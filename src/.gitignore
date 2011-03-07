@@ -3,4 +3,4 @@ Makefile.in
 hint
 *.o
 *.a
-.deps
+.deps/
