@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+hint
+*.o
+*.a
+.deps
