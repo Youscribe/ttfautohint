@@ -36,6 +36,9 @@ TTF_autohint(FILE *in,
   SFNT_Table* SFNT_Table_Infos = NULL;
   FT_ULong num_table_infos = 0;
 
+  SFNT_Table* SFNT_Tables = NULL;
+  FT_ULong num_tables = 0;
+
   FT_ULong glyf_idx;
 
   FT_Error error;
@@ -141,20 +144,43 @@ TTF_autohint(FILE *in,
     {
       if (sti_p->len)
       {
-        sti_p->buf = (FT_Byte*)malloc(sti_p->len);
-        if (!sti_p->buf)
+        SFNT_Table* st_new;
+        SFNT_Table* st_p;
+
+
+        /* add one element to table array */
+        num_tables++;
+        st_new = (SFNT_Table*)realloc(SFNT_Tables,
+                                      num_tables * sizeof (SFNT_Table));
+        if (!st_new)
+        {
+          error = FT_Err_Out_Of_Memory;
+          goto Err;
+        }
+        else
+          SFNT_Tables = st_new;
+
+        st_p = &SFNT_Tables[num_tables - 1];
+
+        st_p->tag = sti_p->tag;
+        st_p->len = sti_p->len;
+        st_p->buf = (FT_Byte*)malloc(st_p->len);
+        if (!st_p->buf)
         {
           error = FT_Err_Out_Of_Memory;
           goto Err;
         }
 
-        error = FT_Load_Sfnt_Table(face, sti_p->tag, 0,
-                                   sti_p->buf, &sti_p->len);
+        /* link buffer pointer */
+        sti_p->buf = st_p->buf;
+
+        error = FT_Load_Sfnt_Table(face, st_p->tag, 0,
+                                   st_p->buf, &st_p->len);
         if (error)
           goto Err;
-
-        sti_p++;
       }
+
+      sti_p++;
     }
   }
 
@@ -178,12 +204,13 @@ TTF_autohint(FILE *in,
 Err:
   /* in case of error it is expected that the unallocated pointers */
   /* are NULL (and counters are zero) */
-  if (SFNT_Table_Infos)
+  if (SFNT_Tables)
   {
-    for (j = 0; j < num_table_infos; j++)
-      free(SFNT_Table_Infos[j].buf);
-    free(SFNT_Table_Infos);
+    for (j = 0; j < num_tables; j++)
+      free(SFNT_Tables[j].buf);
+    free(SFNT_Tables);
   }
+  free(SFNT_Table_Infos);
   FT_Done_Face(face);
   FT_Done_FreeType(lib);
   free(in_buf);
