@@ -21,6 +21,12 @@ typedef struct SFNT_Table_ {
   FT_Byte* buf;
 } SFNT_Table;
 
+typedef struct SFNT_ {
+  FT_Face face;
+  SFNT_Table* table_infos;
+  FT_ULong num_table_infos;
+} SFNT;
+
 
 TA_Error
 TTF_autohint(FILE *in,
@@ -33,8 +39,7 @@ TTF_autohint(FILE *in,
   FT_Byte* in_buf;
   size_t in_len;
 
-  SFNT_Table* SFNT_Table_Infos = NULL;
-  FT_ULong num_table_infos = 0;
+  SFNT sfnt;
 
   SFNT_Table* SFNT_Tables = NULL;
   FT_ULong num_tables = 0;
@@ -87,21 +92,21 @@ TTF_autohint(FILE *in,
     goto Err;
   }
 
-  error = FT_Sfnt_Table_Info(face, 0, NULL, &num_table_infos);
+  error = FT_Sfnt_Table_Info(face, 0, NULL, &sfnt.num_table_infos);
   if (error)
     goto Err;
 
-  SFNT_Table_Infos =
-    (SFNT_Table*)calloc(1, num_table_infos * sizeof (SFNT_Table));
-  if (!SFNT_Table_Infos)
+  sfnt.table_infos =
+    (SFNT_Table*)calloc(1, sfnt.num_table_infos * sizeof (SFNT_Table));
+  if (!sfnt.table_infos)
   {
     error = FT_Err_Out_Of_Memory;
     goto Err;
   }
 
   /* collect SFNT table data */
-  glyf_idx = num_table_infos;
-  for (j = 0; j < num_table_infos; j++)
+  glyf_idx = sfnt.num_table_infos;
+  for (j = 0; j < sfnt.num_table_infos; j++)
   {
     FT_ULong tag, len;
 
@@ -120,14 +125,14 @@ TTF_autohint(FILE *in,
             || tag == TTAG_prep
             || tag == TTAG_cvt))
       {
-        SFNT_Table_Infos[j].tag = tag;
-        SFNT_Table_Infos[j].len = len;
+        sfnt.table_infos[j].tag = tag;
+        sfnt.table_infos[j].len = len;
       }
     }
   }
 
   /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (glyf_idx == num_table_infos)
+  if (glyf_idx == sfnt.num_table_infos)
   {
     error = FT_Err_Invalid_Argument;
     goto Err;
@@ -137,10 +142,10 @@ TTF_autohint(FILE *in,
   /*** split font into SFNT tables ***/
 
   {
-    SFNT_Table* sti_p = SFNT_Table_Infos;
+    SFNT_Table* sti_p = sfnt.table_infos;
 
 
-    for (j = 0; j < num_table_infos; j++)
+    for (j = 0; j < sfnt.num_table_infos; j++)
     {
       if (sti_p->len)
       {
@@ -210,7 +215,7 @@ Err:
       free(SFNT_Tables[j].buf);
     free(SFNT_Tables);
   }
-  free(SFNT_Table_Infos);
+  free(sfnt.table_infos);
   FT_Done_Face(face);
   FT_Done_FreeType(lib);
   free(in_buf);
