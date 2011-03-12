@@ -175,9 +175,12 @@ TTF_autohint(FILE *in,
 Err:
   /* in case of error it is expected that the unallocated pointers */
   /* are NULL (and counters are zero) */
-  for (j = 0; j < num_tables; j++)
-    free(SFNT_Tables[j].buf);
-  free(SFNT_Tables);
+  if (SFNT_Tables)
+  {
+    for (j = 0; j < num_tables; j++)
+      free(SFNT_Tables[j].buf);
+    free(SFNT_Tables);
+  }
   FT_Done_Face(face);
   FT_Done_FreeType(lib);
   free(in_buf);
