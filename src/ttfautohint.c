@@ -29,12 +29,13 @@ TTF_autohint(FILE *in,
   FT_Library lib = NULL;
   FT_Face face = NULL;
   FT_Long num_faces = 0;
-  FT_ULong num_table_infos = 0;
 
   FT_Byte* in_buf;
   size_t in_len;
 
   SFNT_Table* SFNT_Table_Infos = NULL;
+  FT_ULong num_table_infos = 0;
+
   FT_ULong glyf_idx;
 
   FT_Error error;
@@ -133,25 +134,26 @@ TTF_autohint(FILE *in,
   /*** split font into SFNT tables ***/
 
   {
-    SFNT_Table* stp = SFNT_Table_Infos;
+    SFNT_Table* sti_p = SFNT_Table_Infos;
 
 
     for (j = 0; j < num_table_infos; j++)
     {
-      if (stp->len)
+      if (sti_p->len)
       {
-        stp->buf = (FT_Byte*)malloc(stp->len);
-        if (!stp->buf)
+        sti_p->buf = (FT_Byte*)malloc(sti_p->len);
+        if (!sti_p->buf)
         {
           error = FT_Err_Out_Of_Memory;
           goto Err;
         }
 
-        error = FT_Load_Sfnt_Table(face, stp->tag, 0, stp->buf, &stp->len);
+        error = FT_Load_Sfnt_Table(face, sti_p->tag, 0,
+                                   sti_p->buf, &sti_p->len);
         if (error)
           goto Err;
 
-        stp++;
+        sti_p++;
       }
     }
   }
