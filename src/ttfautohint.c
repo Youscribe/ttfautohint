@@ -39,7 +39,7 @@ TTF_autohint(FILE *in,
 
   FT_Error error;
 
-  FT_ULong i;
+  FT_ULong j;
 
 
   /*** load font into memory ***/
@@ -96,27 +96,27 @@ TTF_autohint(FILE *in,
 
   /* collect SFNT table data */
   glyf_idx = num_tables;
-  for (i = 0; i < num_tables; i++)
+  for (j = 0; j < num_tables; j++)
   {
     FT_ULong tag, len;
 
 
-    error = FT_Sfnt_Table_Info(face, i, &tag, &len);
+    error = FT_Sfnt_Table_Info(face, j, &tag, &len);
     if (error && error != FT_Err_Table_Missing)
       goto Err;
 
     if (!error)
     {
       if (tag == TTAG_glyf)
-        glyf_idx = i;
+        glyf_idx = j;
 
       /* ignore tables which we are going to create by ourselves */
       if (!(tag == TTAG_fpgm
             || tag == TTAG_prep
             || tag == TTAG_cvt))
       {
-        SFNT_Tables[i].tag = tag;
-        SFNT_Tables[i].len = len;
+        SFNT_Tables[j].tag = tag;
+        SFNT_Tables[j].len = len;
       }
     }
   }
@@ -135,7 +135,7 @@ TTF_autohint(FILE *in,
     SFNT_Table* stp = SFNT_Tables;
 
 
-    for (i = 0; i < num_tables; i++)
+    for (j = 0; j < num_tables; j++)
     {
       if (stp->len)
       {
@@ -175,8 +175,8 @@ TTF_autohint(FILE *in,
 Err:
   /* in case of error it is expected that the unallocated pointers */
   /* are NULL (and counters are zero) */
-  for (i = 0; i < num_tables; i++)
-    free(SFNT_Tables[i].buf);
+  for (j = 0; j < num_tables; j++)
+    free(SFNT_Tables[j].buf);
   free(SFNT_Tables);
   FT_Done_Face(face);
   FT_Done_FreeType(lib);
