@@ -87,8 +87,6 @@ TTF_autohint(FILE *in,
   if (error)
     goto Err2;
 
-  /* allocate three more slots for the tables we will eventually add */
-  num_tables += 3;
   SFNT_Tables = (SFNT_Table*)calloc(1, num_tables * sizeof (SFNT_Table));
   if (!SFNT_Tables)
   {
@@ -97,8 +95,8 @@ TTF_autohint(FILE *in,
   }
 
   /* collect SFNT table data */
-  glyf_idx = num_tables - 3;
-  for (i = 0; i < num_tables - 3; i++)
+  glyf_idx = num_tables;
+  for (i = 0; i < num_tables; i++)
   {
     FT_ULong tag, len;
 
@@ -124,7 +122,7 @@ TTF_autohint(FILE *in,
   }
 
   /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (glyf_idx == num_tables - 3)
+  if (glyf_idx == num_tables)
   {
     error = FT_Err_Invalid_Argument;
     goto Err3;
@@ -137,7 +135,7 @@ TTF_autohint(FILE *in,
     SFNT_Table* st = SFNT_Tables;
 
 
-    for (i = 0; i < num_tables - 3; i++)
+    for (i = 0; i < num_tables; i++)
     {
       if (st->len)
       {
