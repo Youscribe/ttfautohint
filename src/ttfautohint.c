@@ -33,13 +33,12 @@ TTF_autohint(FILE *in,
              FILE *out)
 {
   FT_Library lib = NULL;
-  FT_Face face = NULL;
-  FT_Long num_faces = 0;
 
   FT_Byte* in_buf;
   size_t in_len;
 
-  SFNT sfnt;
+  SFNT* sfnts;
+  FT_Long num_sfnts = 0;
 
   SFNT_Table* SFNT_Tables = NULL;
   FT_ULong num_tables = 0;
@@ -48,6 +47,7 @@ TTF_autohint(FILE *in,
 
   FT_Error error;
 
+  FT_Long i;
   FT_ULong j;
 
 
@@ -75,117 +75,136 @@ TTF_autohint(FILE *in,
   if (error)
     goto Err;
 
-  error = FT_New_Memory_Face(lib, in_buf, in_len, -1, &face);
-  if (error)
-    goto Err;
-  num_faces = face->num_faces;
-  FT_Done_Face(face);
-
-  error = FT_New_Memory_Face(lib, in_buf, in_len, 0, &face);
-  if (error)
-    goto Err;
-
-  /* check that font is TTF */
-  if (!FT_IS_SFNT(face))
   {
-    error = FT_Err_Invalid_Argument;
-    goto Err;
+    FT_Face f;
+
+
+    error = FT_New_Memory_Face(lib, in_buf, in_len, -1, &f);
+    if (error)
+      goto Err;
+    num_sfnts = f->num_faces;
+    FT_Done_Face(f);
   }
 
-  error = FT_Sfnt_Table_Info(face, 0, NULL, &sfnt.num_table_infos);
-  if (error)
-    goto Err;
-
-  sfnt.table_infos =
-    (SFNT_Table*)calloc(1, sfnt.num_table_infos * sizeof (SFNT_Table));
-  if (!sfnt.table_infos)
+  /* it is a TTC if we have more than a single face */
+  sfnts = (SFNT*)calloc(1, num_sfnts * sizeof (SFNT));
+  if (!sfnts)
   {
     error = FT_Err_Out_Of_Memory;
     goto Err;
   }
 
-  /* collect SFNT table data */
-  glyf_idx = sfnt.num_table_infos;
-  for (j = 0; j < sfnt.num_table_infos; j++)
+  for (i = 0; i < num_sfnts; i++)
   {
-    FT_ULong tag, len;
+    SFNT *sfnt = &sfnts[i];
 
 
-    error = FT_Sfnt_Table_Info(face, j, &tag, &len);
-    if (error && error != FT_Err_Table_Missing)
+    error = FT_New_Memory_Face(lib, in_buf, in_len, 0, &sfnt->face);
+    if (error)
       goto Err;
 
-    if (!error)
+    /* check that font is TTF */
+    if (!FT_IS_SFNT(sfnt->face))
     {
-      if (tag == TTAG_glyf)
-        glyf_idx = j;
+      error = FT_Err_Invalid_Argument;
+      goto Err;
+    }
 
-      /* ignore tables which we are going to create by ourselves */
-      if (!(tag == TTAG_fpgm
-            || tag == TTAG_prep
-            || tag == TTAG_cvt))
+    error = FT_Sfnt_Table_Info(sfnt->face, 0, NULL, &sfnt->num_table_infos);
+    if (error)
+      goto Err;
+
+    sfnt->table_infos =
+      (SFNT_Table*)calloc(1, sfnt->num_table_infos * sizeof (SFNT_Table));
+    if (!sfnt->table_infos)
+    {
+      error = FT_Err_Out_Of_Memory;
+      goto Err;
+    }
+
+    /* collect SFNT table data */
+    glyf_idx = sfnt->num_table_infos;
+    for (j = 0; j < sfnt->num_table_infos; j++)
+    {
+      FT_ULong tag, len;
+
+
+      error = FT_Sfnt_Table_Info(sfnt->face, j, &tag, &len);
+      if (error && error != FT_Err_Table_Missing)
+        goto Err;
+
+      if (!error)
       {
-        sfnt.table_infos[j].tag = tag;
-        sfnt.table_infos[j].len = len;
+        if (tag == TTAG_glyf)
+          glyf_idx = j;
+
+        /* ignore tables which we are going to create by ourselves */
+        if (!(tag == TTAG_fpgm
+              || tag == TTAG_prep
+              || tag == TTAG_cvt))
+        {
+          sfnt->table_infos[j].tag = tag;
+          sfnt->table_infos[j].len = len;
+        }
       }
     }
-  }
 
-  /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (glyf_idx == sfnt.num_table_infos)
-  {
-    error = FT_Err_Invalid_Argument;
-    goto Err;
-  }
-
-
-  /*** split font into SFNT tables ***/
-
-  {
-    SFNT_Table* sti_p = sfnt.table_infos;
-
-
-    for (j = 0; j < sfnt.num_table_infos; j++)
+    /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
+    if (glyf_idx == sfnt->num_table_infos)
     {
-      if (sti_p->len)
+      error = FT_Err_Invalid_Argument;
+      goto Err;
+    }
+
+
+    /*** split font into SFNT tables ***/
+
+    {
+      SFNT_Table* sti_p = sfnt->table_infos;
+
+
+      for (j = 0; j < sfnt->num_table_infos; j++)
       {
-        SFNT_Table* st_new;
-        SFNT_Table* st_p;
-
-
-        /* add one element to table array */
-        num_tables++;
-        st_new = (SFNT_Table*)realloc(SFNT_Tables,
-                                      num_tables * sizeof (SFNT_Table));
-        if (!st_new)
+        if (sti_p->len)
         {
-          error = FT_Err_Out_Of_Memory;
-          goto Err;
+          SFNT_Table* st_new;
+          SFNT_Table* st_p;
+
+
+          /* add one element to table array */
+          num_tables++;
+          st_new = (SFNT_Table*)realloc(SFNT_Tables,
+                                        num_tables * sizeof (SFNT_Table));
+          if (!st_new)
+          {
+            error = FT_Err_Out_Of_Memory;
+            goto Err;
+          }
+          else
+            SFNT_Tables = st_new;
+
+          st_p = &SFNT_Tables[num_tables - 1];
+
+          st_p->tag = sti_p->tag;
+          st_p->len = sti_p->len;
+          st_p->buf = (FT_Byte*)malloc(st_p->len);
+          if (!st_p->buf)
+          {
+            error = FT_Err_Out_Of_Memory;
+            goto Err;
+          }
+
+          /* link buffer pointer */
+          sti_p->buf = st_p->buf;
+
+          error = FT_Load_Sfnt_Table(sfnt->face, st_p->tag, 0,
+                                     st_p->buf, &st_p->len);
+          if (error)
+            goto Err;
         }
-        else
-          SFNT_Tables = st_new;
 
-        st_p = &SFNT_Tables[num_tables - 1];
-
-        st_p->tag = sti_p->tag;
-        st_p->len = sti_p->len;
-        st_p->buf = (FT_Byte*)malloc(st_p->len);
-        if (!st_p->buf)
-        {
-          error = FT_Err_Out_Of_Memory;
-          goto Err;
-        }
-
-        /* link buffer pointer */
-        sti_p->buf = st_p->buf;
-
-        error = FT_Load_Sfnt_Table(face, st_p->tag, 0,
-                                   st_p->buf, &st_p->len);
-        if (error)
-          goto Err;
+        sti_p++;
       }
-
-      sti_p++;
     }
   }
 
@@ -215,8 +234,15 @@ Err:
       free(SFNT_Tables[j].buf);
     free(SFNT_Tables);
   }
-  free(sfnt.table_infos);
-  FT_Done_Face(face);
+  if (sfnts)
+  {
+    for (i = 0; i < num_sfnts; i++)
+    {
+      FT_Done_Face(sfnts[i].face);
+      free(sfnts[i].table_infos);
+    }
+    free(sfnts);
+  }
   FT_Done_FreeType(lib);
   free(in_buf);
 
