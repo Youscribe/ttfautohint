@@ -7,6 +7,7 @@
 
 #include <config.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -99,7 +100,7 @@ TTF_autohint(FILE *in,
     SFNT *sfnt = &sfnts[i];
 
 
-    error = FT_New_Memory_Face(lib, in_buf, in_len, 0, &sfnt->face);
+    error = FT_New_Memory_Face(lib, in_buf, in_len, i, &sfnt->face);
     if (error)
       goto Err;
 
@@ -167,40 +168,66 @@ TTF_autohint(FILE *in,
       if (table_info->len)
       {
         SFNT_Table* tables_new;
+        SFNT_Table* table_last;
         SFNT_Table* table;
+        FT_Byte* buf;
+
+        FT_Long k;
 
 
-        /* add one element to table array */
-        num_tables++;
-        tables_new =
-          (SFNT_Table*)realloc(tables,
-                               num_tables * sizeof (SFNT_Table));
-        if (!tables_new)
-        {
-          error = FT_Err_Out_Of_Memory;
-          goto Err;
-        }
-        else
-          tables = tables_new;
-
-        table = &tables[num_tables - 1];
-
-        table->tag = table_info->tag;
-        table->len = table_info->len;
-        table->buf = (FT_Byte*)malloc(table->len);
-        if (!table->buf)
+        buf = (FT_Byte*)malloc(table_info->len);
+        if (!buf)
         {
           error = FT_Err_Out_Of_Memory;
           goto Err;
         }
 
-        /* link buffer pointer */
-        table_info->buf = table->buf;
-
-        error = FT_Load_Sfnt_Table(sfnt->face, table->tag, 0,
-                                   table->buf, &table->len);
+        /* load table */
+        error = FT_Load_Sfnt_Table(sfnt->face, table_info->tag, 0,
+                                   buf, &table_info->len);
         if (error)
           goto Err;
+
+        /* check whether we already have this table */
+        for (k = 0; k < num_tables; k++)
+        {
+          table = &tables[k];
+
+          if (table->tag == table_info->tag
+              && table->len == table_info->len
+              && !memcmp(table->buf, buf, table->len))
+            break;
+        }
+
+        /* add one element to table array if it's missing or not the same */
+        if (k == num_tables)
+        {
+          num_tables++;
+          tables_new =
+            (SFNT_Table*)realloc(tables,
+                                 num_tables * sizeof (SFNT_Table));
+          if (!tables_new)
+          {
+            error = FT_Err_Out_Of_Memory;
+            goto Err;
+          }
+          else
+            tables = tables_new;
+
+          table_last = &tables[num_tables - 1];
+
+          table_last->tag = table_info->tag;
+          table_last->len = table_info->len;
+          table_last->buf = buf;
+
+          /* link buffer pointer */
+          table_info->buf = table_last->buf;
+        }
+        else
+        {
+          free(buf);
+          table_info->buf = tables[k].buf;
+        }
       }
     }
   }
