@@ -2,7 +2,7 @@
 
 /* written 2011 by Werner Lemberg <wl@gnu.org> */
 
-/* This file need FreeType 2.4.5 or newer. */
+/* This file needs FreeType 2.4.5 or newer. */
 
 
 #include <config.h>
