@@ -132,25 +132,25 @@ TTF_autohint(FILE *in,
   /*** split font into SFNT tables ***/
 
   {
-    SFNT_Table* st = SFNT_Tables;
+    SFNT_Table* stp = SFNT_Tables;
 
 
     for (i = 0; i < num_tables; i++)
     {
-      if (st->len)
+      if (stp->len)
       {
-        st->buf = (FT_Byte*)malloc(st->len);
-        if (!st->buf)
+        stp->buf = (FT_Byte*)malloc(stp->len);
+        if (!stp->buf)
         {
           error = FT_Err_Out_Of_Memory;
           goto Err;
         }
 
-        error = FT_Load_Sfnt_Table(face, st->tag, 0, st->buf, &st->len);
+        error = FT_Load_Sfnt_Table(face, stp->tag, 0, stp->buf, &stp->len);
         if (error)
           goto Err;
 
-        st++;
+        stp++;
       }
     }
   }
