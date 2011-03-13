@@ -16,11 +16,16 @@
 #include "ttfautohint.h"
 
 
+/* this structure represents both the data contained in the SFNT */
+/* table records and the actual SFNT table data */
+
 typedef struct SFNT_Table_ {
   FT_ULong tag;
   FT_ULong len;
   FT_Byte* buf;
 } SFNT_Table;
+
+/* this structure is used to model a font within a TTC */
 
 typedef struct SFNT_ {
   FT_Face face;
@@ -52,7 +57,11 @@ TTF_autohint(FILE *in,
   FT_ULong j;
 
 
-  /*** load font into memory ***/
+  /*************************/
+  /*                       */
+  /* load font into memory */
+  /*                       */
+  /*************************/
 
   fseek(in, 0, SEEK_END);
   in_len = ftell(in);
@@ -76,6 +85,7 @@ TTF_autohint(FILE *in,
   if (error)
     goto Err;
 
+  /* get number of faces */
   {
     FT_Face f;
 
@@ -123,7 +133,7 @@ TTF_autohint(FILE *in,
       goto Err;
     }
 
-    /* collect SFNT table data */
+    /* collect SFNT table information and search for `glyf' table */
     glyf_idx = sfnt->num_table_infos;
     for (j = 0; j < sfnt->num_table_infos; j++)
     {
@@ -158,13 +168,18 @@ TTF_autohint(FILE *in,
     }
 
 
-    /*** split font into SFNT tables ***/
+    /*******************************/
+    /*                             */
+    /* split font into SFNT tables */
+    /*                             */
+    /*******************************/
 
     for (j = 0; j < sfnt->num_table_infos; j++)
     {
       SFNT_Table *table_info = &sfnt->table_infos[j];
 
 
+      /* we ignore empty tables */
       if (table_info->len)
       {
         SFNT_Table* tables_new;
@@ -186,7 +201,7 @@ TTF_autohint(FILE *in,
         error = FT_Load_Sfnt_Table(sfnt->face, table_info->tag, 0,
                                    buf, &table_info->len);
         if (error)
-          goto Err;
+          goto Err1;
 
         /* check whether we already have this table */
         for (k = 0; k < num_tables; k++)
@@ -209,7 +224,7 @@ TTF_autohint(FILE *in,
           if (!tables_new)
           {
             error = FT_Err_Out_Of_Memory;
-            goto Err;
+            goto Err1;
           }
           else
             tables = tables_new;
@@ -228,6 +243,11 @@ TTF_autohint(FILE *in,
           free(buf);
           table_info->buf = tables[k].buf;
         }
+        continue;
+
+      Err1:
+        free(buf);
+        goto Err;
       }
     }
   }
@@ -250,7 +270,7 @@ TTF_autohint(FILE *in,
   error = TA_Err_Ok;
 
 Err:
-  /* in case of error it is expected that the unallocated pointers */
+  /* in case of error it is expected that unallocated pointers */
   /* are NULL (and counters are zero) */
   if (tables)
   {
