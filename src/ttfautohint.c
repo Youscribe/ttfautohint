@@ -49,8 +49,6 @@ TTF_autohint(FILE *in,
   SFNT_Table* tables = NULL;
   FT_ULong num_tables = 0;
 
-  FT_ULong glyf_idx;
-
   FT_Error error;
 
   FT_Long i;
@@ -107,6 +105,8 @@ TTF_autohint(FILE *in,
 
   for (i = 0; i < num_sfnts; i++)
   {
+    FT_ULong glyf_idx;
+
     SFNT *sfnt = &sfnts[i];
 
 
