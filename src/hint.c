@@ -53,7 +53,7 @@ main(int argc,
   error = TTF_autohint(in, out);
   if (error)
   {
-    fprintf(stderr, "Error code `%x' while autohinting font\n", error);
+    fprintf(stderr, "Error code `0x%02x' while autohinting font\n", error);
     exit(EXIT_FAILURE);
   }
 
