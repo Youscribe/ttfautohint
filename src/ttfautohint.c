@@ -154,8 +154,8 @@ TA_font_collect_table_info(SFNT *sfnt)
 
 
 static FT_Error
-TA_font_split_SFNT_tables(SFNT *sfnt,
-                          FONT *font)
+TA_font_split_into_SFNT_tables(SFNT *sfnt,
+                               FONT *font)
 {
   FT_Error error;
   FT_ULong i;
@@ -313,7 +313,7 @@ TTF_autohint(FILE *in,
     if (error)
       goto Err;
 
-    error = TA_font_split_SFNT_tables(sfnt, font);
+    error = TA_font_split_into_SFNT_tables(sfnt, font);
     if (error)
       goto Err;
   }
