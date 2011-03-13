@@ -241,7 +241,7 @@ TA_font_split_into_SFNT_tables(SFNT *sfnt,
 
 
 static void
-font_unload(FONT *font)
+TA_font_unload(FONT *font)
 {
   if (!font)
     return;
@@ -337,7 +337,7 @@ TTF_autohint(FILE *in,
   error = TA_Err_Ok;
 
 Err:
-  font_unload(font);
+  TA_font_unload(font);
 
   return error;
 }
