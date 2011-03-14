@@ -48,8 +48,8 @@ typedef struct FONT_ {
 
 
 static FT_Error
-TA_font_load_into_memory(FILE *in,
-                         FONT *font)
+TA_font_load_into_memory(FILE* in,
+                         FONT* font)
 {
   fseek(in, 0, SEEK_END);
   font->in_len = ftell(in);
@@ -71,7 +71,7 @@ TA_font_load_into_memory(FILE *in,
 
 
 static FT_Error
-TA_font_init(FONT *font)
+TA_font_init(FONT* font)
 {
   FT_Error error;
   FT_Face f;
@@ -98,7 +98,7 @@ TA_font_init(FONT *font)
 
 
 static FT_Error
-TA_font_collect_table_info(SFNT *sfnt)
+TA_font_collect_table_info(SFNT* sfnt)
 {
   FT_Error error;
   FT_ULong glyf_idx;
@@ -154,8 +154,8 @@ TA_font_collect_table_info(SFNT *sfnt)
 
 
 static FT_Error
-TA_font_split_into_SFNT_tables(SFNT *sfnt,
-                               FONT *font)
+TA_font_split_into_SFNT_tables(SFNT* sfnt,
+                               FONT* font)
 {
   FT_Error error;
   FT_ULong i;
@@ -163,7 +163,7 @@ TA_font_split_into_SFNT_tables(SFNT *sfnt,
 
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
-    SFNT_Table *table_info = &sfnt->table_infos[i];
+    SFNT_Table* table_info = &sfnt->table_infos[i];
 
 
     /* we ignore empty tables */
@@ -186,7 +186,7 @@ TA_font_split_into_SFNT_tables(SFNT *sfnt,
       /* check whether we already have this table */
       for (j = 0; j < font->num_tables; j++)
       {
-        SFNT_Table *table = &font->tables[j];
+        SFNT_Table* table = &font->tables[j];
 
 
         if (table->tag == table_info->tag
@@ -241,13 +241,14 @@ TA_font_split_into_SFNT_tables(SFNT *sfnt,
 
 
 static void
-TA_font_unload(FONT *font)
+TA_font_unload(FONT* font)
 {
+  /* in case of error it is expected that unallocated pointers */
+  /* are NULL (and counters are zero) */
+
   if (!font)
     return;
 
-  /* in case of error it is expected that unallocated pointers */
-  /* are NULL (and counters are zero) */
   if (font->tables)
   {
     FT_ULong i;
@@ -278,8 +279,8 @@ TA_font_unload(FONT *font)
 
 
 TA_Error
-TTF_autohint(FILE *in,
-             FILE *out)
+TTF_autohint(FILE* in,
+             FILE* out)
 {
   FONT* font;
   FT_Error error;
@@ -301,7 +302,7 @@ TTF_autohint(FILE *in,
   /* loop over subfonts */
   for (i = 0; i < font->num_sfnts; i++)
   {
-    SFNT *sfnt = &font->sfnts[i];
+    SFNT* sfnt = &font->sfnts[i];
 
 
     error = FT_New_Memory_Face(font->lib, font->in_buf, font->in_len,
