@@ -52,8 +52,8 @@ typedef struct FONT_ {
 
 
 static FT_Error
-TA_font_load_into_memory(FILE* in,
-                         FONT* font)
+TA_font_read(FILE* in,
+             FONT* font)
 {
   fseek(in, 0, SEEK_END);
   font->in_len = ftell(in);
@@ -531,7 +531,7 @@ TTF_autohint(FILE* in,
   if (!font)
     return FT_Err_Out_Of_Memory;
 
-  error = TA_font_load_into_memory(in, font);
+  error = TA_font_read(in, font);
   if (error)
     goto Err;
 
