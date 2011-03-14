@@ -178,15 +178,15 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
       FT_ULong j;
 
 
-      /* assure that table length is a multiple of 4; */
-      /* we need this later for writing the tables back */
+      /* make the allocated buffer length a multiple of 4; */
+      /* this simplifies writing the tables back */
       len = (table_info->len + 3) & ~3;
 
       buf = (FT_Byte*)malloc(len);
       if (!buf)
         return FT_Err_Out_Of_Memory;
 
-      /* pad table with zeros */
+      /* pad buffer with zeros */
       buf[len - 1] = 0;
       buf[len - 2] = 0;
       buf[len - 3] = 0;
@@ -196,8 +196,6 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
                                  buf, &table_info->len);
       if (error)
         goto Err;
-
-      table_info->len = len;
 
       /* check whether we already have this table */
       for (j = 0; j < font->num_tables; j++)
@@ -416,7 +414,9 @@ TA_font_build_TTF(FONT* font)
     table_record[15] = BYTE4(table_info->len);
 
     table_record += 16;
-    table_offset += table_info->len;
+    /* table offsets must be a multiple of 4; */
+    /* this also fits the actual buffer length */
+    table_offset += (table_info->len + 3) & ~3;
   }
 
   /* the font header is complete; compute `head' checksum */
@@ -448,8 +448,9 @@ TA_font_build_TTF(FONT* font)
     if (!table_info->len)
       continue;
 
+    /* buffer length is a multiple of 4 */
     memcpy(font->out_buf + table_info->offset,
-           table_info->buf, table_info->len);
+           table_info->buf, (table_info->len + 3) & ~3);
   }
 
   error = TA_Err_Ok;
