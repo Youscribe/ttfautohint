@@ -17,6 +17,15 @@
 #include "ttfautohint.h"
 
 
+#define HIGH(x) (FT_Byte)(((x) & 0xFF00) >> 8)
+#define LOW(x) ((x) & 0x00FF)
+
+#define BYTE1(x) (FT_Byte)(((x) & 0xFF000000UL) >> 24);
+#define BYTE2(x) (FT_Byte)(((x) & 0x00FF0000UL) >> 16);
+#define BYTE3(x) (FT_Byte)(((x) & 0x0000FF00UL) >> 8);
+#define BYTE4(x) ((x) & 0x000000FFUL);
+
+
 /* this structure represents both the data contained in the SFNT */
 /* table records and the actual SFNT table data */
 typedef struct SFNT_Table_ {
@@ -272,15 +281,6 @@ TA_table_compute_checksum(FT_Byte* buf,
 
   return checksum;
 }
-
-
-#define HIGH(x) (FT_Byte)(((x) & 0xFF00) >> 8)
-#define LOW(x) ((x) & 0x00FF)
-
-#define BYTE1(x) (FT_Byte)(((x) & 0xFF000000UL) >> 24);
-#define BYTE2(x) (FT_Byte)(((x) & 0x00FF0000UL) >> 16);
-#define BYTE3(x) (FT_Byte)(((x) & 0x0000FF00UL) >> 8);
-#define BYTE4(x) ((x) & 0x000000FFUL);
 
 
 static FT_Error
