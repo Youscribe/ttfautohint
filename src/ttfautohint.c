@@ -75,7 +75,7 @@ TA_font_read(FILE* in,
   if (font->in_len < 100)
     return FT_Err_Invalid_Argument;
 
-  font->in_buf = (FT_Byte*)malloc(font->in_len);
+  font->in_buf = (FT_Byte*)malloc(font->in_len * sizeof (FT_Byte));
   if (!font->in_buf)
     return FT_Err_Out_Of_Memory;
 
@@ -225,7 +225,7 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
       /* this simplifies writing the tables back */
       len = (table_info->len + 3) & ~3;
 
-      buf = (FT_Byte*)malloc(len);
+      buf = (FT_Byte*)malloc(len * sizeof (FT_Byte));
       if (!buf)
         return FT_Err_Out_Of_Memory;
 
@@ -333,7 +333,7 @@ TA_font_build_TTF(FONT* font)
   /* construct TTF header */
 
   header_len = 12 + 16 * num_tables_in_header;
-  header_buf = (FT_Byte*)malloc(header_len);
+  header_buf = (FT_Byte*)malloc(header_len * sizeof (FT_Byte));
   if (!header_buf)
     return FT_Err_Out_Of_Memory;
 
@@ -444,7 +444,7 @@ TA_font_build_TTF(FONT* font)
 
   /* build font */
   font->out_len = table_offset;
-  font->out_buf = (FT_Byte*)malloc(font->out_len);
+  font->out_buf = (FT_Byte*)malloc(font->out_len * sizeof (FT_Byte));
   if (!font->out_buf)
   {
     error = FT_Err_Out_Of_Memory;
