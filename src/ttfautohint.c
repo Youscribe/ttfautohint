@@ -17,6 +17,9 @@
 #include "ttfautohint.h"
 
 
+/* these macros convert 16bit and 32bit numbers into single bytes */
+/* using the byte order needed within SFNT files                  */
+
 #define HIGH(x) (FT_Byte)(((x) & 0xFF00) >> 8)
 #define LOW(x) ((x) & 0x00FF)
 
@@ -35,7 +38,7 @@ typedef struct SFNT_Table_ {
   FT_ULong offset; /* used while building output font only */
 } SFNT_Table;
 
-/* this structure is used to model a font within a TTC */
+/* this structure is used to model a TTF or a subfont within a TTC */
 typedef struct SFNT_ {
   FT_Face face;
   SFNT_Table* table_infos;
@@ -68,7 +71,7 @@ TA_font_read(FILE* in,
   font->in_len = ftell(in);
   fseek(in, 0, SEEK_SET);
 
-  /* a TTF can never be that small */
+  /* a valid TTF can never be that small */
   if (font->in_len < 100)
     return FT_Err_Invalid_Argument;
 
@@ -118,7 +121,7 @@ TA_font_collect_table_info(SFNT* sfnt)
   FT_ULong i;
 
 
-  /* check that font is TTF */
+  /* check that font is TTF or TTC */
   if (!FT_IS_SFNT(sfnt->face))
     return FT_Err_Invalid_Argument;
 
@@ -150,7 +153,8 @@ TA_font_collect_table_info(SFNT* sfnt)
       /* ignore tables which we are going to create by ourselves */
       if (!(tag == TTAG_fpgm
             || tag == TTAG_prep
-            || tag == TTAG_cvt))
+            || tag == TTAG_cvt
+            || tag == TTAG_DSIG))
       {
         sfnt->table_infos[i].tag = tag;
         sfnt->table_infos[i].len = len;
@@ -218,7 +222,7 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
           break;
       }
 
-      /* add element to table array if it's missing or not the same */
+      /* add element to table array if it is missing or different */
       if (j == font->num_tables)
       {
         SFNT_Table* tables_new;
@@ -565,6 +569,7 @@ TTF_autohint(FILE* in,
   /* construct `fpgm' table */
   /* construct `prep' table */
   /* construct `cvt ' table */
+  /* construct dummy `DSIG' table */
 
   /* split `glyf' table */
   /* handle all glyphs in a loop */
