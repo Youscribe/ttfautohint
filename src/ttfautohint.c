@@ -114,7 +114,7 @@ TA_font_init(FONT* font)
 
 
 static FT_Error
-TA_font_collect_table_info(SFNT* sfnt)
+TA_sfnt_collect_table_info(SFNT* sfnt)
 {
   FT_Error error;
   FT_ULong glyf_idx;
@@ -564,7 +564,7 @@ TTF_autohint(FILE* in,
     if (error)
       goto Err;
 
-    error = TA_font_collect_table_info(sfnt);
+    error = TA_sfnt_collect_table_info(sfnt);
     if (error)
       goto Err;
 
