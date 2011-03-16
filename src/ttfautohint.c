@@ -171,6 +171,36 @@ TA_font_collect_table_info(SFNT* sfnt)
 
 
 static FT_Error
+TA_font_add_table(FONT* font,
+                  SFNT_Table* table_info,
+                  FT_Byte* buf)
+{
+  SFNT_Table* tables_new;
+  SFNT_Table* table_last;
+
+
+  font->num_tables++;
+  tables_new = (SFNT_Table*)realloc(font->tables,
+                                    font->num_tables * sizeof (SFNT_Table));
+  if (!tables_new)
+    return FT_Err_Out_Of_Memory;
+  else
+    font->tables = tables_new;
+
+  table_last = &font->tables[font->num_tables - 1];
+
+  table_last->tag = table_info->tag;
+  table_last->len = table_info->len;
+  table_last->buf = buf;
+
+  /* link buffer pointer */
+  table_info->buf = table_last->buf;
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
 TA_font_split_into_SFNT_tables(SFNT* sfnt,
                                FONT* font)
 {
@@ -222,33 +252,12 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
           break;
       }
 
-      /* add element to table array if it is missing or different */
       if (j == font->num_tables)
       {
-        SFNT_Table* tables_new;
-        SFNT_Table* table_last;
-
-
-        font->num_tables++;
-        tables_new =
-          (SFNT_Table*)realloc(font->tables,
-                               font->num_tables * sizeof (SFNT_Table));
-        if (!tables_new)
-        {
-          error = FT_Err_Out_Of_Memory;
+        /* add element to table array if it is missing or different */
+        error = TA_font_add_table(font, table_info, buf);
+        if (error)
           goto Err;
-        }
-        else
-          font->tables = tables_new;
-
-        table_last = &font->tables[font->num_tables - 1];
-
-        table_last->tag = table_info->tag;
-        table_last->len = table_info->len;
-        table_last->buf = buf;
-
-        /* link buffer pointer */
-        table_info->buf = table_last->buf;
       }
       else
       {
@@ -569,7 +578,6 @@ TTF_autohint(FILE* in,
   /* construct `fpgm' table */
   /* construct `prep' table */
   /* construct `cvt ' table */
-  /* construct dummy `DSIG' table */
 
   /* split `glyf' table */
   /* handle all glyphs in a loop */
