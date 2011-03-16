@@ -7,6 +7,7 @@
 
 #include <config.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <ft2build.h>
@@ -200,6 +201,34 @@ TA_font_add_table(FONT* font,
 }
 
 
+static int
+TA_table_compare_tags(const void* t1,
+                      const void* t2)
+{
+  /* Looking into an arbitrary TTF (with a `DSIG' table), tags */
+  /* starting with an uppercase letter are sorted before lowercase */
+  /* letters.  In other words, the alphabetical ordering (as */
+  /* mandated by signing a font) is a simple numeric comparison of */
+  /* the 32bit tag value. */
+
+  FT_ULong tag1 = ((SFNT_Table*)t1)->tag;
+  FT_ULong tag2 = ((SFNT_Table*)t2)->tag;
+
+
+  return tag1 == tag2 ? 0
+                      : (tag1 < tag2 ? -1
+                                     : 0);
+}
+
+
+static void
+TA_sfnt_sort_table_info(SFNT* sfnt)
+{
+  qsort(sfnt->table_infos, sfnt->num_table_infos,
+        sizeof (SFNT_Table), TA_table_compare_tags);
+}
+
+
 static FT_Error
 TA_font_split_into_SFNT_tables(SFNT* sfnt,
                                FONT* font)
@@ -317,6 +346,7 @@ TA_font_build_TTF(FONT* font)
   FT_ULong i;
   FT_Error error;
 
+  TA_sfnt_sort_table_info(sfnt);
 
   num_tables_in_header = 0;
 
