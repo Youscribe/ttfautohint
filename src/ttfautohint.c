@@ -172,6 +172,28 @@ TA_sfnt_collect_table_info(SFNT* sfnt)
 
 
 static FT_Error
+TA_sfnt_add_table_info(SFNT* sfnt,
+                       SFNT_Table table_info)
+{
+  SFNT_Table* table_infos_new;
+
+
+  sfnt->num_table_infos++;
+  table_infos_new =
+    (SFNT_Table*)realloc(sfnt->table_infos,
+                         sfnt->num_table_infos * sizeof (SFNT_Table));
+  if (!table_infos_new)
+    return FT_Err_Out_Of_Memory;
+  else
+    sfnt->table_infos = table_infos_new;
+
+  sfnt->table_infos[sfnt->num_table_infos - 1] = table_info;
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
 TA_font_add_table(FONT* font,
                   SFNT_Table* table_info,
                   FT_Byte* buf)
@@ -325,12 +347,47 @@ TA_table_compute_checksum(FT_Byte* buf,
 }
 
 
+/* we build a dummy `DSIG' table only */
+
+static FT_Error
+TA_table_construct_DSIG(FT_Byte** DSIG)
+{
+  FT_Byte* buf;
+
+
+  buf = (FT_Byte*)malloc(8 * sizeof (FT_Byte));
+  if (!buf)
+    return FT_Err_Out_Of_Memory;
+
+  /* version */
+  buf[0] = 0x00;
+  buf[1] = 0x00;
+  buf[2] = 0x00;
+  buf[3] = 0x01;
+
+  /* zero signatures */
+  buf[4] = 0x00;
+  buf[5] = 0x00;
+
+  /* permission flags */
+  buf[6] = 0x00;
+  buf[7] = 0x00;
+
+  *DSIG = buf;
+
+  return TA_Err_Ok;
+}
+
+
 static FT_Error
 TA_font_build_TTF(FONT* font)
 {
   SFNT* sfnt = &font->sfnts[0];
-  SFNT_Table* table_infos = sfnt->table_infos;
-  FT_ULong num_table_infos = sfnt->num_table_infos;
+  SFNT_Table* table_infos;
+  FT_ULong num_table_infos;
+
+  SFNT_Table DSIG_table_info;
+  FT_Byte* DSIG_buf;
 
   FT_ULong num_tables_in_header;
 
@@ -346,8 +403,34 @@ TA_font_build_TTF(FONT* font)
   FT_ULong i;
   FT_Error error;
 
+
+  /* add a dummy `DSIG' table info */
+  DSIG_table_info.tag = TTAG_DSIG;
+  DSIG_table_info.len = 8;
+
+  error = TA_sfnt_add_table_info(sfnt, DSIG_table_info);
+  if (error)
+    return error;
+
+  error = TA_table_construct_DSIG(&DSIG_buf);
+  if (error)
+    return error;
+
+  /* in case of success, `DSIG_buf' gets linked */
+  /* and is eventually freed in TA_font_unload */
+  error = TA_font_add_table(font,
+                            &sfnt->table_infos[sfnt->num_table_infos - 1],
+                            DSIG_buf);
+  if (error)
+  {
+    free(DSIG_buf);
+    return error;
+  }
+
   TA_sfnt_sort_table_info(sfnt);
 
+  table_infos = sfnt->table_infos;
+  num_table_infos = sfnt->num_table_infos;
   num_tables_in_header = 0;
 
   for (i = 0; i < num_table_infos; i++)
