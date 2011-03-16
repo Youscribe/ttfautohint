@@ -217,7 +217,7 @@ TA_table_compare_tags(const void* t1,
 
   return tag1 == tag2 ? 0
                       : (tag1 < tag2 ? -1
-                                     : 0);
+                                     : 1);
 }
 
 
