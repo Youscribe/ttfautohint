@@ -183,7 +183,10 @@ TA_sfnt_add_table_info(SFNT* sfnt,
     (SFNT_Table*)realloc(sfnt->table_infos,
                          sfnt->num_table_infos * sizeof (SFNT_Table));
   if (!table_infos_new)
+  {
+    sfnt->num_table_infos--;
     return FT_Err_Out_Of_Memory;
+  }
   else
     sfnt->table_infos = table_infos_new;
 
@@ -206,7 +209,10 @@ TA_font_add_table(FONT* font,
   tables_new = (SFNT_Table*)realloc(font->tables,
                                     font->num_tables * sizeof (SFNT_Table));
   if (!tables_new)
+  {
+    font->num_tables--;
     return FT_Err_Out_Of_Memory;
+  }
   else
     font->tables = tables_new;
 
