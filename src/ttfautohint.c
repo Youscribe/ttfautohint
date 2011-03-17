@@ -30,19 +30,29 @@
 #define BYTE4(x) ((x) & 0x000000FFUL);
 
 
-/* this structure represents both the data contained in the SFNT */
-/* table records and the actual SFNT table data */
+/* the length of a dummy `DSIG' table */
+#define DSIG_LEN 8
+
+/* an empty slot in the table info array */
+#define MISSING (FT_ULong)~0
+
+
+/* an SFNT table */
 typedef struct SFNT_Table_ {
   FT_ULong tag;
   FT_ULong len;
-  FT_Byte* buf;
-  FT_ULong offset; /* used while building output font only */
+  FT_Byte* buf;    /* the table data */
+  FT_ULong offset; /* from beginning of file */
 } SFNT_Table;
+
+/* we use indices into the SFNT table array to */
+/* represent table info records in a TTF header */
+typedef FT_ULong SFNT_Table_Info;
 
 /* this structure is used to model a TTF or a subfont within a TTC */
 typedef struct SFNT_ {
   FT_Face face;
-  SFNT_Table* table_infos;
+  SFNT_Table_Info* table_infos;
   FT_ULong num_table_infos;
 } SFNT;
 
@@ -115,73 +125,15 @@ TA_font_init(FONT* font)
 
 
 static FT_Error
-TA_sfnt_collect_table_info(SFNT* sfnt)
+TA_sfnt_add_table_info(SFNT* sfnt)
 {
-  FT_Error error;
-  FT_ULong glyf_idx;
-  FT_ULong i;
-
-
-  /* check that font is TTF or TTC */
-  if (!FT_IS_SFNT(sfnt->face))
-    return FT_Err_Invalid_Argument;
-
-  error = FT_Sfnt_Table_Info(sfnt->face, 0, NULL, &sfnt->num_table_infos);
-  if (error)
-    return error;
-
-  sfnt->table_infos =
-    (SFNT_Table*)calloc(1, sfnt->num_table_infos * sizeof (SFNT_Table));
-  if (!sfnt->table_infos)
-    return FT_Err_Out_Of_Memory;
-
-  /* collect SFNT table information and search for `glyf' table */
-  glyf_idx = sfnt->num_table_infos;
-  for (i = 0; i < sfnt->num_table_infos; i++)
-  {
-    FT_ULong tag, len;
-
-
-    error = FT_Sfnt_Table_Info(sfnt->face, i, &tag, &len);
-    if (error && error != FT_Err_Table_Missing)
-      return error;
-
-    if (!error)
-    {
-      if (tag == TTAG_glyf)
-        glyf_idx = i;
-
-      /* ignore tables which we are going to create by ourselves */
-      if (!(tag == TTAG_fpgm
-            || tag == TTAG_prep
-            || tag == TTAG_cvt
-            || tag == TTAG_DSIG))
-      {
-        sfnt->table_infos[i].tag = tag;
-        sfnt->table_infos[i].len = len;
-      }
-    }
-  }
-
-  /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (glyf_idx == sfnt->num_table_infos)
-    return FT_Err_Invalid_Argument;
-
-  return TA_Err_Ok;
-}
-
-
-static FT_Error
-TA_sfnt_add_table_info(SFNT* sfnt,
-                       SFNT_Table table_info)
-{
-  SFNT_Table* table_infos_new;
+  SFNT_Table_Info* table_infos_new;
 
 
   sfnt->num_table_infos++;
   table_infos_new =
-    (SFNT_Table*)realloc(sfnt->table_infos,
-                         sfnt->num_table_infos * sizeof (SFNT_Table));
+    (SFNT_Table_Info*)realloc(sfnt->table_infos, sfnt->num_table_infos
+                                                 * sizeof (SFNT_Table_Info));
   if (!table_infos_new)
   {
     sfnt->num_table_infos--;
@@ -190,7 +142,7 @@ TA_sfnt_add_table_info(SFNT* sfnt,
   else
     sfnt->table_infos = table_infos_new;
 
-  sfnt->table_infos[sfnt->num_table_infos - 1] = table_info;
+  sfnt->table_infos[sfnt->num_table_infos - 1] = MISSING;
 
   return TA_Err_Ok;
 }
@@ -198,7 +150,9 @@ TA_sfnt_add_table_info(SFNT* sfnt,
 
 static FT_Error
 TA_font_add_table(FONT* font,
-                  SFNT_Table* table_info,
+                  SFNT_Table_Info* table_info,
+                  FT_ULong tag,
+                  FT_ULong len,
                   FT_Byte* buf)
 {
   SFNT_Table* tables_new;
@@ -218,42 +172,60 @@ TA_font_add_table(FONT* font,
 
   table_last = &font->tables[font->num_tables - 1];
 
-  table_last->tag = table_info->tag;
-  table_last->len = table_info->len;
+  table_last->tag = tag;
+  table_last->len = len;
   table_last->buf = buf;
 
-  /* link buffer pointer */
-  table_info->buf = table_last->buf;
+  /* link table and table info */
+  *table_info = font->num_tables - 1;
 
   return TA_Err_Ok;
 }
 
 
-static int
-TA_table_compare_tags(const void* t1,
-                      const void* t2)
+static void
+TA_sfnt_sort_table_info(SFNT* sfnt,
+                        FONT* font)
 {
   /* Looking into an arbitrary TTF (with a `DSIG' table), tags */
   /* starting with an uppercase letter are sorted before lowercase */
   /* letters.  In other words, the alphabetical ordering (as */
   /* mandated by signing a font) is a simple numeric comparison of */
-  /* the 32bit tag value. */
+  /* the 32bit tag values. */
 
-  FT_ULong tag1 = ((SFNT_Table*)t1)->tag;
-  FT_ULong tag2 = ((SFNT_Table*)t2)->tag;
+  SFNT_Table* tables = font->tables;
+
+  SFNT_Table_Info* table_infos = sfnt->table_infos;
+  FT_ULong num_table_infos = sfnt->num_table_infos;
+
+  FT_ULong i;
+  FT_ULong j;
 
 
-  return tag1 == tag2 ? 0
-                      : (tag1 < tag2 ? -1
-                                     : 1);
-}
+  for (i = 1; i < num_table_infos; i++)
+  {
+    for (j = i; j > 0; j--)
+    {
+      SFNT_Table_Info swap;
+      FT_ULong tag1;
+      FT_ULong tag2;
 
 
-static void
-TA_sfnt_sort_table_info(SFNT* sfnt)
-{
-  qsort(sfnt->table_infos, sfnt->num_table_infos,
-        sizeof (SFNT_Table), TA_table_compare_tags);
+      tag1 = (table_infos[j] == MISSING)
+               ? 0
+               : tables[table_infos[j]].tag;
+      tag2 = (table_infos[j - 1] == MISSING)
+               ? 0
+               : tables[table_infos[j - 1]].tag;
+
+      if (tag1 > tag2)
+        break;
+
+      swap = table_infos[j];
+      table_infos[j] = table_infos[j - 1];
+      table_infos[j - 1] = swap;
+    }
+  }
 }
 
 
@@ -262,72 +234,111 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
                                FONT* font)
 {
   FT_Error error;
+  FT_ULong glyf_idx;
   FT_ULong i;
 
 
+  /* basic check whether font is a TTF or TTC */
+  if (!FT_IS_SFNT(sfnt->face))
+    return FT_Err_Invalid_Argument;
+
+  error = FT_Sfnt_Table_Info(sfnt->face, 0, NULL, &sfnt->num_table_infos);
+  if (error)
+    return error;
+
+  sfnt->table_infos = (SFNT_Table_Info*)malloc(sfnt->num_table_infos
+                                               * sizeof (SFNT_Table_Info));
+  if (!sfnt->table_infos)
+    return FT_Err_Out_Of_Memory;
+
+  /* collect SFNT tables and search for `glyf' table */
+  glyf_idx = MISSING;
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
-    SFNT_Table* table_info = &sfnt->table_infos[i];
+    SFNT_Table_Info* table_info = &sfnt->table_infos[i];
+    FT_ULong tag;
+    FT_ULong len;
+    FT_Byte* buf;
+
+    FT_ULong buf_len;
+    FT_ULong j;
 
 
-    /* we ignore empty tables */
-    if (table_info->len)
+    *table_info = MISSING;
+
+    error = FT_Sfnt_Table_Info(sfnt->face, i, &tag, &len);
+    if (error)
     {
-      FT_Byte* buf;
-      FT_ULong len;
-      FT_ULong j;
-
-
-      /* make the allocated buffer length a multiple of 4; */
-      /* this simplifies writing the tables back */
-      len = (table_info->len + 3) & ~3;
-
-      buf = (FT_Byte*)malloc(len * sizeof (FT_Byte));
-      if (!buf)
-        return FT_Err_Out_Of_Memory;
-
-      /* pad buffer with zeros */
-      buf[len - 1] = 0;
-      buf[len - 2] = 0;
-      buf[len - 3] = 0;
-
-      /* load table */
-      error = FT_Load_Sfnt_Table(sfnt->face, table_info->tag, 0,
-                                 buf, &table_info->len);
-      if (error)
-        goto Err;
-
-      /* check whether we already have this table */
-      for (j = 0; j < font->num_tables; j++)
-      {
-        SFNT_Table* table = &font->tables[j];
-
-
-        if (table->tag == table_info->tag
-            && table->len == table_info->len
-            && !memcmp(table->buf, buf, table->len))
-          break;
-      }
-
-      if (j == font->num_tables)
-      {
-        /* add element to table array if it is missing or different */
-        error = TA_font_add_table(font, table_info, buf);
-        if (error)
-          goto Err;
-      }
+      /* this ignores both missing and zero-length tables */
+      if (error == FT_Err_Table_Missing)
+        continue;
       else
-      {
-        free(buf);
-        table_info->buf = font->tables[j].buf;
-      }
+        return error;
+    }
+
+    if (tag == TTAG_glyf)
+      glyf_idx = i;
+
+    /* ignore tables which we are going to create by ourselves */
+    else if (tag == TTAG_fpgm
+             || tag == TTAG_prep
+             || tag == TTAG_cvt
+             || tag == TTAG_DSIG)
       continue;
 
-    Err:
-      free(buf);
-      return error;
+    /* make the allocated buffer length a multiple of 4 */
+    buf_len = (len + 3) & -3;
+    buf = (FT_Byte*)malloc(buf_len * sizeof (FT_Byte));
+    if (!buf)
+      return FT_Err_Out_Of_Memory;
+
+    /* pad end of buffer with zeros */
+    buf[buf_len - 1] = 0x00;
+    buf[buf_len - 2] = 0x00;
+    buf[buf_len - 3] = 0x00;
+
+    /* load table */
+    error = FT_Load_Sfnt_Table(sfnt->face, tag, 0, buf, &len);
+    if (error)
+      goto Err;
+
+    /* check whether we already have this table */
+    for (j = 0; j < font->num_tables; j++)
+    {
+      SFNT_Table* table = &font->tables[j];
+
+
+      if (table->tag == tag
+          && table->len == len
+          && !memcmp(table->buf, buf, len))
+        break;
     }
+
+    if (j == font->num_tables)
+    {
+      /* add element to table array if it is missing or different; */
+      /* in case of success, `buf' gets linked and is eventually */
+      /* freed in `TA_font_unload' */
+      error = TA_font_add_table(font, table_info, tag, len, buf);
+      if (error)
+        goto Err;
+    }
+    else
+    {
+      /* reuse existing SFNT table */
+      free(buf);
+      *table_info = j;
+    }
+    continue;
+
+  Err:
+    free(buf);
+    return error;
   }
+
+  /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
+  if (glyf_idx == MISSING)
+    return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
 }
@@ -361,7 +372,7 @@ TA_table_construct_DSIG(FT_Byte** DSIG)
   FT_Byte* buf;
 
 
-  buf = (FT_Byte*)malloc(8 * sizeof (FT_Byte));
+  buf = (FT_Byte*)malloc(DSIG_LEN * sizeof (FT_Byte));
   if (!buf)
     return FT_Err_Out_Of_Memory;
 
@@ -385,14 +396,39 @@ TA_table_construct_DSIG(FT_Byte** DSIG)
 }
 
 
+static void
+TA_font_compute_table_offsets(FONT* font,
+                              FT_ULong start)
+{
+  FT_ULong  i;
+  FT_ULong  offset = start;
+
+
+  for (i = 0; i < font->num_tables; i++)
+  {
+    SFNT_Table* table = &font->tables[i];
+
+
+    table->offset = offset;
+
+    /* table offsets must be a multiple of 4; */
+    /* this also fits the actual buffer length */
+    offset += (table->len + 3) & ~3;
+  }
+}
+
+
 static FT_Error
 TA_font_build_TTF(FONT* font)
 {
   SFNT* sfnt = &font->sfnts[0];
-  SFNT_Table* table_infos;
+
+  SFNT_Table* tables;
+  FT_ULong num_tables;
+
+  SFNT_Table_Info* table_infos;
   FT_ULong num_table_infos;
 
-  SFNT_Table DSIG_table_info;
   FT_Byte* DSIG_buf;
 
   FT_ULong num_tables_in_header;
@@ -400,21 +436,18 @@ TA_font_build_TTF(FONT* font)
   FT_Byte* header_buf;
   FT_ULong header_len;
 
-  FT_Byte* head_buf = NULL;
+  FT_Byte* head_buf = NULL; /* pointer to `head' table */
   FT_ULong head_checksum; /* checksum in `head' table */
 
   FT_Byte* table_record;
-  FT_ULong table_offset;
 
   FT_ULong i;
   FT_Error error;
 
 
-  /* add a dummy `DSIG' table info */
-  DSIG_table_info.tag = TTAG_DSIG;
-  DSIG_table_info.len = 8;
+  /* add a dummy `DSIG' table */
 
-  error = TA_sfnt_add_table_info(sfnt, DSIG_table_info);
+  error = TA_sfnt_add_table_info(sfnt);
   if (error)
     return error;
 
@@ -423,17 +456,17 @@ TA_font_build_TTF(FONT* font)
     return error;
 
   /* in case of success, `DSIG_buf' gets linked */
-  /* and is eventually freed in TA_font_unload */
+  /* and is eventually freed in `TA_font_unload' */
   error = TA_font_add_table(font,
                             &sfnt->table_infos[sfnt->num_table_infos - 1],
-                            DSIG_buf);
+                            TTAG_DSIG, DSIG_LEN, DSIG_buf);
   if (error)
   {
     free(DSIG_buf);
     return error;
   }
 
-  TA_sfnt_sort_table_info(sfnt);
+  TA_sfnt_sort_table_info(sfnt, font);
 
   table_infos = sfnt->table_infos;
   num_table_infos = sfnt->num_table_infos;
@@ -442,7 +475,7 @@ TA_font_build_TTF(FONT* font)
   for (i = 0; i < num_table_infos; i++)
   {
     /* ignore empty tables */
-    if (table_infos[i].len)
+    if (table_infos[i] != MISSING)
       num_tables_in_header++;
   }
 
@@ -487,32 +520,37 @@ TA_font_build_TTF(FONT* font)
     header_buf[11] = LOW(range_shift);
   }
 
-  /* location of the first table record */
+  /* location of the first table info record */
   table_record = &header_buf[12];
-  /* the first table immediately follows the header */
-  table_offset = header_len;
+
+  /* the first SFNT table immediately follows the header */
+  TA_font_compute_table_offsets(font, header_len);
+
+  tables = font->tables;
+  num_tables = font->num_tables;
 
   head_checksum = 0;
 
   /* loop over all tables */
   for (i = 0; i < num_table_infos; i++)
   {
-    SFNT_Table *table_info = &table_infos[i];
+    SFNT_Table_Info table_info = table_infos[i];
+    SFNT_Table* table;
     FT_ULong table_checksum;
 
 
-    /* ignore empty tables */
-    if (!table_info->len)
+    /* ignore empty slots */
+    if (table_info == MISSING)
       continue;
 
-    table_info->offset = table_offset;
+    table = &tables[table_info];
 
-    if (table_info->tag == TTAG_head)
+    if (table->tag == TTAG_head)
     {
       /* we always reach this IF clause since FreeType would */
       /* have aborted already if the `head' table were missing */
 
-      head_buf = table_info->buf;
+      head_buf = table->buf;
 
       /* reset checksum in `head' table for recalculation */
       head_buf[8] = 0x00;
@@ -521,34 +559,31 @@ TA_font_build_TTF(FONT* font)
       head_buf[11] = 0x00;
     }
 
-    table_checksum = TA_table_compute_checksum(table_info->buf,
-                                               table_info->len);
+    table_checksum = TA_table_compute_checksum(table->buf,
+                                               table->len);
     head_checksum += table_checksum;
 
-    table_record[0] = BYTE1(table_info->tag);
-    table_record[1] = BYTE2(table_info->tag);
-    table_record[2] = BYTE3(table_info->tag);
-    table_record[3] = BYTE4(table_info->tag);
+    table_record[0] = BYTE1(table->tag);
+    table_record[1] = BYTE2(table->tag);
+    table_record[2] = BYTE3(table->tag);
+    table_record[3] = BYTE4(table->tag);
 
     table_record[4] = BYTE1(table_checksum);
     table_record[5] = BYTE2(table_checksum);
     table_record[6] = BYTE3(table_checksum);
     table_record[7] = BYTE4(table_checksum);
 
-    table_record[8] = BYTE1(table_offset);
-    table_record[9] = BYTE2(table_offset);
-    table_record[10] = BYTE3(table_offset);
-    table_record[11] = BYTE4(table_offset);
+    table_record[8] = BYTE1(table->offset);
+    table_record[9] = BYTE2(table->offset);
+    table_record[10] = BYTE3(table->offset);
+    table_record[11] = BYTE4(table->offset);
 
-    table_record[12] = BYTE1(table_info->len);
-    table_record[13] = BYTE2(table_info->len);
-    table_record[14] = BYTE3(table_info->len);
-    table_record[15] = BYTE4(table_info->len);
+    table_record[12] = BYTE1(table->len);
+    table_record[13] = BYTE2(table->len);
+    table_record[14] = BYTE3(table->len);
+    table_record[15] = BYTE4(table->len);
 
     table_record += 16;
-    /* table offsets must be a multiple of 4; */
-    /* this also fits the actual buffer length */
-    table_offset += (table_info->len + 3) & ~3;
   }
 
   /* the font header is complete; compute `head' checksum */
@@ -562,7 +597,8 @@ TA_font_build_TTF(FONT* font)
   head_buf[11] = BYTE4(head_checksum);
 
   /* build font */
-  font->out_len = table_offset;
+  font->out_len = tables[num_tables - 1].offset
+                  + ((tables[num_tables - 1].len + 3) & ~3);
   font->out_buf = (FT_Byte*)malloc(font->out_len * sizeof (FT_Byte));
   if (!font->out_buf)
   {
@@ -572,17 +608,14 @@ TA_font_build_TTF(FONT* font)
 
   memcpy(font->out_buf, header_buf, header_len);
 
-  for (i = 0; i < num_table_infos; i++)
+  for (i = 0; i < num_tables; i++)
   {
-    SFNT_Table *table_info = &table_infos[i];
+    SFNT_Table *table = &tables[i];
 
-
-    if (!table_info->len)
-      continue;
 
     /* buffer length is a multiple of 4 */
-    memcpy(font->out_buf + table_info->offset,
-           table_info->buf, (table_info->len + 3) & ~3);
+    memcpy(font->out_buf + table->offset,
+           table->buf, (table->len + 3) & ~3);
   }
 
   error = TA_Err_Ok;
@@ -680,10 +713,6 @@ TTF_autohint(FILE* in,
 
     error = FT_New_Memory_Face(font->lib, font->in_buf, font->in_len,
                                i, &sfnt->face);
-    if (error)
-      goto Err;
-
-    error = TA_sfnt_collect_table_info(sfnt);
     if (error)
       goto Err;
 
