@@ -413,8 +413,8 @@ TA_font_compute_table_offsets(FONT* font,
 
     table->offset = offset;
 
-    /* table offsets must be a multiple of 4; */
-    /* this also fits the actual buffer length */
+    /* table offsets must be multiples of 4; */
+    /* this also fits the actual buffer lengths */
     offset += (table->len + 3) & ~3;
   }
 }
@@ -638,7 +638,7 @@ TA_font_build_TTF(FONT* font)
 
   for (i = 0; i < num_tables; i++)
   {
-    SFNT_Table *table = &tables[i];
+    SFNT_Table* table = &tables[i];
 
 
     /* buffer length is a multiple of 4 */
@@ -843,7 +843,7 @@ TA_font_build_TTC(FONT* font)
 
   for (j = 0; j < num_tables; j++)
   {
-    SFNT_Table *table = &tables[j];
+    SFNT_Table* table = &tables[j];
 
 
     /* buffer length is a multiple of 4 */
