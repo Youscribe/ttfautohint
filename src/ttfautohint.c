@@ -43,6 +43,7 @@ typedef struct SFNT_Table_ {
   FT_ULong len;
   FT_Byte* buf;    /* the table data */
   FT_ULong offset; /* from beginning of file */
+  FT_ULong checksum;
 } SFNT_Table;
 
 /* we use indices into the SFNT table array to */
@@ -75,8 +76,8 @@ typedef struct FONT_ {
 
 
 static FT_Error
-TA_font_read(FILE* in,
-             FONT* font)
+TA_font_read(FONT* font,
+             FILE* in)
 {
   fseek(in, 0, SEEK_END);
   font->in_len = ftell(in);
@@ -148,6 +149,26 @@ TA_sfnt_add_table_info(SFNT* sfnt)
 }
 
 
+static FT_ULong
+TA_table_compute_checksum(FT_Byte* buf,
+                          FT_ULong len)
+{
+  FT_Byte* end_buf = buf + len;
+  FT_ULong checksum = 0;
+
+
+  while (buf < end_buf)
+  {
+    checksum += *(buf++) << 24;
+    checksum += *(buf++) << 16;
+    checksum += *(buf++) << 8;
+    checksum += *(buf++);
+  }
+
+  return checksum;
+}
+
+
 static FT_Error
 TA_font_add_table(FONT* font,
                   SFNT_Table_Info* table_info,
@@ -175,6 +196,7 @@ TA_font_add_table(FONT* font,
   table_last->tag = tag;
   table_last->len = len;
   table_last->buf = buf;
+  table_last->checksum = TA_table_compute_checksum(buf, len);
 
   /* link table and table info */
   *table_info = font->num_tables - 1;
@@ -230,7 +252,7 @@ TA_sfnt_sort_table_info(SFNT* sfnt,
 
 
 static FT_Error
-TA_font_split_into_SFNT_tables(SFNT* sfnt,
+TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
                                FONT* font)
 {
   FT_Error error;
@@ -341,26 +363,6 @@ TA_font_split_into_SFNT_tables(SFNT* sfnt,
     return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
-}
-
-
-static FT_ULong
-TA_table_compute_checksum(FT_Byte* buf,
-                          FT_ULong len)
-{
-  FT_Byte* end_buf = buf + len;
-  FT_ULong checksum = 0;
-
-
-  while (buf < end_buf)
-  {
-    checksum += *(buf++) << 24;
-    checksum += *(buf++) << 16;
-    checksum += *(buf++) << 8;
-    checksum += *(buf++);
-  }
-
-  return checksum;
 }
 
 
@@ -536,7 +538,6 @@ TA_font_build_TTF(FONT* font)
   {
     SFNT_Table_Info table_info = table_infos[i];
     SFNT_Table* table;
-    FT_ULong table_checksum;
 
 
     /* ignore empty slots */
@@ -559,19 +560,17 @@ TA_font_build_TTF(FONT* font)
       head_buf[11] = 0x00;
     }
 
-    table_checksum = TA_table_compute_checksum(table->buf,
-                                               table->len);
-    head_checksum += table_checksum;
+    head_checksum += table->checksum;
 
     table_record[0] = BYTE1(table->tag);
     table_record[1] = BYTE2(table->tag);
     table_record[2] = BYTE3(table->tag);
     table_record[3] = BYTE4(table->tag);
 
-    table_record[4] = BYTE1(table_checksum);
-    table_record[5] = BYTE2(table_checksum);
-    table_record[6] = BYTE3(table_checksum);
-    table_record[7] = BYTE4(table_checksum);
+    table_record[4] = BYTE1(table->checksum);
+    table_record[5] = BYTE2(table->checksum);
+    table_record[6] = BYTE3(table->checksum);
+    table_record[7] = BYTE4(table->checksum);
 
     table_record[8] = BYTE1(table->offset);
     table_record[9] = BYTE2(table->offset);
@@ -635,8 +634,8 @@ TA_font_build_TTC(FONT* font)
 
 
 static FT_Error
-TA_font_write(FILE* out,
-              FONT* font)
+TA_font_write(FONT* font,
+              FILE* out)
 {
   if (fwrite(font->out_buf, 1, font->out_len, out) != font->out_len)
     return TA_Err_Invalid_Stream_Write;
@@ -697,7 +696,7 @@ TTF_autohint(FILE* in,
   if (!font)
     return FT_Err_Out_Of_Memory;
 
-  error = TA_font_read(in, font);
+  error = TA_font_read(font, in);
   if (error)
     goto Err;
 
@@ -716,11 +715,10 @@ TTF_autohint(FILE* in,
     if (error)
       goto Err;
 
-    error = TA_font_split_into_SFNT_tables(sfnt, font);
+    error = TA_sfnt_split_into_SFNT_tables(sfnt, font);
     if (error)
       goto Err;
   }
-
 
   /* compute global hints */
   /* construct `fpgm' table */
@@ -735,7 +733,6 @@ TTF_autohint(FILE* in,
 
   /* construct `glyf' table */
 
-  /* build font from SFNT tables */
   if (font->num_sfnts == 1)
     error = TA_font_build_TTF(font);
   else
@@ -743,8 +740,7 @@ TTF_autohint(FILE* in,
   if (error)
     goto Err;
 
-  /* write font from memory */
-  error = TA_font_write(out, font);
+  error = TA_font_write(font, out);
   if (error)
     goto Err;
 
