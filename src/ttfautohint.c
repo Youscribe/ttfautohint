@@ -421,59 +421,29 @@ TA_font_compute_table_offsets(FONT* font,
 
 
 static FT_Error
-TA_font_build_TTF(FONT* font)
+TA_sfnt_construct_header(SFNT* sfnt,
+                         FONT* font,
+                         FT_Byte** header_buf,
+                         FT_ULong * header_len)
 {
-  SFNT* sfnt = &font->sfnts[0];
+  SFNT_Table* tables = font->tables;
 
-  SFNT_Table* tables;
-  FT_ULong num_tables;
+  SFNT_Table_Info* table_infos = sfnt->table_infos;
+  FT_ULong num_table_infos = sfnt->num_table_infos;
 
-  SFNT_Table_Info* table_infos;
-  FT_ULong num_table_infos;
+  FT_Byte* buf;
+  FT_ULong len;
 
-  FT_Byte* DSIG_buf;
-
-  FT_ULong num_tables_in_header;
-
-  FT_Byte* header_buf;
-  FT_ULong header_len;
+  FT_Byte* table_record;
 
   FT_Byte* head_buf = NULL; /* pointer to `head' table */
   FT_ULong head_checksum; /* checksum in `head' table */
 
-  FT_Byte* table_record;
-
+  FT_ULong num_tables_in_header;
   FT_ULong i;
-  FT_Error error;
 
 
-  /* add a dummy `DSIG' table */
-
-  error = TA_sfnt_add_table_info(sfnt);
-  if (error)
-    return error;
-
-  error = TA_table_construct_DSIG(&DSIG_buf);
-  if (error)
-    return error;
-
-  /* in case of success, `DSIG_buf' gets linked */
-  /* and is eventually freed in `TA_font_unload' */
-  error = TA_font_add_table(font,
-                            &sfnt->table_infos[sfnt->num_table_infos - 1],
-                            TTAG_DSIG, DSIG_LEN, DSIG_buf);
-  if (error)
-  {
-    free(DSIG_buf);
-    return error;
-  }
-
-  TA_sfnt_sort_table_info(sfnt, font);
-
-  table_infos = sfnt->table_infos;
-  num_table_infos = sfnt->num_table_infos;
   num_tables_in_header = 0;
-
   for (i = 0; i < num_table_infos; i++)
   {
     /* ignore empty tables */
@@ -481,25 +451,20 @@ TA_font_build_TTF(FONT* font)
       num_tables_in_header++;
   }
 
-  if (num_tables_in_header > 0xFFFF)
-    return FT_Err_Array_Too_Large;
-
-  /* construct TTF header */
-
-  header_len = 12 + 16 * num_tables_in_header;
-  header_buf = (FT_Byte*)malloc(header_len * sizeof (FT_Byte));
-  if (!header_buf)
+  len = 12 + 16 * num_tables_in_header;
+  buf = (FT_Byte*)malloc(len * sizeof (FT_Byte));
+  if (!buf)
     return FT_Err_Out_Of_Memory;
 
   /* SFNT version */
-  header_buf[0] = 0x00;
-  header_buf[1] = 0x01;
-  header_buf[2] = 0x00;
-  header_buf[3] = 0x00;
+  buf[0] = 0x00;
+  buf[1] = 0x01;
+  buf[2] = 0x00;
+  buf[3] = 0x00;
 
   /* number of tables */
-  header_buf[4] = HIGH(num_tables_in_header);
-  header_buf[5] = LOW(num_tables_in_header);
+  buf[4] = HIGH(num_tables_in_header);
+  buf[5] = LOW(num_tables_in_header);
 
   /* auxiliary data */
   {
@@ -514,22 +479,19 @@ TA_font_build_TTF(FONT* font)
     search_range = 0x10 << entry_selector;
     range_shift = (num_tables_in_header << 4) - search_range;
 
-    header_buf[6] = HIGH(search_range);
-    header_buf[7] = LOW(search_range);
-    header_buf[8] = HIGH(entry_selector);
-    header_buf[9] = LOW(entry_selector);
-    header_buf[10] = HIGH(range_shift);
-    header_buf[11] = LOW(range_shift);
+    buf[6] = HIGH(search_range);
+    buf[7] = LOW(search_range);
+    buf[8] = HIGH(entry_selector);
+    buf[9] = LOW(entry_selector);
+    buf[10] = HIGH(range_shift);
+    buf[11] = LOW(range_shift);
   }
 
   /* location of the first table info record */
-  table_record = &header_buf[12];
+  table_record = &buf[12];
 
   /* the first SFNT table immediately follows the header */
-  TA_font_compute_table_offsets(font, header_len);
-
-  tables = font->tables;
-  num_tables = font->num_tables;
+  TA_font_compute_table_offsets(font, len);
 
   head_checksum = 0;
 
@@ -586,7 +548,7 @@ TA_font_build_TTF(FONT* font)
   }
 
   /* the font header is complete; compute `head' checksum */
-  head_checksum += TA_table_compute_checksum(header_buf, header_len);
+  head_checksum += TA_table_compute_checksum(buf, len);
   head_checksum = 0xB1B0AFBAUL - head_checksum;
 
   /* store checksum in `head' table; */
@@ -595,7 +557,62 @@ TA_font_build_TTF(FONT* font)
   head_buf[10] = BYTE3(head_checksum);
   head_buf[11] = BYTE4(head_checksum);
 
+  *header_buf = buf;
+  *header_len = len;
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_font_build_TTF(FONT* font)
+{
+  SFNT* sfnt = &font->sfnts[0];
+
+  SFNT_Table* tables;
+  FT_ULong num_tables;
+
+  FT_Byte* DSIG_buf;
+
+  FT_Byte* header_buf;
+  FT_ULong header_len;
+
+  FT_ULong i;
+  FT_Error error;
+
+
+  /* add a dummy `DSIG' table */
+
+  error = TA_sfnt_add_table_info(sfnt);
+  if (error)
+    return error;
+
+  error = TA_table_construct_DSIG(&DSIG_buf);
+  if (error)
+    return error;
+
+  /* in case of success, `DSIG_buf' gets linked */
+  /* and is eventually freed in `TA_font_unload' */
+  error = TA_font_add_table(font,
+                            &sfnt->table_infos[sfnt->num_table_infos - 1],
+                            TTAG_DSIG, DSIG_LEN, DSIG_buf);
+  if (error)
+  {
+    free(DSIG_buf);
+    return error;
+  }
+
+  TA_sfnt_sort_table_info(sfnt, font);
+
+  error = TA_sfnt_construct_header(sfnt, font, &header_buf, &header_len);
+  if (error)
+    return error;
+
   /* build font */
+
+  tables = font->tables;
+  num_tables = font->num_tables;
+
   font->out_len = tables[num_tables - 1].offset
                   + ((tables[num_tables - 1].len + 3) & ~3);
   font->out_buf = (FT_Byte*)malloc(font->out_len * sizeof (FT_Byte));
