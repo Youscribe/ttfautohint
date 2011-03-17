@@ -87,7 +87,7 @@ TA_font_read(FONT* font,
   if (font->in_len < 100)
     return FT_Err_Invalid_Argument;
 
-  font->in_buf = (FT_Byte*)malloc(font->in_len * sizeof (FT_Byte));
+  font->in_buf = (FT_Byte*)malloc(font->in_len);
   if (!font->in_buf)
     return FT_Err_Out_Of_Memory;
 
@@ -310,7 +310,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
 
     /* make the allocated buffer length a multiple of 4 */
     buf_len = (len + 3) & -3;
-    buf = (FT_Byte*)malloc(buf_len * sizeof (FT_Byte));
+    buf = (FT_Byte*)malloc(buf_len);
     if (!buf)
       return FT_Err_Out_Of_Memory;
 
@@ -374,7 +374,7 @@ TA_table_construct_DSIG(FT_Byte** DSIG)
   FT_Byte* buf;
 
 
-  buf = (FT_Byte*)malloc(DSIG_LEN * sizeof (FT_Byte));
+  buf = (FT_Byte*)malloc(DSIG_LEN);
   if (!buf)
     return FT_Err_Out_Of_Memory;
 
@@ -452,7 +452,7 @@ TA_sfnt_construct_header(SFNT* sfnt,
   }
 
   len = 12 + 16 * num_tables_in_header;
-  buf = (FT_Byte*)malloc(len * sizeof (FT_Byte));
+  buf = (FT_Byte*)malloc(len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
 
@@ -615,7 +615,7 @@ TA_font_build_TTF(FONT* font)
 
   font->out_len = tables[num_tables - 1].offset
                   + ((tables[num_tables - 1].len + 3) & ~3);
-  font->out_buf = (FT_Byte*)malloc(font->out_len * sizeof (FT_Byte));
+  font->out_buf = (FT_Byte*)malloc(font->out_len);
   if (!font->out_buf)
   {
     error = FT_Err_Out_Of_Memory;
