@@ -57,6 +57,7 @@ typedef struct SFNT_ {
   FT_ULong num_table_infos;
   FT_ULong glyf_idx; /* this subfont's `glyf' SFNT table index */
   FT_ULong loca_idx; /* this subfont's `loca' SFNT table index */
+  FT_Byte loca_format; /* `indexToLocFormat' from `head' table */
 } SFNT;
 
 /* our font object */
@@ -335,7 +336,9 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
         break;
     }
 
-    if (tag == TTAG_glyf)
+    if (tag == TTAG_head)
+      sfnt->loca_format = buf[51];
+    else if (tag == TTAG_glyf)
       sfnt->glyf_idx = j;
     else if (tag == TTAG_loca)
       sfnt->loca_idx = j;
