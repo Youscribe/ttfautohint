@@ -55,6 +55,7 @@ typedef struct SFNT_ {
   FT_Face face;
   SFNT_Table_Info* table_infos;
   FT_ULong num_table_infos;
+  FT_ULong glyf_idx; /* this subfont's `glyf' SFNT table index */
 } SFNT;
 
 /* our font object */
@@ -256,7 +257,6 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
                                FONT* font)
 {
   FT_Error error;
-  FT_ULong glyf_idx;
   FT_ULong i;
 
 
@@ -274,7 +274,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     return FT_Err_Out_Of_Memory;
 
   /* collect SFNT tables and search for `glyf' table */
-  glyf_idx = MISSING;
+  sfnt->glyf_idx = MISSING;
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
     SFNT_Table_Info* table_info = &sfnt->table_infos[i];
@@ -297,9 +297,6 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       else
         return error;
     }
-
-    if (tag == TTAG_glyf)
-      glyf_idx = i;
 
     /* ignore tables which we are going to create by ourselves */
     else if (tag == TTAG_fpgm
@@ -336,6 +333,9 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
         break;
     }
 
+    if (tag == TTAG_glyf)
+      sfnt->glyf_idx = j;
+
     if (j == font->num_tables)
     {
       /* add element to table array if it is missing or different; */
@@ -359,7 +359,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   }
 
   /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (glyf_idx == MISSING)
+  if (sfnt->glyf_idx == MISSING)
     return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
