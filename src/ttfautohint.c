@@ -19,7 +19,7 @@
 
 
 /* these macros convert 16bit and 32bit numbers into single bytes */
-/* using the byte order needed within SFNT files                  */
+/* using the byte order needed within SFNT files */
 
 #define HIGH(x) (FT_Byte)(((x) & 0xFF00) >> 8)
 #define LOW(x) ((x) & 0x00FF)
@@ -407,8 +407,8 @@ static void
 TA_font_compute_table_offsets(FONT* font,
                               FT_ULong start)
 {
-  FT_ULong  i;
-  FT_ULong  offset = start;
+  FT_ULong i;
+  FT_ULong offset = start;
 
 
   for (i = 0; i < font->num_tables; i++)
