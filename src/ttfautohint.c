@@ -56,6 +56,7 @@ typedef struct SFNT_ {
   SFNT_Table_Info* table_infos;
   FT_ULong num_table_infos;
   FT_ULong glyf_idx; /* this subfont's `glyf' SFNT table index */
+  FT_ULong loca_idx; /* this subfont's `loca' SFNT table index */
 } SFNT;
 
 /* our font object */
@@ -273,8 +274,9 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   if (!sfnt->table_infos)
     return FT_Err_Out_Of_Memory;
 
-  /* collect SFNT tables and search for `glyf' table */
+  /* collect SFNT tables and search for `glyf' and `loca' table */
   sfnt->glyf_idx = MISSING;
+  sfnt->loca_idx = MISSING;
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
     SFNT_Table_Info* table_info = &sfnt->table_infos[i];
@@ -335,6 +337,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
 
     if (tag == TTAG_glyf)
       sfnt->glyf_idx = j;
+    else if (tag == TTAG_loca)
+      sfnt->loca_idx = j;
 
     if (j == font->num_tables)
     {
@@ -358,8 +362,9 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     return error;
   }
 
-  /* no (non-empty) `glyf' table; this can't be a TTF with outlines */
-  if (sfnt->glyf_idx == MISSING)
+  /* no (non-empty) `glyf' or `loca' table; */
+  /* this can't be a valid TTF with outlines */
+  if (sfnt->glyf_idx == MISSING || sfnt->loca_idx == MISSING)
     return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
@@ -954,18 +959,24 @@ TTF_autohint(FILE* in,
       goto Err;
   }
 
+  /* split `glyf' table */
+  /* handle all glyphs in a loop */
+    /* strip bytecode */
+
+  /* remove `glyf' table */
+  /* remove `loca' table */
+
   /* compute global hints */
   /* construct `fpgm' table */
   /* construct `prep' table */
   /* construct `cvt ' table */
 
-  /* split `glyf' table */
   /* handle all glyphs in a loop */
-    /* strip bytecode */
     /* hint the glyph */
     /* construct bytecode */
 
   /* construct `glyf' table */
+  /* construct `loca' table */
 
   if (font->num_sfnts == 1)
     error = TA_font_build_TTF(font);
