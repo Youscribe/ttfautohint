@@ -621,7 +621,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 /* we build a dummy `DSIG' table only */
 
 static FT_Error
-TA_table_construct_DSIG(FT_Byte** DSIG)
+TA_table_build_DSIG(FT_Byte** DSIG)
 {
   FT_Byte* buf;
 
@@ -675,11 +675,11 @@ TA_font_compute_table_offsets(FONT* font,
 /* If `do_complete' is 0, only return `header_len'. */
 
 static FT_Error
-TA_sfnt_construct_TTF_header(SFNT* sfnt,
-                             FONT* font,
-                             FT_Byte** header_buf,
-                             FT_ULong* header_len,
-                             FT_Int do_complete)
+TA_sfnt_build_TTF_header(SFNT* sfnt,
+                         FONT* font,
+                         FT_Byte** header_buf,
+                         FT_ULong* header_len,
+                         FT_Int do_complete)
 {
   SFNT_Table* tables = font->tables;
 
@@ -846,7 +846,7 @@ TA_font_build_TTF(FONT* font)
   if (error)
     return error;
 
-  error = TA_table_construct_DSIG(&DSIG_buf);
+  error = TA_table_build_DSIG(&DSIG_buf);
   if (error)
     return error;
 
@@ -864,11 +864,11 @@ TA_font_build_TTF(FONT* font)
   TA_sfnt_sort_table_info(sfnt, font);
 
   /* the first SFNT table immediately follows the header */
-  (void)TA_sfnt_construct_TTF_header(sfnt, font, NULL, &SFNT_offset, 0);
+  (void)TA_sfnt_build_TTF_header(sfnt, font, NULL, &SFNT_offset, 0);
   TA_font_compute_table_offsets(font, SFNT_offset);
 
-  error = TA_sfnt_construct_TTF_header(sfnt, font,
-                                       &header_buf, &header_len, 1);
+  error = TA_sfnt_build_TTF_header(sfnt, font,
+                                   &header_buf, &header_len, 1);
   if (error)
     return error;
 
@@ -908,9 +908,9 @@ Err:
 
 
 static FT_Error
-TA_font_construct_TTC_header(FONT* font,
-                             FT_Byte** header_buf,
-                             FT_ULong* header_len)
+TA_font_build_TTC_header(FONT* font,
+                         FT_Byte** header_buf,
+                         FT_ULong* header_len)
 {
   SFNT* sfnts = font->sfnts;
   FT_Long num_sfnts = font->num_sfnts;
@@ -965,7 +965,7 @@ TA_font_construct_TTC_header(FONT* font,
 
     TA_sfnt_sort_table_info(sfnt, font);
     /* only get header length */
-    (void)TA_sfnt_construct_TTF_header(sfnt, font, NULL, &l, 0);
+    (void)TA_sfnt_build_TTF_header(sfnt, font, NULL, &l, 0);
 
     *(p++) = BYTE1(TTF_offset);
     *(p++) = BYTE2(TTF_offset);
@@ -1031,7 +1031,7 @@ TA_font_build_TTC(FONT* font)
 
   /* add a dummy `DSIG' table */
 
-  error = TA_table_construct_DSIG(&DSIG_buf);
+  error = TA_table_build_DSIG(&DSIG_buf);
   if (error)
     return error;
 
@@ -1045,8 +1045,8 @@ TA_font_build_TTC(FONT* font)
   }
 
   /* this also computes the SFNT table offsets */
-  error = TA_font_construct_TTC_header(font,
-                                       &TTC_header_buf, &TTC_header_len);
+  error = TA_font_build_TTC_header(font,
+                                   &TTC_header_buf, &TTC_header_len);
   if (error)
     return error;
 
@@ -1060,9 +1060,9 @@ TA_font_build_TTC(FONT* font)
 
   for (i = 0; i < num_sfnts; i++)
   {
-    error = TA_sfnt_construct_TTF_header(&sfnts[i], font,
-                                         &TTF_header_bufs[i],
-                                         &TTF_header_lens[i], 1);
+    error = TA_sfnt_build_TTF_header(&sfnts[i], font,
+                                     &TTF_header_bufs[i],
+                                     &TTF_header_lens[i], 1);
     if (error)
       goto Err;
   }
@@ -1226,24 +1226,20 @@ TTF_autohint(FILE* in,
       goto Err;
   }
 
-
-  /* handle all glyphs in a loop */
-    /* strip bytecode */
-
   /* remove `glyf' table */
   /* remove `loca' table */
 
   /* compute global hints */
-  /* construct `fpgm' table */
-  /* construct `prep' table */
-  /* construct `cvt ' table */
+  /* build `fpgm' table */
+  /* build `prep' table */
+  /* build `cvt ' table */
 
   /* handle all glyphs in a loop */
     /* hint the glyph */
-    /* construct bytecode */
+    /* build bytecode */
 
-  /* construct `glyf' table */
-  /* construct `loca' table */
+  /* build `glyf' table */
+  /* build `loca' table */
 
   if (font->num_sfnts == 1)
     error = TA_font_build_TTF(font);
