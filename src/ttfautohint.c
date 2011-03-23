@@ -582,9 +582,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         FT_UShort num_ins;
         FT_UShort num_pts;
 
-        FT_ULong flags_size;
-        FT_ULong x_size;
-        FT_ULong y_size;
+        FT_ULong flags_size; /* size of the flags array */
+        FT_ULong xy_size; /* size of x and y coordinate arrays together */
 
         FT_UShort j;
 
@@ -618,8 +617,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         num_pts++;
 
         flags_start = p;
-        x_size = 0;
-        y_size = 0;
+        xy_size = 0;
         j = 0;
 
         while (j < num_pts)
@@ -658,19 +656,19 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
               return FT_Err_Invalid_Table;
           }
 
-          x_size += count * x_short * have_x;
-          y_size += count * y_short * have_y;
+          xy_size += count * x_short * have_x;
+          xy_size += count * y_short * have_y;
 
           j += count;
         }
 
-        if (p + x_size + y_size > endp)
+        if (p + xy_size > endp)
           return FT_Err_Invalid_Table;
 
         flags_size = p - flags_start;
 
         /* adjust glyph record length */
-        glyph->len = ins_offset + 2 + flags_size + x_size + y_size;
+        glyph->len = ins_offset + 2 + flags_size + xy_size;
         glyph->buf = (FT_Byte*)malloc(glyph->len);
         if (!glyph->buf)
           return FT_Err_Out_Of_Memory;
@@ -680,7 +678,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         glyph->buf[ins_offset] = 0; /* no instructions */
         glyph->buf[ins_offset + 1] = 0;
         memcpy(glyph->buf + ins_offset + 2, flags_start,
-               flags_size + x_size + y_size);
+               flags_size + xy_size);
       }
     }
   }
@@ -729,9 +727,9 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
     {
       memcpy(p, data->glyphs[i].buf, len);
 
-      /* pad with zero bytes to a multiple of 4; */
-      /* this works even for the last glyph record since the */
-      /* whole `glyf' table length is a multiple of 4 also */
+      /* pad with zero bytes to make the buffer length a multiple of 4; */
+      /* this works even for the last glyph record since */
+      /* the `glyf' table length is a multiple of 4 also */
       p += len;
       switch (len % 4)
       {
@@ -846,7 +844,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
     *(p++) = HIGH(offset);
     *(p++) = LOW(offset);
 
-    /* pad `loca' table to a multiple of 4 */
+    /* pad `loca' table to make its length a multiple of 4 */
     if (loca_table->len % 4 == 2)
     {
       *(p++) = 0;
