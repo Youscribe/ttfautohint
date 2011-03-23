@@ -323,6 +323,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   /* collect SFNT tables and search for `glyf' and `loca' table */
   sfnt->glyf_idx = MISSING;
   sfnt->loca_idx = MISSING;
+  sfnt->head_idx = MISSING;
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
     SFNT_Table_Info* table_info = &sfnt->table_infos[i];
@@ -410,9 +411,11 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     return error;
   }
 
-  /* no (non-empty) `glyf' or `loca' table; */
+  /* no (non-empty) `glyf', `loca', or `head' table; */
   /* this can't be a valid TTF with outlines */
-  if (sfnt->glyf_idx == MISSING || sfnt->loca_idx == MISSING)
+  if (sfnt->glyf_idx == MISSING
+      || sfnt->loca_idx == MISSING
+      || sfnt->head_idx == MISSING)
     return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
@@ -424,7 +427,8 @@ TA_glyph_parse_composite(GLYPH* glyph,
                          FT_Byte* buf,
                          FT_ULong len)
 {
-  FT_ULong flags_offset;
+  FT_ULong flags_offset; /* after the loop, this is the offset */
+                         /* to last element in the flags array */
   FT_UShort flags;
 
   FT_Byte* p;
@@ -583,10 +587,9 @@ TA_glyph_parse_simple(GLYPH* glyph,
 
   /* now copy everything but the instructions */
   memcpy(glyph->buf, buf, ins_offset);
-  glyph->buf[ins_offset] = 0; /* no instructions */
+  glyph->buf[ins_offset] = 0; /* set instructionLength field to zero */
   glyph->buf[ins_offset + 1] = 0;
-  memcpy(glyph->buf + ins_offset + 2, flags_start,
-         flags_size + xy_size);
+  memcpy(glyph->buf + ins_offset + 2, flags_start, flags_size + xy_size);
 
   return TA_Err_Ok;
 }
