@@ -91,7 +91,7 @@ typedef struct SFNT_Table_ {
   FT_ULong offset; /* from beginning of file */
   FT_ULong checksum;
   void* data; /* used e.g. for `glyf' table tada */
-  FT_Bool recreated;
+  FT_Bool processed;
 } SFNT_Table;
 
 /* we use indices into the SFNT table array to */
@@ -256,7 +256,7 @@ TA_font_add_table(FONT* font,
   table_last->checksum = TA_table_compute_checksum(buf, len);
   table_last->offset = 0; /* set in `TA_font_compute_table_offsets' */
   table_last->data = NULL;
-  table_last->recreated = 0;
+  table_last->processed = 0;
 
   /* link table and table info */
   *table_info = font->num_tables - 1;
@@ -748,7 +748,7 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
   FT_UShort i;
 
 
-  if (glyf_table->recreated)
+  if (glyf_table->processed)
     return TA_Err_Ok;
 
   /* get table size */
@@ -795,7 +795,7 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 
   glyf_table->checksum = TA_table_compute_checksum(glyf_table->buf,
                                                    glyf_table->len);
-  glyf_table->recreated = 1;
+  glyf_table->processed = 1;
 
   return TA_Err_Ok;
 }
@@ -817,7 +817,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
   FT_UShort i;
 
 
-  if (loca_table->recreated)
+  if (loca_table->processed)
     return TA_Err_Ok;
 
   /* get largest offset */
@@ -902,7 +902,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
 
   loca_table->checksum = TA_table_compute_checksum(loca_table->buf,
                                                    loca_table->len);
-  loca_table->recreated = 1;
+  loca_table->processed = 1;
 
   head_table->buf[LOCA_FORMAT_OFFSET] = loca_format;
 
@@ -918,7 +918,7 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   FT_Byte* buf = maxp_table->buf;
 
 
-  if (maxp_table->recreated)
+  if (maxp_table->processed)
     return TA_Err_Ok;
 
   if (maxp_table->len != MAXP_LEN)
@@ -941,7 +941,7 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
 
   maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
                                                    maxp_table->len);
-  maxp_table->recreated = 1;
+  maxp_table->processed = 1;
 
   return TA_Err_Ok;
 }
