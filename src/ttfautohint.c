@@ -36,6 +36,9 @@
 /* an empty slot in the table info array */
 #define MISSING (FT_ULong)~0
 
+/* the offset to the loca table format in `head' table */
+#define LOCA_FORMAT_OFFSET 51
+
 
 /* composite glyph flags */
 #define ARGS_ARE_WORDS 0x0001
@@ -45,6 +48,14 @@
 #define WE_HAVE_AN_XY_SCALE 0x0040
 #define WE_HAVE_A_2X2 0x0080
 #define WE_HAVE_INSTR 0x0100
+
+
+/* simple glyph flags */
+#define X_SHORT_VECTOR 0x02
+#define Y_SHORT_VECTOR 0x04
+#define REPEAT 0x08
+#define SAME_X 0x10
+#define SAME_Y 0x20
 
 
 /* a single glyph */
@@ -68,7 +79,8 @@ typedef struct SFNT_Table_ {
   FT_Byte* buf; /* the table data */
   FT_ULong offset; /* from beginning of file */
   FT_ULong checksum;
-  void* data;
+  void* data; /* used e.g. for `glyf' table tada */
+  FT_Bool recreated;
 } SFNT_Table;
 
 /* we use indices into the SFNT table array to */
@@ -82,9 +94,10 @@ typedef struct SFNT_ {
   SFNT_Table_Info* table_infos;
   FT_ULong num_table_infos;
 
-  FT_ULong glyf_idx; /* this subfont's `glyf' SFNT table index */
-  FT_ULong loca_idx; /* this subfont's `loca' SFNT table index */
-  FT_Byte loca_format; /* `indexToLocFormat' from `head' table */
+  /* various SFNT table indices */
+  FT_ULong glyf_idx;
+  FT_ULong loca_idx;
+  FT_ULong head_idx;
 } SFNT;
 
 /* our font object */
@@ -187,6 +200,8 @@ TA_table_compute_checksum(FT_Byte* buf,
   FT_ULong checksum = 0;
 
 
+  /* we expect that `len' is a multiple of 4 */
+
   while (buf < end_buf)
   {
     checksum += *(buf++) << 24;
@@ -229,6 +244,7 @@ TA_font_add_table(FONT* font,
   table_last->checksum = TA_table_compute_checksum(buf, len);
   table_last->offset = 0; /* set in `TA_font_compute_table_offsets' */
   table_last->data = NULL;
+  table_last->recreated = 0;
 
   /* link table and table info */
   *table_info = font->num_tables - 1;
@@ -366,7 +382,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     }
 
     if (tag == TTAG_head)
-      sfnt->loca_format = buf[51];
+      sfnt->head_idx = j;
     else if (tag == TTAG_glyf)
       sfnt->glyf_idx = j;
     else if (tag == TTAG_loca)
@@ -409,7 +425,9 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 {
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   SFNT_Table* loca_table = &font->tables[sfnt->loca_idx];
+  SFNT_Table* head_table = &font->tables[sfnt->head_idx];
   glyf_Data* data;
+  FT_Byte loca_format;
 
   FT_ULong offset;
   FT_ULong offset_next;
@@ -431,15 +449,17 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
   glyf_table->data = data;
 
-  data->num_glyphs = sfnt->loca_format ? loca_table->len / 4 - 1
-                                       : loca_table->len / 2 - 1;
+  loca_format = head_table->buf[LOCA_FORMAT_OFFSET];
+
+  data->num_glyphs = loca_format ? loca_table->len / 4 - 1
+                                 : loca_table->len / 2 - 1;
   data->glyphs = (GLYPH*)calloc(1, data->num_glyphs * sizeof (GLYPH));
   if (!data->glyphs)
     return FT_Err_Out_Of_Memory;
 
   p = loca_table->buf;
 
-  if (sfnt->loca_format)
+  if (loca_format)
   {
     offset_next = *(p++) << 24;
     offset_next += *(p++) << 16;
@@ -463,7 +483,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
     offset = offset_next;
 
-    if (sfnt->loca_format)
+    if (loca_format)
     {
       offset_next = *(p++) << 24;
       offset_next += *(p++) << 16;
@@ -488,6 +508,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     {
       FT_Byte* bufp;
       FT_Byte* endp;
+      FT_Byte* p;
       FT_Short num_contours;
 
 
@@ -496,9 +517,10 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         return FT_Err_Invalid_Table;
 
       bufp = glyf_table->buf + offset;
+      p = bufp;
       endp = bufp + len;
 
-      num_contours = (FT_Short)((bufp[0] << 8) + bufp[1]);
+      num_contours = (FT_Short)((p[0] << 8) + p[1]);
 
       if (num_contours < 0)
       {
@@ -509,110 +531,334 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
 
         /* skip header */
-        bufp += 10;
+        p += 10;
 
         /* walk over component records */
         do
         {
-          if (bufp + 4 > endp)
+          if (p + 4 > endp)
             return FT_Err_Invalid_Table;
 
-          flags_offset = bufp - (glyf_table->buf + offset);
+          flags_offset = p - bufp;
 
-          flags = *(bufp++) << 8;
-          flags += *(bufp++);
+          flags = *(p++) << 8;
+          flags += *(p++);
 
           /* skip glyph component index */
-          bufp += 2;
+          p += 2;
 
           /* skip scaling and offset arguments */
           if (flags & ARGS_ARE_WORDS)
-            bufp += 4;
+            p += 4;
           else
-            bufp += 2;
+            p += 2;
 
           if (flags & WE_HAVE_A_SCALE)
-            bufp += 2;
+            p += 2;
           else if (flags & WE_HAVE_AN_XY_SCALE)
-            bufp += 4;
+            p += 4;
           else if (flags & WE_HAVE_A_2X2)
-            bufp += 8;
+            p += 8;
         } while (flags & MORE_COMPONENTS);
 
-        if (flags & WE_HAVE_INSTR)
-        {
-          FT_UShort num_ins;
+        len = p - bufp;
 
+        glyph->len = len;
+        glyph->buf = (FT_Byte*)malloc(len);
+        if (!glyph->buf)
+          return FT_Err_Out_Of_Memory;
 
-          if (bufp + 2 > endp)
-            return FT_Err_Invalid_Table;
-
-          num_ins = *(bufp++) << 8;
-          num_ins += *(bufp++);
-
-          if (bufp + num_ins > endp)
-            return FT_Err_Invalid_Table;
-
-          /* adjust glyph record length */
-          glyph->len = len - (num_ins + 2);
-          glyph->buf = (FT_Byte*)malloc(glyph->len);
-          if (!glyph->buf)
-            return FT_Err_Out_Of_Memory;
-
-          /* now copy everything but the instructions */
-          memcpy(glyph->buf, glyf_table->buf + offset, glyph->len);
-          /* unset instruction flag */
-          glyph->buf[flags_offset] &= ~(WE_HAVE_INSTR >> 8);
-        }
-        else
-        {
-          glyph->len = len;
-          glyph->buf = (FT_Byte*)malloc(glyph->len);
-          if (!glyph->buf)
-            return FT_Err_Out_Of_Memory;
-
-          /* copy record */
-          memcpy(glyph->buf, glyf_table->buf, glyph->len);
-        }
+        /* copy record without instructions (if any) */
+        memcpy(glyph->buf, bufp, len);
+        glyph->buf[flags_offset] &= ~(WE_HAVE_INSTR >> 8);
       }
       else
       {
         /* simple glyph */
 
         FT_ULong ins_offset;
+        FT_Byte* flags_start;
+
         FT_UShort num_ins;
+        FT_UShort num_pts;
+
+        FT_ULong flags_size;
+        FT_ULong x_size;
+        FT_ULong y_size;
+
+        FT_UShort j;
 
 
         ins_offset = 10 + num_contours * 2;
 
-        bufp += ins_offset;
+        p += ins_offset;
 
-        if (bufp + 2 > endp)
+        if (p + 2 > endp)
           return FT_Err_Invalid_Table;
 
         /* get number of instructions */
-        num_ins = *(bufp++) << 8;
-        num_ins += *(bufp++);
+        num_ins = *(p++) << 8;
+        num_ins += *(p++);
 
-        bufp += num_ins;
+        p += num_ins;
 
-        if (bufp > endp)
+        if (p > endp)
           return FT_Err_Invalid_Table;
 
+        /* We must parse the rest of the glyph record to get the exact */
+        /* record length.  Since the `loca' table rounds record lengths */
+        /* up to multiples of 4 (or 2 for older fonts), and we must round */
+        /* up again after stripping off the instructions, it would be */
+        /* possible otherwise to have more than 4 bytes of padding which */
+        /* is more or less invalid. */
+
+        /* get number of points from last outline point */
+        num_pts = bufp[ins_offset - 2] << 8;
+        num_pts += bufp[ins_offset - 1];
+        num_pts++;
+
+        flags_start = p;
+        x_size = 0;
+        y_size = 0;
+        j = 0;
+
+        while (j < num_pts)
+        {
+          FT_Byte flags;
+          FT_Byte x_short;
+          FT_Byte y_short;
+          FT_Byte have_x;
+          FT_Byte have_y;
+          FT_Byte count;
+
+
+          if (p + 1 > endp)
+            return FT_Err_Invalid_Table;
+
+          flags = *(p++);
+
+          x_short = (flags & X_SHORT_VECTOR) ? 1 : 2;
+          y_short = (flags & Y_SHORT_VECTOR) ? 1 : 2;
+
+          have_x = ((flags & SAME_X)
+                    && !(flags & X_SHORT_VECTOR)) ? 0 : 1;
+          have_y = ((flags & SAME_Y)
+                    && !(flags & Y_SHORT_VECTOR)) ? 0 : 1;
+
+          count = 1;
+
+          if (flags & REPEAT)
+          {
+            if (p + 1 > endp)
+              return FT_Err_Invalid_Table;
+
+            count += *(p++);
+
+            if (j + count > num_pts)
+              return FT_Err_Invalid_Table;
+          }
+
+          x_size += count * x_short * have_x;
+          y_size += count * y_short * have_y;
+
+          j += count;
+        }
+
+        if (p + x_size + y_size > endp)
+          return FT_Err_Invalid_Table;
+
+        flags_size = p - flags_start;
+
         /* adjust glyph record length */
-        glyph->len = len - num_ins;
+        glyph->len = ins_offset + 2 + flags_size + x_size + y_size;
         glyph->buf = (FT_Byte*)malloc(glyph->len);
         if (!glyph->buf)
           return FT_Err_Out_Of_Memory;
 
         /* now copy everything but the instructions */
-        memcpy(glyph->buf, glyf_table->buf + offset, ins_offset);
+        memcpy(glyph->buf, bufp, ins_offset);
         glyph->buf[ins_offset] = 0; /* no instructions */
         glyph->buf[ins_offset + 1] = 0;
-        memcpy(glyph->buf + ins_offset + 2, bufp, endp - bufp);
+        memcpy(glyph->buf + ins_offset + 2, flags_start,
+               flags_size + x_size + y_size);
       }
     }
   }
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_sfnt_build_glyf_table(SFNT* sfnt,
+                         FONT* font)
+{
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
+  FT_ULong len;
+  FT_Byte* buf_new;
+  FT_Byte* p;
+  FT_UShort i;
+
+
+  if (glyf_table->recreated)
+    return TA_Err_Ok;
+
+  /* get table size */
+  len = 0;
+  for (i = 0; i < data->num_glyphs; i++)
+  {
+    /* glyph records should be aligned to start at multiples of 4 */
+    len = (len + 3) & ~3;
+    len += data->glyphs[i].len;
+  }
+
+  glyf_table->len = len;
+  buf_new = (FT_Byte*)realloc(glyf_table->buf, (len + 3) & ~3);
+  if (!buf_new)
+    return FT_Err_Out_Of_Memory;
+  else
+    glyf_table->buf = buf_new;
+
+  p = glyf_table->buf;
+  for (i = 0; i < data->num_glyphs; i++)
+  {
+    len = data->glyphs[i].len;
+    if (len)
+    {
+      memcpy(p, data->glyphs[i].buf, len);
+
+      /* pad with zero bytes to a multiple of 4; */
+      /* this works even for the last glyph record since the */
+      /* whole `glyf' table length is a multiple of 4 also */
+      p += len;
+      switch (len % 4)
+      {
+      case 1:
+        *(p++) = 0;
+      case 2:
+        *(p++) = 0;
+      case 3:
+        *(p++) = 0;
+      default:
+        break;
+      }
+    }
+  }
+
+  glyf_table->checksum = TA_table_compute_checksum(glyf_table->buf,
+                                                   glyf_table->len);
+  glyf_table->recreated = 1;
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_sfnt_build_loca_table(SFNT* sfnt,
+                         FONT* font)
+{
+  SFNT_Table* loca_table = &font->tables[sfnt->loca_idx];
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  SFNT_Table* head_table = &font->tables[sfnt->head_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
+  FT_ULong offset;
+  FT_Byte loca_format;
+  FT_Byte* buf_new;
+  FT_Byte* p;
+  FT_UShort i;
+
+
+  if (loca_table->recreated)
+    return TA_Err_Ok;
+
+  /* get largest offset */
+  offset = 0;
+  for (i = 0; i < data->num_glyphs; i++)
+  {
+    /* glyph records should be aligned to start at multiples of 4 */
+    offset = (offset + 3) & ~3;
+    offset += data->glyphs[i].len;
+  }
+
+  if (offset > 0xFFFF * 2)
+    loca_format = 1;
+  else
+    loca_format = 0;
+
+  /* fill table */
+  if (loca_format)
+  {
+    loca_table->len = (data->num_glyphs + 1) * 4;
+    buf_new = (FT_Byte*)realloc(loca_table->buf, loca_table->len);
+    if (!buf_new)
+      return FT_Err_Out_Of_Memory;
+    else
+      loca_table->buf = buf_new;
+
+    p = loca_table->buf;
+    offset = 0;
+
+    for (i = 0; i < data->num_glyphs; i++)
+    {
+      offset = (offset + 3) & ~3;
+
+      *(p++) = BYTE1(offset);
+      *(p++) = BYTE2(offset);
+      *(p++) = BYTE3(offset);
+      *(p++) = BYTE4(offset);
+
+      offset += data->glyphs[i].len;
+    }
+
+    /* last element is the size of the `glyf' table */
+    *(p++) = BYTE1(offset);
+    *(p++) = BYTE2(offset);
+    *(p++) = BYTE3(offset);
+    *(p++) = BYTE4(offset);
+  }
+  else
+  {
+    loca_table->len = (data->num_glyphs + 1) * 2;
+    buf_new = (FT_Byte*)realloc(loca_table->buf,
+                                (loca_table->len + 3) & ~3);
+    if (!buf_new)
+      return FT_Err_Out_Of_Memory;
+    else
+      loca_table->buf = buf_new;
+
+    p = loca_table->buf;
+    offset = 0;
+
+    for (i = 0; i < data->num_glyphs; i++)
+    {
+      offset = (offset + 1) & ~1;
+
+      *(p++) = HIGH(offset);
+      *(p++) = LOW(offset);
+
+      offset += (data->glyphs[i].len + 1) >> 1;
+    }
+
+    /* last element is the size of the `glyf' table */
+    *(p++) = HIGH(offset);
+    *(p++) = LOW(offset);
+
+    /* pad `loca' table to a multiple of 4 */
+    if (loca_table->len % 4 == 2)
+    {
+      *(p++) = 0;
+      *(p++) = 0;
+    }
+  }
+
+  loca_table->checksum = TA_table_compute_checksum(loca_table->buf,
+                                                   loca_table->len);
+  loca_table->recreated = 1;
+
+  head_table->buf[LOCA_FORMAT_OFFSET] = loca_format;
 
   return TA_Err_Ok;
 }
@@ -1238,8 +1484,21 @@ TTF_autohint(FILE* in,
     /* hint the glyph */
     /* build bytecode */
 
-  /* build `glyf' table */
-  /* build `loca' table */
+  /* adjust `maxp' table */
+
+  /* loop again over subfonts */
+  for (i = 0; i < font->num_sfnts; i++)
+  {
+    SFNT* sfnt = &font->sfnts[i];
+
+
+    error = TA_sfnt_build_glyf_table(sfnt, font);
+    if (error)
+      goto Err;
+    error = TA_sfnt_build_loca_table(sfnt, font);
+    if (error)
+      goto Err;
+  }
 
   if (font->num_sfnts == 1)
     error = TA_font_build_TTF(font);
