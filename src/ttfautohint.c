@@ -506,7 +506,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       continue; /* empty glyph */
     else
     {
-      FT_Byte* bufp;
+      FT_Byte* buf;
       FT_Byte* endp;
       FT_Byte* p;
       FT_Short num_contours;
@@ -516,9 +516,9 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       if (len < 10)
         return FT_Err_Invalid_Table;
 
-      bufp = glyf_table->buf + offset;
-      p = bufp;
-      endp = bufp + len;
+      buf = glyf_table->buf + offset;
+      p = buf;
+      endp = buf + len;
 
       num_contours = (FT_Short)((p[0] << 8) + p[1]);
 
@@ -539,7 +539,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
           if (p + 4 > endp)
             return FT_Err_Invalid_Table;
 
-          flags_offset = p - bufp;
+          flags_offset = p - buf;
 
           flags = *(p++) << 8;
           flags += *(p++);
@@ -561,7 +561,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
             p += 8;
         } while (flags & MORE_COMPONENTS);
 
-        len = p - bufp;
+        len = p - buf;
 
         glyph->len = len;
         glyph->buf = (FT_Byte*)malloc(len);
@@ -569,7 +569,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
           return FT_Err_Out_Of_Memory;
 
         /* copy record without instructions (if any) */
-        memcpy(glyph->buf, bufp, len);
+        memcpy(glyph->buf, buf, len);
         glyph->buf[flags_offset] &= ~(WE_HAVE_INSTR >> 8);
       }
       else
@@ -612,8 +612,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         /* is more or less invalid. */
 
         /* get number of points from last outline point */
-        num_pts = bufp[ins_offset - 2] << 8;
-        num_pts += bufp[ins_offset - 1];
+        num_pts = buf[ins_offset - 2] << 8;
+        num_pts += buf[ins_offset - 1];
         num_pts++;
 
         flags_start = p;
@@ -674,7 +674,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
           return FT_Err_Out_Of_Memory;
 
         /* now copy everything but the instructions */
-        memcpy(glyph->buf, bufp, ins_offset);
+        memcpy(glyph->buf, buf, ins_offset);
         glyph->buf[ins_offset] = 0; /* no instructions */
         glyph->buf[ins_offset + 1] = 0;
         memcpy(glyph->buf + ins_offset + 2, flags_start,
