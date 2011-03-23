@@ -39,6 +39,17 @@
 /* the offset to the loca table format in `head' table */
 #define LOCA_FORMAT_OFFSET 51
 
+/* various offset within the `maxp' table */
+#define MAXP_MAX_ZONES_OFFSET 14
+#define MAXP_MAX_TWILIGHT_POINTS_OFFSET 16
+#define MAXP_MAX_STORAGE_OFFSET 18
+#define MAXP_MAX_FUNCTION_DEFS_OFFSET 20
+#define MAXP_MAX_INSTRUCTION_DEFS_OFFSET 22
+#define MAXP_MAX_STACK_ELEMENTS_OFFSET 24
+#define MAXP_MAX_INSTRUCTIONS_OFFSET 26
+
+#define MAXP_LEN 32
+
 
 /* composite glyph flags */
 #define ARGS_ARE_WORDS 0x0001
@@ -98,6 +109,7 @@ typedef struct SFNT_ {
   FT_ULong glyf_idx;
   FT_ULong loca_idx;
   FT_ULong head_idx;
+  FT_ULong maxp_idx;
 } SFNT;
 
 /* our font object */
@@ -324,6 +336,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->glyf_idx = MISSING;
   sfnt->loca_idx = MISSING;
   sfnt->head_idx = MISSING;
+  sfnt->maxp_idx = MISSING;
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
     SFNT_Table_Info* table_info = &sfnt->table_infos[i];
@@ -388,6 +401,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       sfnt->glyf_idx = j;
     else if (tag == TTAG_loca)
       sfnt->loca_idx = j;
+    else if (tag == TTAG_maxp)
+      sfnt->maxp_idx = j;
 
     if (j == font->num_tables)
     {
@@ -411,11 +426,12 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     return error;
   }
 
-  /* no (non-empty) `glyf', `loca', or `head' table; */
+  /* no (non-empty) `glyf', `loca', `head', or `maxp' table; */
   /* this can't be a valid TTF with outlines */
   if (sfnt->glyf_idx == MISSING
       || sfnt->loca_idx == MISSING
-      || sfnt->head_idx == MISSING)
+      || sfnt->head_idx == MISSING
+      || sfnt->maxp_idx == MISSING)
     return FT_Err_Invalid_Argument;
 
   return TA_Err_Ok;
@@ -889,6 +905,43 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
   loca_table->recreated = 1;
 
   head_table->buf[LOCA_FORMAT_OFFSET] = loca_format;
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_sfnt_update_maxp_table(SFNT* sfnt,
+                          FONT* font)
+{
+  SFNT_Table* maxp_table = &font->tables[sfnt->maxp_idx];
+  FT_Byte* buf = maxp_table->buf;
+
+
+  if (maxp_table->recreated)
+    return TA_Err_Ok;
+
+  if (maxp_table->len != MAXP_LEN)
+    return FT_Err_Invalid_Table;
+
+  buf[MAXP_MAX_ZONES_OFFSET] = 0;
+  buf[MAXP_MAX_ZONES_OFFSET + 1] = 1;
+  buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET] = 0;
+  buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_STORAGE_OFFSET] = 0;
+  buf[MAXP_MAX_STORAGE_OFFSET + 1] = 0;
+  buf[MAXP_MAX_FUNCTION_DEFS_OFFSET] = 0;
+  buf[MAXP_MAX_FUNCTION_DEFS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_INSTRUCTION_DEFS_OFFSET] = 0;
+  buf[MAXP_MAX_INSTRUCTION_DEFS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET] = 0;
+  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_INSTRUCTIONS_OFFSET] = 0;
+  buf[MAXP_MAX_INSTRUCTIONS_OFFSET + 1] = 0;
+
+  maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
+                                                   maxp_table->len);
+  maxp_table->recreated = 1;
 
   return TA_Err_Ok;
 }
@@ -1502,9 +1555,6 @@ TTF_autohint(FILE* in,
       goto Err;
   }
 
-  /* remove `glyf' table */
-  /* remove `loca' table */
-
   /* compute global hints */
   /* build `fpgm' table */
   /* build `prep' table */
@@ -1526,6 +1576,9 @@ TTF_autohint(FILE* in,
     if (error)
       goto Err;
     error = TA_sfnt_build_loca_table(sfnt, font);
+    if (error)
+      goto Err;
+    error = TA_sfnt_update_maxp_table(sfnt, font);
     if (error)
       goto Err;
   }
