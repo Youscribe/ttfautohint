@@ -36,10 +36,10 @@
 /* an empty slot in the table info array */
 #define MISSING (FT_ULong)~0
 
-/* the offset to the loca table format in `head' table */
+/* the offset to the loca table format in the `head' table */
 #define LOCA_FORMAT_OFFSET 51
 
-/* various offset within the `maxp' table */
+/* various offsets within the `maxp' table */
 #define MAXP_MAX_ZONES_OFFSET 14
 #define MAXP_MAX_TWILIGHT_POINTS_OFFSET 16
 #define MAXP_MAX_STORAGE_OFFSET 18
@@ -51,7 +51,7 @@
 #define MAXP_LEN 32
 
 
-/* composite glyph flags */
+/* flags in composite glyph records */
 #define ARGS_ARE_WORDS 0x0001
 #define ARGS_ARE_XY_VALUES 0x0002
 #define WE_HAVE_A_SCALE 0x0008
@@ -60,8 +60,7 @@
 #define WE_HAVE_A_2X2 0x0080
 #define WE_HAVE_INSTR 0x0100
 
-
-/* simple glyph flags */
+/* flags in simple glyph records */
 #define X_SHORT_VECTOR 0x02
 #define Y_SHORT_VECTOR 0x04
 #define REPEAT 0x08
@@ -90,12 +89,12 @@ typedef struct SFNT_Table_ {
   FT_Byte* buf; /* the table data */
   FT_ULong offset; /* from beginning of file */
   FT_ULong checksum;
-  void* data; /* used e.g. for `glyf' table tada */
+  void* data; /* used e.g. for `glyf' table data */
   FT_Bool processed;
 } SFNT_Table;
 
 /* we use indices into the SFNT table array to */
-/* represent table info records in a TTF header */
+/* represent table info records of the TTF header */
 typedef FT_ULong SFNT_Table_Info;
 
 /* this structure is used to model a TTF or a subfont within a TTC */
@@ -212,7 +211,7 @@ TA_table_compute_checksum(FT_Byte* buf,
   FT_ULong checksum = 0;
 
 
-  /* we expect that `len' is a multiple of 4 */
+  /* we expect that the length of `buf' is a multiple of 4 */
 
   while (buf < end_buf)
   {
@@ -284,6 +283,7 @@ TA_sfnt_sort_table_info(SFNT* sfnt,
   FT_ULong j;
 
 
+  /* bubble sort */
   for (i = 1; i < num_table_infos; i++)
   {
     for (j = i; j > 0; j--)
@@ -337,6 +337,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->loca_idx = MISSING;
   sfnt->head_idx = MISSING;
   sfnt->maxp_idx = MISSING;
+
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
     SFNT_Table_Info* table_info = &sfnt->table_infos[i];
@@ -444,7 +445,7 @@ TA_glyph_parse_composite(GLYPH* glyph,
                          FT_ULong len)
 {
   FT_ULong flags_offset; /* after the loop, this is the offset */
-                         /* to last element in the flags array */
+                         /* to the last element in the flags array */
   FT_UShort flags;
 
   FT_Byte* p;
@@ -618,6 +619,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   SFNT_Table* loca_table = &font->tables[sfnt->loca_idx];
   SFNT_Table* head_table = &font->tables[sfnt->head_idx];
+
   glyf_Data* data;
   FT_Byte loca_format;
 
@@ -631,7 +633,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   /* in case of success, all allocated arrays are */
   /* linked and eventually freed in `TA_font_unload' */
 
-  /* nothing to do if table has already been processed */
+  /* nothing to do if table has already been split */
   if (glyf_table->data)
     return TA_Err_Ok;
 
@@ -755,7 +757,7 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
   len = 0;
   for (i = 0; i < data->num_glyphs; i++)
   {
-    /* glyph records should be aligned to start at multiples of 4 */
+    /* glyph records should have offsets which are multiples of 4 */
     len = (len + 3) & ~3;
     len += data->glyphs[i].len;
   }
@@ -775,9 +777,9 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
     {
       memcpy(p, data->glyphs[i].buf, len);
 
-      /* pad with zero bytes to make the buffer length a multiple of 4; */
-      /* this works even for the last glyph record since */
-      /* the `glyf' table length is a multiple of 4 also */
+      /* pad with zero bytes to have an offset which is a multiple of 4; */
+      /* this works even for the last glyph record since the `glyf' */
+      /* table length is a multiple of 4 also */
       p += len;
       switch (len % 4)
       {
@@ -808,6 +810,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
   SFNT_Table* loca_table = &font->tables[sfnt->loca_idx];
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   SFNT_Table* head_table = &font->tables[sfnt->head_idx];
+
   glyf_Data* data = (glyf_Data*)glyf_table->data;
 
   FT_ULong offset;
@@ -824,7 +827,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
   offset = 0;
   for (i = 0; i < data->num_glyphs; i++)
   {
-    /* glyph records should be aligned to start at multiples of 4 */
+    /* glyph records should have offsets which are multiples of 4 */
     offset = (offset + 3) & ~3;
     offset += data->glyphs[i].len;
   }
@@ -859,7 +862,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
       offset += data->glyphs[i].len;
     }
 
-    /* last element is the size of the `glyf' table */
+    /* last element holds the size of the `glyf' table */
     *(p++) = BYTE1(offset);
     *(p++) = BYTE2(offset);
     *(p++) = BYTE3(offset);
@@ -888,7 +891,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
       offset += (data->glyphs[i].len + 1) >> 1;
     }
 
-    /* last element is the size of the `glyf' table */
+    /* last element holds the size of the `glyf' table */
     *(p++) = HIGH(offset);
     *(p++) = LOW(offset);
 
@@ -1206,6 +1209,7 @@ TA_font_build_TTF(FONT* font)
   tables = font->tables;
   num_tables = font->num_tables;
 
+  /* get font length from last SFNT table array element */
   font->out_len = tables[num_tables - 1].offset
                   + ((tables[num_tables - 1].len + 3) & ~3);
   font->out_buf = (FT_Byte*)malloc(font->out_len);
@@ -1401,6 +1405,7 @@ TA_font_build_TTC(FONT* font)
   tables = font->tables;
   num_tables = font->num_tables;
 
+  /* get font length from last SFNT table array element */
   font->out_len = tables[num_tables - 1].offset
                   + ((tables[num_tables - 1].len + 3) & ~3);
   font->out_buf = (FT_Byte*)malloc(font->out_len);
