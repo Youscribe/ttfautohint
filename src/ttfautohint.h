@@ -2,15 +2,18 @@
 
 /* written 2011 by Werner Lemberg <wl@gnu.org> */
 
+#ifndef __TTFAUTOHINT_H__
+#define __TTFAUTOHINT_H__
+
 #include <stdio.h>
 
 
-/* error type */
+/* Error type. */
 
 typedef int TA_Error;
 
 
-/* errors */
+/* Error values in addition to the FT_Err_XXX constants from FreeType. */
 
 #define TA_Err_Ok 0x00
 #define TA_Err_Invalid_Stream_Write 0x5F
@@ -30,5 +33,7 @@ typedef int TA_Error;
 TA_Error
 TTF_autohint(FILE *in,
              FILE *out);
+
+#endif /* __TTFAUTOHINT_H__ */
 
 /* end of ttfautohint.h */

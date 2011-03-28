@@ -4,7 +4,8 @@ AM_CPPFLAGS = $(FREETYPE_CPPFLAGS)
 AM_LDFLAGS = $(FREETYPE_LDFLAGS)
 
 noinst_LIBRARIES = libttfautohint.a
-libttfautohint_a_SOURCES = ttfautohint.c \
+libttfautohint_a_SOURCES = ta.h \
+                           ttfautohint.c \
                            ttfautohint.h
 
 noinst_PROGRAMS = hint
