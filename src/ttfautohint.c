@@ -4,7 +4,6 @@
 
 /* This file needs FreeType 2.4.5 or newer. */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -5,6 +5,15 @@ AM_LDFLAGS = $(FREETYPE_LDFLAGS)
 
 noinst_LIBRARIES = libttfautohint.a
 libttfautohint_a_SOURCES = ta.h \
+                           tadummy.c \
+                           tadummy.h \
+                           taglobal.c \
+                           taglobal.h \
+                           tahints.c \
+                           tahints.h \
+                           tasort.c \
+                           tasort.h \
+                           tatypes.h \
                            ttfautohint.c \
                            ttfautohint.h
 
