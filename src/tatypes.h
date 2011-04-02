@@ -41,6 +41,10 @@ extern void* _ta_debug_hints;
 
 #define TA_ABS(a) ((a) < 0 ? -(a) : (a))
 
+#define TA_PIX_FLOOR(x) ((x) & ~63)
+#define TA_PIX_ROUND(x) TA_PIX_FLOOR((x) + 32)
+#define TA_PIX_CEIL(x) TA_PIX_FLOOR((x) + 63)
+
 
 typedef struct TA_WidthRec_
 {

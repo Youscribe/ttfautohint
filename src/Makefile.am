@@ -11,6 +11,8 @@ libttfautohint_a_SOURCES = ta.h \
                            taglobal.h \
                            tahints.c \
                            tahints.h \
+                           talatin.c \
+                           talatin.h \
                            tasort.c \
                            tasort.h \
                            tatypes.h \
