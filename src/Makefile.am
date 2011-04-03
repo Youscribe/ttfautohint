@@ -7,12 +7,16 @@ noinst_LIBRARIES = libttfautohint.a
 libttfautohint_a_SOURCES = ta.h \
                            tadummy.c \
                            tadummy.h \
+                           tagloadr.c \
+                           tagloadr.h \
                            taglobal.c \
                            taglobal.h \
                            tahints.c \
                            tahints.h \
                            talatin.c \
                            talatin.h \
+                           taloader.c \
+                           taloader.h \
                            tasort.c \
                            tasort.h \
                            tatypes.h \

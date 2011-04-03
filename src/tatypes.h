@@ -41,6 +41,11 @@ extern void* _ta_debug_hints;
 
 #define TA_ABS(a) ((a) < 0 ? -(a) : (a))
 
+/* from file `ftobjs.h' from FreeType */
+#define TA_PAD_FLOOR(x, n) ((x) & ~((n) - 1))
+#define TA_PAD_ROUND(x, n) TA_PAD_FLOOR((x) + ((n) / 2), n)
+#define TA_PAD_CEIL(x, n) TA_PAD_FLOOR((x) + ((n) - 1), n)
+
 #define TA_PIX_FLOOR(x) ((x) & ~63)
 #define TA_PIX_ROUND(x) TA_PIX_FLOOR((x) + 32)
 #define TA_PIX_CEIL(x) TA_PIX_FLOOR((x) + 63)

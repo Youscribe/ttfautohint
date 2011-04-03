@@ -49,7 +49,7 @@ static TA_ScriptClass const ta_script_classes[] =
 typedef struct TA_FaceGlobalsRec_
 {
   FT_Face face;
-  FT_Long glyph_count;    /* same as face->num_glyphs */
+  FT_Long glyph_count; /* same as face->num_glyphs */
   FT_Byte* glyph_scripts;
 
   TA_ScriptMetrics metrics[TA_SCRIPT_MAX];
@@ -158,10 +158,10 @@ ta_face_globals_new(FT_Face face,
                     TA_FaceGlobals *aglobals)
 {
   FT_Error error;
-  TA_FaceGlobals globals = NULL;
+  TA_FaceGlobals globals;
 
 
-  globals = (TA_FaceGlobals)calloc(1, sizeof (*globals) +
+  globals = (TA_FaceGlobals)calloc(1, sizeof (TA_FaceGlobalsRec) +
                                       face->num_glyphs * sizeof (FT_Byte));
   if (!globals)
   {
@@ -206,7 +206,7 @@ ta_face_globals_free(TA_FaceGlobals globals)
 #endif
 
         if (clazz->script_metrics_done)
-          clazz->script_metrics_done( globals->metrics[nn]);
+          clazz->script_metrics_done(globals->metrics[nn]);
 
         free(globals->metrics[nn]);
         globals->metrics[nn] = NULL;

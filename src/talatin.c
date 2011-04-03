@@ -105,7 +105,7 @@ ta_latin_metrics_init_widths(TA_LatinMetrics metrics,
             dist = -dist;
 
           if (num_widths < TA_LATIN_MAX_WIDTHS)
-            axis->widths[ num_widths++ ].org = dist;
+            axis->widths[num_widths++].org = dist;
         }
       }
 
@@ -156,7 +156,7 @@ static void
 ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
                              FT_Face face)
 {
-  FT_Pos flats [TA_LATIN_MAX_TEST_CHARACTERS];
+  FT_Pos flats[TA_LATIN_MAX_TEST_CHARACTERS];
   FT_Pos rounds[TA_LATIN_MAX_TEST_CHARACTERS];
   FT_Int num_flats;
   FT_Int num_rounds;
@@ -621,7 +621,7 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
 /* scale global values in both directions */
 
-FT_LOCAL_DEF(void)
+void
 ta_latin_metrics_scale(TA_LatinMetrics metrics,
                         TA_Scaler scaler)
 {
@@ -1492,7 +1492,7 @@ ta_latin_compute_stem_width(TA_GlyphHints hints,
 
 
   if (!TA_LATIN_HINTS_DO_STEM_ADJUST(hints)
-      || axis->extra_light )
+      || axis->extra_light)
     return width;
 
   if (dist < 0)
