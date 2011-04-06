@@ -9,9 +9,9 @@
 #include "taglobal.h"
 
 #include "tadummy.h"
+#include "talatin.h"
 
 #if 0
-#include "talatin.h"
 #include "tacjk.h"
 #include "taindic.h"
 
@@ -24,11 +24,11 @@
 static TA_ScriptClass const ta_script_classes[] =
 {
   &ta_dummy_script_class,
-#if 0
 #ifdef FT_OPTION_AUTOFIT2
   &ta_latin2_script_class,
 #endif
   &ta_latin_script_class,
+#if 0
   &ta_cjk_script_class,
   &ta_indic_script_class,
 #endif
@@ -36,8 +36,8 @@ static TA_ScriptClass const ta_script_classes[] =
 };
 
 
-/* index of default script in `ta_script_classes' */
-#define TA_SCRIPT_LIST_DEFAULT 2
+/* XXX index of default script in `ta_script_classes' */
+#define TA_SCRIPT_LIST_DEFAULT 0
 /* a bit mask indicating an uncovered glyph */
 #define TA_SCRIPT_LIST_NONE 0x7F
 /* if this flag is set, we have an ASCII digit */

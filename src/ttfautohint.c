@@ -1443,6 +1443,8 @@ TTF_autohint(FILE* in,
   }
 
   /* compute global hints */
+  TA_font_compute_global_hints(font);
+
   /* build `fpgm' table */
   /* build `prep' table */
   /* build `cvt ' table */

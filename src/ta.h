@@ -12,6 +12,7 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_TAGS_H
 
+#include "taloader.h"
 #include "ttfautohint.h"
 
 
@@ -123,6 +124,8 @@ typedef struct FONT_ {
 
   SFNT_Table* tables;
   FT_ULong num_tables;
+
+  TA_LoaderRec loader[1]; /* the interface to the autohinter */
 } FONT;
 
 #endif /* __TA_H__ */

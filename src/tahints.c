@@ -174,13 +174,13 @@ ta_glyph_hints_dump_points(TA_GlyphHints hints)
 
 
   printf("Table of points:\n");
-  printf("  [ index |  xorg |  yorg |  xscale |  yscale"
-           " |  xfit  |  yfit  |  flags ]\n");
+  printf("  [ index |  xorg |  yorg | xscale | yscale"
+           " |  xfit |  yfit |  flags ]\n");
 
   for (point = points; point < limit; point++)
   {
-    printf("  [ %5d | %5d | %5d | %-5.2f | %-5.2f"
-             " | %-5.2f | %-5.2f | %c%c%c%c%c%c ]\n",
+    printf("  [ %5d | %5d | %5d | %6.2f | %6.2f"
+             " | %5.2f | %5.2f | %c%c%c%c%c%c ]\n",
            point - points,
            point->fx,
            point->fy,
@@ -200,7 +200,7 @@ ta_glyph_hints_dump_points(TA_GlyphHints hints)
 
 
 static const char*
-ta_edge_flags_to_string(TA_Byte flags)
+ta_edge_flags_to_string(FT_Byte flags)
 {
   static char temp[32];
   int pos = 0;
@@ -247,11 +247,11 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
            dimension == TA_DIMENSION_HORZ ? "vertical"
                                           : "horizontal");
     printf("  [ index |  pos  |  dir  | link | serif |"
-             " height  | extra | flags    ]\n");
+             " height | extra |    flags    ]\n");
 
     for (seg = segments; seg < limit; seg++)
     {
-      printf("  [ %5d | %5.2g | %5s | %4d | %5d | %5d | %5d | %s ]\n",
+      printf("  [ %5d | %5.2g | %5s | %4d | %5d | %6d | %5d | %11s ]\n",
              seg - segments,
              dimension == TA_DIMENSION_HORZ ? (int)seg->first->ox / 64.0
                                             : (int)seg->first->oy / 64.0,
@@ -289,12 +289,12 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
            dimension == TA_DIMENSION_HORZ ? "vertical"
                                           : "horizontal");
     printf("  [ index |  pos  |  dir  | link |"
-             " serif | blue | opos  |  pos  | flags   ]\n");
+             " serif | blue | opos  |  pos  |    flags    ]\n");
 
     for (edge = edges; edge < limit; edge++)
     {
       printf("  [ %5d | %5.2g | %5s | %4d |"
-               " %5d |   %c  | %5.2f | %5.2f | %s ]\n",
+               " %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
              edge - edges,
              (int)edge->opos / 64.0,
              ta_dir_str((TA_Direction)edge->dir),

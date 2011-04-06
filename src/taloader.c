@@ -103,13 +103,16 @@ ta_loader_load_g(TA_Loader loader,
   TA_ScriptMetrics metrics = loader->metrics;
   TA_GlyphHints hints = &loader->hints;
   FT_GlyphSlot slot = face->glyph;
+#if 0
   FT_Slot_Internal internal = slot->internal;
+#endif
 
 
   error = FT_Load_Glyph(face, glyph_index, load_flags);
   if (error)
     goto Exit;
 
+#if 0
   loader->transformed = internal->glyph_transformed;
   if (loader->transformed)
   {
@@ -123,6 +126,7 @@ ta_loader_load_g(TA_Loader loader,
     FT_Matrix_Invert(&inverse);
     FT_Vector_Transform(&loader->trans_delta, &inverse);
   }
+#endif
 
   /* set linear metrics */
   slot->linearHoriAdvance = slot->metrics.horiAdvance;
@@ -444,6 +448,7 @@ Hint_Metrics:
     slot->metrics.horiAdvance = TA_PIX_ROUND(slot->metrics.horiAdvance);
     slot->metrics.vertAdvance = TA_PIX_ROUND(slot->metrics.vertAdvance);
 
+#if 0
     /* now copy outline into glyph slot */
     TA_GlyphLoader_Rewind(internal->loader);
     error = TA_GlyphLoader_CopyPoints(internal->loader, gloader);
@@ -452,6 +457,7 @@ Hint_Metrics:
 
     slot->outline = internal->loader->base.outline;
     slot->format = FT_GLYPH_FORMAT_OUTLINE;
+#endif
   }
 
 #ifdef DEBUG_HINTER

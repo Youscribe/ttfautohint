@@ -5,6 +5,8 @@ AM_LDFLAGS = $(FREETYPE_LDFLAGS)
 
 noinst_LIBRARIES = libttfautohint.a
 libttfautohint_a_SOURCES = ta.h \
+                           tabytecode.c \
+                           tabytecode.h \
                            tadummy.c \
                            tadummy.h \
                            tagloadr.c \
