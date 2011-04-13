@@ -154,7 +154,7 @@ static const char ta_latin_blue_chars[TA_LATIN_MAX_BLUES]
 
 static void
 ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
-                             FT_Face face)
+                            FT_Face face)
 {
   FT_Pos flats[TA_LATIN_MAX_TEST_CHARACTERS];
   FT_Pos rounds[TA_LATIN_MAX_TEST_CHARACTERS];
@@ -438,7 +438,7 @@ ta_latin_metrics_check_digits(TA_LatinMetrics metrics,
 
 FT_Error
 ta_latin_metrics_init(TA_LatinMetrics metrics,
-                       FT_Face face)
+                      FT_Face face)
 {
   FT_Error error = FT_Err_Ok;
   FT_CharMap oldmap = face->charmap;
