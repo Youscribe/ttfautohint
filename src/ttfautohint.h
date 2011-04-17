@@ -17,6 +17,7 @@ typedef int TA_Error;
 
 #define TA_Err_Ok 0x00
 #define TA_Err_Invalid_Stream_Write 0x5F
+#define TA_Err_Hinter_Overflow 0xF0
 
 
 /*

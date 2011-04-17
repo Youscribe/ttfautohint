@@ -1223,6 +1223,9 @@ TA_font_unload(FONT* font)
   if (!font)
     return;
 
+  if (font->loader)
+    ta_loader_done(font->loader);
+
   if (font->tables)
   {
     FT_ULong i;
@@ -1310,12 +1313,14 @@ TTF_autohint(FILE* in,
       goto Err;
   }
 
-  /* compute global hints */
-  TA_font_compute_global_hints(font);
-
   /* build `fpgm' table */
   /* build `prep' table */
   /* build `cvt ' table */
+
+  /* XXX handle subfonts? */
+  error = TA_sfnt_build_cvt_table(&font->sfnts[0], font);
+  if (error)
+    goto Err;
 
   /* handle all glyphs in a loop */
     /* hint the glyph */
