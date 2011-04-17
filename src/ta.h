@@ -129,6 +129,8 @@ typedef struct FONT_ {
   TA_LoaderRec loader[1]; /* the interface to the autohinter */
 } FONT;
 
+#include "tatables.h"
+
 #endif /* __TA_H__ */
 
 /* end of ta.h */
