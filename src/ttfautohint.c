@@ -236,10 +236,13 @@ TA_glyph_parse_composite(GLYPH* glyph,
       p += 8;
   } while (flags & MORE_COMPONENTS);
 
+  glyph->flags_offset = flags_offset;
+
   /* adjust glyph record length */
   len = p - buf;
 
-  glyph->len = len;
+  glyph->len1 = len;
+  /* glyph->len2 = 0; */
   glyph->buf = (FT_Byte*)malloc(len);
   if (!glyph->buf)
     return FT_Err_Out_Of_Memory;
@@ -346,17 +349,17 @@ TA_glyph_parse_simple(GLYPH* glyph,
 
   flags_size = p - flags_start;
 
-  /* adjust glyph record length */
-  glyph->len = ins_offset + 2 + flags_size + xy_size;
-  glyph->buf = (FT_Byte*)malloc(glyph->len);
+  /* store the data before and after the bytecode instructions */
+  /* in the same array */
+  glyph->len1 = ins_offset;
+  glyph->len2 = flags_size + xy_size;
+  glyph->buf = (FT_Byte*)malloc(glyph->len1 + glyph->len2);
   if (!glyph->buf)
     return FT_Err_Out_Of_Memory;
 
   /* now copy everything but the instructions */
-  memcpy(glyph->buf, buf, ins_offset);
-  glyph->buf[ins_offset] = 0; /* set instructionLength field to zero */
-  glyph->buf[ins_offset + 1] = 0;
-  memcpy(glyph->buf + ins_offset + 2, flags_start, flags_size + xy_size);
+  memcpy(glyph->buf, buf, glyph->len1);
+  memcpy(glyph->buf + glyph->len1, flags_start, glyph->len2);
 
   return TA_Err_Ok;
 }
@@ -494,6 +497,8 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
 
+  GLYPH* glyph;
+
   FT_ULong len;
   FT_Byte* buf_new;
   FT_Byte* p;
@@ -505,11 +510,15 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 
   /* get table size */
   len = 0;
-  for (i = 0; i < data->num_glyphs; i++)
+  glyph = data->glyphs;
+  for (i = 0; i < data->num_glyphs; i++, glyph++)
   {
     /* glyph records should have offsets which are multiples of 4 */
     len = (len + 3) & ~3;
-    len += data->glyphs[i].len;
+    len += glyph->len1 + glyph->len2 + glyph->ins_len;
+    /* add two bytes for the instructionLength field */
+    if (glyph->len2 || glyph->ins_len)
+      len += 2;
   }
 
   glyf_table->len = len;
@@ -520,17 +529,48 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
     glyf_table->buf = buf_new;
 
   p = glyf_table->buf;
-  for (i = 0; i < data->num_glyphs; i++)
+  glyph = data->glyphs;
+  for (i = 0; i < data->num_glyphs; i++, glyph++)
   {
-    len = data->glyphs[i].len;
+    len = glyph->len1 + glyph->len2 + glyph->ins_len;
+    if (glyph->len2 || glyph->ins_len)
+      len += 2;
+
     if (len)
     {
-      memcpy(p, data->glyphs[i].buf, len);
+      /* copy glyph data and insert new instructions */
+      memcpy(p, glyph->buf, glyph->len1);
+
+      if (glyph->len2)
+      {
+        /* simple glyph */
+        p += glyph->len1;
+        *(p++) = HIGH(glyph->ins_len);
+        *(p++) = LOW(glyph->ins_len);
+        memcpy(p, glyph->ins_buf, glyph->ins_len);
+        p += glyph->ins_len;
+        memcpy(p, glyph->buf + glyph->len1, glyph->len2);
+        p += glyph->len2;
+      }
+      else
+      {
+        /* composite glyph */
+        if (glyph->ins_len)
+        {
+          *(p + glyph->flags_offset) |= (WE_HAVE_INSTR >> 8);
+          p += glyph->len1;
+          *(p++) = HIGH(glyph->ins_len);
+          *(p++) = LOW(glyph->ins_len);
+          memcpy(p, glyph->ins_buf, glyph->ins_len);
+          p += glyph->ins_len;
+        }
+        else
+          p += glyph->len1;
+      }
 
       /* pad with zero bytes to have an offset which is a multiple of 4; */
       /* this works even for the last glyph record since the `glyf' */
       /* table length is a multiple of 4 also */
-      p += len;
       switch (len % 4)
       {
       case 1:
@@ -562,6 +602,7 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
   SFNT_Table* head_table = &font->tables[sfnt->head_idx];
 
   glyf_Data* data = (glyf_Data*)glyf_table->data;
+  GLYPH* glyph;
 
   FT_ULong offset;
   FT_Byte loca_format;
@@ -575,11 +616,16 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
 
   /* get largest offset */
   offset = 0;
-  for (i = 0; i < data->num_glyphs; i++)
+  glyph = data->glyphs;
+
+  for (i = 0; i < data->num_glyphs; i++, glyph++)
   {
     /* glyph records should have offsets which are multiples of 4 */
     offset = (offset + 3) & ~3;
-    offset += data->glyphs[i].len;
+    offset += glyph->len1 + glyph->len2 + glyph->ins_len;
+    /* add two bytes for the instructionLength field */
+    if (glyph->len2 || glyph->ins_len)
+      offset += 2;
   }
 
   if (offset > 0xFFFF * 2)
@@ -599,8 +645,9 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
 
     p = loca_table->buf;
     offset = 0;
+    glyph = data->glyphs;
 
-    for (i = 0; i < data->num_glyphs; i++)
+    for (i = 0; i < data->num_glyphs; i++, glyph++)
     {
       offset = (offset + 3) & ~3;
 
@@ -609,7 +656,9 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
       *(p++) = BYTE3(offset);
       *(p++) = BYTE4(offset);
 
-      offset += data->glyphs[i].len;
+      offset += glyph->len1 + glyph->len2 + glyph->ins_len;
+      if (glyph->len2 || glyph->ins_len)
+        offset += 2;
     }
 
     /* last element holds the size of the `glyf' table */
@@ -630,15 +679,18 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
 
     p = loca_table->buf;
     offset = 0;
+    glyph = data->glyphs;
 
-    for (i = 0; i < data->num_glyphs; i++)
+    for (i = 0; i < data->num_glyphs; i++, glyph++)
     {
       offset = (offset + 1) & ~1;
 
       *(p++) = HIGH(offset);
       *(p++) = LOW(offset);
 
-      offset += (data->glyphs[i].len + 1) >> 1;
+      offset += (glyph->len1 + glyph->len2 + glyph->ins_len + 1) >> 1;
+      if (glyph->len2 || glyph->ins_len)
+        offset += 1;
     }
 
     /* last element holds the size of the `glyf' table */

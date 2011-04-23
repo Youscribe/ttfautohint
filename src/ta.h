@@ -70,8 +70,14 @@
 /* a single glyph */
 typedef struct GLYPH_
 {
-  FT_ULong len;
-  FT_Byte* buf;
+  FT_ULong len1; /* number of bytes before instructions location */
+  FT_ULong len2; /* number of bytes after instructions location; */
+                 /* if zero, this indicates a composite glyph */
+  FT_Byte* buf; /* extracted glyph data */
+  FT_ULong flags_offset; /* offset to last flag in a composite glyph */
+
+  FT_ULong ins_len; /* number of new instructions */
+  FT_Byte* ins_buf; /* new instruction data */
 } GLYPH;
 
 /* a representation of the data in the `glyf' table */
