@@ -238,6 +238,8 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
   for (dimension = 1; dimension >= 0; dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
+    TA_Point points = hints->points;
+    TA_Edge edges = axis->edges;
     TA_Segment segments = axis->segments;
     TA_Segment limit = segments + axis->num_segments;
     TA_Segment seg;
@@ -246,18 +248,22 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
     printf("Table of %s segments:\n",
            dimension == TA_DIMENSION_HORZ ? "vertical"
                                           : "horizontal");
-    printf("  [ index |  pos  |  dir  | link | serif |"
+    printf("  [ index |  pos  |  dir  | from |  to  | link | serif | edge |"
              " height | extra |    flags    ]\n");
 
     for (seg = segments; seg < limit; seg++)
     {
-      printf("  [ %5d | %5.2g | %5s | %4d | %5d | %6d | %5d | %11s ]\n",
+      printf("  [ %5d | %5.2g | %5s | %4d | %4d | %4d | %5d | %4d |"
+               " %6d | %5d | %11s ]\n",
              seg - segments,
              dimension == TA_DIMENSION_HORZ ? (int)seg->first->ox / 64.0
                                             : (int)seg->first->oy / 64.0,
              ta_dir_str((TA_Direction)seg->dir),
+             TA_INDEX_NUM(seg->first, points),
+             TA_INDEX_NUM(seg->last, points),
              TA_INDEX_NUM(seg->link, segments),
              TA_INDEX_NUM(seg->serif, segments),
+             TA_INDEX_NUM(seg->edge, edges),
              seg->height,
              seg->height - (seg->max_coord - seg->min_coord),
              ta_edge_flags_to_string(seg->flags));
@@ -278,6 +284,7 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
   for (dimension = 1; dimension >= 0; dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
+    TA_Segment segments = axis->segments;
     TA_Edge edges = axis->edges;
     TA_Edge limit = edges + axis->num_edges;
     TA_Edge edge;
@@ -304,6 +311,44 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
              edge->opos / 64.0,
              edge->pos / 64.0,
              ta_edge_flags_to_string(edge->flags));
+    }
+    printf("\n");
+  }
+}
+
+
+void
+ta_glyph_hints_dump_edge_links(TA_GlyphHints hints)
+{
+  FT_Int dimension;
+
+
+  for (dimension = 1; dimension >= 0; dimension--)
+  {
+    TA_AxisHints axis = &hints->axis[dimension];
+    TA_Segment segments = axis->segments;
+    TA_Edge edges = axis->edges;
+    TA_Edge limit = edges + axis->num_edges;
+
+    TA_Edge edge;
+    TA_Segment seg;
+
+
+    printf("%s edges consist of the following segments:\n",
+           dimension == TA_DIMENSION_HORZ ? "Vertical"
+                                          : "Horizontal");
+    for (edge = edges; edge < limit; edge++)
+    {
+      printf("  %2d:", edge - edges);
+
+      seg = edge->first;
+      do
+      {
+        printf(" %d", seg - segments);
+        seg = seg->edge_next;
+      } while (seg != edge->first);
+
+      printf("\n");
     }
     printf("\n");
   }
@@ -725,7 +770,7 @@ void
 ta_glyph_hints_align_edge_points(TA_GlyphHints hints,
                                  TA_Dimension dim)
 {
-  TA_AxisHints axis = & hints->axis[dim];
+  TA_AxisHints axis = &hints->axis[dim];
   TA_Segment segments = axis->segments;
   TA_Segment segment_limit = segments + axis->num_segments;
   TA_Segment seg;
