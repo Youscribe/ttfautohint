@@ -111,11 +111,15 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
         return error;
     }
 
-    /* ignore tables which we are going to create by ourselves */
+    /* ignore tables which we are going to create by ourselves, */
+    /* or which would become invalid otherwise */
     else if (tag == TTAG_fpgm
              || tag == TTAG_prep
              || tag == TTAG_cvt
-             || tag == TTAG_DSIG)
+             || tag == TTAG_DSIG
+             || tag == TTAG_hdmx
+             || tag == TTAG_VDMX
+             || tag == TTAG_LTSH)
       continue;
 
     /* make the allocated buffer length a multiple of 4 */
