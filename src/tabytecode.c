@@ -168,4 +168,81 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
   }
 }
 
+
+#define CVT_HORZ_WIDTHS_OFFSET(font) 0
+#define CVT_VERT_WIDTHS_OFFSET(font) \
+          CVT_HORZ_WIDTHS_OFFSET(font) \
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count;
+#define CVT_BLUE_REFS_OFFSET(font) \
+          CVT_VERT_WIDTHS_OFFSET(font) \
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count;
+#define CVT_BLUE_SHOOTS_OFFSET(font) \
+          CVT_BLUE_REFS_OFFSET(font) \
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count;
+
+
+static FT_Error
+TA_table_build_fpgm(FT_Byte** fpgm,
+                    FT_ULong* fpgm_len,
+                    FONT* font)
+{
+  FT_UInt buf_len;
+  FT_Byte* buf;
+  FT_Byte* buf_p;
+
+
+  buf_len = sizeof (fpgm_0a) + 1
+            + sizeof (fpgm_0b) + 1
+            + sizeof (fpgm_0c);
+  buf = (FT_Byte*)malloc(buf_len);
+  if (!buf)
+    return FT_Err_Out_Of_Memory;
+
+  /* copy font program into buffer and fill in the missing variables */
+  buf_p = buf;
+  memcpy(buf_p, fpgm_0a, sizeof (fpgm_0a));
+  buf_p += sizeof (fpgm_0a);
+  *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+  memcpy(buf_p, fpgm_0b, sizeof (fpgm_0b));
+  buf_p += sizeof (fpgm_0b);
+  *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+  memcpy(buf_p, fpgm_0c, sizeof (fpgm_0c));
+
+  *fpgm = buf;
+  *fpgm_len = buf_len;
+
+  return FT_Err_Ok;
+}
+
+
+FT_Error
+TA_sfnt_build_fpgm_table(SFNT* sfnt,
+                         FONT* font)
+{
+  FT_Error error;
+
+  FT_Byte* fpgm_buf;
+  FT_ULong fpgm_len;
+
+
+  error = TA_sfnt_add_table_info(sfnt);
+  if (error)
+    return error;
+
+  error = TA_table_build_fpgm(&fpgm_buf, &fpgm_len, font);
+  if (error)
+    return error;
+
+  /* in case of success, `fpgm_buf' gets linked */
+  /* and is eventually freed in `TA_font_unload' */
+  error = TA_font_add_table(font,
+                            &sfnt->table_infos[sfnt->num_table_infos - 1],
+                            TTAG_fpgm, fpgm_len, fpgm_buf);
+  if (error)
+  {
+    free(fpgm_buf);
+    return error;
+  }
+}
+
 /* end of tabytecode.c */

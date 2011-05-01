@@ -1369,14 +1369,19 @@ TTF_autohint(FILE* in,
       goto Err;
   }
 
-  /* build `fpgm' table */
-  /* build `prep' table */
-  /* build `cvt ' table */
+  /* XXX handle subfonts for bytecode tables? */
 
-  /* XXX handle subfonts? */
+  /* build `cvt ' table */
   error = TA_sfnt_build_cvt_table(&font->sfnts[0], font);
   if (error)
     goto Err;
+
+  /* build `fpgm' table */
+  error = TA_sfnt_build_fpgm_table(&font->sfnts[0], font);
+  if (error)
+    goto Err;
+
+  /* build `prep' table */
 
   /* handle all glyphs in a loop */
     /* hint the glyph */
