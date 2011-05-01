@@ -181,6 +181,211 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
           + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count;
 
 
+/* in the comments below, the top of the stack (`s:') */
+/* is the rightmost element; the stack is shown */
+/* after the instruction on the same line has been executed */
+
+  /*
+   * compute_stem_width
+   *
+   *   This is the equivalent to the following code from function
+   *   `ta_latin_compute_stem_width':
+   *
+   *      dist = ABS(width)
+   *
+   *      if stem_is_serif
+   *         && dist < 3*64:
+   *        return width
+   *      else if base_is_round:
+   *        if dist < 80
+   *          dist = 64
+   *      else:
+   *        dist = MIN(56, dist)
+   *
+   *      delta = ABS(dist - std_width)
+   *
+   *      if delta < 40:
+   *        dist = MIN(48, std_width)
+   *        goto End
+   *
+   *      if dist < 3*64:
+   *        delta = dist
+   *        dist = FLOOR(dist)
+   *        delta = delta - dist
+   *
+   *        if delta < 10:
+   *          dist = dist + delta
+   *        else if delta < 32:
+   *          dist = dist + 10
+   *        else if delta < 54:
+   *          dist = dist + 54
+   *        else
+   *          dist = dist + delta
+   *      else
+   *        dist = ROUND(dist)
+   *
+   *    End:
+   *      if width < 0:
+   *        dist = -dist
+   *      return dist
+   *
+   *
+   *
+   * Function 0: compute_stem_width
+   *
+   * in: width
+   *     stem_is_serif
+   *     base_is_round
+   * out: new_width
+   * CVT: is_extra_light
+   *      std_width
+   */
+
+unsigned char fpgm_0a[] = {
+
+  PUSHB_1
+    0,
+  FDEF
+
+  DUP
+  ABS /* s: base_is_round stem_is_serif width dist */
+
+  DUP
+  PUSHB_1
+    3*64,
+  LT /* dist < 3*64 */
+
+  PUSHB_1
+    4,
+  MINDEX /* s: base_is_round width dist (dist<3*64) stem_is_serif */
+
+  AND /* stem_is_serif && dist < 3*64 */
+  IF /* s: base_is_round width dist */
+    POP
+    SWAP
+    POP /* s: width */
+
+  ELSE
+    ROLL /* s: width dist base_is_round */
+    IF /* s: width dist */
+      DUP
+      PUSHB_1
+        80,
+      LT /* dist < 80 */
+      IF /* s: width dist */
+        POP
+        PUSHB_1
+          64, /* dist = 64 */
+      EIF
+
+    ELSE
+      PUSHB_1
+        56,
+      MIN /* dist = min(56, dist) */
+    EIF
+
+    DUP /* s: width dist dist */
+    PUSHB_1
+
+};
+
+/*    %c, index of std_width */
+
+unsigned char fpgm_0b[] = {
+
+    RCVT
+    SUB
+    ABS /* s: width dist delta */
+
+    PUSHB_1
+      40,
+    LT /* delta < 40 */
+    IF /* s: width dist */
+      POP
+      PUSHB_2
+        48,
+
+};
+
+/*      %c, index of std_width */
+
+unsigned char fpgm_0c[] = {
+
+      RCVT
+      MIN /* dist = min(48, std_width) */
+
+    ELSE
+      DUP /* s: width dist dist */
+      PUSHB_1
+        3*64,
+      LT /* dist < 3*64 */
+      IF
+        DUP /* s: width delta dist */
+        FLOOR /* dist = FLOOR(dist) */
+        DUP /* s: width delta dist dist */
+        ROLL
+        ROLL /* s: width dist delta dist */
+        SUB /* delta = delta - dist */
+
+        DUP /* s: width dist delta delta */
+        PUSHB_1
+          10,
+        LT /* delta < 10 */
+        IF /* s: width dist delta */
+          ADD /* dist = dist + delta */
+
+        ELSE
+          DUP
+          PUSHB_1
+            32,
+          LT /* delta < 32 */
+          IF
+            POP
+            PUSHB_1
+              10,
+            ADD /* dist = dist + 10 */
+
+          ELSE
+            DUP
+            PUSHB_1
+              54,
+            LT /* delta < 54 */
+            IF
+              POP
+              PUSHB_1
+                54,
+              ADD /* dist = dist + 54 */
+
+            ELSE
+              ADD /* dist = dist + delta */
+
+            EIF
+          EIF
+        EIF
+
+        ELSE
+          PUSHB_1
+            32,
+          ADD
+          FLOOR /* dist = round(dist) */
+
+        EIF
+      EIF
+
+      SWAP /* s: dist width */
+      PUSHB_1
+        0,
+      LT /* width < 0 */
+      NEG /* dist = -dist */
+
+    EIF
+  EIF
+
+  ENDF
+
+};
+
+
 static FT_Error
 TA_table_build_fpgm(FT_Byte** fpgm,
                     FT_ULong* fpgm_len,

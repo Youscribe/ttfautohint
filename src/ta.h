@@ -136,6 +136,7 @@ typedef struct FONT_ {
 } FONT;
 
 #include "tatables.h"
+#include "tabytecode.h"
 
 #endif /* __TA_H__ */
 
