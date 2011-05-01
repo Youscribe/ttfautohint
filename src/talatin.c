@@ -1705,7 +1705,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
     for (edge = edges; edge < edge_limit; edge++)
     {
       TA_Width blue;
-      TA_Edge edge1, edge2;
+      TA_Edge edge1, edge2; /* these edges form the stem to check */
 
 
       if (edge->flags & TA_EDGE_DONE)
@@ -1717,6 +1717,8 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
       if (blue)
         edge1 = edge;
+
+      /* flip edges if the other stem is aligned to a blue zone */
       else if (edge2 && edge2->blue_edge)
       {
         blue = edge2->blue_edge;
@@ -1746,7 +1748,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
     }
   }
 
-  /* now we align all stem edges, */
+  /* now we align all other stem edges, */
   /* trying to maintain the relative order of stems in the glyph */
   for (edge = edges; edge < edge_limit; edge++)
   {
@@ -1778,6 +1780,8 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
     if (!anchor)
     {
+      /* if we reach this if clause, no stem has been aligned yet */
+
       FT_Pos org_len, org_center, cur_len;
       FT_Pos cur_pos1, error1, error2, u_off, d_off;
 
@@ -1786,14 +1790,18 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       cur_len = ta_latin_compute_stem_width(hints, dim, org_len,
                                             edge->flags, edge2->flags);
 
-      /* some voodoo to specially round edges for small stem widths */
+      /* some voodoo to specially round edges for small stem widths; */
+      /* the idea is to align the center of a stem, */
+      /* then shifting the stem edges to suitable positions */
       if (cur_len <= 64)
       {
+        /* width <= 1px */
         u_off = 32;
         d_off = 32;
       }
       else
       {
+        /* 1px < width < 1.5px */
         u_off = 38;
         d_off = 26;
       }
