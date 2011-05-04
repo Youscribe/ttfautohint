@@ -568,7 +568,7 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
   }
 
   /* an extra-light axis corresponds to a standard width that is */
-  /* smaller than 0.75 pixels */
+  /* smaller than 5/8 pixels */
   axis->extra_light =
     (FT_Bool)(FT_MulFix(axis->standard_width, scale) < 32 + 8);
 
@@ -591,9 +591,16 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
       dist = FT_MulFix(blue->ref.org - blue->shoot.org, scale);
       if (dist <= 48 && dist >= -48)
       {
-        FT_Pos delta1, delta2;
+#if 0
+        FT_Pos delta1;
+#endif
+        FT_Pos delta2;
 
 
+        /* use discrete values for blue zone widths */
+
+#if 0
+        /* generic, original code */
         delta1 = blue->shoot.org - blue->ref.org;
         delta2 = delta1;
         if (delta1 < 0)
@@ -610,6 +617,22 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
         if (delta1 < 0)
           delta2 = -delta2;
+#else
+        /* simplified version due to abs(dist) <= 48 */
+        delta2 = dist;
+        if (dist < 0)
+          delta2 = -delta2;
+
+        if (delta2 < 32)
+          delta2 = 0;
+        else if (delta < 48)
+          delta2 = 32;
+        else
+          delta2 = 64;
+
+        if (dist < 0)
+          delta2 = -delta2;
+#endif
 
         blue->ref.fit = TA_PIX_ROUND(blue->ref.cur);
         blue->shoot.fit = blue->ref.fit + delta2;
@@ -1008,7 +1031,7 @@ ta_latin_hints_compute_edges(TA_GlyphHints hints,
   /*                                                                  */
   /********************************************************************/
 
-  /* assure that edge distance threshold is at least 0.25px */
+  /* assure that edge distance threshold is at most 0.25px */
   edge_distance_threshold = FT_MulFix(laxis->edge_distance_threshold,
                                       scale);
   if (edge_distance_threshold > 64 / 4)
