@@ -1382,6 +1382,9 @@ TTF_autohint(FILE* in,
     goto Err;
 
   /* build `prep' table */
+  error = TA_sfnt_build_prep_table(&font->sfnts[0], font);
+  if (error)
+    goto Err;
 
   /* handle all glyphs in a loop */
     /* hint the glyph */

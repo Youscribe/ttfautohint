@@ -170,81 +170,102 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 
 #define CVT_HORZ_WIDTHS_OFFSET(font) 0
+#define CVT_HORZ_WIDTHS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
+
 #define CVT_VERT_WIDTHS_OFFSET(font) \
           CVT_HORZ_WIDTHS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count;
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
+#define CVT_VERT_WIDTHS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
+
 #define CVT_BLUE_REFS_OFFSET(font) \
           CVT_VERT_WIDTHS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count;
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
+#define CVT_BLUE_REFS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+
 #define CVT_BLUE_SHOOTS_OFFSET(font) \
           CVT_BLUE_REFS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count;
+          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+#define CVT_BLUE_SHOOTS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+
+
+/* symbolic names for storage area locations */
+
+#define sal_counter 0,
+#define sal_limit 1,
+#define sal_scale 2,
+#define sal_0x10000 3,
 
 
 /* in the comments below, the top of the stack (`s:') */
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
 
-  /*
-   * compute_stem_width
-   *
-   *   This is the equivalent to the following code from function
-   *   `ta_latin_compute_stem_width':
-   *
-   *      dist = ABS(width)
-   *
-   *      if stem_is_serif
-   *         && dist < 3*64:
-   *        return width
-   *      else if base_is_round:
-   *        if dist < 80
-   *          dist = 64
-   *      else:
-   *        dist = MIN(56, dist)
-   *
-   *      delta = ABS(dist - std_width)
-   *
-   *      if delta < 40:
-   *        dist = MIN(48, std_width)
-   *        goto End
-   *
-   *      if dist < 3*64:
-   *        delta = dist
-   *        dist = FLOOR(dist)
-   *        delta = delta - dist
-   *
-   *        if delta < 10:
-   *          dist = dist + delta
-   *        else if delta < 32:
-   *          dist = dist + 10
-   *        else if delta < 54:
-   *          dist = dist + 54
-   *        else
-   *          dist = dist + delta
-   *      else
-   *        dist = ROUND(dist)
-   *
-   *    End:
-   *      if width < 0:
-   *        dist = -dist
-   *      return dist
-   *
-   *
-   *
-   * Function 0: compute_stem_width
-   *
-   * in: width
-   *     stem_is_serif
-   *     base_is_round
-   * out: new_width
-   * CVT: is_extra_light
-   *      std_width
-   */
+/*
+ * compute_stem_width
+ *
+ *   This is the equivalent to the following code from function
+ *   `ta_latin_compute_stem_width':
+ *
+ *      dist = ABS(width)
+ *
+ *      if stem_is_serif
+ *         && dist < 3*64:
+ *        return width
+ *      else if base_is_round:
+ *        if dist < 80
+ *          dist = 64
+ *      else:
+ *        dist = MIN(56, dist)
+ *
+ *      delta = ABS(dist - std_width)
+ *
+ *      if delta < 40:
+ *        dist = MIN(48, std_width)
+ *        goto End
+ *
+ *      if dist < 3*64:
+ *        delta = dist
+ *        dist = FLOOR(dist)
+ *        delta = delta - dist
+ *
+ *        if delta < 10:
+ *          dist = dist + delta
+ *        else if delta < 32:
+ *          dist = dist + 10
+ *        else if delta < 54:
+ *          dist = dist + 54
+ *        else
+ *          dist = dist + delta
+ *      else
+ *        dist = ROUND(dist)
+ *
+ *    End:
+ *      if width < 0:
+ *        dist = -dist
+ *      return dist
+ *
+ *
+ *
+ * Function 0: compute_stem_width
+ *
+ * in: width
+ *     stem_is_serif
+ *     base_is_round
+ * out: new_width
+ * CVT: is_extra_light   XXX
+ *      std_width
+ */
+
+#define compute_stem_width 0,
 
 unsigned char fpgm_0a[] = {
 
   PUSHB_1
-    0,
+    compute_stem_width
   FDEF
 
   DUP
@@ -386,6 +407,137 @@ unsigned char fpgm_0c[] = {
 };
 
 
+/*
+ * loop
+ *
+ *   Take a range and a function number and apply the function to all
+ *   elements of the range.  The called function must not change the
+ *   stack.
+ *
+ * Function 1: loop
+ *
+ * in: func_num
+ *     end
+ *     start
+ *
+ * uses: sal_counter (counter initialized with `start')
+ *       sal_limit (`end')
+ */
+
+#define loop 1,
+
+unsigned char fpgm_1[] = {
+
+  PUSHB_1
+    loop
+  FDEF
+
+  ROLL /* s: func_num start end */
+  PUSHB_1
+    sal_limit
+  SWAP
+  WS
+
+  PUSHB_1
+    sal_counter
+  SWAP
+  WS
+
+/* start_loop: */
+  PUSHB_1
+    sal_counter
+  RS
+  PUSHB_1
+    sal_limit
+  RS
+  LTEQ /* start <= end */
+  IF /* s: func_num */
+    DUP
+    CALL
+    PUSHB_2
+      1,
+      sal_counter
+    RS
+    ADD /* start = start + 1 */
+    PUSHB_1
+      sal_counter
+    SWAP
+    WS
+
+    PUSHB_1
+      22,
+    NEG
+    JMPR /* goto start_loop */
+  ELSE
+    POP
+  EIF
+
+  ENDF
+
+};
+
+
+/*
+ * rescale_horizontally
+ *
+ *   All entries in the CVT table get scaled automatically using the
+ *   vertical resolution.  However, some widths must be scaled with the
+ *   horizontal resolution.
+ *
+ * Function 2: rescale_horizontally
+ *
+ * uses: sal_counter (CVT index)
+ *       sal_scale (scale in 16.16 format)
+ */
+
+#define rescale_horizontally 2,
+
+unsigned char fpgm_2[] = {
+
+  PUSHB_1
+    rescale_horizontally
+  FDEF
+
+  PUSHB_1
+    sal_counter
+  RS
+  DUP
+  RCVT
+  PUSHB_1
+    sal_scale
+  RS
+  MUL /* CVT * scale * 2^10 */
+  PUSHB_1
+    sal_0x10000
+  RS
+  DIV /* CVT * scale */
+
+  SWAP
+  WCVTP
+
+  ENDF
+
+};
+
+
+/* we often need 0x10000 which can't be pushed directly onto the stack, */
+/* thus we provide it in the storage area */
+
+unsigned char fpgm_A[] = {
+
+  PUSHB_1
+    sal_0x10000
+  PUSHW_2
+    0x08, /* 0x800 */
+    0x00,
+    0x08, /* 0x800 */
+    0x00,
+  MUL /* 0x10000 */
+  WS
+
+};
+
+
 static FT_Error
 TA_table_build_fpgm(FT_Byte** fpgm,
                     FT_ULong* fpgm_len,
@@ -396,9 +548,14 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   FT_Byte* buf_p;
 
 
-  buf_len = sizeof (fpgm_0a) + 1
-            + sizeof (fpgm_0b) + 1
-            + sizeof (fpgm_0c);
+  buf_len = sizeof (fpgm_0a)
+            + 1
+            + sizeof (fpgm_0b)
+            + 1
+            + sizeof (fpgm_0c)
+            + sizeof (fpgm_1)
+            + sizeof (fpgm_2)
+            + sizeof (fpgm_A);
   buf = (FT_Byte*)malloc(buf_len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
@@ -412,6 +569,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   buf_p += sizeof (fpgm_0b);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
   memcpy(buf_p, fpgm_0c, sizeof (fpgm_0c));
+  buf_p += sizeof (fpgm_0c);
+  memcpy(buf_p, fpgm_1, sizeof (fpgm_1));
+  buf_p += sizeof (fpgm_1);
+  memcpy(buf_p, fpgm_2, sizeof (fpgm_2));
+  buf_p += sizeof (fpgm_2);
+  memcpy(buf_p, fpgm_A, sizeof (fpgm_A));
 
   *fpgm = buf;
   *fpgm_len = buf_len;
@@ -446,6 +609,117 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
   if (error)
   {
     free(fpgm_buf);
+    return error;
+  }
+}
+
+
+/* the `prep' instructions */
+
+unsigned char prep_a[] = {
+
+  /* scale horizontal CVT entries */
+  /* if horizontal and vertical resolutions differ */
+
+  SVTCA_x
+  MPPEM
+  SVTCA_y
+  MPPEM
+  NEQ /* horz_ppem != vert_ppem */
+  IF
+    SVTCA_x
+    MPPEM
+    PUSHB_1
+      sal_0x10000
+    RS
+    MUL /* horz_ppem in 22.10 format */
+
+    SVTCA_y
+    MPPEM
+    DIV /* (horz_ppem / vert_ppem) in 16.16 format */
+
+    PUSHB_1
+      sal_scale
+    SWAP
+    WS
+
+    /* loop over horizontal CVT entries */
+    PUSHB_4
+
+};
+
+/*    %c, first horizontal index */
+/*    %c, last horizontal index */
+
+unsigned char prep_b[] = {
+
+      rescale_horizontally
+      loop
+    CALL
+  EIF
+
+};
+
+
+static FT_Error
+TA_table_build_prep(FT_Byte** prep,
+                    FT_ULong* prep_len,
+                    FONT* font)
+{
+  FT_UInt buf_len;
+  FT_Byte* buf;
+  FT_Byte* buf_p;
+
+
+  buf_len = sizeof (prep_a)
+            + 2
+            + sizeof (prep_b);
+  buf = (FT_Byte*)malloc(buf_len);
+  if (!buf)
+    return FT_Err_Out_Of_Memory;
+
+  /* copy cvt program into buffer and fill in the missing variables */
+  buf_p = buf;
+  memcpy(buf_p, prep_a, sizeof (prep_a));
+  buf_p += sizeof (prep_a);
+  *(buf_p++) = (unsigned char)CVT_HORZ_WIDTHS_OFFSET(font);
+  *(buf_p++) = (unsigned char)(CVT_HORZ_WIDTHS_OFFSET(font)
+                               + CVT_HORZ_WIDTHS_SIZE(font) - 1);
+  memcpy(buf_p, prep_b, sizeof (prep_b));
+
+  *prep = buf;
+  *prep_len = buf_len;
+
+  return FT_Err_Ok;
+}
+
+
+FT_Error
+TA_sfnt_build_prep_table(SFNT* sfnt,
+                         FONT* font)
+{
+  FT_Error error;
+
+  FT_Byte* prep_buf;
+  FT_ULong prep_len;
+
+
+  error = TA_sfnt_add_table_info(sfnt);
+  if (error)
+    return error;
+
+  error = TA_table_build_prep(&prep_buf, &prep_len, font);
+  if (error)
+    return error;
+
+  /* in case of success, `prep_buf' gets linked */
+  /* and is eventually freed in `TA_font_unload' */
+  error = TA_font_add_table(font,
+                            &sfnt->table_infos[sfnt->num_table_infos - 1],
+                            TTAG_prep, prep_len, prep_buf);
+  if (error)
+  {
+    free(prep_buf);
     return error;
   }
 }
