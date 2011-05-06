@@ -71,7 +71,6 @@ typedef struct TA_LatinAxisRec_
   FT_Bool extra_light; /* is standard width very light? */
 
   /* ignored for horizontal metrics */
-  FT_Bool control_overshoot;
   FT_UInt blue_count;
   TA_LatinBlueRec blues[TA_LATIN_BLUE_MAX];
 
