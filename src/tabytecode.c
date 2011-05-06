@@ -169,22 +169,26 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 }
 
 
+/* the horizontal stem widths */
 #define CVT_HORZ_WIDTHS_OFFSET(font) 0
 #define CVT_HORZ_WIDTHS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
 
+/* the vertical stem widths */
 #define CVT_VERT_WIDTHS_OFFSET(font) \
           CVT_HORZ_WIDTHS_OFFSET(font) \
           + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
 #define CVT_VERT_WIDTHS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
 
+/* the blue zone values for flat edges */
 #define CVT_BLUE_REFS_OFFSET(font) \
           CVT_VERT_WIDTHS_OFFSET(font) \
           + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
 #define CVT_BLUE_REFS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
 
+/* the blue zone values for round edges */
 #define CVT_BLUE_SHOOTS_OFFSET(font) \
           CVT_BLUE_REFS_OFFSET(font) \
           + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
