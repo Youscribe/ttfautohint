@@ -66,6 +66,7 @@ TA_table_build_cvt(FT_Byte** cvt,
 
   FT_UInt i;
   FT_UInt buf_len;
+  FT_UInt len;
   FT_Byte* buf;
   FT_Byte* buf_p;
 
@@ -82,9 +83,17 @@ TA_table_build_cvt(FT_Byte** cvt,
 
   buf_len = 2 * (haxis->width_count + vaxis->width_count
                  + 2 * vaxis->blue_count);
-  buf = (FT_Byte*)malloc(buf_len);
+
+  /* buffer length must be a multiple of four */
+  len = (buf_len + 3) & ~3;
+  buf = (FT_Byte*)malloc(len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
+
+  /* pad end of buffer with zeros */
+  buf[len - 1] = 0x00;
+  buf[len - 2] = 0x00;
+  buf[len - 3] = 0x00;
 
   buf_p = buf;
 
@@ -547,6 +556,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
                     FONT* font)
 {
   FT_UInt buf_len;
+  FT_UInt len;
   FT_Byte* buf;
   FT_Byte* buf_p;
 
@@ -559,9 +569,16 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (fpgm_1)
             + sizeof (fpgm_2)
             + sizeof (fpgm_A);
-  buf = (FT_Byte*)malloc(buf_len);
+  /* buffer length must be a multiple of four */
+  len = (buf_len + 3) & ~3;
+  buf = (FT_Byte*)malloc(len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
+
+  /* pad end of buffer with zeros */
+  buf[len - 1] = 0x00;
+  buf[len - 2] = 0x00;
+  buf[len - 3] = 0x00;
 
   /* copy font program into buffer and fill in the missing variables */
   buf_p = buf;
@@ -764,6 +781,7 @@ TA_table_build_prep(FT_Byte** prep,
   FT_UInt i;
 
   FT_UInt buf_len;
+  FT_UInt len;
   FT_Byte* buf;
   FT_Byte* buf_p;
 
@@ -797,9 +815,16 @@ TA_table_build_prep(FT_Byte** prep,
                + sizeof (prep_g);
   }
 
-  buf = (FT_Byte*)malloc(buf_len);
+  /* buffer length must be a multiple of four */
+  len = (buf_len + 3) & ~3;
+  buf = (FT_Byte*)malloc(len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
+
+  /* pad end of buffer with zeros */
+  buf[len - 1] = 0x00;
+  buf[len - 2] = 0x00;
+  buf[len - 3] = 0x00;
 
   /* copy cvt program into buffer and fill in the missing variables */
   buf_p = buf;
