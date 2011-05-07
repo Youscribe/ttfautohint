@@ -63,7 +63,6 @@ TA_table_build_cvt(FT_Byte** cvt,
 {
   TA_LatinAxis haxis;
   TA_LatinAxis vaxis;
-  TA_LatinBlue blue;
 
   FT_UInt i;
   FT_UInt buf_len;
@@ -482,24 +481,24 @@ unsigned char fpgm_1[] = {
 
 
 /*
- * rescale_horizontally
+ * rescale
  *
  *   All entries in the CVT table get scaled automatically using the
  *   vertical resolution.  However, some widths must be scaled with the
- *   horizontal resolution.
+ *   horizontal resolution, and others get adjusted later on.
  *
- * Function 2: rescale_horizontally
+ * Function 2: rescale
  *
  * uses: sal_counter (CVT index)
  *       sal_scale (scale in 16.16 format)
  */
 
-#define rescale_horizontally 2,
+#define rescale 2,
 
 unsigned char fpgm_2[] = {
 
   PUSHB_1
-    rescale_horizontally
+    rescale
   FDEF
 
   PUSHB_1
@@ -566,18 +565,26 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
   /* copy font program into buffer and fill in the missing variables */
   buf_p = buf;
+
   memcpy(buf_p, fpgm_0a, sizeof (fpgm_0a));
   buf_p += sizeof (fpgm_0a);
+
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+
   memcpy(buf_p, fpgm_0b, sizeof (fpgm_0b));
   buf_p += sizeof (fpgm_0b);
+
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+
   memcpy(buf_p, fpgm_0c, sizeof (fpgm_0c));
   buf_p += sizeof (fpgm_0c);
+
   memcpy(buf_p, fpgm_1, sizeof (fpgm_1));
   buf_p += sizeof (fpgm_1);
+
   memcpy(buf_p, fpgm_2, sizeof (fpgm_2));
   buf_p += sizeof (fpgm_2);
+
   memcpy(buf_p, fpgm_A, sizeof (fpgm_A));
 
   *fpgm = buf;
@@ -657,9 +664,91 @@ unsigned char prep_a[] = {
 
 unsigned char prep_b[] = {
 
-      rescale_horizontally
+      rescale
       loop
     CALL
+  EIF
+
+};
+
+unsigned char prep_c[] = {
+
+  /* optimize the alignment of the top of small letters to the pixel grid */
+
+  PUSHB_1
+
+};
+
+/*  %c, index of alignment blue zone */
+
+unsigned char prep_d[] = {
+
+  RCVT
+  DUP
+  DUP
+  PUSHB_1
+    40,
+  ADD
+  FLOOR /* fitted = FLOOR(scaled + 40) */
+  DUP /* s: scaled scaled fitted fitted */
+  ROLL
+  NEQ
+  IF /* s: scaled fitted */
+    SWAP
+    PUSHB_1
+      sal_0x10000
+    RS
+    MUL /* scaled in 16.16 format */
+    SWAP
+    DIV /* (scaled / fitted) in 16.16 format */
+
+    PUSHB_1
+      sal_scale
+    SWAP
+    WS
+
+    /* loop over vertical CVT entries */
+    PUSHB_4
+
+};
+
+/*    %c, first vertical index */
+/*    %c, last vertical index */
+
+unsigned char prep_e[] = {
+
+      rescale
+      loop
+    CALL
+
+    /* loop over blue refs */
+    PUSHB_4
+
+};
+
+/*    %c, first blue ref index */
+/*    %c, last blue ref index */
+
+unsigned char prep_f[] = {
+
+      rescale
+      loop
+    CALL
+
+    /* loop over blue shoots */
+    PUSHB_4
+
+};
+
+/*    %c, first blue shoot index */
+/*    %c, last blue shoot index */
+
+unsigned char prep_g[] = {
+
+      rescale
+      loop
+    CALL
+
   EIF
 
 };
@@ -670,26 +759,92 @@ TA_table_build_prep(FT_Byte** prep,
                     FT_ULong* prep_len,
                     FONT* font)
 {
+  TA_LatinAxis vaxis;
+  TA_LatinBlue blue_adjustment;
+  FT_UInt i;
+
   FT_UInt buf_len;
   FT_Byte* buf;
   FT_Byte* buf_p;
 
 
+  vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
+  blue_adjustment = NULL;
+
+  for (i = 0; i < vaxis->blue_count; i++)
+  {
+    if (vaxis->blues[i].flags & TA_LATIN_BLUE_ADJUSTMENT)
+    {
+      blue_adjustment = &vaxis->blues[i];
+      break;
+    }
+  }
+
   buf_len = sizeof (prep_a)
             + 2
             + sizeof (prep_b);
+
+  if (blue_adjustment)
+  {
+    buf_len += sizeof (prep_c)
+               + 1
+               + sizeof (prep_d)
+               + 2
+               + sizeof (prep_e)
+               + 2
+               + sizeof (prep_f)
+               + 2
+               + sizeof (prep_g);
+  }
+
   buf = (FT_Byte*)malloc(buf_len);
   if (!buf)
     return FT_Err_Out_Of_Memory;
 
   /* copy cvt program into buffer and fill in the missing variables */
   buf_p = buf;
+
   memcpy(buf_p, prep_a, sizeof (prep_a));
   buf_p += sizeof (prep_a);
+
   *(buf_p++) = (unsigned char)CVT_HORZ_WIDTHS_OFFSET(font);
   *(buf_p++) = (unsigned char)(CVT_HORZ_WIDTHS_OFFSET(font)
                                + CVT_HORZ_WIDTHS_SIZE(font) - 1);
+
   memcpy(buf_p, prep_b, sizeof (prep_b));
+
+  if (blue_adjustment)
+  {
+    buf_p += sizeof (prep_b);
+
+    memcpy(buf_p, prep_c, sizeof (prep_c));
+    buf_p += sizeof (prep_c);
+
+    *(buf_p++) = blue_adjustment - vaxis->blues;
+
+    memcpy(buf_p, prep_d, sizeof (prep_d));
+    buf_p += sizeof (prep_d);
+
+    *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+    *(buf_p++) = (unsigned char)(CVT_VERT_WIDTHS_OFFSET(font)
+                                 + CVT_VERT_WIDTHS_SIZE(font) - 1);
+
+    memcpy(buf_p, prep_e, sizeof (prep_e));
+    buf_p += sizeof (prep_e);
+
+    *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
+    *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
+                                 + CVT_BLUE_REFS_SIZE(font) - 1);
+
+    memcpy(buf_p, prep_f, sizeof (prep_f));
+    buf_p += sizeof (prep_f);
+
+    *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
+    *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
+                                 + CVT_BLUE_SHOOTS_SIZE(font) - 1);
+
+    memcpy(buf_p, prep_g, sizeof (prep_g));
+  }
 
   *prep = buf;
   *prep_len = buf_len;
