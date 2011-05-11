@@ -32,6 +32,9 @@
 /* the length of a dummy `DSIG' table */
 #define DSIG_LEN 8
 
+/* the length of our `gasp' table */
+#define GASP_LEN 8
+
 /* an empty slot in the table info array */
 #define MISSING (FT_ULong)~0
 
