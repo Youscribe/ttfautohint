@@ -119,7 +119,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
              || tag == TTAG_DSIG
              || tag == TTAG_hdmx
              || tag == TTAG_VDMX
-             || tag == TTAG_LTSH)
+             || tag == TTAG_LTSH
+             || tag == TTAG_gasp)
       continue;
 
     /* make the allocated buffer length a multiple of 4 */
