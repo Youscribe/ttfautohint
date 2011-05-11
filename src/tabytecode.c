@@ -206,10 +206,10 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 /* symbolic names for storage area locations */
 
-#define sal_counter 0,
-#define sal_limit 1,
-#define sal_scale 2,
-#define sal_0x10000 3,
+#define sal_counter 0
+#define sal_limit 1
+#define sal_scale 2
+#define sal_0x10000 3
 
 
 /* in the comments below, the top of the stack (`s:') */
@@ -272,53 +272,53 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *      std_width
  */
 
-#define compute_stem_width 0,
+#define compute_stem_width 0
 
 unsigned char fpgm_0a[] = {
 
-  PUSHB_1
-    compute_stem_width
-  FDEF
+  PUSHB_1,
+    compute_stem_width,
+  FDEF,
 
-  DUP
-  ABS /* s: base_is_round stem_is_serif width dist */
+  DUP,
+  ABS, /* s: base_is_round stem_is_serif width dist */
 
-  DUP
-  PUSHB_1
+  DUP,
+  PUSHB_1,
     3*64,
-  LT /* dist < 3*64 */
+  LT, /* dist < 3*64 */
 
-  PUSHB_1
+  PUSHB_1,
     4,
-  MINDEX /* s: base_is_round width dist (dist<3*64) stem_is_serif */
+  MINDEX, /* s: base_is_round width dist (dist<3*64) stem_is_serif */
 
-  AND /* stem_is_serif && dist < 3*64 */
-  IF /* s: base_is_round width dist */
-    POP
-    SWAP
-    POP /* s: width */
+  AND, /* stem_is_serif && dist < 3*64 */
+  IF, /* s: base_is_round width dist */
+    POP,
+    SWAP,
+    POP, /* s: width */
 
-  ELSE
-    ROLL /* s: width dist base_is_round */
-    IF /* s: width dist */
-      DUP
-      PUSHB_1
+  ELSE,
+    ROLL, /* s: width dist base_is_round */
+    IF, /* s: width dist */
+      DUP,
+      PUSHB_1,
         80,
-      LT /* dist < 80 */
-      IF /* s: width dist */
-        POP
-        PUSHB_1
+      LT, /* dist < 80 */
+      IF, /* s: width dist */
+        POP,
+        PUSHB_1,
           64, /* dist = 64 */
-      EIF
+      EIF,
 
-    ELSE
-      PUSHB_1
+    ELSE,
+      PUSHB_1,
         56,
-      MIN /* dist = min(56, dist) */
-    EIF
+      MIN, /* dist = min(56, dist) */
+    EIF,
 
-    DUP /* s: width dist dist */
-    PUSHB_1
+    DUP, /* s: width dist dist */
+    PUSHB_1,
 
 };
 
@@ -326,16 +326,16 @@ unsigned char fpgm_0a[] = {
 
 unsigned char fpgm_0b[] = {
 
-    RCVT
-    SUB
-    ABS /* s: width dist delta */
+    RCVT,
+    SUB,
+    ABS, /* s: width dist delta */
 
-    PUSHB_1
+    PUSHB_1,
       40,
-    LT /* delta < 40 */
-    IF /* s: width dist */
-      POP
-      PUSHB_2
+    LT, /* delta < 40 */
+    IF, /* s: width dist */
+      POP,
+      PUSHB_2,
         48,
 
 };
@@ -344,77 +344,77 @@ unsigned char fpgm_0b[] = {
 
 unsigned char fpgm_0c[] = {
 
-      RCVT
-      MIN /* dist = min(48, std_width) */
+      RCVT,
+      MIN, /* dist = min(48, std_width) */
 
-    ELSE
-      DUP /* s: width dist dist */
-      PUSHB_1
+    ELSE,
+      DUP, /* s: width dist dist */
+      PUSHB_1,
         3*64,
-      LT /* dist < 3*64 */
-      IF
-        DUP /* s: width delta dist */
-        FLOOR /* dist = FLOOR(dist) */
-        DUP /* s: width delta dist dist */
-        ROLL
-        ROLL /* s: width dist delta dist */
-        SUB /* delta = delta - dist */
+      LT, /* dist < 3*64 */
+      IF,
+        DUP, /* s: width delta dist */
+        FLOOR, /* dist = FLOOR(dist) */
+        DUP, /* s: width delta dist dist */
+        ROLL,
+        ROLL, /* s: width dist delta dist */
+        SUB, /* delta = delta - dist */
 
-        DUP /* s: width dist delta delta */
-        PUSHB_1
+        DUP, /* s: width dist delta delta */
+        PUSHB_1,
           10,
-        LT /* delta < 10 */
-        IF /* s: width dist delta */
-          ADD /* dist = dist + delta */
+        LT, /* delta < 10 */
+        IF, /* s: width dist delta */
+          ADD, /* dist = dist + delta */
 
-        ELSE
-          DUP
-          PUSHB_1
+        ELSE,
+          DUP,
+          PUSHB_1,
             32,
-          LT /* delta < 32 */
-          IF
-            POP
-            PUSHB_1
+          LT, /* delta < 32 */
+          IF,
+            POP,
+            PUSHB_1,
               10,
-            ADD /* dist = dist + 10 */
+            ADD, /* dist = dist + 10 */
 
-          ELSE
-            DUP
-            PUSHB_1
+          ELSE,
+            DUP,
+            PUSHB_1,
               54,
-            LT /* delta < 54 */
-            IF
-              POP
-              PUSHB_1
+            LT, /* delta < 54 */
+            IF,
+              POP,
+              PUSHB_1,
                 54,
-              ADD /* dist = dist + 54 */
+              ADD, /* dist = dist + 54 */
 
-            ELSE
-              ADD /* dist = dist + delta */
+            ELSE,
+              ADD, /* dist = dist + delta */
 
-            EIF
-          EIF
-        EIF
+            EIF,
+          EIF,
+        EIF,
 
-        ELSE
-          PUSHB_1
+        ELSE,
+          PUSHB_1,
             32,
-          ADD
-          FLOOR /* dist = round(dist) */
+          ADD,
+          FLOOR, /* dist = round(dist) */
 
-        EIF
-      EIF
+        EIF,
+      EIF,
 
-      SWAP /* s: dist width */
-      PUSHB_1
+      SWAP, /* s: dist width */
+      PUSHB_1,
         0,
-      LT /* width < 0 */
-      NEG /* dist = -dist */
+      LT, /* width < 0 */
+      NEG, /* dist = -dist */
 
-    EIF
-  EIF
+    EIF,
+  EIF,
 
-  ENDF
+  ENDF,
 
 };
 
@@ -436,55 +436,55 @@ unsigned char fpgm_0c[] = {
  *       sal_limit (`end')
  */
 
-#define loop 1,
+#define loop 1
 
 unsigned char fpgm_1[] = {
 
-  PUSHB_1
-    loop
-  FDEF
+  PUSHB_1,
+    loop,
+  FDEF,
 
-  ROLL /* s: func_num start end */
-  PUSHB_1
-    sal_limit
-  SWAP
-  WS
+  ROLL, /* s: func_num start end */
+  PUSHB_1,
+    sal_limit,
+  SWAP,
+  WS,
 
-  PUSHB_1
-    sal_counter
-  SWAP
-  WS
+  PUSHB_1,
+    sal_counter,
+  SWAP,
+  WS,
 
 /* start_loop: */
-  PUSHB_1
-    sal_counter
-  RS
-  PUSHB_1
-    sal_limit
-  RS
-  LTEQ /* start <= end */
-  IF /* s: func_num */
-    DUP
-    CALL
-    PUSHB_2
+  PUSHB_1,
+    sal_counter,
+  RS,
+  PUSHB_1,
+    sal_limit,
+  RS,
+  LTEQ, /* start <= end */
+  IF, /* s: func_num */
+    DUP,
+    CALL,
+    PUSHB_2,
       1,
-      sal_counter
-    RS
-    ADD /* start = start + 1 */
-    PUSHB_1
-      sal_counter
-    SWAP
-    WS
+      sal_counter,
+    RS,
+    ADD, /* start = start + 1 */
+    PUSHB_1,
+      sal_counter,
+    SWAP,
+    WS,
 
-    PUSHB_1
+    PUSHB_1,
       22,
-    NEG
-    JMPR /* goto start_loop */
-  ELSE
-    POP
-  EIF
+    NEG,
+    JMPR, /* goto start_loop */
+  ELSE,
+    POP,
+  EIF,
 
-  ENDF
+  ENDF,
 
 };
 
@@ -502,32 +502,32 @@ unsigned char fpgm_1[] = {
  *       sal_scale (scale in 16.16 format)
  */
 
-#define rescale 2,
+#define rescale 2
 
 unsigned char fpgm_2[] = {
 
-  PUSHB_1
-    rescale
-  FDEF
+  PUSHB_1,
+    rescale,
+  FDEF,
 
-  PUSHB_1
-    sal_counter
-  RS
-  DUP
-  RCVT
-  PUSHB_1
-    sal_scale
-  RS
-  MUL /* CVT * scale * 2^10 */
-  PUSHB_1
-    sal_0x10000
-  RS
-  DIV /* CVT * scale */
+  PUSHB_1,
+    sal_counter,
+  RS,
+  DUP,
+  RCVT,
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* CVT * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* CVT * scale */
 
-  SWAP
-  WCVTP
+  SWAP,
+  WCVTP,
 
-  ENDF
+  ENDF,
 
 };
 
@@ -537,15 +537,15 @@ unsigned char fpgm_2[] = {
 
 unsigned char fpgm_A[] = {
 
-  PUSHB_1
-    sal_0x10000
-  PUSHW_2
+  PUSHB_1,
+    sal_0x10000,
+  PUSHW_2,
     0x08, /* 0x800 */
     0x00,
     0x08, /* 0x800 */
     0x00,
-  MUL /* 0x10000 */
-  WS
+  MUL, /* 0x10000 */
+  WS,
 
 };
 
@@ -649,30 +649,30 @@ unsigned char prep_a[] = {
   /* scale horizontal CVT entries */
   /* if horizontal and vertical resolutions differ */
 
-  SVTCA_x
-  MPPEM
-  SVTCA_y
-  MPPEM
-  NEQ /* horz_ppem != vert_ppem */
-  IF
-    SVTCA_x
-    MPPEM
-    PUSHB_1
-      sal_0x10000
-    RS
-    MUL /* horz_ppem in 22.10 format */
+  SVTCA_x,
+  MPPEM,
+  SVTCA_y,
+  MPPEM,
+  NEQ, /* horz_ppem != vert_ppem */
+  IF,
+    SVTCA_x,
+    MPPEM,
+    PUSHB_1,
+      sal_0x10000,
+    RS,
+    MUL, /* horz_ppem in 22.10 format */
 
-    SVTCA_y
-    MPPEM
-    DIV /* (horz_ppem / vert_ppem) in 16.16 format */
+    SVTCA_y,
+    MPPEM,
+    DIV, /* (horz_ppem / vert_ppem) in 16.16 format */
 
-    PUSHB_1
-      sal_scale
-    SWAP
-    WS
+    PUSHB_1,
+      sal_scale,
+    SWAP,
+    WS,
 
     /* loop over horizontal CVT entries */
-    PUSHB_4
+    PUSHB_4,
 
 };
 
@@ -681,10 +681,10 @@ unsigned char prep_a[] = {
 
 unsigned char prep_b[] = {
 
-      rescale
-      loop
-    CALL
-  EIF
+      rescale,
+      loop,
+    CALL,
+  EIF,
 
 };
 
@@ -692,7 +692,7 @@ unsigned char prep_c[] = {
 
   /* optimize the alignment of the top of small letters to the pixel grid */
 
-  PUSHB_1
+  PUSHB_1,
 
 };
 
@@ -700,32 +700,32 @@ unsigned char prep_c[] = {
 
 unsigned char prep_d[] = {
 
-  RCVT
-  DUP
-  DUP
-  PUSHB_1
+  RCVT,
+  DUP,
+  DUP,
+  PUSHB_1,
     40,
-  ADD
-  FLOOR /* fitted = FLOOR(scaled + 40) */
-  DUP /* s: scaled scaled fitted fitted */
-  ROLL
-  NEQ
-  IF /* s: scaled fitted */
-    SWAP
-    PUSHB_1
-      sal_0x10000
-    RS
-    MUL /* scaled in 16.16 format */
-    SWAP
-    DIV /* (scaled / fitted) in 16.16 format */
+  ADD,
+  FLOOR, /* fitted = FLOOR(scaled + 40) */
+  DUP, /* s: scaled scaled fitted fitted */
+  ROLL,
+  NEQ,
+  IF, /* s: scaled fitted */
+    SWAP,
+    PUSHB_1,
+      sal_0x10000,
+    RS,
+    MUL, /* scaled in 16.16 format */
+    SWAP,
+    DIV, /* (scaled / fitted) in 16.16 format */
 
-    PUSHB_1
-      sal_scale
-    SWAP
-    WS
+    PUSHB_1,
+      sal_scale,
+    SWAP,
+    WS,
 
     /* loop over vertical CVT entries */
-    PUSHB_4
+    PUSHB_4,
 
 };
 
@@ -734,12 +734,12 @@ unsigned char prep_d[] = {
 
 unsigned char prep_e[] = {
 
-      rescale
-      loop
-    CALL
+      rescale,
+      loop,
+    CALL,
 
     /* loop over blue refs */
-    PUSHB_4
+    PUSHB_4,
 
 };
 
@@ -748,12 +748,12 @@ unsigned char prep_e[] = {
 
 unsigned char prep_f[] = {
 
-      rescale
-      loop
-    CALL
+      rescale,
+      loop,
+    CALL,
 
     /* loop over blue shoots */
-    PUSHB_4
+    PUSHB_4,
 
 };
 
@@ -762,11 +762,11 @@ unsigned char prep_f[] = {
 
 unsigned char prep_g[] = {
 
-      rescale
-      loop
-    CALL
+      rescale,
+      loop,
+    CALL,
 
-  EIF
+  EIF,
 
 };
 
