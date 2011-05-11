@@ -76,8 +76,8 @@
 #define MIAP_noround 0x3E /* move indirect absolute point without rounding */
 #define MIAP_round   0x3F /* move indirect absolute point with rounding */
 
-#define NPushB       0x40 /* push `n' bytes */
-#define NPushW       0x41 /* push `n' words */
+#define NPUSHB       0x40 /* push `n' bytes */
+#define NPUSHW       0x41 /* push `n' words */
 #define WS           0x42 /* write to storage area */
 #define RS           0x43 /* read from storage area */
 #define WCVTP        0x44 /* write to CVT in pixel units */
