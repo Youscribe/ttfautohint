@@ -283,7 +283,7 @@
 
 /* this value of this macro must be increased */
 /* if a new bytecode function gets defined */
-#define NUM_FDEFS 3
+#define NUM_FDEFS 5
 
 
 FT_Error
@@ -292,6 +292,14 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 FT_Error
 TA_sfnt_build_fpgm_table(SFNT* sfnt,
+                         FONT* font);
+
+FT_Error
+TA_sfnt_build_prep_table(SFNT* sfnt,
+                         FONT* font);
+
+FT_Error
+TA_sfnt_build_glyf_hints(SFNT* sfnt,
                          FONT* font);
 
 #endif /* __TABYTECODE_H__ */

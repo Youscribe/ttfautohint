@@ -738,16 +738,16 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   buf[MAXP_MAX_ZONES_OFFSET + 1] = 2;
   buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET] = 0;
   buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET + 1] = 0;
-  buf[MAXP_MAX_STORAGE_OFFSET] = 0;
-  buf[MAXP_MAX_STORAGE_OFFSET + 1] = 0;
+  buf[MAXP_MAX_STORAGE_OFFSET] = HIGH(sfnt->max_storage);
+  buf[MAXP_MAX_STORAGE_OFFSET + 1] = LOW(sfnt->max_storage);
   buf[MAXP_MAX_FUNCTION_DEFS_OFFSET] = 0;
   buf[MAXP_MAX_FUNCTION_DEFS_OFFSET + 1] = NUM_FDEFS;
   buf[MAXP_MAX_INSTRUCTION_DEFS_OFFSET] = 0;
   buf[MAXP_MAX_INSTRUCTION_DEFS_OFFSET + 1] = 0;
-  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET] = 0;
-  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET + 1] = 0;
-  buf[MAXP_MAX_INSTRUCTIONS_OFFSET] = 0;
-  buf[MAXP_MAX_INSTRUCTIONS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET] = HIGH(sfnt->max_stack_elements);
+  buf[MAXP_MAX_STACK_ELEMENTS_OFFSET + 1] = LOW(sfnt->max_stack_elements);
+  buf[MAXP_MAX_INSTRUCTIONS_OFFSET] = HIGH(sfnt->max_instructions);
+  buf[MAXP_MAX_INSTRUCTIONS_OFFSET + 1] = LOW(sfnt->max_instructions);
 
   maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
                                                    maxp_table->len);
@@ -847,6 +847,8 @@ TA_sfnt_build_gasp_table(SFNT* sfnt,
     free(gasp_buf);
     return error;
   }
+
+  return FT_Err_Ok;
 }
 
 
@@ -1453,11 +1455,10 @@ TTF_autohint(FILE* in,
   if (error)
     goto Err;
 
-  /* handle all glyphs in a loop */
-    /* hint the glyph */
-    /* build bytecode */
-
-  /* adjust `maxp' table */
+  /* hint the glyphs and build bytecode */
+  error = TA_sfnt_build_glyf_hints(&font->sfnts[0], font);
+  if (error)
+    goto Err;
 
   /* loop again over subfonts */
   for (i = 0; i < font->num_sfnts; i++)

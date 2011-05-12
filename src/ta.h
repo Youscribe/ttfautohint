@@ -117,6 +117,11 @@ typedef struct SFNT_ {
   FT_ULong loca_idx;
   FT_ULong head_idx;
   FT_ULong maxp_idx;
+
+  /* values necessary to update the `maxp' table */
+  FT_UShort max_storage;
+  FT_UShort max_stack_elements;
+  FT_UShort max_instructions;
 } SFNT;
 
 /* our font object */

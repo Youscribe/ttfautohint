@@ -6,6 +6,10 @@
 #include "tabytecode.h"
 
 
+/* a simple macro to emit bytecode instructions */
+#define BCI(code) *(bufp++) = (code)
+
+
 #ifdef TA_DEBUG
 int _ta_debug = 1;
 int _ta_debug_disable_horz_hints;
@@ -121,6 +125,10 @@ TA_table_build_cvt(FT_Byte** cvt,
       goto Err;
     *(buf_p++) = HIGH(vaxis->blues[i].ref.org);
     *(buf_p++) = LOW(vaxis->blues[i].ref.org);
+  }
+
+  for (i = 0; i < vaxis->blue_count; i++)
+  {
     if (vaxis->blues[i].shoot.org > 0xFFFF)
       goto Err;
     *(buf_p++) = HIGH(vaxis->blues[i].shoot.org);
@@ -174,6 +182,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
     free(cvt_buf);
     return error;
   }
+
+  return FT_Err_Ok;
 }
 
 
@@ -210,6 +220,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_limit 1
 #define sal_scale 2
 #define sal_0x10000 3
+#define sal_segment_offset 4
 
 
 /* in the comments below, the top of the stack (`s:') */
@@ -444,6 +455,7 @@ unsigned char fpgm_1[] = {
     loop,
   FDEF,
 
+  ROLL,
   ROLL, /* s: func_num start end */
   PUSHB_1,
     sal_limit,
@@ -524,7 +536,6 @@ unsigned char fpgm_2[] = {
   RS,
   DIV, /* CVT * scale */
 
-  SWAP,
   WCVTP,
 
   ENDF,
@@ -532,20 +543,66 @@ unsigned char fpgm_2[] = {
 };
 
 
-/* we often need 0x10000 which can't be pushed directly onto the stack, */
-/* thus we provide it in the storage area */
+/*
+ * sal_loop_assign
+ *
+ *   Apply the WS instruction repeatedly to stack data.
+ *
+ * Function 3: sal_loop_assign
+ *
+ * in: counter (N)
+ *     offset
+ *     data_N-1
+ *     data_N-2
+ *     ...
+ *     data_0
+ *
+ * uses: sal_assign
+ */
 
-unsigned char fpgm_A[] = {
+#define sal_assign 3
+
+unsigned char fpgm_3[] = {
 
   PUSHB_1,
-    sal_0x10000,
-  PUSHW_2,
-    0x08, /* 0x800 */
-    0x00,
-    0x08, /* 0x800 */
-    0x00,
-  MUL, /* 0x10000 */
+    sal_assign,
+  FDEF,
+
+  DUP,
+  ROLL, /* s: offset offset data */
   WS,
+
+  PUSHB_1,
+    1,
+  SUB, /* s: (offset - 1) */
+
+  ENDF,
+
+};
+
+#define sal_loop_assign 4
+
+unsigned char fpgm_4[] = {
+
+  PUSHB_1,
+    sal_loop_assign,
+  FDEF,
+
+  DUP, /* s: offset counter counter */
+  ROLL,
+  ADD,
+  PUSHB_1,
+    1,
+  SUB,
+  SWAP, /* s: (offset + counter - 1) counter */
+
+  /* process the stack, popping off the elements in a loop */
+  PUSHB_1,
+    sal_assign,
+  LOOPCALL,
+  POP,
+
+  ENDF,
 
 };
 
@@ -568,7 +625,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (fpgm_0c)
             + sizeof (fpgm_1)
             + sizeof (fpgm_2)
-            + sizeof (fpgm_A);
+            + sizeof (fpgm_3)
+            + sizeof (fpgm_4);
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
   buf = (FT_Byte*)malloc(len);
@@ -602,7 +660,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   memcpy(buf_p, fpgm_2, sizeof (fpgm_2));
   buf_p += sizeof (fpgm_2);
 
-  memcpy(buf_p, fpgm_A, sizeof (fpgm_A));
+  memcpy(buf_p, fpgm_3, sizeof (fpgm_3));
+  buf_p += sizeof (fpgm_3);
+
+  memcpy(buf_p, fpgm_4, sizeof (fpgm_4));
 
   *fpgm = buf;
   *fpgm_len = buf_len;
@@ -639,10 +700,30 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
     free(fpgm_buf);
     return error;
   }
+
+  return FT_Err_Ok;
 }
 
 
 /* the `prep' instructions */
+
+/* we often need 0x10000 which can't be pushed directly onto the stack, */
+/* thus we provide it in the storage area */
+
+unsigned char prep_A[] = {
+
+  PUSHB_1,
+    sal_0x10000,
+  PUSHW_2,
+    0x08, /* 0x800 */
+    0x00,
+    0x08, /* 0x800 */
+    0x00,
+  MUL, /* 0x10000 */
+  WS,
+
+};
+
 
 unsigned char prep_a[] = {
 
@@ -711,13 +792,12 @@ unsigned char prep_d[] = {
   ROLL,
   NEQ,
   IF, /* s: scaled fitted */
-    SWAP,
     PUSHB_1,
       sal_0x10000,
     RS,
     MUL, /* scaled in 16.16 format */
     SWAP,
-    DIV, /* (scaled / fitted) in 16.16 format */
+    DIV, /* (fitted / scaled) in 16.16 format */
 
     PUSHB_1,
       sal_scale,
@@ -798,7 +878,8 @@ TA_table_build_prep(FT_Byte** prep,
     }
   }
 
-  buf_len = sizeof (prep_a)
+  buf_len = sizeof (prep_A)
+            + sizeof (prep_a)
             + 2
             + sizeof (prep_b);
 
@@ -829,6 +910,9 @@ TA_table_build_prep(FT_Byte** prep,
   /* copy cvt program into buffer and fill in the missing variables */
   buf_p = buf;
 
+  memcpy(buf_p, prep_A, sizeof (prep_A));
+  buf_p += sizeof (prep_A);
+
   memcpy(buf_p, prep_a, sizeof (prep_a));
   buf_p += sizeof (prep_a);
 
@@ -845,7 +929,8 @@ TA_table_build_prep(FT_Byte** prep,
     memcpy(buf_p, prep_c, sizeof (prep_c));
     buf_p += sizeof (prep_c);
 
-    *(buf_p++) = blue_adjustment - vaxis->blues;
+    *(buf_p++) = blue_adjustment - vaxis->blues
+                 + CVT_BLUE_SHOOTS_OFFSET(font);
 
     memcpy(buf_p, prep_d, sizeof (prep_d));
     buf_p += sizeof (prep_d);
@@ -870,6 +955,8 @@ TA_table_build_prep(FT_Byte** prep,
 
     memcpy(buf_p, prep_g, sizeof (prep_g));
   }
+
+  /* XXX handle extra_light */
 
   *prep = buf;
   *prep_len = buf_len;
@@ -906,6 +993,234 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
     free(prep_buf);
     return error;
   }
+
+  return FT_Err_Ok;
+}
+
+
+/* we store the segments in the storage area; */
+/* each segment record consists of the first and last point */
+
+static void
+TA_font_build_glyph_segments(FONT* font,
+                             FT_Byte* bufp)
+{
+  TA_GlyphHints hints = &font->loader->hints;
+  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
+  TA_Point points = hints->points;
+  TA_Segment segments = axis->segments;
+  TA_Segment seg;
+
+  FT_UInt delta;
+  FT_UInt count;
+  FT_UInt limit;
+  FT_UInt loop_limit;
+  FT_UInt i;
+
+
+  limit = axis->num_segments * 2 + 2;
+  seg = segments;
+
+  /* NPUSHB and NPUSHW can't handle more than 256 stack elements */
+
+  if (hints->num_points > 0xFF)
+  {
+    count = 0;
+
+    if (limit - count > 256)
+    {
+      delta = 256;
+      loop_limit = 128;
+
+      if (axis->num_segments == 127)
+        loop_limit = 127;
+    }
+    else
+    {
+      delta = limit - count;
+      loop_limit = (delta - 2) / 2;
+    }
+
+    while (count < limit)
+    {
+      BCI(NPUSHW);
+      BCI(delta);
+
+      for (i = 0; i < loop_limit; i++, seg++)
+      {
+        BCI(HIGH(seg->first - points));
+        BCI(LOW(seg->first - points));
+        BCI(HIGH(seg->last - points));
+        BCI(LOW(seg->last - points));
+      }
+
+      count += delta;
+
+      if (limit - count > 256)
+      {
+        delta = 256;
+        loop_limit = 128;
+
+        if (axis->num_segments == 127)
+          loop_limit = 127;
+      }
+      else
+      {
+        delta = limit - count;
+        loop_limit = (delta - 2) / 2;
+      }
+    }
+
+    BCI(HIGH(sal_segment_offset));
+    BCI(LOW(sal_segment_offset));
+    BCI(HIGH(axis->num_segments * 2));
+    BCI(LOW(axis->num_segments * 2));
+  }
+  else
+  {
+    count = 0;
+
+    if (limit - count > 256)
+    {
+      delta = 256;
+      loop_limit = 128;
+
+      if (axis->num_segments == 127)
+        loop_limit = 127;
+    }
+    else
+    {
+      delta = limit - count;
+      loop_limit = (delta - 2) / 2;
+    }
+
+    while (count < limit)
+    {
+      BCI(NPUSHB);
+      BCI(delta);
+
+      for (i = 0; i < loop_limit; i++, seg++)
+      {
+        BCI(seg->first - points);
+        BCI(seg->last - points);
+      }
+
+      count += delta;
+
+      if (limit - count > 256)
+      {
+        delta = 256;
+        loop_limit = 128;
+
+        if (axis->num_segments == 127)
+          loop_limit = 127;
+      }
+      else
+      {
+        delta = limit - count;
+        loop_limit = (delta - 2) / 2;
+      }
+    }
+
+    BCI(sal_segment_offset);
+    BCI(axis->num_segments * 2);
+  }
+
+  BCI(PUSHB_1);
+  BCI(sal_loop_assign);
+  BCI(CALL);
+}
+
+
+static FT_Error
+TA_sfnt_build_glyph_instructions(SFNT* sfnt,
+                                 FONT* font,
+                                 FT_Long idx)
+{
+  FT_Face face = sfnt->face;
+  FT_Error error;
+
+  FT_Byte* ins_buf;
+  FT_UInt ins_len;
+  FT_Byte* p;
+
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+  GLYPH* glyph = &data->glyphs[idx];
+
+  TA_GlyphHints hints;
+
+
+  if (idx < 0)
+    return FT_Err_Invalid_Argument;
+
+  /* computing the segments is resolution independent, */
+  /* thus the pixel size in this call is arbitrary */
+  error = FT_Set_Pixel_Sizes(face, 20, 20);
+  if (error)
+    return error;
+
+  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, 0);
+  if (error)
+    return error;
+
+  /* do nothing if we have an empty glyph */
+  if (!face->glyph->outline.n_contours)
+    return FT_Err_Ok;
+
+  hints = &font->loader->hints;
+
+  /* we allocate a buffer which is certainly large enough */
+  /* to hold all of the created bytecode instructions; */
+  /* later on it gets reallocated to its real size */
+  ins_len = hints->num_points * 1000;
+  ins_buf = (FT_Byte*)malloc(ins_len);
+  if (!ins_buf)
+    return FT_Err_Out_Of_Memory;
+
+  /* initialize array with an invalid bytecode */
+  /* so that we can easily find the array length at reallocation time */
+  memset(ins_buf, INS_A0, ins_len);
+
+  TA_font_build_glyph_segments(font, ins_buf);
+
+  /* XXX: add more hinting stuff */
+
+  /* now reallocate instruction array to its real size */
+  p = (FT_Byte*)memchr((char*)ins_buf, INS_A0, ins_len);
+  ins_len = p - ins_buf;
+
+  if (ins_len > sfnt->max_instructions)
+    sfnt->max_instructions = ins_len;
+
+  glyph->ins_buf = realloc(ins_buf, ins_len);
+  glyph->ins_len = ins_len;
+
+  return FT_Err_Ok;
+}
+
+
+FT_Error
+TA_sfnt_build_glyf_hints(SFNT* sfnt,
+                         FONT* font)
+{
+  FT_Face face = sfnt->face;
+  FT_Long idx;
+  FT_Error error;
+
+
+  for (idx = 0; idx < face->num_glyphs; idx++)
+  {
+    error = TA_sfnt_build_glyph_instructions(sfnt, font, idx);
+    if (error)
+      return error;
+  }
+
+  /* XXX provide real values or better estimates */
+  sfnt->max_storage = 1000;
+  sfnt->max_stack_elements = 1000;
+
+  return FT_Err_Ok;
 }
 
 /* end of tabytecode.c */
