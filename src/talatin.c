@@ -262,7 +262,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
             best_last = last;
           }
         }
-        TA_LOG(("%5d", best_y));
+        TA_LOG(("%5ld", best_y));
       }
 
       /* now check whether the point belongs to a straight or round */

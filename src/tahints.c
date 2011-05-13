@@ -284,7 +284,6 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
   for (dimension = 1; dimension >= 0; dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
-    TA_Segment segments = axis->segments;
     TA_Edge edges = axis->edges;
     TA_Edge limit = edges + axis->num_edges;
     TA_Edge edge;
