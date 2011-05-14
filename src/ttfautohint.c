@@ -1363,7 +1363,10 @@ TA_font_unload(FONT* font)
 
 
           for (j = 0; j < data->num_glyphs; j++)
+          {
             free(data->glyphs[j].buf);
+            free(data->glyphs[j].ins_buf);
+          }
           free(data->glyphs);
           free(data);
         }
