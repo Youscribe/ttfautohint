@@ -19,6 +19,35 @@ void* _ta_debug_hints;
 #endif
 
 
+/* structures for hinting sets */
+typedef struct Edge2Blue_ {
+  FT_UInt first_segment;
+
+  FT_Bool is_serif;
+  FT_Bool is_round;
+
+  FT_UInt num_remaining_segments;
+  FT_UInt* remaining_segments;
+} Edge2Blue;
+
+typedef struct Edge2Link_ {
+  FT_UInt first_segment;
+
+  FT_UInt num_remaining_segments;
+  FT_UInt* remaining_segments;
+} Edge2Link;
+
+typedef struct Hinting_Set_ {
+  FT_UInt size;
+
+  FT_UInt num_edges2blues;
+  Edge2Blue* edges2blues;
+
+  FT_UInt num_edges2links;
+  Edge2Link* edges2links;
+} Hinting_Set;
+
+
 static FT_Error
 TA_sfnt_compute_global_hints(SFNT* sfnt,
                              FONT* font)
@@ -1132,6 +1161,167 @@ TA_font_build_glyph_segments(FONT* font,
 }
 
 
+static void
+TA_font_clear_edge_DONE_flag(FONT* font)
+{
+  TA_GlyphHints hints = &font->loader->hints;
+  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
+  TA_Edge edges = axis->edges;
+  TA_Edge edge_limit = edges + axis->num_edges;
+  TA_Edge edge;
+
+
+  for (edge = edges; edge < edge_limit; edge++)
+    edge->flags &= ~TA_EDGE_DONE;
+}
+
+
+static FT_Error
+TA_construct_hinting_set(FONT* font,
+                         FT_UInt size,
+                         Hinting_Set* hinting_set)
+{
+  hinting_set->size = size;
+
+  /* XXX use real values */
+  hinting_set->num_edges2blues = 0;
+  hinting_set->edges2blues = NULL;
+  hinting_set->num_edges2links = 0;
+  hinting_set->edges2links = NULL;
+
+  return FT_Err_Ok;
+}
+
+
+static FT_Bool
+TA_hinting_set_is_different(Hinting_Set* hinting_sets,
+                            FT_UInt num_hinting_sets,
+                            Hinting_Set hinting_set)
+{
+  Hinting_Set last_hinting_set;
+
+  Edge2Blue* edge2blue;
+  Edge2Blue* last_edge2blue;
+  Edge2Link* edge2link;
+  Edge2Link* last_edge2link;
+
+  FT_UInt i;
+
+
+  if (!hinting_sets)
+    return 1;
+
+  /* we only need to compare with the last hinting set */
+  last_hinting_set = hinting_sets[num_hinting_sets - 1];
+
+  if (hinting_set.num_edges2blues
+      != last_hinting_set.num_edges2blues)
+    return 1;
+
+  edge2blue = hinting_set.edges2blues;
+  last_edge2blue = last_hinting_set.edges2blues;
+
+  for (i = 0;
+       i < hinting_set.num_edges2blues;
+       i++, edge2blue++, last_edge2blue++)
+  {
+    if (edge2blue->num_remaining_segments
+        != last_edge2blue->num_remaining_segments)
+      return 1;
+
+    if (edge2blue->remaining_segments)
+    {
+      if (memcmp(edge2blue->remaining_segments,
+                 last_edge2blue->remaining_segments,
+                 sizeof (FT_UInt) * edge2blue->num_remaining_segments))
+        return 1;
+    }
+  }
+
+  if (hinting_set.num_edges2links
+      != last_hinting_set.num_edges2links)
+    return 1;
+
+  edge2link = hinting_set.edges2links;
+  last_edge2link = last_hinting_set.edges2links;
+
+  for (i = 0;
+       i < hinting_set.num_edges2links;
+       i++, edge2link++, last_edge2link++)
+  {
+    if (edge2link->num_remaining_segments
+        != last_edge2link->num_remaining_segments)
+      return 1;
+
+    if (edge2link->remaining_segments)
+    {
+      if (memcmp(edge2link->remaining_segments,
+                 last_edge2link->remaining_segments,
+                 sizeof (FT_UInt) * edge2link->num_remaining_segments))
+        return 1;
+    }
+  }
+
+  return 0;
+}
+
+
+static FT_Error
+TA_add_hinting_set(Hinting_Set** hinting_sets,
+                   FT_UInt* num_hinting_sets,
+                   Hinting_Set hinting_set)
+{
+  Hinting_Set* hinting_sets_new;
+
+
+  (*num_hinting_sets)++;
+  hinting_sets_new =
+    (Hinting_Set*)realloc(*hinting_sets, *num_hinting_sets
+                                         * sizeof (Hinting_Set));
+  if (!hinting_sets_new)
+  {
+    (*num_hinting_sets)--;
+    return FT_Err_Out_Of_Memory;
+  }
+  else
+    *hinting_sets = hinting_sets_new;
+
+  *hinting_sets[*num_hinting_sets - 1] = hinting_set;
+
+  return FT_Err_Ok;
+}
+
+
+static void
+TA_free_hinting_set(Hinting_Set hinting_set)
+{
+  FT_UInt i;
+
+
+  for (i = 0; i < hinting_set.num_edges2blues; i++)
+    free(hinting_set.edges2blues[i].remaining_segments);
+  free(hinting_set.edges2blues);
+
+  for (i = 0; i < hinting_set.num_edges2links; i++)
+    free(hinting_set.edges2links[i].remaining_segments);
+  free(hinting_set.edges2links);
+}
+
+
+static void
+TA_free_hinting_sets(Hinting_Set* hinting_sets,
+                     FT_UInt num_hinting_sets)
+{
+  FT_UInt i;
+
+
+  for (i = 0; i < num_hinting_sets; i++)
+    TA_free_hinting_set(hinting_sets[i]);
+
+  free(hinting_sets);
+}
+
+
 static FT_Error
 TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                  FONT* font,
@@ -1149,6 +1339,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   GLYPH* glyph = &data->glyphs[idx];
 
   TA_GlyphHints hints;
+
+  FT_UInt num_hinting_sets;
+  Hinting_Set* hinting_sets;
+
+  FT_UInt size;
 
 
   if (idx < 0)
@@ -1184,9 +1379,51 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   TA_font_build_glyph_segments(font, ins_buf);
 
-  /* XXX: add more hinting stuff */
+  /* now we loop over a large range of pixel sizes */
+  /* to find hinting sets which get pushed onto the bytecode stack */
+  num_hinting_sets = 0;
+  hinting_sets = NULL;
 
-  /* now reallocate instruction array to its real size */
+  for (size = 8; size <= 10; size++)
+  {
+    Hinting_Set hinting_set;
+
+
+    error = FT_Set_Pixel_Sizes(face, size, size);
+    if (error)
+      goto Err;
+
+    error = ta_loader_load_glyph(font->loader, face, idx, 0);
+    if (error)
+      goto Err;
+
+    TA_font_clear_edge_DONE_flag(font);
+
+    error = TA_construct_hinting_set(font, size, &hinting_set);
+    if (error)
+      goto Err;
+
+    if (TA_hinting_set_is_different(hinting_sets,
+                                    num_hinting_sets,
+                                    hinting_set))
+    {
+      error = TA_add_hinting_set(&hinting_sets,
+                                 &num_hinting_sets,
+                                 hinting_set);
+      if (error)
+      {
+        TA_free_hinting_set(hinting_set);
+        goto Err;
+      }
+    }
+    else
+      TA_free_hinting_set(hinting_set);
+  }
+
+  /* push hinting sets */
+  /* XXX: emit hinting instructions */
+
+  /* we are done, so reallocate the instruction array to its real size */
   p = (FT_Byte*)memchr((char*)ins_buf, INS_A0, ins_len);
   ins_len = p - ins_buf;
 
@@ -1196,7 +1433,15 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   glyph->ins_buf = realloc(ins_buf, ins_len);
   glyph->ins_len = ins_len;
 
+  TA_free_hinting_sets(hinting_sets, num_hinting_sets);
+
   return FT_Err_Ok;
+
+Err:
+  TA_free_hinting_sets(hinting_sets, num_hinting_sets);
+  free(ins_buf);
+
+  return error;
 }
 
 

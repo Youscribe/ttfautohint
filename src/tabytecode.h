@@ -281,8 +281,8 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
-/* this value of this macro must be increased */
-/* if a new bytecode function gets defined */
+/* the value of this macro must be increased */
+/* if a new bytecode function gets added */
 #define NUM_FDEFS 5
 
 
