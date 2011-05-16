@@ -13,7 +13,7 @@
 #include FT_OUTLINE_H
 
 
-#define TA_DEBUG
+/* #define TA_DEBUG */
 
 #ifdef TA_DEBUG
 

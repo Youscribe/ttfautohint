@@ -1181,13 +1181,122 @@ TA_construct_hinting_set(FONT* font,
                          FT_UInt size,
                          Hinting_Set* hinting_set)
 {
+  TA_GlyphHints hints = &font->loader->hints;
+  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
+  TA_Segment segments = axis->segments;
+  TA_Edge edges = axis->edges;
+  TA_Edge limit = edges + axis->num_edges;
+  TA_Edge edge;
+
+  Edge2Blue* edge2blue;
+  Edge2Link* edge2link;
+
+
   hinting_set->size = size;
 
-  /* XXX use real values */
   hinting_set->num_edges2blues = 0;
   hinting_set->edges2blues = NULL;
   hinting_set->num_edges2links = 0;
   hinting_set->edges2links = NULL;
+
+  for (edge = edges; edge < limit; edge++)
+  {
+    if (edge->blue_edge)
+      hinting_set->num_edges2blues++;
+    else
+      hinting_set->num_edges2links++;
+  }
+
+  if (hinting_set->num_edges2blues)
+  {
+    hinting_set->edges2blues =
+      (Edge2Blue*)calloc(1, hinting_set->num_edges2blues
+                            * sizeof (Edge2Blue));
+    if (!hinting_set->edges2blues)
+      return FT_Err_Out_Of_Memory;
+  }
+
+  if (hinting_set->num_edges2links)
+  {
+    hinting_set->edges2links =
+      (Edge2Link*)calloc(1, hinting_set->num_edges2links
+                            * sizeof (Edge2Link));
+    if (!hinting_set->edges2links)
+      return FT_Err_Out_Of_Memory;
+  }
+
+  edge2blue = hinting_set->edges2blues;
+  edge2link = hinting_set->edges2links;
+
+  for (edge = edges; edge < limit; edge++)
+  {
+    TA_Segment seg;
+    FT_UInt* remaining_segments;
+
+
+    if (edge->blue_edge)
+    {
+      edge2blue->first_segment = edge->first - segments;
+      edge2blue->is_serif = edge->flags & TA_EDGE_SERIF;
+      edge2blue->is_round = edge->flags & TA_EDGE_ROUND;
+
+      seg = edge->first->edge_next;
+      while (seg != edge->first)
+      {
+        edge2blue->num_remaining_segments++;
+        seg = seg->edge_next;
+      }
+
+      if (edge2blue->num_remaining_segments)
+      {
+        edge2blue->remaining_segments =
+          (FT_UInt*)calloc(1, edge2blue->num_remaining_segments
+                              * sizeof (FT_UInt));
+        if (!edge2blue->remaining_segments)
+          return FT_Err_Out_Of_Memory;
+      }
+
+      remaining_segments = edge2blue->remaining_segments;
+      while (seg != edge->first)
+      {
+        *remaining_segments = seg - segments;
+        seg = seg->edge_next;
+        remaining_segments++;
+      }
+
+      edge2blue++;
+    }
+    else
+    {
+      edge2link->first_segment = edge->first - segments;
+
+      seg = edge->first->edge_next;
+      while (seg != edge->first)
+      {
+        edge2link->num_remaining_segments++;
+        seg = seg->edge_next;
+      }
+
+      if (edge2link->num_remaining_segments)
+      {
+        edge2link->remaining_segments =
+          (FT_UInt*)calloc(1, edge2link->num_remaining_segments
+                              * sizeof (FT_UInt));
+        if (!edge2link->remaining_segments)
+          return FT_Err_Out_Of_Memory;
+      }
+
+      remaining_segments = edge2link->remaining_segments;
+      while (seg != edge->first)
+      {
+        *remaining_segments = seg - segments;
+        seg = seg->edge_next;
+        remaining_segments++;
+      }
+
+      edge2link++;
+    }
+  }
 
   return FT_Err_Ok;
 }
@@ -1286,7 +1395,7 @@ TA_add_hinting_set(Hinting_Set** hinting_sets,
   else
     *hinting_sets = hinting_sets_new;
 
-  *hinting_sets[*num_hinting_sets - 1] = hinting_set;
+  (*hinting_sets)[*num_hinting_sets - 1] = hinting_set;
 
   return FT_Err_Ok;
 }
@@ -1384,7 +1493,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   num_hinting_sets = 0;
   hinting_sets = NULL;
 
-  for (size = 8; size <= 10; size++)
+#if 0
+  printf("glyph %ld\n", idx);
+#endif
+
+  for (size = 8; size <= 1000; size++)
   {
     Hinting_Set hinting_set;
 
@@ -1407,6 +1520,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                     num_hinting_sets,
                                     hinting_set))
     {
+#if 0
+      if (num_hinting_sets > 0)
+        printf("  additional hinting set for size %d\n", size);
+#endif
+
       error = TA_add_hinting_set(&hinting_sets,
                                  &num_hinting_sets,
                                  hinting_set);
@@ -1430,7 +1548,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (ins_len > sfnt->max_instructions)
     sfnt->max_instructions = ins_len;
 
-  glyph->ins_buf = realloc(ins_buf, ins_len);
+  glyph->ins_buf = (FT_Byte*)realloc(ins_buf, ins_len);
   glyph->ins_len = ins_len;
 
   TA_free_hinting_sets(hinting_sets, num_hinting_sets);
