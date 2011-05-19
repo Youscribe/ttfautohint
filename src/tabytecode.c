@@ -1420,16 +1420,16 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
   FT_UInt num_args;
 
 
-  /* collect all arguments temporarily in an array */
+  /* collect all arguments temporarily in an array (in reverse order) */
   /* so that we can easily split into chunks of 255 args */
   /* as needed by NPUSHB and NPUSHW, respectively */
   args = (FT_UInt*)malloc(hinting_set->num_args * sizeof (FT_UInt));
   if (!args)
     return NULL;
 
-  arg = args;
+  arg = args + hinting_set->num_args - 1;
 
-  *(arg++) = hinting_set->num_edges2blues;
+  *(arg--) = hinting_set->num_edges2blues;
 
   edge2blue_limit = hinting_set->edges2blues
                     + hinting_set->num_edges2blues;
@@ -1437,18 +1437,18 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
        edge2blue < edge2blue_limit;
        edge2blue++)
   {
-    *(arg++) = edge2blue->first_segment;
-    *(arg++) = edge2blue->is_serif;
-    *(arg++) = edge2blue->is_round;
-    *(arg++) = edge2blue->num_remaining_segments;
+    *(arg--) = edge2blue->first_segment;
+    *(arg--) = edge2blue->is_serif;
+    *(arg--) = edge2blue->is_round;
+    *(arg--) = edge2blue->num_remaining_segments;
 
     seg_limit = edge2blue->remaining_segments
                 + edge2blue->num_remaining_segments;
     for (seg = edge2blue->remaining_segments; seg < seg_limit; seg++)
-      *(arg++) = *seg;
+      *(arg--) = *seg;
   }
 
-  *(arg++) = hinting_set->num_edges2links;
+  *(arg--) = hinting_set->num_edges2links;
 
   edge2link_limit = hinting_set->edges2links
                     + hinting_set->num_edges2links;
@@ -1456,13 +1456,13 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
        edge2link < edge2link_limit;
        edge2link++)
   {
-    *(arg++) = edge2link->first_segment;
-    *(arg++) = edge2link->num_remaining_segments;
+    *(arg--) = edge2link->first_segment;
+    *(arg--) = edge2link->num_remaining_segments;
 
     seg_limit = edge2link->remaining_segments
                 + edge2link->num_remaining_segments;
     for (seg = edge2link->remaining_segments; seg < seg_limit; seg++)
-      *(arg++) = *seg;
+      *(arg--) = *seg;
   }
 
   /* with most fonts it is very rare */
