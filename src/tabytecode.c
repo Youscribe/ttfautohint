@@ -584,10 +584,10 @@ unsigned char fpgm_2[] = {
  *
  * in: counter (N)
  *     offset
- *     data_N-1
- *     data_N-2
- *     ...
  *     data_0
+ *     data_1
+ *     ...
+ *     data_N
  *
  * uses: sal_assign
  */
@@ -606,7 +606,7 @@ unsigned char fpgm_3[] = {
 
   PUSHB_1,
     1,
-  SUB, /* s: (offset - 1) */
+  ADD, /* s: (offset + 1) */
 
   ENDF,
 
@@ -620,18 +620,12 @@ unsigned char fpgm_4[] = {
     sal_loop_assign,
   FDEF,
 
-  DUP, /* s: offset counter counter */
-  ROLL,
-  ADD,
-  PUSHB_1,
-    1,
-  SUB,
-  SWAP, /* s: (offset + counter - 1) counter */
-
   /* process the stack, popping off the elements in a loop */
   PUSHB_1,
     sal_assign,
   LOOPCALL,
+
+  /* clean up stack */
   POP,
 
   ENDF,
@@ -1055,16 +1049,23 @@ TA_font_build_glyph_segments(FONT* font,
 
 
   seg_limit = segments + axis->num_segments;
-  num_args = 2 * axis->num_segments + 2;
+  num_args = 2 * axis->num_segments + 3;
 
-  /* collect all arguments temporarily in an array */
+  /* collect all arguments temporarily in an array (in reverse order) */
   /* so that we can easily split into chunks of 255 args */
   /* as needed by NPUSHB and NPUSHW, respectively */
   args = (FT_UInt*)malloc(num_args * sizeof (FT_UInt));
   if (!args)
     return NULL;
 
-  arg = args;
+  arg = args + num_args - 1;
+
+  if (axis->num_segments > 0xFF)
+    need_words = 1;
+
+  *(arg--) = sal_loop_assign;
+  *(arg--) = axis->num_segments * 2;
+  *(arg--) = sal_segment_offset;
 
   for (seg = segments; seg < seg_limit; seg++)
   {
@@ -1072,18 +1073,12 @@ TA_font_build_glyph_segments(FONT* font,
     FT_UInt last = seg->last - points;
 
 
-    *(arg++) = first;
-    *(arg++) = last;
+    *(arg--) = first;
+    *(arg--) = last;
 
     if (first > 0xFF || last > 0xFF)
       need_words = 1;
   }
-
-  *(arg++) = sal_segment_offset;
-
-  *(arg++) = axis->num_segments * 2;
-  if (axis->num_segments > 0xFF)
-    need_words = 1;
 
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
@@ -1123,8 +1118,6 @@ TA_font_build_glyph_segments(FONT* font,
     }
   }
 
-  BCI(PUSHB_1);
-  BCI(sal_loop_assign);
   BCI(CALL);
 
   free(args);
