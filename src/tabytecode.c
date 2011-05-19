@@ -260,7 +260,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* after the instruction on the same line has been executed */
 
 /*
- * compute_stem_width
+ * bci_compute_stem_width
  *
  *   This is the equivalent to the following code from function
  *   `ta_latin_compute_stem_width':
@@ -305,7 +305,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *
  *
  *
- * Function 0: compute_stem_width
+ * Function 0: bci_compute_stem_width
  *
  * in: width
  *     stem_is_serif
@@ -315,12 +315,12 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *      std_width
  */
 
-#define compute_stem_width 0
+#define bci_compute_stem_width 0
 
 unsigned char fpgm_0a[] = {
 
   PUSHB_1,
-    compute_stem_width,
+    bci_compute_stem_width,
   FDEF,
 
   DUP,
@@ -463,13 +463,13 @@ unsigned char fpgm_0c[] = {
 
 
 /*
- * loop
+ * bci_loop
  *
  *   Take a range and a function number and apply the function to all
  *   elements of the range.  The called function must not change the
  *   stack.
  *
- * Function 1: loop
+ * Function 1: bci_loop
  *
  * in: func_num
  *     end
@@ -479,12 +479,12 @@ unsigned char fpgm_0c[] = {
  *       sal_limit (`end')
  */
 
-#define loop 1
+#define bci_loop 1
 
 unsigned char fpgm_1[] = {
 
   PUSHB_1,
-    loop,
+    bci_loop,
   FDEF,
 
   ROLL,
@@ -534,24 +534,24 @@ unsigned char fpgm_1[] = {
 
 
 /*
- * rescale
+ * bci_rescale
  *
  *   All entries in the CVT table get scaled automatically using the
  *   vertical resolution.  However, some widths must be scaled with the
  *   horizontal resolution, and others get adjusted later on.
  *
- * Function 2: rescale
+ * Function 2: bci_rescale
  *
  * uses: sal_counter (CVT index)
  *       sal_scale (scale in 16.16 format)
  */
 
-#define rescale 2
+#define bci_rescale 2
 
 unsigned char fpgm_2[] = {
 
   PUSHB_1,
-    rescale,
+    bci_rescale,
   FDEF,
 
   PUSHB_1,
@@ -576,11 +576,11 @@ unsigned char fpgm_2[] = {
 
 
 /*
- * sal_loop_assign
+ * bci_loop_sal_assign
  *
  *   Apply the WS instruction repeatedly to stack data.
  *
- * Function 3: sal_loop_assign
+ * Function 3: bci_loop_sal_assign
  *
  * in: counter (N)
  *     offset
@@ -589,15 +589,15 @@ unsigned char fpgm_2[] = {
  *     ...
  *     data_N
  *
- * uses: sal_assign
+ * uses: bci_sal_assign
  */
 
-#define sal_assign 3
+#define bci_sal_assign 3
 
 unsigned char fpgm_3[] = {
 
   PUSHB_1,
-    sal_assign,
+    bci_sal_assign,
   FDEF,
 
   DUP,
@@ -612,17 +612,17 @@ unsigned char fpgm_3[] = {
 
 };
 
-#define sal_loop_assign 4
+#define bci_loop_sal_assign 4
 
 unsigned char fpgm_4[] = {
 
   PUSHB_1,
-    sal_loop_assign,
+    bci_loop_sal_assign,
   FDEF,
 
   /* process the stack, popping off the elements in a loop */
   PUSHB_1,
-    sal_assign,
+    bci_sal_assign,
   LOOPCALL,
 
   /* clean up stack */
@@ -788,8 +788,8 @@ unsigned char prep_a[] = {
 
 unsigned char prep_b[] = {
 
-      rescale,
-      loop,
+      bci_rescale,
+      bci_loop,
     CALL,
   EIF,
 
@@ -840,8 +840,8 @@ unsigned char prep_d[] = {
 
 unsigned char prep_e[] = {
 
-      rescale,
-      loop,
+      bci_rescale,
+      bci_loop,
     CALL,
 
     /* loop over blue refs */
@@ -854,8 +854,8 @@ unsigned char prep_e[] = {
 
 unsigned char prep_f[] = {
 
-      rescale,
-      loop,
+      bci_rescale,
+      bci_loop,
     CALL,
 
     /* loop over blue shoots */
@@ -868,8 +868,8 @@ unsigned char prep_f[] = {
 
 unsigned char prep_g[] = {
 
-      rescale,
-      loop,
+      bci_rescale,
+      bci_loop,
     CALL,
 
   EIF,
@@ -1063,7 +1063,7 @@ TA_font_build_glyph_segments(FONT* font,
   if (axis->num_segments > 0xFF)
     need_words = 1;
 
-  *(arg--) = sal_loop_assign;
+  *(arg--) = bci_loop_sal_assign;
   *(arg--) = axis->num_segments * 2;
   *(arg--) = sal_segment_offset;
 
