@@ -1042,125 +1042,92 @@ TA_font_build_glyph_segments(FONT* font,
   TA_Point points = hints->points;
   TA_Segment segments = axis->segments;
   TA_Segment seg;
+  TA_Segment seg_limit;
 
-  FT_UInt delta;
-  FT_UInt count;
-  FT_UInt limit;
-  FT_UInt loop_limit;
-  FT_UInt i;
+  FT_UInt* args;
+  FT_UInt* arg;
+  FT_UInt num_args;
+  FT_UInt nargs;
+
+  FT_Bool need_words = 0;
+
+  FT_UInt i, j;
 
 
-  limit = axis->num_segments * 2 + 2;
-  seg = segments;
+  seg_limit = segments + axis->num_segments;
+  num_args = 2 * axis->num_segments + 2;
 
-  /* NPUSHB and NPUSHW can't handle more than 256 stack elements */
+  /* collect all arguments temporarily in an array */
+  /* so that we can easily split into chunks of 255 args */
+  /* as needed by NPUSHB and NPUSHW, respectively */
+  args = (FT_UInt*)malloc(num_args * sizeof (FT_UInt));
+  if (!args)
+    return NULL;
 
-  if (hints->num_points > 0xFF)
+  arg = args;
+
+  for (seg = segments; seg < seg_limit; seg++)
   {
-    count = 0;
+    FT_UInt first = seg->first - points;
+    FT_UInt last = seg->last - points;
 
-    if (limit - count > 256)
-    {
-      delta = 256;
-      loop_limit = 128;
 
-      if (axis->num_segments == 127)
-        loop_limit = 127;
-    }
-    else
-    {
-      delta = limit - count;
-      loop_limit = (delta - 2) / 2;
-    }
+    *(arg++) = first;
+    *(arg++) = last;
 
-    while (count < limit)
+    if (first > 0xFF || last > 0xFF)
+      need_words = 1;
+  }
+
+  *(arg++) = sal_segment_offset;
+
+  *(arg++) = axis->num_segments * 2;
+  if (axis->num_segments > 0xFF)
+    need_words = 1;
+
+  /* with most fonts it is very rare */
+  /* that any of the pushed arguments is larger than 0xFF, */
+  /* thus we refrain from further optimizing this case */
+
+  arg = args;
+
+  if (need_words)
+  {
+    for (i = 0; i < num_args; i += 255)
     {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
       BCI(NPUSHW);
-      BCI(delta);
-
-      for (i = 0; i < loop_limit; i++, seg++)
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
       {
-        BCI(HIGH(seg->first - points));
-        BCI(LOW(seg->first - points));
-        BCI(HIGH(seg->last - points));
-        BCI(LOW(seg->last - points));
-      }
-
-      count += delta;
-
-      if (limit - count > 256)
-      {
-        delta = 256;
-        loop_limit = 128;
-
-        if (axis->num_segments == 127)
-          loop_limit = 127;
-      }
-      else
-      {
-        delta = limit - count;
-        loop_limit = (delta - 2) / 2;
+        BCI(HIGH(*arg));
+        BCI(LOW(*arg));
+        arg++;
       }
     }
-
-    BCI(HIGH(sal_segment_offset));
-    BCI(LOW(sal_segment_offset));
-    BCI(HIGH(axis->num_segments * 2));
-    BCI(LOW(axis->num_segments * 2));
   }
   else
   {
-    count = 0;
-
-    if (limit - count > 256)
+    for (i = 0; i < num_args; i += 255)
     {
-      delta = 256;
-      loop_limit = 128;
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
 
-      if (axis->num_segments == 127)
-        loop_limit = 127;
-    }
-    else
-    {
-      delta = limit - count;
-      loop_limit = (delta - 2) / 2;
-    }
-
-    while (count < limit)
-    {
       BCI(NPUSHB);
-      BCI(delta);
-
-      for (i = 0; i < loop_limit; i++, seg++)
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
       {
-        BCI(seg->first - points);
-        BCI(seg->last - points);
-      }
-
-      count += delta;
-
-      if (limit - count > 256)
-      {
-        delta = 256;
-        loop_limit = 128;
-
-        if (axis->num_segments == 127)
-          loop_limit = 127;
-      }
-      else
-      {
-        delta = limit - count;
-        loop_limit = (delta - 2) / 2;
+        BCI(*arg);
+        arg++;
       }
     }
-
-    BCI(sal_segment_offset);
-    BCI(axis->num_segments * 2);
   }
 
   BCI(PUSHB_1);
   BCI(sal_loop_assign);
   BCI(CALL);
+
+  free(args);
 
   return bufp;
 }
@@ -1462,6 +1429,7 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
 
   /* collect all arguments temporarily in an array */
   /* so that we can easily split into chunks of 255 args */
+  /* as needed by NPUSHB and NPUSHW, respectively */
   args = (FT_UInt*)malloc(hinting_set->num_args * sizeof (FT_UInt));
   if (!args)
     return NULL;
