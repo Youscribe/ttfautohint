@@ -249,15 +249,20 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* symbolic names for storage area locations */
 
 #define sal_counter 0
-#define sal_limit 1
-#define sal_scale 2
-#define sal_0x10000 3
-#define sal_segment_offset 4 /* should be last */
+#define sal_limit sal_counter + 1
+#define sal_scale sal_limit + 1
+#define sal_0x10000 sal_scale + 1
+#define sal_segment_offset sal_0x10000 + 1 /* must be last */
 
 
 /* in the comments below, the top of the stack (`s:') */
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
+
+#define FPGM(func_name) fpgm_ ## func_name
+#define FPGMx(func_name, x) fpgm_ ## func_name ## x
+
+
 
 /*
  * bci_compute_stem_width
@@ -314,7 +319,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 #define bci_compute_stem_width 0
 
-unsigned char fpgm_0a[] = {
+unsigned char FPGMx(bci_compute_stem_width, a) [] = {
 
   PUSHB_1,
     bci_compute_stem_width,
@@ -364,7 +369,7 @@ unsigned char fpgm_0a[] = {
 
 /*    %c, index of std_width */
 
-unsigned char fpgm_0b[] = {
+unsigned char FPGMx(bci_compute_stem_width, b) [] = {
 
     RCVT,
     SUB,
@@ -382,7 +387,7 @@ unsigned char fpgm_0b[] = {
 
 /*      %c, index of std_width */
 
-unsigned char fpgm_0c[] = {
+unsigned char FPGMx(bci_compute_stem_width, c) [] = {
 
       RCVT,
       MIN, /* dist = min(48, std_width) */
@@ -474,9 +479,9 @@ unsigned char fpgm_0c[] = {
  *       sal_limit (`end')
  */
 
-#define bci_loop 1
+#define bci_loop bci_compute_stem_width + 1
 
-unsigned char fpgm_1[] = {
+unsigned char FPGM(bci_loop) [] = {
 
   PUSHB_1,
     bci_loop,
@@ -539,9 +544,9 @@ unsigned char fpgm_1[] = {
  *       sal_scale (scale in 16.16 format)
  */
 
-#define bci_rescale 2
+#define bci_rescale bci_loop + 1
 
-unsigned char fpgm_2[] = {
+unsigned char FPGM(bci_rescale) [] = {
 
   PUSHB_1,
     bci_rescale,
@@ -583,10 +588,10 @@ unsigned char fpgm_2[] = {
  * uses: bci_sal_assign
  */
 
-#define bci_sal_assign 3
-#define bci_loop_sal_assign 4
+#define bci_sal_assign bci_rescale + 1
+#define bci_loop_sal_assign bci_sal_assign + 1
 
-unsigned char fpgm_3[] = {
+unsigned char FPGM(bci_sal_assign) [] = {
 
   PUSHB_1,
     bci_sal_assign,
@@ -604,7 +609,7 @@ unsigned char fpgm_3[] = {
 
 };
 
-unsigned char fpgm_4[] = {
+unsigned char FPGM(bci_loop_sal_assign) [] = {
 
   PUSHB_1,
     bci_loop_sal_assign,
@@ -657,12 +662,12 @@ unsigned char fpgm_4[] = {
  *       bci_edge2link
  */
 
-#define bci_remaining_edges 5
-#define bci_edge2blue 6
-#define bci_edge2link 7
-#define bci_hint_glyph 8
+#define bci_remaining_edges bci_loop_sal_assign + 1
+#define bci_edge2blue bci_remaining_edges + 1
+#define bci_edge2link bci_edge2blue + 1
+#define bci_hint_glyph bci_edge2link + 1
 
-unsigned char fpgm_5[] = {
+unsigned char FPGM(bci_remaining_edges) [] = {
 
   PUSHB_1,
     bci_remaining_edges,
@@ -674,7 +679,7 @@ unsigned char fpgm_5[] = {
 
 };
 
-unsigned char fpgm_6[] = {
+unsigned char FPGM(bci_edge2blue) [] = {
 
   PUSHB_1,
     bci_edge2blue,
@@ -691,7 +696,7 @@ unsigned char fpgm_6[] = {
 
 };
 
-unsigned char fpgm_7[] = {
+unsigned char FPGM(bci_edge2link) [] = {
 
   PUSHB_1,
     bci_edge2link,
@@ -706,7 +711,7 @@ unsigned char fpgm_7[] = {
 
 };
 
-unsigned char fpgm_8[] = {
+unsigned char FPGM(bci_hint_glyph) [] = {
 
   PUSHB_1,
     bci_hint_glyph,
@@ -736,19 +741,19 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   FT_Byte* buf_p;
 
 
-  buf_len = sizeof (fpgm_0a)
+  buf_len = sizeof (FPGMx(bci_compute_stem_width, a))
             + 1
-            + sizeof (fpgm_0b)
+            + sizeof (FPGMx(bci_compute_stem_width, b))
             + 1
-            + sizeof (fpgm_0c)
-            + sizeof (fpgm_1)
-            + sizeof (fpgm_2)
-            + sizeof (fpgm_3)
-            + sizeof (fpgm_4)
-            + sizeof (fpgm_5)
-            + sizeof (fpgm_6)
-            + sizeof (fpgm_7)
-            + sizeof (fpgm_8);
+            + sizeof (FPGMx(bci_compute_stem_width, c))
+            + sizeof (FPGM(bci_loop))
+            + sizeof (FPGM(bci_rescale))
+            + sizeof (FPGM(bci_sal_assign))
+            + sizeof (FPGM(bci_loop_sal_assign))
+            + sizeof (FPGM(bci_remaining_edges))
+            + sizeof (FPGM(bci_edge2blue))
+            + sizeof (FPGM(bci_edge2link))
+            + sizeof (FPGM(bci_hint_glyph));
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
   buf = (FT_Byte*)malloc(len);
@@ -763,41 +768,52 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   /* copy font program into buffer and fill in the missing variables */
   buf_p = buf;
 
-  memcpy(buf_p, fpgm_0a, sizeof (fpgm_0a));
-  buf_p += sizeof (fpgm_0a);
+  memcpy(buf_p, FPGMx(bci_compute_stem_width, a),
+         sizeof (FPGMx(bci_compute_stem_width, a)));
+  buf_p += sizeof (FPGMx(bci_compute_stem_width, a));
 
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
 
-  memcpy(buf_p, fpgm_0b, sizeof (fpgm_0b));
-  buf_p += sizeof (fpgm_0b);
+  memcpy(buf_p, FPGMx(bci_compute_stem_width, b),
+         sizeof (FPGMx(bci_compute_stem_width, b)));
+  buf_p += sizeof (FPGMx(bci_compute_stem_width, b));
 
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
 
-  memcpy(buf_p, fpgm_0c, sizeof (fpgm_0c));
-  buf_p += sizeof (fpgm_0c);
+  memcpy(buf_p, FPGMx(bci_compute_stem_width, c),
+         sizeof (FPGMx(bci_compute_stem_width, c)));
+  buf_p += sizeof (FPGMx(bci_compute_stem_width, c));
 
-  memcpy(buf_p, fpgm_1, sizeof (fpgm_1));
-  buf_p += sizeof (fpgm_1);
+  memcpy(buf_p, FPGM(bci_loop),
+         sizeof (FPGM(bci_loop)));
+  buf_p += sizeof (FPGM(bci_loop));
 
-  memcpy(buf_p, fpgm_2, sizeof (fpgm_2));
-  buf_p += sizeof (fpgm_2);
+  memcpy(buf_p, FPGM(bci_rescale),
+         sizeof (FPGM(bci_rescale)));
+  buf_p += sizeof (FPGM(bci_rescale));
 
-  memcpy(buf_p, fpgm_3, sizeof (fpgm_3));
-  buf_p += sizeof (fpgm_3);
+  memcpy(buf_p, FPGM(bci_sal_assign),
+         sizeof (FPGM(bci_sal_assign)));
+  buf_p += sizeof (FPGM(bci_sal_assign));
 
-  memcpy(buf_p, fpgm_4, sizeof (fpgm_4));
-  buf_p += sizeof (fpgm_4);
+  memcpy(buf_p, FPGM(bci_loop_sal_assign),
+         sizeof (FPGM(bci_loop_sal_assign)));
+  buf_p += sizeof (FPGM(bci_loop_sal_assign));
 
-  memcpy(buf_p, fpgm_5, sizeof (fpgm_5));
-  buf_p += sizeof (fpgm_5);
+  memcpy(buf_p, FPGM(bci_remaining_edges),
+         sizeof (FPGM(bci_remaining_edges)));
+  buf_p += sizeof (FPGM(bci_remaining_edges));
 
-  memcpy(buf_p, fpgm_6, sizeof (fpgm_6));
-  buf_p += sizeof (fpgm_6);
+  memcpy(buf_p, FPGM(bci_edge2blue),
+         sizeof (FPGM(bci_edge2blue)));
+  buf_p += sizeof (FPGM(bci_edge2blue));
 
-  memcpy(buf_p, fpgm_7, sizeof (fpgm_7));
-  buf_p += sizeof (fpgm_7);
+  memcpy(buf_p, FPGM(bci_edge2link),
+         sizeof (FPGM(bci_edge2link)));
+  buf_p += sizeof (FPGM(bci_edge2link));
 
-  memcpy(buf_p, fpgm_8, sizeof (fpgm_8));
+  memcpy(buf_p, FPGM(bci_hint_glyph),
+         sizeof (FPGM(bci_hint_glyph)));
 
   *fpgm = buf;
   *fpgm_len = buf_len;
