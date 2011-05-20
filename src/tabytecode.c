@@ -252,7 +252,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_limit 1
 #define sal_scale 2
 #define sal_0x10000 3
-#define sal_segment_offset 4
+#define sal_segment_offset 4 /* should be last */
 
 
 /* in the comments below, the top of the stack (`s:') */
@@ -303,9 +303,6 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *        dist = -dist
  *      return dist
  *
- *
- *
- * Function 0: bci_compute_stem_width
  *
  * in: width
  *     stem_is_serif
@@ -469,8 +466,6 @@ unsigned char fpgm_0c[] = {
  *   elements of the range.  The called function must not change the
  *   stack.
  *
- * Function 1: bci_loop
- *
  * in: func_num
  *     end
  *     start
@@ -540,8 +535,6 @@ unsigned char fpgm_1[] = {
  *   vertical resolution.  However, some widths must be scaled with the
  *   horizontal resolution, and others get adjusted later on.
  *
- * Function 2: bci_rescale
- *
  * uses: sal_counter (CVT index)
  *       sal_scale (scale in 16.16 format)
  */
@@ -580,19 +573,18 @@ unsigned char fpgm_2[] = {
  *
  *   Apply the WS instruction repeatedly to stack data.
  *
- * Function 3: bci_loop_sal_assign
- *
  * in: counter (N)
  *     offset
  *     data_0
  *     data_1
  *     ...
- *     data_N
+ *     data_(N-1)
  *
  * uses: bci_sal_assign
  */
 
 #define bci_sal_assign 3
+#define bci_loop_sal_assign 4
 
 unsigned char fpgm_3[] = {
 
@@ -612,8 +604,6 @@ unsigned char fpgm_3[] = {
 
 };
 
-#define bci_loop_sal_assign 4
-
 unsigned char fpgm_4[] = {
 
   PUSHB_1,
@@ -627,6 +617,108 @@ unsigned char fpgm_4[] = {
 
   /* clean up stack */
   POP,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_hint_glyph
+ *
+ *   This is the top-level glyph hinting function
+ *   which parses the arguments on the stack and calls subroutines.
+ *
+ * in: num_edges2blues (M)
+ *       edge2blue_0.first_segment
+ *                  .is_serif
+ *                  .is_round
+ *                  .num_remaining_segments (N)
+ *                  .remaining_segments_0
+ *                                     _1
+ *                                     ...
+ *                                     _(N-1)
+ *                _1
+ *                ...
+ *                _(M-1)
+ *
+ *     num_edges2links (P)
+ *       edge2link_0.first_segment
+ *                  .num_remaining_segments (Q)
+ *                  .remaining_segments_0
+ *                                     _1
+ *                                     ...
+ *                                     _(Q-1)
+ *                _1
+ *                ...
+ *                _(P-1)
+ *
+ * uses: bci_edge2blue
+ *       bci_edge2link
+ */
+
+#define bci_remaining_edges 5
+#define bci_edge2blue 6
+#define bci_edge2link 7
+#define bci_hint_glyph 8
+
+unsigned char fpgm_5[] = {
+
+  PUSHB_1,
+    bci_remaining_edges,
+  FDEF,
+
+  POP, /* XXX remaining segment */
+
+  ENDF,
+
+};
+
+unsigned char fpgm_6[] = {
+
+  PUSHB_1,
+    bci_edge2blue,
+  FDEF,
+
+  POP, /* XXX first_segment */
+  POP, /* XXX is_serif */
+  POP, /* XXX is_round */
+  PUSHB_1,
+    bci_remaining_edges,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
+unsigned char fpgm_7[] = {
+
+  PUSHB_1,
+    bci_edge2link,
+  FDEF,
+
+  POP, /* XXX first_segment */
+  PUSHB_1,
+    bci_remaining_edges,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
+unsigned char fpgm_8[] = {
+
+  PUSHB_1,
+    bci_hint_glyph,
+  FDEF,
+
+  PUSHB_1,
+    bci_edge2blue,
+  LOOPCALL,
+
+  PUSHB_1,
+    bci_edge2link,
+  LOOPCALL,
 
   ENDF,
 
@@ -652,7 +744,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (fpgm_1)
             + sizeof (fpgm_2)
             + sizeof (fpgm_3)
-            + sizeof (fpgm_4);
+            + sizeof (fpgm_4)
+            + sizeof (fpgm_5)
+            + sizeof (fpgm_6)
+            + sizeof (fpgm_7)
+            + sizeof (fpgm_8);
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
   buf = (FT_Byte*)malloc(len);
@@ -690,6 +786,18 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   buf_p += sizeof (fpgm_3);
 
   memcpy(buf_p, fpgm_4, sizeof (fpgm_4));
+  buf_p += sizeof (fpgm_4);
+
+  memcpy(buf_p, fpgm_5, sizeof (fpgm_5));
+  buf_p += sizeof (fpgm_5);
+
+  memcpy(buf_p, fpgm_6, sizeof (fpgm_6));
+  buf_p += sizeof (fpgm_6);
+
+  memcpy(buf_p, fpgm_7, sizeof (fpgm_7));
+  buf_p += sizeof (fpgm_7);
+
+  memcpy(buf_p, fpgm_8, sizeof (fpgm_8));
 
   *fpgm = buf;
   *fpgm_len = buf_len;
@@ -1556,6 +1664,10 @@ TA_emit_hinting_sets(Hinting_Set* hinting_sets,
 
   for (i = 0; i < num_hinting_sets - 1; i++)
     BCI(EIF);
+
+  BCI(PUSHB_1);
+  BCI(bci_hint_glyph);
+  BCI(CALL);
 
   return bufp;
 }

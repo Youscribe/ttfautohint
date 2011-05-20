@@ -283,7 +283,7 @@
 
 /* the value of this macro must be increased */
 /* if a new bytecode function gets added */
-#define NUM_FDEFS 5
+#define NUM_FDEFS 9
 
 
 FT_Error
