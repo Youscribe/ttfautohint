@@ -255,12 +255,11 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_segment_offset sal_0x10000 + 1 /* must be last */
 
 
-/* we need the following two macros */
+/* we need the following macro */
 /* so that `func_name' doesn't get replaced with its #defined value */
 /* (as defined in `tabytecode.h') */
 
 #define FPGM(func_name) fpgm_ ## func_name
-#define FPGMx(func_name, x) fpgm_ ## func_name ## x
 
 
 /* in the comments below, the top of the stack (`s:') */
@@ -320,7 +319,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *      std_width
  */
 
-unsigned char FPGMx(bci_compute_stem_width, a) [] = {
+unsigned char FPGM(bci_compute_stem_width_a) [] = {
 
   PUSHB_1,
     bci_compute_stem_width,
@@ -370,7 +369,7 @@ unsigned char FPGMx(bci_compute_stem_width, a) [] = {
 
 /*    %c, index of std_width */
 
-unsigned char FPGMx(bci_compute_stem_width, b) [] = {
+unsigned char FPGM(bci_compute_stem_width_b) [] = {
 
     RCVT,
     SUB,
@@ -388,7 +387,7 @@ unsigned char FPGMx(bci_compute_stem_width, b) [] = {
 
 /*      %c, index of std_width */
 
-unsigned char FPGMx(bci_compute_stem_width, c) [] = {
+unsigned char FPGM(bci_compute_stem_width_c) [] = {
 
       RCVT,
       MIN, /* dist = min(48, std_width) */
@@ -719,6 +718,11 @@ unsigned char FPGM(bci_hint_glyph) [] = {
 };
 
 
+#define COPY_FPGM(func_name) \
+          memcpy(buf_p, fpgm_ ## func_name, \
+                 sizeof (fpgm_ ## func_name)); \
+          buf_p += sizeof (fpgm_ ## func_name) \
+
 static FT_Error
 TA_table_build_fpgm(FT_Byte** fpgm,
                     FT_ULong* fpgm_len,
@@ -730,11 +734,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   FT_Byte* buf_p;
 
 
-  buf_len = sizeof (FPGMx(bci_compute_stem_width, a))
+  buf_len = sizeof (FPGM(bci_compute_stem_width_a))
             + 1
-            + sizeof (FPGMx(bci_compute_stem_width, b))
+            + sizeof (FPGM(bci_compute_stem_width_b))
             + 1
-            + sizeof (FPGMx(bci_compute_stem_width, c))
+            + sizeof (FPGM(bci_compute_stem_width_c))
             + sizeof (FPGM(bci_loop))
             + sizeof (FPGM(bci_rescale))
             + sizeof (FPGM(bci_sal_assign))
@@ -757,52 +761,19 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   /* copy font program into buffer and fill in the missing variables */
   buf_p = buf;
 
-  memcpy(buf_p, FPGMx(bci_compute_stem_width, a),
-         sizeof (FPGMx(bci_compute_stem_width, a)));
-  buf_p += sizeof (FPGMx(bci_compute_stem_width, a));
-
+  COPY_FPGM(bci_compute_stem_width_a);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
-
-  memcpy(buf_p, FPGMx(bci_compute_stem_width, b),
-         sizeof (FPGMx(bci_compute_stem_width, b)));
-  buf_p += sizeof (FPGMx(bci_compute_stem_width, b));
-
+  COPY_FPGM(bci_compute_stem_width_b);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
-
-  memcpy(buf_p, FPGMx(bci_compute_stem_width, c),
-         sizeof (FPGMx(bci_compute_stem_width, c)));
-  buf_p += sizeof (FPGMx(bci_compute_stem_width, c));
-
-  memcpy(buf_p, FPGM(bci_loop),
-         sizeof (FPGM(bci_loop)));
-  buf_p += sizeof (FPGM(bci_loop));
-
-  memcpy(buf_p, FPGM(bci_rescale),
-         sizeof (FPGM(bci_rescale)));
-  buf_p += sizeof (FPGM(bci_rescale));
-
-  memcpy(buf_p, FPGM(bci_sal_assign),
-         sizeof (FPGM(bci_sal_assign)));
-  buf_p += sizeof (FPGM(bci_sal_assign));
-
-  memcpy(buf_p, FPGM(bci_loop_sal_assign),
-         sizeof (FPGM(bci_loop_sal_assign)));
-  buf_p += sizeof (FPGM(bci_loop_sal_assign));
-
-  memcpy(buf_p, FPGM(bci_remaining_edges),
-         sizeof (FPGM(bci_remaining_edges)));
-  buf_p += sizeof (FPGM(bci_remaining_edges));
-
-  memcpy(buf_p, FPGM(bci_edge2blue),
-         sizeof (FPGM(bci_edge2blue)));
-  buf_p += sizeof (FPGM(bci_edge2blue));
-
-  memcpy(buf_p, FPGM(bci_edge2link),
-         sizeof (FPGM(bci_edge2link)));
-  buf_p += sizeof (FPGM(bci_edge2link));
-
-  memcpy(buf_p, FPGM(bci_hint_glyph),
-         sizeof (FPGM(bci_hint_glyph)));
+  COPY_FPGM(bci_compute_stem_width_c);
+  COPY_FPGM(bci_loop);
+  COPY_FPGM(bci_rescale);
+  COPY_FPGM(bci_sal_assign);
+  COPY_FPGM(bci_loop_sal_assign);
+  COPY_FPGM(bci_remaining_edges);
+  COPY_FPGM(bci_edge2blue);
+  COPY_FPGM(bci_edge2link);
+  COPY_FPGM(bci_hint_glyph);
 
   *fpgm = buf;
   *fpgm_len = buf_len;
@@ -988,6 +959,10 @@ unsigned char prep_g[] = {
   EIF,
 
 };
+
+/* XXX talatin.c: 577 */
+/* XXX talatin.c: 1671 */
+/* XXX talatin.c: 1708 */
 
 
 static FT_Error
@@ -1818,8 +1793,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   bufp = TA_emit_hinting_sets(hinting_sets, num_hinting_sets, bufp);
   if (!bufp)
     return FT_Err_Out_Of_Memory;
-
-  /* XXX: emit hinting instructions */
 
   /* we are done, so reallocate the instruction array to its real size */
   bufp = (FT_Byte*)memchr((char*)ins_buf, INS_A0, ins_len);
