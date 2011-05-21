@@ -281,9 +281,17 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
-/* the value of this macro must be increased */
-/* if a new bytecode function gets added */
-#define NUM_FDEFS 9
+#define bci_compute_stem_width 0
+#define bci_loop bci_compute_stem_width + 1
+#define bci_rescale bci_loop + 1
+#define bci_sal_assign bci_rescale + 1
+#define bci_loop_sal_assign bci_sal_assign + 1
+#define bci_remaining_edges bci_loop_sal_assign + 1
+#define bci_edge2blue bci_remaining_edges + 1
+#define bci_edge2link bci_edge2blue + 1
+#define bci_hint_glyph bci_edge2link + 1
+
+#define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
 
 
 FT_Error

@@ -255,14 +255,17 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_segment_offset sal_0x10000 + 1 /* must be last */
 
 
-/* in the comments below, the top of the stack (`s:') */
-/* is the rightmost element; the stack is shown */
-/* after the instruction on the same line has been executed */
+/* we need the following two macros */
+/* so that `func_name' doesn't get replaced with its #defined value */
+/* (as defined in `tabytecode.h') */
 
 #define FPGM(func_name) fpgm_ ## func_name
 #define FPGMx(func_name, x) fpgm_ ## func_name ## x
 
 
+/* in the comments below, the top of the stack (`s:') */
+/* is the rightmost element; the stack is shown */
+/* after the instruction on the same line has been executed */
 
 /*
  * bci_compute_stem_width
@@ -316,8 +319,6 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  * CVT: is_extra_light   XXX
  *      std_width
  */
-
-#define bci_compute_stem_width 0
 
 unsigned char FPGMx(bci_compute_stem_width, a) [] = {
 
@@ -479,8 +480,6 @@ unsigned char FPGMx(bci_compute_stem_width, c) [] = {
  *       sal_limit (`end')
  */
 
-#define bci_loop bci_compute_stem_width + 1
-
 unsigned char FPGM(bci_loop) [] = {
 
   PUSHB_1,
@@ -544,8 +543,6 @@ unsigned char FPGM(bci_loop) [] = {
  *       sal_scale (scale in 16.16 format)
  */
 
-#define bci_rescale bci_loop + 1
-
 unsigned char FPGM(bci_rescale) [] = {
 
   PUSHB_1,
@@ -587,9 +584,6 @@ unsigned char FPGM(bci_rescale) [] = {
  *
  * uses: bci_sal_assign
  */
-
-#define bci_sal_assign bci_rescale + 1
-#define bci_loop_sal_assign bci_sal_assign + 1
 
 unsigned char FPGM(bci_sal_assign) [] = {
 
@@ -661,11 +655,6 @@ unsigned char FPGM(bci_loop_sal_assign) [] = {
  * uses: bci_edge2blue
  *       bci_edge2link
  */
-
-#define bci_remaining_edges bci_loop_sal_assign + 1
-#define bci_edge2blue bci_remaining_edges + 1
-#define bci_edge2link bci_edge2blue + 1
-#define bci_hint_glyph bci_edge2link + 1
 
 unsigned char FPGM(bci_remaining_edges) [] = {
 
