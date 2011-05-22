@@ -963,10 +963,15 @@ unsigned char prep_g[] = {
 
 };
 
+
 /* XXX talatin.c: 577 */
 /* XXX talatin.c: 1671 */
 /* XXX talatin.c: 1708 */
 
+
+#define COPY_PREP(array) \
+          memcpy(buf_p, array, sizeof (array)); \
+          buf_p += sizeof (array);
 
 static FT_Error
 TA_table_build_prep(FT_Byte** prep,
@@ -1027,50 +1032,31 @@ TA_table_build_prep(FT_Byte** prep,
   /* copy cvt program into buffer and fill in the missing variables */
   buf_p = buf;
 
-  memcpy(buf_p, prep_A, sizeof (prep_A));
-  buf_p += sizeof (prep_A);
-
-  memcpy(buf_p, prep_a, sizeof (prep_a));
-  buf_p += sizeof (prep_a);
-
+  COPY_PREP(prep_A);
+  COPY_PREP(prep_a);
   *(buf_p++) = (unsigned char)CVT_HORZ_WIDTHS_OFFSET(font);
   *(buf_p++) = (unsigned char)(CVT_HORZ_WIDTHS_OFFSET(font)
                                + CVT_HORZ_WIDTHS_SIZE(font) - 1);
-
-  memcpy(buf_p, prep_b, sizeof (prep_b));
+  COPY_PREP(prep_b);
 
   if (blue_adjustment)
   {
-    buf_p += sizeof (prep_b);
-
-    memcpy(buf_p, prep_c, sizeof (prep_c));
-    buf_p += sizeof (prep_c);
-
-    *(buf_p++) = blue_adjustment - vaxis->blues
-                 + CVT_BLUE_SHOOTS_OFFSET(font);
-
-    memcpy(buf_p, prep_d, sizeof (prep_d));
-    buf_p += sizeof (prep_d);
-
+    COPY_PREP(prep_c);
+    *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
+                                 + blue_adjustment - vaxis->blues);
+    COPY_PREP(prep_d);
     *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_VERT_WIDTHS_OFFSET(font)
                                  + CVT_VERT_WIDTHS_SIZE(font) - 1);
-
-    memcpy(buf_p, prep_e, sizeof (prep_e));
-    buf_p += sizeof (prep_e);
-
+    COPY_PREP(prep_e);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
                                  + CVT_BLUE_REFS_SIZE(font) - 1);
-
-    memcpy(buf_p, prep_f, sizeof (prep_f));
-    buf_p += sizeof (prep_f);
-
+    COPY_PREP(prep_f);
     *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + CVT_BLUE_SHOOTS_SIZE(font) - 1);
-
-    memcpy(buf_p, prep_g, sizeof (prep_g));
+    COPY_PREP(prep_g);
   }
 
   /* XXX handle extra_light */
