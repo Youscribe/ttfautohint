@@ -120,7 +120,9 @@ TA_table_build_cvt(FT_Byte** cvt,
   haxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[0];
   vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
 
-  buf_len = 2 * (haxis->width_count + vaxis->width_count
+  buf_len = 2 * (2
+                 + haxis->width_count
+                 + vaxis->width_count
                  + 2 * vaxis->blue_count);
 
   /* buffer length must be a multiple of four */
@@ -136,7 +138,26 @@ TA_table_build_cvt(FT_Byte** cvt,
 
   buf_p = buf;
 
-  /* XXX emit standard_width also? */
+  if (haxis->width_count > 0)
+  {
+    *(buf_p++) = HIGH(haxis->widths[0].org);
+    *(buf_p++) = LOW(haxis->widths[0].org);
+  }
+  else
+  {
+    *(buf_p++) = 0;
+    *(buf_p++) = 50;
+  }
+  if (vaxis->width_count > 0)
+  {
+    *(buf_p++) = HIGH(vaxis->widths[0].org);
+    *(buf_p++) = LOW(vaxis->widths[0].org);
+  }
+  else
+  {
+    *(buf_p++) = 0;
+    *(buf_p++) = 50;
+  }
 
   for (i = 0; i < haxis->width_count; i++)
   {
@@ -222,8 +243,16 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 }
 
 
+/* the horizontal and vertical standard widths */
+#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 0
+#define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
+          CVT_HORZ_STANDARD_WIDTH_OFFSET(font) \
+          + 1
+
 /* the horizontal stem widths */
-#define CVT_HORZ_WIDTHS_OFFSET(font) 0
+#define CVT_HORZ_WIDTHS_OFFSET(font) \
+          CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
+          + 1
 #define CVT_HORZ_WIDTHS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
 
@@ -255,7 +284,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_limit sal_counter + 1
 #define sal_scale sal_limit + 1
 #define sal_0x10000 sal_scale + 1
-#define sal_segment_offset sal_0x10000 + 1 /* must be last */
+#define sal_is_extra_light sal_0x10000 + 1
+#define sal_segment_offset sal_is_extra_light + 1 /* must be last */
 
 
 /* we need the following macro */
@@ -277,8 +307,9 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *
  *      dist = ABS(width)
  *
- *      if stem_is_serif
- *         && dist < 3*64:
+ *      if (stem_is_serif
+ *          && dist < 3*64)
+ *         || is_extra_light:
  *        return width
  *      else if base_is_round:
  *        if dist < 80
@@ -318,8 +349,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *     stem_is_serif
  *     base_is_round
  * out: new_width
- * CVT: is_extra_light   XXX
- *      std_width
+ * sal: is_extra_light
+ * CVT: std_width
  */
 
 unsigned char FPGM(bci_compute_stem_width_a) [] = {
@@ -339,8 +370,13 @@ unsigned char FPGM(bci_compute_stem_width_a) [] = {
   PUSHB_1,
     4,
   MINDEX, /* s: base_is_round width dist (dist<3*64) stem_is_serif */
-
   AND, /* stem_is_serif && dist < 3*64 */
+
+  PUSHB_1,
+    sal_is_extra_light,
+  RS,
+  OR, /* (stem_is_serif && dist < 3*64) || is_extra_light */
+
   IF, /* s: base_is_round width dist */
     POP,
     SWAP,
@@ -865,6 +901,20 @@ unsigned char prep_a[] = {
     SWAP,
     WS,
 
+    /* adjust horizontal standard width */
+    PUSHB_4,
+
+};
+
+/*    %c, horizontal standard width index */
+/*    %c, horizontal standard width index */
+
+unsigned char prep_b[] = {
+
+      bci_rescale,
+      bci_loop,
+    CALL,
+
     /* loop over horizontal CVT entries */
     PUSHB_4,
 
@@ -873,7 +923,7 @@ unsigned char prep_a[] = {
 /*    %c, first horizontal index */
 /*    %c, last horizontal index */
 
-unsigned char prep_b[] = {
+unsigned char prep_c[] = {
 
       bci_rescale,
       bci_loop,
@@ -882,7 +932,7 @@ unsigned char prep_b[] = {
 
 };
 
-unsigned char prep_c[] = {
+unsigned char prep_d[] = {
 
   /* optimize the alignment of the top of small letters to the pixel grid */
 
@@ -892,7 +942,7 @@ unsigned char prep_c[] = {
 
 /*  %c, index of alignment blue zone */
 
-unsigned char prep_d[] = {
+unsigned char prep_e[] = {
 
   RCVT,
   DUP,
@@ -925,7 +975,7 @@ unsigned char prep_d[] = {
 /*    %c, first vertical index */
 /*    %c, last vertical index */
 
-unsigned char prep_e[] = {
+unsigned char prep_f[] = {
 
       bci_rescale,
       bci_loop,
@@ -939,7 +989,7 @@ unsigned char prep_e[] = {
 /*    %c, first blue ref index */
 /*    %c, last blue ref index */
 
-unsigned char prep_f[] = {
+unsigned char prep_g[] = {
 
       bci_rescale,
       bci_loop,
@@ -953,13 +1003,31 @@ unsigned char prep_f[] = {
 /*    %c, first blue shoot index */
 /*    %c, last blue shoot index */
 
-unsigned char prep_g[] = {
+unsigned char prep_h[] = {
 
       bci_rescale,
       bci_loop,
     CALL,
-
   EIF,
+
+};
+
+unsigned char prep_i[] = {
+
+  /* compute (vertical) `extra_light' flag */
+  PUSHB_3,
+    sal_is_extra_light,
+    40,
+
+};
+
+/*  %c, index of vertical standard_width */
+
+unsigned char prep_j[] = {
+
+  RCVT,
+  GT, /* standard_width < 40 */
+  WS,
 
 };
 
@@ -1003,20 +1071,26 @@ TA_table_build_prep(FT_Byte** prep,
   buf_len = sizeof (prep_A)
             + sizeof (prep_a)
             + 2
-            + sizeof (prep_b);
+            + sizeof (prep_b)
+            + 2
+            + sizeof (prep_c);
 
   if (blue_adjustment)
   {
-    buf_len += sizeof (prep_c)
+    buf_len += sizeof (prep_d)
                + 1
-               + sizeof (prep_d)
-               + 2
                + sizeof (prep_e)
                + 2
                + sizeof (prep_f)
                + 2
-               + sizeof (prep_g);
+               + sizeof (prep_g)
+               + 2
+               + sizeof (prep_h);
   }
+
+  buf_len += sizeof (prep_i)
+             + 1
+             + sizeof (prep_j);
 
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
@@ -1034,32 +1108,37 @@ TA_table_build_prep(FT_Byte** prep,
 
   COPY_PREP(prep_A);
   COPY_PREP(prep_a);
+  *(buf_p++) = (unsigned char)CVT_HORZ_STANDARD_WIDTH_OFFSET(font);
+  *(buf_p++) = (unsigned char)CVT_HORZ_STANDARD_WIDTH_OFFSET(font);
+  COPY_PREP(prep_b);
   *(buf_p++) = (unsigned char)CVT_HORZ_WIDTHS_OFFSET(font);
   *(buf_p++) = (unsigned char)(CVT_HORZ_WIDTHS_OFFSET(font)
                                + CVT_HORZ_WIDTHS_SIZE(font) - 1);
-  COPY_PREP(prep_b);
+  COPY_PREP(prep_c);
 
   if (blue_adjustment)
   {
-    COPY_PREP(prep_c);
+    COPY_PREP(prep_d);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + blue_adjustment - vaxis->blues);
-    COPY_PREP(prep_d);
+    COPY_PREP(prep_e);
     *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_VERT_WIDTHS_OFFSET(font)
                                  + CVT_VERT_WIDTHS_SIZE(font) - 1);
-    COPY_PREP(prep_e);
+    COPY_PREP(prep_f);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
                                  + CVT_BLUE_REFS_SIZE(font) - 1);
-    COPY_PREP(prep_f);
+    COPY_PREP(prep_g);
     *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + CVT_BLUE_SHOOTS_SIZE(font) - 1);
-    COPY_PREP(prep_g);
+    COPY_PREP(prep_h);
   }
 
-  /* XXX handle extra_light */
+  COPY_PREP(prep_i);
+  *(buf_p++) = (unsigned char)CVT_VERT_STANDARD_WIDTH_OFFSET(font);
+  COPY_PREP(prep_j);
 
   *prep = buf;
   *prep_len = buf_len;
