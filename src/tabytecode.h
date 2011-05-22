@@ -283,8 +283,8 @@
 
 #define bci_compute_stem_width 0
 #define bci_loop bci_compute_stem_width + 1
-#define bci_rescale bci_loop + 1
-#define bci_sal_assign bci_rescale + 1
+#define bci_cvt_rescale bci_loop + 1
+#define bci_sal_assign bci_cvt_rescale + 1
 #define bci_loop_sal_assign bci_sal_assign + 1
 #define bci_remaining_edges bci_loop_sal_assign + 1
 #define bci_edge2blue bci_remaining_edges + 1
