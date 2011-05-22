@@ -9,6 +9,9 @@
 /* a simple macro to emit bytecode instructions */
 #define BCI(code) *(bufp++) = (code)
 
+/* we increase the stack depth by amount */
+#define ADDITIONAL_STACK_ELEMENTS 20
+
 
 #ifdef TA_DEBUG
 int _ta_debug = 1;
@@ -1116,7 +1119,8 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
 /* each segment record consists of the first and last point */
 
 static FT_Byte*
-TA_font_build_glyph_segments(FONT* font,
+TA_sfnt_build_glyph_segments(SFNT* sfnt,
+                             FONT* font,
                              FT_Byte* bufp)
 {
   TA_GlyphHints hints = &font->loader->hints;
@@ -1134,6 +1138,8 @@ TA_font_build_glyph_segments(FONT* font,
   FT_Bool need_words = 0;
 
   FT_UInt i, j;
+  FT_UInt num_storage;
+  FT_UInt num_stack_elements;
 
 
   seg_limit = segments + axis->num_segments;
@@ -1207,6 +1213,14 @@ TA_font_build_glyph_segments(FONT* font,
   }
 
   BCI(CALL);
+
+  num_storage = sal_segment_offset + axis->num_segments;
+  if (num_storage > sfnt->max_storage)
+    sfnt->max_storage = num_storage;
+
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
+  if (num_stack_elements > sfnt->max_stack_elements)
+    sfnt->max_stack_elements = num_stack_elements;
 
   free(args);
 
@@ -1490,8 +1504,9 @@ TA_add_hinting_set(Hinting_Set** hinting_sets,
 
 
 static FT_Byte*
-TA_emit_hinting_set(Hinting_Set* hinting_set,
-                    FT_Byte* bufp)
+TA_sfnt_emit_hinting_set(SFNT* sfnt,
+                         Hinting_Set* hinting_set,
+                         FT_Byte* bufp)
 {
   FT_UInt* args;
   FT_UInt* arg;
@@ -1506,6 +1521,7 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
 
   FT_UInt i, j;
   FT_UInt num_args;
+  FT_UInt num_stack_elements;
 
 
   /* collect all arguments temporarily in an array (in reverse order) */
@@ -1597,14 +1613,19 @@ TA_emit_hinting_set(Hinting_Set* hinting_set,
 
   free(args);
 
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + hinting_set->num_args;
+  if (num_stack_elements > sfnt->max_stack_elements)
+    sfnt->max_stack_elements = sfnt->max_stack_elements;
+
   return bufp;
 }
 
 
 static FT_Byte*
-TA_emit_hinting_sets(Hinting_Set* hinting_sets,
-                     FT_UInt num_hinting_sets,
-                     FT_Byte* bufp)
+TA_sfnt_emit_hinting_sets(SFNT* sfnt,
+                          Hinting_Set* hinting_sets,
+                          FT_UInt num_hinting_sets,
+                          FT_Byte* bufp)
 {
   FT_UInt i;
   Hinting_Set* hinting_set;
@@ -1630,7 +1651,7 @@ TA_emit_hinting_sets(Hinting_Set* hinting_sets,
     }
     BCI(LT);
     BCI(IF);
-    bufp = TA_emit_hinting_set(hinting_set, bufp);
+    bufp = TA_sfnt_emit_hinting_set(sfnt, hinting_set, bufp);
     if (!bufp)
       return NULL;
     BCI(ELSE);
@@ -1638,7 +1659,7 @@ TA_emit_hinting_sets(Hinting_Set* hinting_sets,
     hinting_set++;
   }
 
-  bufp = TA_emit_hinting_set(hinting_set, bufp);
+  bufp = TA_sfnt_emit_hinting_set(sfnt, hinting_set, bufp);
   if (!bufp)
     return NULL;
 
@@ -1738,7 +1759,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* so that we can easily find the array length at reallocation time */
   memset(ins_buf, INS_A0, ins_len);
 
-  bufp = TA_font_build_glyph_segments(font, ins_buf);
+  bufp = TA_sfnt_build_glyph_segments(sfnt, font, ins_buf);
 
   /* now we loop over a large range of pixel sizes */
   /* to find hinting sets which get pushed onto the bytecode stack */
@@ -1790,7 +1811,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
       TA_free_hinting_set(hinting_set);
   }
 
-  bufp = TA_emit_hinting_sets(hinting_sets, num_hinting_sets, bufp);
+  bufp = TA_sfnt_emit_hinting_sets(sfnt,
+                                   hinting_sets, num_hinting_sets, bufp);
   if (!bufp)
     return FT_Err_Out_Of_Memory;
 
@@ -1831,10 +1853,6 @@ TA_sfnt_build_glyf_hints(SFNT* sfnt,
     if (error)
       return error;
   }
-
-  /* XXX provide real values or better estimates */
-  sfnt->max_storage = 1000;
-  sfnt->max_stack_elements = 1000;
 
   return FT_Err_Ok;
 }
