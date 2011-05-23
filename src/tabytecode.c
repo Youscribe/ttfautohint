@@ -946,10 +946,12 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
 
 /* the `prep' instructions */
 
+#define PREP(snippet_name) prep_ ## snippet_name
+
 /* we often need 0x10000 which can't be pushed directly onto the stack, */
 /* thus we provide it in the storage area */
 
-unsigned char prep_A[] = {
+unsigned char PREP(store_0x10000) [] = {
 
   PUSHB_1,
     sal_0x10000,
@@ -963,7 +965,7 @@ unsigned char prep_A[] = {
 
 };
 
-unsigned char prep_a[] = {
+unsigned char PREP(align_top_a) [] = {
 
   /* optimize the alignment of the top of small letters to the pixel grid */
 
@@ -973,7 +975,7 @@ unsigned char prep_a[] = {
 
 /*  %c, index of alignment blue zone */
 
-unsigned char prep_b[] = {
+unsigned char PREP(align_top_b) [] = {
 
   RCVT,
   DUP,
@@ -998,6 +1000,10 @@ unsigned char prep_b[] = {
     SWAP,
     WS,
 
+};
+
+unsigned char PREP(loop_cvt_a) [] = {
+
     /* loop over vertical CVT entries */
     PUSHB_4,
 
@@ -1006,7 +1012,7 @@ unsigned char prep_b[] = {
 /*    %c, first vertical index */
 /*    %c, last vertical index */
 
-unsigned char prep_c[] = {
+unsigned char PREP(loop_cvt_b) [] = {
 
       bci_cvt_rescale,
       bci_loop,
@@ -1020,7 +1026,7 @@ unsigned char prep_c[] = {
 /*    %c, first blue ref index */
 /*    %c, last blue ref index */
 
-unsigned char prep_d[] = {
+unsigned char PREP(loop_cvt_c) [] = {
 
       bci_cvt_rescale,
       bci_loop,
@@ -1034,7 +1040,7 @@ unsigned char prep_d[] = {
 /*    %c, first blue shoot index */
 /*    %c, last blue shoot index */
 
-unsigned char prep_e[] = {
+unsigned char PREP(loop_cvt_d) [] = {
 
       bci_cvt_rescale,
       bci_loop,
@@ -1043,7 +1049,7 @@ unsigned char prep_e[] = {
 
 };
 
-unsigned char prep_f[] = {
+unsigned char PREP(compute_extra_light_a) [] = {
 
   /* compute (vertical) `extra_light' flag */
   PUSHB_3,
@@ -1054,7 +1060,7 @@ unsigned char prep_f[] = {
 
 /*  %c, index of vertical standard_width */
 
-unsigned char prep_g[] = {
+unsigned char PREP(compute_extra_light_b) [] = {
 
   RCVT,
   GT, /* standard_width < 40 */
@@ -1062,7 +1068,7 @@ unsigned char prep_g[] = {
 
 };
 
-unsigned char prep_h[] = {
+unsigned char PREP(round_blues_a) [] = {
 
   /* use discrete values for blue zone widths */
   PUSHB_4,
@@ -1072,7 +1078,7 @@ unsigned char prep_h[] = {
 /*  %c, first blue ref index */
 /*  %c, last blue ref index */
 
-unsigned char prep_i[] = {
+unsigned char PREP(round_blues_b) [] = {
 
     bci_blue_round,
     bci_loop,
@@ -1081,14 +1087,14 @@ unsigned char prep_i[] = {
 };
 
 
-/* XXX talatin.c: 577 */
 /* XXX talatin.c: 1671 */
 /* XXX talatin.c: 1708 */
 
 
-#define COPY_PREP(array) \
-          memcpy(buf_p, array, sizeof (array)); \
-          buf_p += sizeof (array);
+#define COPY_PREP(snippet_name) \
+          memcpy(buf_p, prep_ ## snippet_name, \
+                 sizeof (prep_ ## snippet_name)); \
+          buf_p += sizeof (prep_ ## snippet_name);
 
 static FT_Error
 TA_table_build_prep(FT_Byte** prep,
@@ -1117,27 +1123,28 @@ TA_table_build_prep(FT_Byte** prep,
     }
   }
 
-  buf_len = sizeof (prep_A);
+  buf_len = sizeof (PREP(store_0x10000));
 
   if (blue_adjustment)
-    buf_len += sizeof (prep_a)
+    buf_len += sizeof (PREP(align_top_a))
                + 1
-               + sizeof (prep_b)
+               + sizeof (PREP(align_top_b))
+               + sizeof (PREP(loop_cvt_a))
                + 2
-               + sizeof (prep_c)
+               + sizeof (PREP(loop_cvt_b))
                + 2
-               + sizeof (prep_d)
+               + sizeof (PREP(loop_cvt_c))
                + 2
-               + sizeof (prep_e);
+               + sizeof (PREP(loop_cvt_d));
 
-  buf_len += sizeof (prep_f)
+  buf_len += sizeof (PREP(compute_extra_light_a))
              + 1
-             + sizeof (prep_g);
+             + sizeof (PREP(compute_extra_light_b));
 
   if (CVT_BLUES_SIZE(font))
-    buf_len += sizeof (prep_h)
+    buf_len += sizeof (PREP(round_blues_a))
                + 2
-               + sizeof (prep_i);
+               + sizeof (PREP(round_blues_b));
 
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
@@ -1153,39 +1160,41 @@ TA_table_build_prep(FT_Byte** prep,
   /* copy cvt program into buffer and fill in the missing variables */
   buf_p = buf;
 
-  COPY_PREP(prep_A);
+  COPY_PREP(store_0x10000);
 
   if (blue_adjustment)
   {
-    COPY_PREP(prep_a);
+    COPY_PREP(align_top_a);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + blue_adjustment - vaxis->blues);
-    COPY_PREP(prep_b);
+    COPY_PREP(align_top_b);
+
+    COPY_PREP(loop_cvt_a);
     *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_VERT_WIDTHS_OFFSET(font)
                                  + CVT_VERT_WIDTHS_SIZE(font) - 1);
-    COPY_PREP(prep_c);
+    COPY_PREP(loop_cvt_b);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
                                  + CVT_BLUES_SIZE(font) - 1);
-    COPY_PREP(prep_d);
+    COPY_PREP(loop_cvt_c);
     *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + CVT_BLUES_SIZE(font) - 1);
-    COPY_PREP(prep_e);
+    COPY_PREP(loop_cvt_d);
   }
 
-  COPY_PREP(prep_f);
+  COPY_PREP(compute_extra_light_a);
   *(buf_p++) = (unsigned char)CVT_VERT_STANDARD_WIDTH_OFFSET(font);
-  COPY_PREP(prep_g);
+  COPY_PREP(compute_extra_light_b);
 
   if (CVT_BLUES_SIZE(font))
   {
-    COPY_PREP(prep_h);
+    COPY_PREP(round_blues_a);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
                                  + CVT_BLUES_SIZE(font) - 1);
-    COPY_PREP(prep_i);
+    COPY_PREP(round_blues_b);
   }
 
   *prep = buf;
