@@ -246,36 +246,29 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* the horizontal and vertical standard widths */
 #define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 0
 #define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
-          CVT_HORZ_STANDARD_WIDTH_OFFSET(font) \
-          + 1
+          CVT_HORZ_STANDARD_WIDTH_OFFSET(font) + 1
 
 /* the horizontal stem widths */
 #define CVT_HORZ_WIDTHS_OFFSET(font) \
-          CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
-          + 1
+          CVT_VERT_STANDARD_WIDTH_OFFSET(font) + 1
 #define CVT_HORZ_WIDTHS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
 
 /* the vertical stem widths */
 #define CVT_VERT_WIDTHS_OFFSET(font) \
-          CVT_HORZ_WIDTHS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
+          CVT_HORZ_WIDTHS_OFFSET(font) + CVT_HORZ_WIDTHS_SIZE(font)
 #define CVT_VERT_WIDTHS_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
 
-/* the blue zone values for flat edges */
-#define CVT_BLUE_REFS_OFFSET(font) \
-          CVT_VERT_WIDTHS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
-#define CVT_BLUE_REFS_SIZE(font) \
+/* the number of blue zones */
+#define CVT_BLUES_SIZE(font) \
           ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
 
-/* the blue zone values for round edges */
+/* the blue zone values for flat and round edges */
+#define CVT_BLUE_REFS_OFFSET(font) \
+          CVT_VERT_WIDTHS_OFFSET(font) + CVT_VERT_WIDTHS_SIZE(font)
 #define CVT_BLUE_SHOOTS_OFFSET(font) \
-          CVT_BLUE_REFS_OFFSET(font) \
-          + ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
-#define CVT_BLUE_SHOOTS_SIZE(font) \
-          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+          CVT_BLUE_REFS_OFFSET(font) + CVT_BLUES_SIZE(font)
 
 
 /* symbolic names for storage area locations */
@@ -1054,11 +1047,11 @@ TA_table_build_prep(FT_Byte** prep,
     COPY_PREP(prep_c);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
-                                 + CVT_BLUE_REFS_SIZE(font) - 1);
+                                 + CVT_BLUES_SIZE(font) - 1);
     COPY_PREP(prep_d);
     *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
-                                 + CVT_BLUE_SHOOTS_SIZE(font) - 1);
+                                 + CVT_BLUES_SIZE(font) - 1);
     COPY_PREP(prep_e);
   }
 
