@@ -286,7 +286,8 @@
 #define bci_cvt_rescale bci_loop + 1
 #define bci_sal_assign bci_cvt_rescale + 1
 #define bci_loop_sal_assign bci_sal_assign + 1
-#define bci_remaining_edges bci_loop_sal_assign + 1
+#define bci_blue_round bci_loop_sal_assign + 1
+#define bci_remaining_edges bci_blue_round + 1
 #define bci_edge2blue bci_remaining_edges + 1
 #define bci_edge2link bci_edge2blue + 1
 #define bci_hint_glyph bci_edge2link + 1

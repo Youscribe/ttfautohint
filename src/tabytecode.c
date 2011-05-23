@@ -486,8 +486,9 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
       PUSHB_1,
         0,
       LT, /* width < 0 */
-      NEG, /* dist = -dist */
-
+      IF,
+        NEG, /* dist = -dist */
+      EIF,
     EIF,
   EIF,
 
@@ -652,6 +653,98 @@ unsigned char FPGM(bci_loop_sal_assign) [] = {
 
 
 /*
+ * bci_blue_round
+ *
+ *   Round a blue ref value and adjust its corresponding shoot value.
+ *
+ * uses: sal_counter (CVT index)
+ *
+ */
+
+unsigned char FPGM(bci_blue_round_a) [] = {
+
+  PUSHB_1,
+    bci_blue_round,
+  FDEF,
+
+  PUSHB_1,
+    sal_counter,
+  RS,
+  DUP,
+  RCVT, /* s: ref_idx ref */
+
+  DUP,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  SWAP, /* s: ref_idx round(ref) ref */
+
+  PUSHB_2,
+
+};
+
+/*  %c, blue_count */
+
+unsigned char FPGM(bci_blue_round_b) [] = {
+
+    4,
+  CINDEX,
+  ADD, /* s: ref_idx round(ref) ref shoot_idx */
+  DUP,
+  RCVT, /* s: ref_idx round(ref) ref shoot_idx shoot */
+
+  ROLL, /* s: ref_idx round(ref) shoot_idx shoot ref */
+  SWAP,
+  SUB, /* s: ref_idx round(ref) shoot_idx dist */
+  DUP,
+  ABS, /* s: ref_idx round(ref) shoot_idx dist delta */
+
+  DUP,
+  PUSHB_1,
+    32,
+  LT, /* delta < 32 */
+  IF,
+    POP,
+    PUSHB_1,
+      0, /* delta = 0 */
+
+  ELSE,
+    PUSHB_1,
+      48,
+    LT, /* delta < 48 */
+    IF,
+      PUSHB_1,
+        32, /* delta = 32 */
+
+    ELSE,
+      PUSHB_1,
+        64, /* delta = 64 */
+    EIF,
+  EIF,
+
+  SWAP, /* s: ref_idx round(ref) shoot_idx delta dist */
+  PUSHB_1,
+    0,
+  LT, /* dist < 0 */
+  IF,
+    NEG, /* delta = -delta */
+  EIF,
+
+  PUSHB_1,
+    3,
+  CINDEX,
+  ADD, /* s: ref_idx round(ref) shoot_idx (round(ref) + delta) */
+
+  WCVTP,
+  WCVTP,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_hint_glyph
  *
  *   This is the top-level glyph hinting function
@@ -773,6 +866,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_cvt_rescale))
             + sizeof (FPGM(bci_sal_assign))
             + sizeof (FPGM(bci_loop_sal_assign))
+            + sizeof (FPGM(bci_blue_round_a))
+            + 1
+            + sizeof (FPGM(bci_blue_round_b))
             + sizeof (FPGM(bci_remaining_edges))
             + sizeof (FPGM(bci_edge2blue))
             + sizeof (FPGM(bci_edge2link))
@@ -800,6 +896,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_cvt_rescale);
   COPY_FPGM(bci_sal_assign);
   COPY_FPGM(bci_loop_sal_assign);
+  COPY_FPGM(bci_blue_round_a);
+  *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
+  COPY_FPGM(bci_blue_round_b);
   COPY_FPGM(bci_remaining_edges);
   COPY_FPGM(bci_edge2blue);
   COPY_FPGM(bci_edge2link);
@@ -963,6 +1062,24 @@ unsigned char prep_g[] = {
 
 };
 
+unsigned char prep_h[] = {
+
+  /* use discrete values for blue zone widths */
+  PUSHB_4,
+
+};
+
+/*  %c, first blue ref index */
+/*  %c, last blue ref index */
+
+unsigned char prep_i[] = {
+
+    bci_blue_round,
+    bci_loop,
+  CALL
+
+};
+
 
 /* XXX talatin.c: 577 */
 /* XXX talatin.c: 1671 */
@@ -1003,7 +1120,6 @@ TA_table_build_prep(FT_Byte** prep,
   buf_len = sizeof (prep_A);
 
   if (blue_adjustment)
-  {
     buf_len += sizeof (prep_a)
                + 1
                + sizeof (prep_b)
@@ -1013,11 +1129,15 @@ TA_table_build_prep(FT_Byte** prep,
                + sizeof (prep_d)
                + 2
                + sizeof (prep_e);
-  }
 
   buf_len += sizeof (prep_f)
              + 1
              + sizeof (prep_g);
+
+  if (CVT_BLUES_SIZE(font))
+    buf_len += sizeof (prep_h)
+               + 2
+               + sizeof (prep_i);
 
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
@@ -1058,6 +1178,15 @@ TA_table_build_prep(FT_Byte** prep,
   COPY_PREP(prep_f);
   *(buf_p++) = (unsigned char)CVT_VERT_STANDARD_WIDTH_OFFSET(font);
   COPY_PREP(prep_g);
+
+  if (CVT_BLUES_SIZE(font))
+  {
+    COPY_PREP(prep_h);
+    *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
+    *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
+                                 + CVT_BLUES_SIZE(font) - 1);
+    COPY_PREP(prep_i);
+  }
 
   *prep = buf;
   *prep_len = buf_len;
@@ -1617,6 +1746,10 @@ TA_sfnt_emit_hinting_sets(SFNT* sfnt,
 
   hinting_set = hinting_sets;
 
+  /* this instruction is essential for getting correct CVT values */
+  /* if horizontal and vertical resolutions differ; */
+  /* it assures that the projection vector is set to the y axis */
+  /* so that CVT values are handled as being `vertical' */
   BCI(SVTCA_y);
 
   for (i = 0; i < num_hinting_sets - 1; i++)
