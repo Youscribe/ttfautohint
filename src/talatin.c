@@ -1680,7 +1680,7 @@ ta_latin_align_linked_edge(TA_GlyphHints hints,
 
   TA_LOG(("  LINK: edge %d (opos=%.2f) linked to (%.2f),"
             " dist was %.2f, now %.2f\n",
-          stem_edge-hints->axis[dim].edges, stem_edge->opos / 64.0,
+          stem_edge - hints->axis[dim].edges, stem_edge->opos / 64.0,
           stem_edge->pos / 64.0, dist / 64.0, fitted_width / 64.0));
 }
 
@@ -2059,7 +2059,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       else if (!anchor)
       {
         TA_LOG(("  SERIF_ANCHOR: edge %d (opos=%.2f) snapped to (%.2f)\n",
-                edge-edges, edge->opos / 64.0, edge->pos / 64.0));
+                edge - edges, edge->opos / 64.0, edge->pos / 64.0));
         edge->pos = TA_PIX_ROUND(edge->opos);
         anchor = edge;
       }

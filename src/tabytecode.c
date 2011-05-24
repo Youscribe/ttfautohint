@@ -1089,6 +1089,7 @@ unsigned char PREP(round_blues_b) [] = {
 
 /* XXX talatin.c: 1671 */
 /* XXX talatin.c: 1708 */
+/* XXX talatin.c: 2182 */
 
 
 #define COPY_PREP(snippet_name) \
