@@ -1944,8 +1944,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     return FT_Err_Out_Of_Memory;
 
   /* we are done, so reallocate the instruction array to its real size */
-  bufp = (FT_Byte*)memchr((char*)ins_buf, INS_A0, ins_len);
-  ins_len = bufp - ins_buf;
+  /* (memrchr is a GNU glibc extension, so we do it manually) */
+  bufp = ins_buf + ins_len;
+  while (*(--bufp) == INS_A0)
+    ;
+  ins_len = bufp - ins_buf + 1;
 
   if (ins_len > sfnt->max_instructions)
     sfnt->max_instructions = ins_len;
