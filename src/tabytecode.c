@@ -22,36 +22,10 @@ void* _ta_debug_hints;
 #endif
 
 
-/* structures for hinting sets */
-typedef struct Edge2Blue_ {
-  FT_UInt first_segment;
-
-  FT_Bool is_serif;
-  FT_Bool is_round;
-
-  FT_UInt num_remaining_segments;
-  FT_UInt* remaining_segments;
-} Edge2Blue;
-
-typedef struct Edge2Link_ {
-  FT_UInt first_segment;
-
-  FT_UInt num_remaining_segments;
-  FT_UInt* remaining_segments;
-} Edge2Link;
-
-typedef struct Hinting_Set_ {
+typedef struct Hints_Record_ {
   FT_UInt size;
-
-  FT_UInt num_edges2blues;
-  Edge2Blue* edges2blues;
-
-  FT_UInt num_edges2links;
-  Edge2Link* edges2links;
-
-  FT_Bool need_words;
-  FT_UInt num_args;
-} Hinting_Set;
+  FT_Byte* buf;
+} Hints_Record;
 
 
 static FT_Error
@@ -1351,280 +1325,71 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 }
 
 
-static void
-TA_font_clear_edge_DONE_flag(FONT* font)
-{
-  TA_GlyphHints hints = &font->loader->hints;
-  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
-  TA_Edge edges = axis->edges;
-  TA_Edge edge_limit = edges + axis->num_edges;
-  TA_Edge edge;
-
-
-  for (edge = edges; edge < edge_limit; edge++)
-    edge->flags &= ~TA_EDGE_DONE;
-}
-
-
-static FT_Error
-TA_construct_hinting_set(FONT* font,
-                         FT_UInt size,
-                         Hinting_Set* hinting_set)
-{
-  TA_GlyphHints hints = &font->loader->hints;
-  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
-  TA_Segment segments = axis->segments;
-  TA_Edge edges = axis->edges;
-  TA_Edge limit = edges + axis->num_edges;
-  TA_Edge edge;
-
-  Edge2Blue* edge2blue;
-  Edge2Link* edge2link;
-
-
-  hinting_set->size = size;
-  hinting_set->need_words = 0;
-  hinting_set->num_args = 0;
-
-  hinting_set->num_edges2blues = 0;
-  hinting_set->edges2blues = NULL;
-  hinting_set->num_edges2links = 0;
-  hinting_set->edges2links = NULL;
-
-  for (edge = edges; edge < limit; edge++)
-  {
-    if (edge->blue_edge)
-      hinting_set->num_edges2blues++;
-    else
-      hinting_set->num_edges2links++;
-  }
-
-  if (hinting_set->num_edges2blues > 0xFF
-      || hinting_set->num_edges2links > 0xFF)
-    hinting_set->need_words = 1;
-
-  /* we push num_edges2blues and num_edges2links */
-  hinting_set->num_args += 2;
-
-  if (hinting_set->num_edges2blues)
-  {
-    hinting_set->edges2blues =
-      (Edge2Blue*)calloc(1, hinting_set->num_edges2blues
-                            * sizeof (Edge2Blue));
-    if (!hinting_set->edges2blues)
-      return FT_Err_Out_Of_Memory;
-  }
-
-  if (hinting_set->num_edges2links)
-  {
-    hinting_set->edges2links =
-      (Edge2Link*)calloc(1, hinting_set->num_edges2links
-                            * sizeof (Edge2Link));
-    if (!hinting_set->edges2links)
-      return FT_Err_Out_Of_Memory;
-  }
-
-  edge2blue = hinting_set->edges2blues;
-  edge2link = hinting_set->edges2links;
-
-  for (edge = edges; edge < limit; edge++)
-  {
-    TA_Segment seg;
-    FT_UInt* remaining_segment;
-
-
-    if (edge->blue_edge)
-    {
-      edge2blue->first_segment = edge->first - segments;
-      edge2blue->is_serif = edge->flags & TA_EDGE_SERIF;
-      edge2blue->is_round = edge->flags & TA_EDGE_ROUND;
-
-      seg = edge->first->edge_next;
-      while (seg != edge->first)
-      {
-        edge2blue->num_remaining_segments++;
-        seg = seg->edge_next;
-      }
-
-      if (edge2blue->first_segment > 0xFF
-          || edge2blue->num_remaining_segments > 0xFF)
-        hinting_set->need_words = 1;
-
-      if (edge2blue->num_remaining_segments)
-      {
-        edge2blue->remaining_segments =
-          (FT_UInt*)calloc(1, edge2blue->num_remaining_segments
-                              * sizeof (FT_UInt));
-        if (!edge2blue->remaining_segments)
-          return FT_Err_Out_Of_Memory;
-      }
-
-      seg = edge->first->edge_next;
-      remaining_segment = edge2blue->remaining_segments;
-      while (seg != edge->first)
-      {
-        *remaining_segment = seg - segments;
-        seg = seg->edge_next;
-
-        if (*remaining_segment > 0xFF)
-          hinting_set->need_words = 1;
-
-        remaining_segment++;
-      }
-
-      /* we push the number of remaining segments, is_serif, is_round, */
-      /* the first segment, and the remaining segments */
-      hinting_set->num_args += edge2blue->num_remaining_segments + 4;
-
-      edge2blue++;
-    }
-    else
-    {
-      edge2link->first_segment = edge->first - segments;
-
-      seg = edge->first->edge_next;
-      while (seg != edge->first)
-      {
-        edge2link->num_remaining_segments++;
-        seg = seg->edge_next;
-      }
-
-      if (edge2link->first_segment > 0xFF
-          || edge2link->num_remaining_segments > 0xFF)
-        hinting_set->need_words = 1;
-
-      if (edge2link->num_remaining_segments)
-      {
-        edge2link->remaining_segments =
-          (FT_UInt*)calloc(1, edge2link->num_remaining_segments
-                              * sizeof (FT_UInt));
-        if (!edge2link->remaining_segments)
-          return FT_Err_Out_Of_Memory;
-      }
-
-      seg = edge->first->edge_next;
-      remaining_segment = edge2link->remaining_segments;
-      while (seg != edge->first)
-      {
-        *remaining_segment = seg - segments;
-        seg = seg->edge_next;
-
-        if (*remaining_segment > 0xFF)
-          hinting_set->need_words = 1;
-
-        remaining_segment++;
-      }
-
-      /* we push the number of remaining segments, */
-      /* the first segment, and the remaining segments */
-      hinting_set->num_args += edge2link->num_remaining_segments + 2;
-
-      edge2link++;
-    }
-  }
-
-  return FT_Err_Ok;
-}
-
-
 static FT_Bool
-TA_hinting_set_is_different(Hinting_Set* hinting_sets,
-                            FT_UInt num_hinting_sets,
-                            Hinting_Set hinting_set)
+TA_hints_record_is_different(Hints_Record* hints_records,
+                             FT_UInt num_hints_records,
+                             FT_Byte* start,
+                             FT_Byte* end)
 {
-  Hinting_Set last_hinting_set;
-
-  Edge2Blue* edge2blue;
-  Edge2Blue* last_edge2blue;
-  Edge2Link* edge2link;
-  Edge2Link* last_edge2link;
-
-  FT_UInt i;
+  Hints_Record last_hints_record;
 
 
-  if (!hinting_sets)
+  if (!hints_records)
     return 1;
 
-  /* we only need to compare with the last hinting set */
-  last_hinting_set = hinting_sets[num_hinting_sets - 1];
+  /* we only need to compare with the last hints record */
+  last_hints_record = hints_records[num_hints_records - 1];
 
-  if (hinting_set.num_edges2blues
-      != last_hinting_set.num_edges2blues)
+  if ((FT_UInt)(end - start) != last_hints_record.size)
     return 1;
 
-  edge2blue = hinting_set.edges2blues;
-  last_edge2blue = last_hinting_set.edges2blues;
-
-  for (i = 0;
-       i < hinting_set.num_edges2blues;
-       i++, edge2blue++, last_edge2blue++)
-  {
-    if (edge2blue->num_remaining_segments
-        != last_edge2blue->num_remaining_segments)
-      return 1;
-
-    if (edge2blue->remaining_segments)
-    {
-      if (memcmp(edge2blue->remaining_segments,
-                 last_edge2blue->remaining_segments,
-                 sizeof (FT_UInt) * edge2blue->num_remaining_segments))
-        return 1;
-    }
-  }
-
-  if (hinting_set.num_edges2links
-      != last_hinting_set.num_edges2links)
+  if (memcmp(start, last_hints_record.buf, last_hints_record.size))
     return 1;
-
-  edge2link = hinting_set.edges2links;
-  last_edge2link = last_hinting_set.edges2links;
-
-  for (i = 0;
-       i < hinting_set.num_edges2links;
-       i++, edge2link++, last_edge2link++)
-  {
-    if (edge2link->num_remaining_segments
-        != last_edge2link->num_remaining_segments)
-      return 1;
-
-    if (edge2link->remaining_segments)
-    {
-      if (memcmp(edge2link->remaining_segments,
-                 last_edge2link->remaining_segments,
-                 sizeof (FT_UInt) * edge2link->num_remaining_segments))
-        return 1;
-    }
-  }
 
   return 0;
 }
 
 
 static FT_Error
-TA_add_hinting_set(Hinting_Set** hinting_sets,
-                   FT_UInt* num_hinting_sets,
-                   Hinting_Set hinting_set)
+TA_add_hints_record(Hints_Record** hints_records,
+                    FT_UInt* num_hints_records,
+                    FT_Byte* start,
+                    FT_Byte* end)
 {
-  Hinting_Set* hinting_sets_new;
+  Hints_Record* hints_records_new;
+  Hints_Record hints_record;
+  FT_UInt size;
 
 
-  (*num_hinting_sets)++;
-  hinting_sets_new =
-    (Hinting_Set*)realloc(*hinting_sets, *num_hinting_sets
-                                         * sizeof (Hinting_Set));
-  if (!hinting_sets_new)
+  size = (FT_UInt)(end - start);
+
+  hints_record.size = size;
+  hints_record.buf = (FT_Byte*)malloc(size);
+  if (!hints_record.buf)
+    return FT_Err_Out_Of_Memory;
+
+  memcpy(hints_record.buf, start, size);
+
+  (*num_hints_records)++;
+  hints_records_new =
+    (Hints_Record*)realloc(*hints_records, *num_hints_records
+                                           * sizeof (Hints_Record));
+  if (!hints_records_new)
   {
-    (*num_hinting_sets)--;
+    free(hints_record.buf);
+    (*num_hints_records)--;
     return FT_Err_Out_Of_Memory;
   }
   else
-    *hinting_sets = hinting_sets_new;
+    *hints_records = hints_records_new;
 
-  (*hinting_sets)[*num_hinting_sets - 1] = hinting_set;
+  (*hints_records)[*num_hints_records - 1] = hints_record;
 
   return FT_Err_Ok;
 }
 
+
+#if 0
 
 static FT_Byte*
 TA_sfnt_emit_hinting_set(SFNT* sfnt,
@@ -1800,34 +1565,117 @@ TA_sfnt_emit_hinting_sets(SFNT* sfnt,
   return bufp;
 }
 
+#endif
+
 
 static void
-TA_free_hinting_set(Hinting_Set hinting_set)
+TA_free_hints_records(Hints_Record* hints_records,
+                      FT_UInt num_hints_records)
 {
   FT_UInt i;
 
 
-  for (i = 0; i < hinting_set.num_edges2blues; i++)
-    free(hinting_set.edges2blues[i].remaining_segments);
-  free(hinting_set.edges2blues);
+  for (i = 0; i < num_hints_records; i++)
+    free(hints_records[i].buf);
 
-  for (i = 0; i < hinting_set.num_edges2links; i++)
-    free(hinting_set.edges2links[i].remaining_segments);
-  free(hinting_set.edges2links);
+  free(hints_records);
+}
+
+
+static FT_Byte*
+TA_hints_recorder_handle_segments(FT_Byte* bufp,
+                                  TA_Segment segments,
+                                  TA_Edge edge,
+                                  FT_Bool* need_words)
+{
+  TA_Segment seg;
+  FT_UInt seg_idx;
+  FT_UInt num_segs = 0;
+  FT_Bool nw = 0;
+
+
+  seg_idx = edge->first - segments;
+  if (seg_idx > 0xFF)
+    nw = 1;
+
+  *(bufp++) = HIGH(seg_idx);
+  *(bufp++) = LOW(seg_idx);
+  *(bufp++) = edge->flags & TA_EDGE_SERIF;
+  *(bufp++) = edge->flags & TA_EDGE_ROUND;
+
+  seg = edge->first->edge_next;
+  while (seg != edge->first)
+  {
+    seg = seg->edge_next;
+    num_segs++;
+  }
+  if (num_segs > 0xFF)
+    nw = 1;
+
+  *(bufp++) = HIGH(num_segs);
+  *(bufp++) = LOW(num_segs);
+
+  seg = edge->first->edge_next;
+  while (seg != edge->first)
+  {
+    seg_idx = seg - segments;
+    seg = seg->edge_next;
+    if (seg_idx > 0xFF)
+      nw = 1;
+
+    *(bufp++) = HIGH(seg_idx);
+    *(bufp++) = LOW(seg_idx);
+  }
+
+  if (!*need_words)
+    *need_words = nw;
+
+  return bufp;
 }
 
 
 static void
-TA_free_hinting_sets(Hinting_Set* hinting_sets,
-                     FT_UInt num_hinting_sets)
+TA_hints_recorder(TA_Action action,
+                  TA_GlyphHints hints,
+                  TA_Dimension dim,
+                  TA_Edge edge1,
+                  TA_Edge edge2)
 {
-  FT_UInt i;
+  TA_AxisHints axis = &hints->axis[dim];
+  TA_Segment segments = axis->segments;
+
+  FT_Byte** buf = (FT_Byte**)hints->user;
+  FT_Byte* p = *buf;
+  FT_Bool need_words = 0;
 
 
-  for (i = 0; i < num_hinting_sets; i++)
-    TA_free_hinting_set(hinting_sets[i]);
+  if (dim == TA_DIMENSION_HORZ)
+    return;
 
-  free(hinting_sets);
+  *(p++) = (FT_Byte)action;
+
+  switch (action)
+  {
+  case ta_link:
+  case ta_anchor:
+  case ta_stem:
+    p = TA_hints_recorder_handle_segments(p, segments, edge1, &need_words);
+    p = TA_hints_recorder_handle_segments(p, segments, edge2, &need_words);
+    break;
+
+  case ta_blue:
+  case ta_bound:
+  case ta_serif:
+  case ta_serif_anchor:
+  case ta_serif_link1:
+  case ta_serif_link2:
+    p = TA_hints_recorder_handle_segments(p, segments, edge1, &need_words);
+    break;
+  }
+
+  *(p++) = (FT_Byte)need_words;
+
+  *buf = p;
 }
 
 
@@ -1842,6 +1690,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Byte* ins_buf;
   FT_UInt ins_len;
   FT_Byte* bufp;
+  FT_Byte* curp;
 
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
@@ -1849,8 +1698,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   TA_GlyphHints hints;
 
-  FT_UInt num_hinting_sets;
-  Hinting_Set* hinting_sets;
+  FT_UInt num_hints_records;
+  Hints_Record* hints_records;
 
   FT_UInt size;
 
@@ -1864,6 +1713,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (error)
     return error;
 
+  ta_loader_register_hints_recorder(font->loader, NULL, NULL);
   error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, 0);
   if (error)
     return error;
@@ -1889,59 +1739,65 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   bufp = TA_sfnt_build_glyph_segments(sfnt, font, ins_buf);
 
   /* now we loop over a large range of pixel sizes */
-  /* to find hinting sets which get pushed onto the bytecode stack */
-  num_hinting_sets = 0;
-  hinting_sets = NULL;
+  /* to find hints records which get pushed onto the bytecode stack */
+  num_hints_records = 0;
+  hints_records = NULL;
 
-#if 0
+#if DEBUG
   printf("glyph %ld\n", idx);
 #endif
 
+  /* we temporarily use `ins_buf' to record the current glyph hints */
+  curp = bufp;
+  ta_loader_register_hints_recorder(font->loader,
+                                    TA_hints_recorder, (void *)&curp);
+
   for (size = 8; size <= 1000; size++)
   {
-    Hinting_Set hinting_set;
-
+    /* rewind buffer pointer for recorder */
+    curp = bufp;
 
     error = FT_Set_Pixel_Sizes(face, size, size);
     if (error)
       goto Err;
 
+    /* calling `ta_loader_load_glyph' uses the */
+    /* `TA_hints_recorder' function as a callback, modifying `curp' */
     error = ta_loader_load_glyph(font->loader, face, idx, 0);
     if (error)
       goto Err;
 
-    TA_font_clear_edge_DONE_flag(font);
-
-    error = TA_construct_hinting_set(font, size, &hinting_set);
-    if (error)
-      goto Err;
-
-    if (TA_hinting_set_is_different(hinting_sets,
-                                    num_hinting_sets,
-                                    hinting_set))
+    if (TA_hints_record_is_different(hints_records,
+                                     num_hints_records,
+                                     bufp, curp))
     {
-#if 0
-      if (num_hinting_sets > 0)
-        printf("  additional hinting set for size %d\n", size);
+#if DEBUG
+      if (num_hints_records > 0)
+      {
+        FT_Byte* p;
+
+
+        printf("  %d:\n", size);
+        for (p = bufp; p < curp; p++)
+          printf(" %2d", *p);
+        printf("\n");
+      }
 #endif
 
-      error = TA_add_hinting_set(&hinting_sets,
-                                 &num_hinting_sets,
-                                 hinting_set);
+      error = TA_add_hints_record(&hints_records,
+                                  &num_hints_records,
+                                  bufp, curp);
       if (error)
-      {
-        TA_free_hinting_set(hinting_set);
         goto Err;
-      }
     }
-    else
-      TA_free_hinting_set(hinting_set);
   }
 
+#if 0
   bufp = TA_sfnt_emit_hinting_sets(sfnt,
                                    hinting_sets, num_hinting_sets, bufp);
   if (!bufp)
     return FT_Err_Out_Of_Memory;
+#endif
 
   /* we are done, so reallocate the instruction array to its real size */
   /* (memrchr is a GNU glibc extension, so we do it manually) */
@@ -1956,12 +1812,12 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   glyph->ins_buf = (FT_Byte*)realloc(ins_buf, ins_len);
   glyph->ins_len = ins_len;
 
-  TA_free_hinting_sets(hinting_sets, num_hinting_sets);
+  TA_free_hints_records(hints_records, num_hints_records);
 
   return FT_Err_Ok;
 
 Err:
-  TA_free_hinting_sets(hinting_sets, num_hinting_sets);
+  TA_free_hints_records(hints_records, num_hints_records);
   free(ins_buf);
 
   return error;

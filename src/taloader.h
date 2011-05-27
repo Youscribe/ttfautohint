@@ -46,6 +46,12 @@ ta_loader_load_glyph(TA_Loader loader,
                      FT_UInt gindex,
                      FT_UInt32 load_flags);
 
+
+void
+ta_loader_register_hints_recorder(TA_Loader loader,
+                                  TA_Hints_Recorder hints_recorder,
+                                  void *user);
+
 #endif /* __TALOADER_H__ */
 
 /* end of taloader.h */

@@ -648,7 +648,7 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
 void
 ta_latin_metrics_scale(TA_LatinMetrics metrics,
-                        TA_Scaler scaler)
+                       TA_Scaler scaler)
 {
   metrics->root.scaler.render_mode = scaler->render_mode;
   metrics->root.scaler.face = scaler->face;
@@ -1682,6 +1682,9 @@ ta_latin_align_linked_edge(TA_GlyphHints hints,
             " dist was %.2f, now %.2f\n",
           stem_edge - hints->axis[dim].edges, stem_edge->opos / 64.0,
           stem_edge->pos / 64.0, dist / 64.0, fitted_width / 64.0));
+
+  if (hints->recorder)
+    hints->recorder(ta_link, hints, dim, base_edge, stem_edge);
 }
 
 
@@ -1759,6 +1762,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
       edge1->pos = blue->fit;
       edge1->flags |= TA_EDGE_DONE;
+
+      if (hints->recorder)
+        hints->recorder(ta_blue, hints, dim, edge1, NULL);
 
       if (edge2 && !edge2->blue_edge)
       {
@@ -1853,14 +1859,17 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       else
         edge->pos = TA_PIX_ROUND(edge->opos);
 
+      anchor = edge;
+      edge->flags |= TA_EDGE_DONE;
+
       TA_LOG(("  ANCHOR: edge %d (opos=%.2f) and %d (opos=%.2f)"
                 " snapped to (%.2f) (%.2f)\n",
               edge - edges, edge->opos / 64.0,
               edge2 - edges, edge2->opos / 64.0,
               edge->pos / 64.0, edge2->pos / 64.0));
-      anchor = edge;
 
-      edge->flags |= TA_EDGE_DONE;
+      if (hints->recorder)
+        hints->recorder(ta_anchor, hints, dim, edge, edge2);
 
       ta_latin_align_linked_edge(hints, dim, edge, edge2);
     }
@@ -1919,6 +1928,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge - edges, edge->opos / 64.0,
                 edge2 - edges, edge2->opos / 64.0,
                 edge->pos / 64.0, edge2->pos / 64.0));
+
+        if (hints->recorder)
+          hints->recorder(ta_stem, hints, dim, edge, edge2);
       }
 
       else
@@ -1948,6 +1960,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge - edges, edge->opos / 64.0,
                 edge2 - edges, edge2->opos / 64.0,
                 edge->pos / 64.0, edge2->pos / 64.0));
+
+        if (hints->recorder)
+          hints->recorder(ta_stem, hints, dim, edge, edge2);
       }
 
       edge->flags |= TA_EDGE_DONE;
@@ -1958,7 +1973,11 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       {
         TA_LOG(("  BOUND: %d (pos=%.2f) to (%.2f)\n",
                 edge - edges, edge->pos / 64.0, edge[-1].pos / 64.0));
+
         edge->pos = edge[-1].pos;
+
+        if (hints->recorder)
+          hints->recorder(ta_bound, hints, dim, edge, NULL);
       }
     }
   }
@@ -2050,18 +2069,26 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       if (delta < 64 + 16)
       {
         ta_latin_align_serif_edge(hints, edge->serif, edge);
+
         TA_LOG(("  SERIF: edge %d (opos=%.2f) serif to %d (opos=%.2f)"
                   " aligned to (%.2f)\n",
                 edge - edges, edge->opos / 64.0,
                 edge->serif - edges, edge->serif->opos / 64.0,
                 edge->pos / 64.0));
+
+        if (hints->recorder)
+          hints->recorder(ta_serif, hints, dim, edge, NULL);
       }
       else if (!anchor)
       {
-        TA_LOG(("  SERIF_ANCHOR: edge %d (opos=%.2f) snapped to (%.2f)\n",
-                edge - edges, edge->opos / 64.0, edge->pos / 64.0));
         edge->pos = TA_PIX_ROUND(edge->opos);
         anchor = edge;
+
+        TA_LOG(("  SERIF_ANCHOR: edge %d (opos=%.2f) snapped to (%.2f)\n",
+                edge - edges, edge->opos / 64.0, edge->pos / 64.0));
+
+        if (hints->recorder)
+          hints->recorder(ta_serif_anchor, hints, dim, edge, NULL);
       }
       else
       {
@@ -2091,6 +2118,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                   edge - edges, edge->opos / 64.0,
                   edge->pos / 64.0,
                   before - edges, before->opos / 64.0));
+
+          if (hints->recorder)
+            hints->recorder(ta_serif_link1, hints, dim, edge, NULL);
         }
         else
         {
@@ -2098,6 +2128,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
           TA_LOG(("  SERIF_LINK2: edge %d (opos=%.2f) snapped to (%.2f)\n",
                   edge - edges, edge->opos / 64.0, edge->pos / 64.0));
+
+          if (hints->recorder)
+            hints->recorder(ta_serif_link2, hints, dim, edge, NULL);
         }
       }
 

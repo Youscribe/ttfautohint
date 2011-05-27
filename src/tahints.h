@@ -298,6 +298,26 @@ typedef struct TA_AxisHintsRec_
 } TA_AxisHintsRec, *TA_AxisHints;
 
 
+typedef enum TA_Action_ {
+  ta_link,
+  ta_blue,
+  ta_anchor,
+  ta_stem,
+  ta_bound,
+  ta_serif,
+  ta_serif_anchor,
+  ta_serif_link1,
+  ta_serif_link2
+} TA_Action;
+
+
+typedef void
+(*TA_Hints_Recorder)(TA_Action action,
+                     TA_GlyphHints hints,
+                     TA_Dimension dim,
+                     TA_Edge edge1,
+                     TA_Edge edge2);
+
 typedef struct TA_GlyphHintsRec_
 {
   FT_Fixed x_scale;
@@ -322,6 +342,9 @@ typedef struct TA_GlyphHintsRec_
 
   FT_Pos xmin_delta; /* used for warping */
   FT_Pos xmax_delta;
+
+  TA_Hints_Recorder recorder;
+  void *user;
 } TA_GlyphHintsRec;
 
 
