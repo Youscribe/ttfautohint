@@ -1684,7 +1684,7 @@ ta_latin_align_linked_edge(TA_GlyphHints hints,
           stem_edge->pos / 64.0, dist / 64.0, fitted_width / 64.0));
 
   if (hints->recorder)
-    hints->recorder(ta_link, hints, dim, base_edge, stem_edge);
+    hints->recorder(ta_link, hints, dim, base_edge, stem_edge, NULL);
 }
 
 
@@ -1763,7 +1763,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       edge1->flags |= TA_EDGE_DONE;
 
       if (hints->recorder)
-        hints->recorder(ta_blue, hints, dim, edge1, NULL);
+        hints->recorder(ta_blue, hints, dim, edge1, NULL, NULL);
 
       if (edge2 && !edge2->blue_edge)
       {
@@ -1868,7 +1868,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
               edge->pos / 64.0, edge2->pos / 64.0));
 
       if (hints->recorder)
-        hints->recorder(ta_anchor, hints, dim, edge, edge2);
+        hints->recorder(ta_anchor, hints, dim, edge, edge2, NULL);
 
       ta_latin_align_linked_edge(hints, dim, edge, edge2);
     }
@@ -1894,7 +1894,13 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         edge->pos = edge2->pos - cur_len;
 
         if (hints->recorder)
-          hints->recorder(ta_adjust, hints, dim, edge, edge2);
+        {
+          if (edge > edges)
+            hints->recorder(ta_adjust_bound, hints, dim,
+                            edge, edge2, &edge[-1]);
+          else
+            hints->recorder(ta_adjust, hints, dim, edge, edge2, NULL);
+        }
       }
 
       else if (cur_len < 96)
@@ -1938,7 +1944,13 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge->pos / 64.0, edge2->pos / 64.0));
 
         if (hints->recorder)
-          hints->recorder(ta_stem, hints, dim, edge, edge2);
+        {
+          if (edge > edges)
+            hints->recorder(ta_stem_bound, hints, dim,
+                            edge, edge2, &edge[-1]);
+          else
+            hints->recorder(ta_stem, hints, dim, edge, edge2, NULL);
+        }
       }
 
       else
@@ -1970,7 +1982,13 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge->pos / 64.0, edge2->pos / 64.0));
 
         if (hints->recorder)
-          hints->recorder(ta_stem, hints, dim, edge, edge2);
+        {
+          if (edge > edges)
+            hints->recorder(ta_stem_bound, hints, dim,
+                            edge, edge2, &edge[-1]);
+          else
+            hints->recorder(ta_stem, hints, dim, edge, edge2, NULL);
+        }
       }
 
       edge->flags |= TA_EDGE_DONE;
@@ -1985,7 +2003,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         edge->pos = edge[-1].pos;
 
         if (hints->recorder)
-          hints->recorder(ta_bound, hints, dim, edge, NULL);
+          hints->recorder(ta_bound, hints, dim, edge, &edge[-1], NULL);
       }
     }
   }
@@ -2085,7 +2103,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge->pos / 64.0));
 
         if (hints->recorder)
-          hints->recorder(ta_serif, hints, dim, edge, NULL);
+          hints->recorder(ta_serif, hints, dim, edge, NULL, NULL);
       }
       else if (!anchor)
       {
@@ -2096,7 +2114,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                 edge - edges, edge->opos / 64.0, edge->pos / 64.0));
 
         if (hints->recorder)
-          hints->recorder(ta_serif_anchor, hints, dim, edge, NULL);
+          hints->recorder(ta_serif_anchor, hints, dim, edge, NULL, NULL);
       }
       else
       {
@@ -2128,7 +2146,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                   before - edges, before->opos / 64.0));
 
           if (hints->recorder)
-            hints->recorder(ta_serif_link1, hints, dim, edge, NULL);
+            hints->recorder(ta_serif_link1, hints, dim, edge, NULL, NULL);
         }
         else
         {
@@ -2138,7 +2156,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                   edge - edges, edge->opos / 64.0, edge->pos / 64.0));
 
           if (hints->recorder)
-            hints->recorder(ta_serif_link2, hints, dim, edge, NULL);
+            hints->recorder(ta_serif_link2, hints, dim, edge, NULL, NULL);
         }
       }
 

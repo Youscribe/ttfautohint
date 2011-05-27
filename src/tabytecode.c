@@ -1585,22 +1585,21 @@ TA_free_hints_records(Hints_Record* hints_records,
 static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
                                   TA_Segment segments,
-                                  TA_Edge edge,
-                                  FT_Bool* need_words)
+                                  TA_Edge edge)
 {
   TA_Segment seg;
   FT_UInt seg_idx;
   FT_UInt num_segs = 0;
-  FT_Bool nw = 0;
 
 
   seg_idx = edge->first - segments;
-  if (seg_idx > 0xFF)
-    nw = 1;
 
+  /* we store everything as 16bit numbers */
   *(bufp++) = HIGH(seg_idx);
   *(bufp++) = LOW(seg_idx);
+  *(bufp++) = 0;
   *(bufp++) = edge->flags & TA_EDGE_SERIF;
+  *(bufp++) = 0;
   *(bufp++) = edge->flags & TA_EDGE_ROUND;
 
   seg = edge->first->edge_next;
@@ -1609,8 +1608,6 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
     seg = seg->edge_next;
     num_segs++;
   }
-  if (num_segs > 0xFF)
-    nw = 1;
 
   *(bufp++) = HIGH(num_segs);
   *(bufp++) = LOW(num_segs);
@@ -1620,15 +1617,10 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
   {
     seg_idx = seg - segments;
     seg = seg->edge_next;
-    if (seg_idx > 0xFF)
-      nw = 1;
 
     *(bufp++) = HIGH(seg_idx);
     *(bufp++) = LOW(seg_idx);
   }
-
-  if (!*need_words)
-    *need_words = nw;
 
   return bufp;
 }
@@ -1639,42 +1631,56 @@ TA_hints_recorder(TA_Action action,
                   TA_GlyphHints hints,
                   TA_Dimension dim,
                   TA_Edge edge1,
-                  TA_Edge edge2)
+                  TA_Edge edge2,
+                  TA_Edge edge3)
 {
   TA_AxisHints axis = &hints->axis[dim];
   TA_Segment segments = axis->segments;
 
   FT_Byte** buf = (FT_Byte**)hints->user;
   FT_Byte* p = *buf;
-  FT_Bool need_words = 0;
 
 
   if (dim == TA_DIMENSION_HORZ)
     return;
 
+  /* we ignore the BOUND action since the information is handled */
+  /* in `ta_adjust_bound' and `ta_stem_bound' */
+  if (action == ta_bound)
+    return;
+
+  *(p++) = 0;
   *(p++) = (FT_Byte)action;
 
   switch (action)
   {
+  case ta_adjust_bound:
+  case ta_stem_bound:
+    p = TA_hints_recorder_handle_segments(p, segments, edge1);
+    p = TA_hints_recorder_handle_segments(p, segments, edge2);
+    p = TA_hints_recorder_handle_segments(p, segments, edge3);
+    break;
+
   case ta_link:
   case ta_anchor:
   case ta_adjust:
   case ta_stem:
-    p = TA_hints_recorder_handle_segments(p, segments, edge1, &need_words);
-    p = TA_hints_recorder_handle_segments(p, segments, edge2, &need_words);
+    p = TA_hints_recorder_handle_segments(p, segments, edge1);
+    p = TA_hints_recorder_handle_segments(p, segments, edge2);
     break;
 
   case ta_blue:
-  case ta_bound:
   case ta_serif:
   case ta_serif_anchor:
   case ta_serif_link1:
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, segments, edge1, &need_words);
+    p = TA_hints_recorder_handle_segments(p, segments, edge1);
+    break;
+
+  /* to pacify the compiler */
+  case ta_bound:
     break;
   }
-
-  *(p++) = (FT_Byte)need_words;
 
   *buf = p;
 }
@@ -1779,8 +1785,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
 
         printf("  %d:\n", size);
-        for (p = bufp; p < curp; p++)
-          printf(" %2d", *p);
+        for (p = bufp; p < curp; p += 2)
+          printf(" %2d", *p * 256 + *(p + 1));
         printf("\n");
       }
 #endif

@@ -303,7 +303,9 @@ typedef enum TA_Action_ {
   ta_blue,
   ta_anchor,
   ta_adjust,
+  ta_adjust_bound,
   ta_stem,
+  ta_stem_bound,
   ta_bound,
   ta_serif,
   ta_serif_anchor,
@@ -317,7 +319,8 @@ typedef void
                      TA_GlyphHints hints,
                      TA_Dimension dim,
                      TA_Edge edge1,
-                     TA_Edge edge2);
+                     TA_Edge edge2,
+                     TA_Edge edge3);
 
 typedef struct TA_GlyphHintsRec_
 {
