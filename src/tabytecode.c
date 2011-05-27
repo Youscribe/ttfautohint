@@ -1658,6 +1658,7 @@ TA_hints_recorder(TA_Action action,
   {
   case ta_link:
   case ta_anchor:
+  case ta_adjust:
   case ta_stem:
     p = TA_hints_recorder_handle_segments(p, segments, edge1, &need_words);
     p = TA_hints_recorder_handle_segments(p, segments, edge2, &need_words);

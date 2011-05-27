@@ -302,6 +302,7 @@ typedef enum TA_Action_ {
   ta_link,
   ta_blue,
   ta_anchor,
+  ta_adjust,
   ta_stem,
   ta_bound,
   ta_serif,
