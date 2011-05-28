@@ -23,6 +23,7 @@ void* _ta_debug_hints;
 
 
 typedef struct Hints_Record_ {
+  FT_UInt num_actions;
   FT_UInt size;
   FT_Byte* buf;
 } Hints_Record;
@@ -1354,15 +1355,17 @@ static FT_Error
 TA_add_hints_record(Hints_Record** hints_records,
                     FT_UInt* num_hints_records,
                     FT_Byte* start,
-                    FT_Byte* end)
+                    Hints_Record hints_record)
 {
   Hints_Record* hints_records_new;
-  Hints_Record hints_record;
   FT_UInt size;
+  /* at this point, `hints_record.buf' still points into `ins_buf' */
+  FT_Byte* end = hints_record.buf;
 
 
   size = (FT_UInt)(end - start);
 
+  /* now fill the structure completely */
   hints_record.size = size;
   hints_record.buf = (FT_Byte*)malloc(size);
   if (!hints_record.buf)
@@ -1637,8 +1640,8 @@ TA_hints_recorder(TA_Action action,
   TA_AxisHints axis = &hints->axis[dim];
   TA_Segment segments = axis->segments;
 
-  FT_Byte** buf = (FT_Byte**)hints->user;
-  FT_Byte* p = *buf;
+  Hints_Record* hints_record = (Hints_Record*)hints->user;
+  FT_Byte* p = hints_record->buf;
 
 
   if (dim == TA_DIMENSION_HORZ)
@@ -1682,7 +1685,8 @@ TA_hints_recorder(TA_Action action,
     break;
   }
 
-  *buf = p;
+  hints_record->num_actions++;
+  hints_record->buf = p;
 }
 
 
@@ -1697,7 +1701,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Byte* ins_buf;
   FT_UInt ins_len;
   FT_Byte* bufp;
-  FT_Byte* curp;
 
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
@@ -1707,6 +1710,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   FT_UInt num_hints_records;
   Hints_Record* hints_records;
+  Hints_Record hints_record;
 
   FT_UInt size;
 
@@ -1754,29 +1758,39 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   printf("glyph %ld\n", idx);
 #endif
 
-  /* we temporarily use `ins_buf' to record the current glyph hints */
-  curp = bufp;
+  /* we temporarily use `ins_buf' to record the current glyph hints, */
+  /* leaving two bytes at the beginning so that the number of actions */
+  /* can be inserted later on */
+  hints_record.buf = bufp + 2;
+  hints_record.num_actions = 0;
   ta_loader_register_hints_recorder(font->loader,
-                                    TA_hints_recorder, (void *)&curp);
+                                    TA_hints_recorder,
+                                    (void *)&hints_record);
 
   for (size = 8; size <= 1000; size++)
   {
     /* rewind buffer pointer for recorder */
-    curp = bufp;
+    hints_record.buf = bufp + 2;
+    hints_record.num_actions = 0;
 
     error = FT_Set_Pixel_Sizes(face, size, size);
     if (error)
       goto Err;
 
     /* calling `ta_loader_load_glyph' uses the */
-    /* `TA_hints_recorder' function as a callback, modifying `curp' */
+    /* `TA_hints_recorder' function as a callback, */
+    /* modifying `hints_record' */
     error = ta_loader_load_glyph(font->loader, face, idx, 0);
     if (error)
       goto Err;
 
+    /* store the number of actions in `ins_buf' */
+    *bufp = HIGH(hints_record.num_actions);
+    *(bufp + 1) = LOW(hints_record.num_actions);
+
     if (TA_hints_record_is_different(hints_records,
                                      num_hints_records,
-                                     bufp, curp))
+                                     bufp, hints_record.buf))
     {
 #if DEBUG
       if (num_hints_records > 0)
@@ -1785,7 +1799,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
 
         printf("  %d:\n", size);
-        for (p = bufp; p < curp; p += 2)
+        for (p = bufp; p < hints_record.buf; p += 2)
           printf(" %2d", *p * 256 + *(p + 1));
         printf("\n");
       }
@@ -1793,7 +1807,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
       error = TA_add_hints_record(&hints_records,
                                   &num_hints_records,
-                                  bufp, curp);
+                                  bufp, hints_record);
       if (error)
         goto Err;
     }
