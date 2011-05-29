@@ -23,9 +23,10 @@ void* _ta_debug_hints;
 
 
 typedef struct Hints_Record_ {
-  FT_UInt num_actions;
   FT_UInt size;
+  FT_UInt num_actions;
   FT_Byte* buf;
+  FT_UInt buf_len;
 } Hints_Record;
 
 
@@ -1341,10 +1342,10 @@ TA_hints_record_is_different(Hints_Record* hints_records,
   /* we only need to compare with the last hints record */
   last_hints_record = hints_records[num_hints_records - 1];
 
-  if ((FT_UInt)(end - start) != last_hints_record.size)
+  if ((FT_UInt)(end - start) != last_hints_record.buf_len)
     return 1;
 
-  if (memcmp(start, last_hints_record.buf, last_hints_record.size))
+  if (memcmp(start, last_hints_record.buf, last_hints_record.buf_len))
     return 1;
 
   return 0;
@@ -1358,20 +1359,20 @@ TA_add_hints_record(Hints_Record** hints_records,
                     Hints_Record hints_record)
 {
   Hints_Record* hints_records_new;
-  FT_UInt size;
+  FT_UInt buf_len;
   /* at this point, `hints_record.buf' still points into `ins_buf' */
   FT_Byte* end = hints_record.buf;
 
 
-  size = (FT_UInt)(end - start);
+  buf_len = (FT_UInt)(end - start);
 
   /* now fill the structure completely */
-  hints_record.size = size;
-  hints_record.buf = (FT_Byte*)malloc(size);
+  hints_record.buf_len = buf_len;
+  hints_record.buf = (FT_Byte*)malloc(buf_len);
   if (!hints_record.buf)
     return FT_Err_Out_Of_Memory;
 
-  memcpy(hints_record.buf, start, size);
+  memcpy(hints_record.buf, start, buf_len);
 
   (*num_hints_records)++;
   hints_records_new =
@@ -1392,119 +1393,70 @@ TA_add_hints_record(Hints_Record** hints_records,
 }
 
 
-#if 0
-
 static FT_Byte*
-TA_sfnt_emit_hinting_set(SFNT* sfnt,
-                         Hinting_Set* hinting_set,
-                         FT_Byte* bufp)
+TA_sfnt_emit_hints_record(SFNT* sfnt,
+                          Hints_Record* hints_record,
+                          FT_Byte* bufp)
 {
-  FT_UInt* args;
-  FT_UInt* arg;
-
-  Edge2Blue* edge2blue;
-  Edge2Blue* edge2blue_limit;
-  Edge2Link* edge2link;
-  Edge2Link* edge2link_limit;
-
-  FT_UInt* seg;
-  FT_UInt* seg_limit;
+  FT_Byte* p;
+  FT_Byte* endp;
+  FT_Bool need_words = 0;
 
   FT_UInt i, j;
+  FT_UInt num_arguments;
   FT_UInt num_args;
   FT_UInt num_stack_elements;
 
 
-  /* collect all arguments temporarily in an array (in reverse order) */
-  /* so that we can easily split into chunks of 255 args */
-  /* as needed by NPUSHB and NPUSHW, respectively */
-  args = (FT_UInt*)malloc(hinting_set->num_args * sizeof (FT_UInt));
-  if (!args)
-    return NULL;
-
-  arg = args + hinting_set->num_args - 1;
-
-  *(arg--) = hinting_set->num_edges2blues;
-
-  edge2blue_limit = hinting_set->edges2blues
-                    + hinting_set->num_edges2blues;
-  for (edge2blue = hinting_set->edges2blues;
-       edge2blue < edge2blue_limit;
-       edge2blue++)
-  {
-    *(arg--) = edge2blue->first_segment;
-    *(arg--) = edge2blue->is_serif;
-    *(arg--) = edge2blue->is_round;
-    *(arg--) = edge2blue->num_remaining_segments;
-
-    seg_limit = edge2blue->remaining_segments
-                + edge2blue->num_remaining_segments;
-    for (seg = edge2blue->remaining_segments; seg < seg_limit; seg++)
-      *(arg--) = *seg;
-  }
-
-  *(arg--) = hinting_set->num_edges2links;
-
-  edge2link_limit = hinting_set->edges2links
-                    + hinting_set->num_edges2links;
-  for (edge2link = hinting_set->edges2links;
-       edge2link < edge2link_limit;
-       edge2link++)
-  {
-    *(arg--) = edge2link->first_segment;
-    *(arg--) = edge2link->num_remaining_segments;
-
-    seg_limit = edge2link->remaining_segments
-                + edge2link->num_remaining_segments;
-    for (seg = edge2link->remaining_segments; seg < seg_limit; seg++)
-      *(arg--) = *seg;
-  }
+  /* check whether any argument is larger than 0xFF */
+  endp = hints_record->buf + hints_record->buf_len;
+  for (p = hints_record->buf; p < endp; p += 2)
+    if (*p)
+      need_words = 1;
 
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
   /* thus we refrain from further optimizing this case */
 
-  arg = args;
+  num_arguments = hints_record->buf_len / 2;
+  p = endp - 2;
 
-  if (hinting_set->need_words)
+  if (need_words)
   {
-    for (i = 0; i < hinting_set->num_args; i += 255)
+    for (i = 0; i < num_arguments; i += 255)
     {
-      num_args = (hinting_set->num_args - i > 255)
-                   ? 255
-                   : hinting_set->num_args - i;
+      num_args = (num_arguments - i > 255) ? 255 : (num_arguments - i);
 
       BCI(NPUSHW);
       BCI(num_args);
       for (j = 0; j < num_args; j++)
       {
-        BCI(HIGH(*arg));
-        BCI(LOW(*arg));
-        arg++;
+        BCI(*p);
+        BCI(*(p + 1));
+        p -= 2;
       }
     }
   }
   else
   {
-    for (i = 0; i < hinting_set->num_args; i += 255)
+    /* we only need the lower bytes */
+    p++;
+
+    for (i = 0; i < num_arguments; i += 255)
     {
-      num_args = (hinting_set->num_args - i > 255)
-                   ? 255
-                   : hinting_set->num_args - i;
+      num_args = (num_arguments - i > 255) ? 255 : (num_arguments - i);
 
       BCI(NPUSHB);
       BCI(num_args);
       for (j = 0; j < num_args; j++)
       {
-        BCI(*arg);
-        arg++;
+        BCI(*p);
+        p -= 2;
       }
     }
   }
 
-  free(args);
-
-  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + hinting_set->num_args;
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_arguments;
   if (num_stack_elements > sfnt->max_stack_elements)
     sfnt->max_stack_elements = sfnt->max_stack_elements;
 
@@ -1513,16 +1465,16 @@ TA_sfnt_emit_hinting_set(SFNT* sfnt,
 
 
 static FT_Byte*
-TA_sfnt_emit_hinting_sets(SFNT* sfnt,
-                          Hinting_Set* hinting_sets,
-                          FT_UInt num_hinting_sets,
-                          FT_Byte* bufp)
+TA_sfnt_emit_hints_records(SFNT* sfnt,
+                           Hints_Record* hints_records,
+                           FT_UInt num_hints_records,
+                           FT_Byte* bufp)
 {
   FT_UInt i;
-  Hinting_Set* hinting_set;
+  Hints_Record* hints_record;
 
 
-  hinting_set = hinting_sets;
+  hints_record = hints_records;
 
   /* this instruction is essential for getting correct CVT values */
   /* if horizontal and vertical resolutions differ; */
@@ -1530,35 +1482,31 @@ TA_sfnt_emit_hinting_sets(SFNT* sfnt,
   /* so that CVT values are handled as being `vertical' */
   BCI(SVTCA_y);
 
-  for (i = 0; i < num_hinting_sets - 1; i++)
+  for (i = 0; i < num_hints_records - 1; i++)
   {
     BCI(MPPEM);
-    if (hinting_set->size > 0xFF)
+    if (hints_record->size > 0xFF)
     {
       BCI(PUSHW_1);
-      BCI(HIGH((hinting_set + 1)->size));
-      BCI(LOW((hinting_set + 1)->size));
+      BCI(HIGH((hints_record + 1)->size));
+      BCI(LOW((hints_record + 1)->size));
     }
     else
     {
       BCI(PUSHB_1);
-      BCI((hinting_set + 1)->size);
+      BCI((hints_record + 1)->size);
     }
     BCI(LT);
     BCI(IF);
-    bufp = TA_sfnt_emit_hinting_set(sfnt, hinting_set, bufp);
-    if (!bufp)
-      return NULL;
+    bufp = TA_sfnt_emit_hints_record(sfnt, hints_record, bufp);
     BCI(ELSE);
 
-    hinting_set++;
+    hints_record++;
   }
 
-  bufp = TA_sfnt_emit_hinting_set(sfnt, hinting_set, bufp);
-  if (!bufp)
-    return NULL;
+  bufp = TA_sfnt_emit_hints_record(sfnt, hints_record, bufp);
 
-  for (i = 0; i < num_hinting_sets - 1; i++)
+  for (i = 0; i < num_hints_records - 1; i++)
     BCI(EIF);
 
   BCI(PUSHB_1);
@@ -1567,8 +1515,6 @@ TA_sfnt_emit_hinting_sets(SFNT* sfnt,
 
   return bufp;
 }
-
-#endif
 
 
 static void
@@ -1772,6 +1718,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     /* rewind buffer pointer for recorder */
     hints_record.buf = bufp + 2;
     hints_record.num_actions = 0;
+    hints_record.size = size;
 
     error = FT_Set_Pixel_Sizes(face, size, size);
     if (error)
@@ -1813,12 +1760,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     }
   }
 
-#if 0
-  bufp = TA_sfnt_emit_hinting_sets(sfnt,
-                                   hinting_sets, num_hinting_sets, bufp);
-  if (!bufp)
-    return FT_Err_Out_Of_Memory;
-#endif
+  bufp = TA_sfnt_emit_hints_records(sfnt,
+                                    hints_records, num_hints_records, bufp);
 
   /* we are done, so reallocate the instruction array to its real size */
   /* (memrchr is a GNU glibc extension, so we do it manually) */
