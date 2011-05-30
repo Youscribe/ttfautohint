@@ -1700,7 +1700,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   num_hints_records = 0;
   hints_records = NULL;
 
-#if DEBUG
+#ifdef DEBUGGING
   printf("glyph %ld\n", idx);
 #endif
 
@@ -1739,7 +1739,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                      num_hints_records,
                                      bufp, hints_record.buf))
     {
-#if DEBUG
+#ifdef DEBUGGING
       if (num_hints_records > 0)
       {
         FT_Byte* p;
@@ -1760,8 +1760,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     }
   }
 
-  bufp = TA_sfnt_emit_hints_records(sfnt,
-                                    hints_records, num_hints_records, bufp);
+  /* clear `ins_buf' if we only have a single empty record */
+  if (num_hints_records == 1 && !hints_records[0].num_actions)
+    memset(ins_buf, INS_A0, (bufp + 2) - ins_buf);
+  else
+    bufp = TA_sfnt_emit_hints_records(sfnt,
+                                      hints_records, num_hints_records,
+                                      bufp);
 
   /* we are done, so reallocate the instruction array to its real size */
   /* (memrchr is a GNU glibc extension, so we do it manually) */
