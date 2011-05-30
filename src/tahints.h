@@ -321,9 +321,9 @@ typedef void
 (*TA_Hints_Recorder)(TA_Action action,
                      TA_GlyphHints hints,
                      TA_Dimension dim,
-                     TA_Edge edge1,
-                     TA_Edge edge2,
-                     TA_Edge edge3);
+                     void* arg1,
+                     void* arg2,
+                     void* arg3);
 
 typedef struct TA_GlyphHintsRec_
 {
