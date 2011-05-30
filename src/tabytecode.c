@@ -726,73 +726,249 @@ unsigned char FPGM(bci_blue_round_b) [] = {
  *   This is the top-level glyph hinting function
  *   which parses the arguments on the stack and calls subroutines.
  *
- * in: num_edges2blues (M)
- *       edge2blue_0.first_segment
- *                  .is_serif
- *                  .is_round
- *                  .num_remaining_segments (N)
- *                  .remaining_segments_0
- *                                     _1
- *                                     ...
- *                                     _(N-1)
- *                _1
- *                ...
- *                _(M-1)
+ * in: num_actions (M)
+ *       action_0_func_idx
+ *         ... data ...
+ *       action_1_func_idx
+ *         ... data ...
+ *       ...
+ *       action_M_func_idx
+ *         ... data ...
  *
- *     num_edges2links (P)
- *       edge2link_0.first_segment
- *                  .num_remaining_segments (Q)
- *                  .remaining_segments_0
- *                                     _1
- *                                     ...
- *                                     _(Q-1)
- *                _1
- *                ...
- *                _(P-1)
+ * uses: bci_handle_action
+ *       bci_action_adjust_bound
+ *       bci_action_stem_bound
  *
- * uses: bci_edge2blue
- *       bci_edge2link
+ *       bci_action_link
+ *       bci_action_anchor
+ *       bci_action_adjust
+ *       bci_action_stem
+ *
+ *       bci_action_blue
+ *       bci_action_serif
+ *       bci_action_serif_anchor
+ *       bci_action_serif_link1
+ *       bci_action_serif_link2
+ *
+ *   All of the above action handlers use `bci_handle_segments' up to three
+ *   times.
  */
 
-unsigned char FPGM(bci_remaining_edges) [] = {
+unsigned char FPGM(bci_handle_remaining_segment) [] = {
 
   PUSHB_1,
-    bci_remaining_edges,
+    bci_handle_remaining_segment,
   FDEF,
 
-  POP, /* XXX remaining segment */
+  POP, /* remaining segment */
 
   ENDF,
 
 };
 
-unsigned char FPGM(bci_edge2blue) [] = {
+unsigned char FPGM(bci_handle_segments) [] = {
 
   PUSHB_1,
-    bci_edge2blue,
+    bci_handle_segments,
   FDEF,
 
-  POP, /* XXX first_segment */
-  POP, /* XXX is_serif */
-  POP, /* XXX is_round */
+  POP, /* first segment */
+  POP, /* is_serif */
+  POP, /* is_round */
+
   PUSHB_1,
-    bci_remaining_edges,
+    bci_handle_remaining_segment,
   LOOPCALL,
 
   ENDF,
 
 };
 
-unsigned char FPGM(bci_edge2link) [] = {
+unsigned char FPGM(bci_action_adjust_bound) [] = {
 
   PUSHB_1,
-    bci_edge2link,
+    bci_action_adjust_bound,
   FDEF,
 
-  POP, /* XXX first_segment */
   PUSHB_1,
-    bci_remaining_edges,
-  LOOPCALL,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_stem_bound) [] = {
+
+  PUSHB_1,
+    bci_action_stem_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_link) [] = {
+
+  PUSHB_1,
+    bci_action_link,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_anchor) [] = {
+
+  PUSHB_1,
+    bci_action_anchor,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_adjust) [] = {
+
+  PUSHB_1,
+    bci_action_adjust,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_stem) [] = {
+
+  PUSHB_1,
+    bci_action_stem,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_blue) [] = {
+
+  PUSHB_1,
+    bci_action_blue,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif) [] = {
+
+  PUSHB_1,
+    bci_action_serif,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_anchor) [] = {
+
+  PUSHB_1,
+    bci_action_serif_anchor,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_link1) [] = {
+
+  PUSHB_1,
+    bci_action_link1,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_link2) [] = {
+
+  PUSHB_1,
+    bci_action_link2,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_handle_action) [] = {
+
+  PUSHB_1,
+    bci_handle_action,
+  FDEF,
+
+  CALL,
 
   ENDF,
 
@@ -805,11 +981,7 @@ unsigned char FPGM(bci_hint_glyph) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_edge2blue,
-  LOOPCALL,
-
-  PUSHB_1,
-    bci_edge2link,
+    bci_handle_action,
   LOOPCALL,
 
   ENDF,
@@ -845,9 +1017,20 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
-            + sizeof (FPGM(bci_remaining_edges))
-            + sizeof (FPGM(bci_edge2blue))
-            + sizeof (FPGM(bci_edge2link))
+            + sizeof (FPGM(bci_handle_remaining_segment))
+            + sizeof (FPGM(bci_handle_segments))
+            + sizeof (FPGM(bci_action_adjust_bound))
+            + sizeof (FPGM(bci_action_stem_bound))
+            + sizeof (FPGM(bci_action_link))
+            + sizeof (FPGM(bci_action_anchor))
+            + sizeof (FPGM(bci_action_adjust))
+            + sizeof (FPGM(bci_action_stem))
+            + sizeof (FPGM(bci_action_blue))
+            + sizeof (FPGM(bci_action_serif))
+            + sizeof (FPGM(bci_action_anchor))
+            + sizeof (FPGM(bci_action_link1))
+            + sizeof (FPGM(bci_action_link2))
+            + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
@@ -875,9 +1058,20 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
-  COPY_FPGM(bci_remaining_edges);
-  COPY_FPGM(bci_edge2blue);
-  COPY_FPGM(bci_edge2link);
+  COPY_FPGM(bci_handle_remaining_segment);
+  COPY_FPGM(bci_handle_segments);
+  COPY_FPGM(bci_action_adjust_bound);
+  COPY_FPGM(bci_action_stem_bound);
+  COPY_FPGM(bci_action_link);
+  COPY_FPGM(bci_action_anchor);
+  COPY_FPGM(bci_action_adjust);
+  COPY_FPGM(bci_action_stem);
+  COPY_FPGM(bci_action_blue);
+  COPY_FPGM(bci_action_serif);
+  COPY_FPGM(bci_action_anchor);
+  COPY_FPGM(bci_action_link1);
+  COPY_FPGM(bci_action_link2);
+  COPY_FPGM(bci_handle_action);
   COPY_FPGM(bci_hint_glyph);
 
   *fpgm = buf;
@@ -1599,7 +1793,7 @@ TA_hints_recorder(TA_Action action,
     return;
 
   *(p++) = 0;
-  *(p++) = (FT_Byte)action;
+  *(p++) = (FT_Byte)action + ACTION_OFFSET;
 
   switch (action)
   {

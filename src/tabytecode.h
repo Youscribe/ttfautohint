@@ -287,12 +287,28 @@
 #define bci_sal_assign bci_cvt_rescale + 1
 #define bci_loop_sal_assign bci_sal_assign + 1
 #define bci_blue_round bci_loop_sal_assign + 1
-#define bci_remaining_edges bci_blue_round + 1
-#define bci_edge2blue bci_remaining_edges + 1
-#define bci_edge2link bci_edge2blue + 1
-#define bci_hint_glyph bci_edge2link + 1
+#define bci_handle_remaining_segment bci_blue_round + 1
+#define bci_handle_segments bci_handle_remaining_segment + 1
+
+/* the order of the `bci_action_*' entries must correspond */
+/* to the order of the TA_Action enumeration entries */
+#define bci_action_adjust_bound bci_handle_segments + 1
+#define bci_action_stem_bound bci_action_adjust_bound + 1
+#define bci_action_link bci_action_stem_bound + 1
+#define bci_action_anchor bci_action_link + 1
+#define bci_action_adjust bci_action_anchor + 1
+#define bci_action_stem bci_action_adjust + 1
+#define bci_action_blue bci_action_stem + 1
+#define bci_action_serif bci_action_blue + 1
+#define bci_action_serif_anchor bci_action_serif + 1
+#define bci_action_link1 bci_action_serif_anchor + 1
+#define bci_action_link2 bci_action_link1 + 1
+#define bci_handle_action bci_action_link2 + 1
+#define bci_hint_glyph bci_handle_action + 1
 
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
+
+#define ACTION_OFFSET bci_action_adjust_bound
 
 
 FT_Error

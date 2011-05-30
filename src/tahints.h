@@ -299,18 +299,21 @@ typedef struct TA_AxisHintsRec_
 
 
 typedef enum TA_Action_ {
+  ta_adjust_bound,
+  ta_stem_bound,
+
   ta_link,
-  ta_blue,
   ta_anchor,
   ta_adjust,
-  ta_adjust_bound,
   ta_stem,
-  ta_stem_bound,
-  ta_bound,
+
+  ta_blue,
   ta_serif,
   ta_serif_anchor,
   ta_serif_link1,
-  ta_serif_link2
+  ta_serif_link2,
+
+  ta_bound,
 } TA_Action;
 
 
