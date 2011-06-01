@@ -740,6 +740,7 @@ unsigned char FPGM(bci_handle_segment) [] = {
 
 };
 
+
 /*
  * bci_align_segment
  *
@@ -998,6 +999,7 @@ unsigned char FPGM(bci_action_stem) [] = {
 
 };
 
+
 /*
  * bci_action_blue
  *
@@ -1023,8 +1025,6 @@ unsigned char FPGM(bci_action_blue) [] = {
   PUSHB_1,
     bci_align_segments,
   CALL,
-
-  /* XXX */
 
   ENDF,
 
@@ -1062,10 +1062,10 @@ unsigned char FPGM(bci_action_serif_anchor) [] = {
 
 };
 
-unsigned char FPGM(bci_action_link1) [] = {
+unsigned char FPGM(bci_action_serif_link1) [] = {
 
   PUSHB_1,
-    bci_action_link1,
+    bci_action_serif_link1,
   FDEF,
 
   PUSHB_1,
@@ -1078,10 +1078,10 @@ unsigned char FPGM(bci_action_link1) [] = {
 
 };
 
-unsigned char FPGM(bci_action_link2) [] = {
+unsigned char FPGM(bci_action_serif_link2) [] = {
 
   PUSHB_1,
-    bci_action_link2,
+    bci_action_serif_link2,
   FDEF,
 
   PUSHB_1,
@@ -1203,8 +1203,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_blue))
             + sizeof (FPGM(bci_action_serif))
             + sizeof (FPGM(bci_action_anchor))
-            + sizeof (FPGM(bci_action_link1))
-            + sizeof (FPGM(bci_action_link2))
+            + sizeof (FPGM(bci_action_serif_link1))
+            + sizeof (FPGM(bci_action_serif_link2))
             + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
   /* buffer length must be a multiple of four */
@@ -1246,8 +1246,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_blue);
   COPY_FPGM(bci_action_serif);
   COPY_FPGM(bci_action_anchor);
-  COPY_FPGM(bci_action_link1);
-  COPY_FPGM(bci_action_link2);
+  COPY_FPGM(bci_action_serif_link1);
+  COPY_FPGM(bci_action_serif_link2);
   COPY_FPGM(bci_handle_action);
   COPY_FPGM(bci_hint_glyph);
 

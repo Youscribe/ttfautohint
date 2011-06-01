@@ -303,9 +303,9 @@
 #define bci_action_blue bci_action_stem + 1
 #define bci_action_serif bci_action_blue + 1
 #define bci_action_serif_anchor bci_action_serif + 1
-#define bci_action_link1 bci_action_serif_anchor + 1
-#define bci_action_link2 bci_action_link1 + 1
-#define bci_handle_action bci_action_link2 + 1
+#define bci_action_serif_link1 bci_action_serif_anchor + 1
+#define bci_action_serif_link2 bci_action_serif_link1 + 1
+#define bci_handle_action bci_action_serif_link2 + 1
 #define bci_hint_glyph bci_handle_action + 1
 
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
