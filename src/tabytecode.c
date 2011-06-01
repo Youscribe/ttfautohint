@@ -13,6 +13,9 @@
 #define ADDITIONAL_STACK_ELEMENTS 20
 
 
+/* #define DEBUGGING */
+
+
 #ifdef TA_DEBUG
 int _ta_debug = 1;
 int _ta_debug_disable_horz_hints;
@@ -2009,13 +2012,12 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                      bufp, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
-      if (num_hints_records > 0)
       {
         FT_Byte* p;
 
 
         printf("  %d:\n", size);
-        for (p = bufp; p < hints_record.buf; p += 2)
+        for (p = bufp; p < recorder.hints_record.buf; p += 2)
           printf(" %2d", *p * 256 + *(p + 1));
         printf("\n");
       }
