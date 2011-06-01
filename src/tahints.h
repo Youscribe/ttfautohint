@@ -269,7 +269,10 @@ typedef struct TA_EdgeRec_
   FT_Byte flags; /* edge flags */
   FT_Char dir; /* edge direction */
   FT_Fixed scale; /* used to speed up interpolation between edges */
+
   TA_Width blue_edge; /* non-NULL if this is a blue edge */
+  FT_UInt best_blue_idx; /* for the hinting recorder callback */
+  FT_Bool best_blue_is_shoot; /* for the hinting recorder callback */
 
   TA_Edge link; /* link edge */
   TA_Edge serif; /* primary edge for serifs */

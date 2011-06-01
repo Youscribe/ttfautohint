@@ -1310,6 +1310,9 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
     TA_Width best_blue = NULL;
     FT_Pos best_dist; /* initial threshold */
 
+    FT_UInt best_blue_idx = 0;
+    FT_Bool best_blue_is_shoot = 0;
+
 
     /* compute the initial threshold as a fraction of the EM size */
     /* (the value 40 is heuristic) */
@@ -1352,6 +1355,9 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
         {
           best_dist = dist;
           best_blue = &blue->ref;
+
+          best_blue_idx = bb;
+          best_blue_is_shoot = 0;
         }
 
         /* now compare it to the overshoot position and check whether */
@@ -1375,6 +1381,9 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
             {
               best_dist = dist;
               best_blue = &blue->shoot;
+
+              best_blue_idx = bb;
+              best_blue_is_shoot = 1;
             }
           }
         }
@@ -1382,7 +1391,11 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
     }
 
     if (best_blue)
+    {
       edge->blue_edge = best_blue;
+      edge->best_blue_idx = best_blue_idx;
+      edge->best_blue_is_shoot = best_blue_is_shoot;
+    }
   }
 }
 
