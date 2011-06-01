@@ -830,8 +830,6 @@ unsigned char FPGM(bci_handle_segments) [] = {
   FDEF,
 
   POP, /* XXX first segment */
-  POP, /* XXX is_serif */
-  POP, /* XXX is_round */
 
   PUSHB_1,
     bci_handle_segment,
@@ -1904,8 +1902,7 @@ TA_free_hints_records(Hints_Record* hints_records,
 static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
                                   TA_Segment segments,
-                                  TA_Edge edge,
-                                  FT_Bool emit_flags)
+                                  TA_Edge edge)
 {
   TA_Segment seg;
   FT_UInt seg_idx;
@@ -1917,13 +1914,6 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
   /* we store everything as 16bit numbers */
   *(bufp++) = HIGH(seg_idx);
   *(bufp++) = LOW(seg_idx);
-  if (emit_flags)
-  {
-    *(bufp++) = 0;
-    *(bufp++) = edge->flags & TA_EDGE_SERIF;
-    *(bufp++) = 0;
-    *(bufp++) = edge->flags & TA_EDGE_ROUND;
-  }
 
   seg = edge->first->edge_next;
   while (seg != edge->first)
@@ -1979,35 +1969,35 @@ TA_hints_recorder(TA_Action action,
   switch (action)
   {
   case ta_adjust_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
     break;
 
   case ta_stem_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
     break;
 
   case ta_link:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;
 
   case ta_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;
 
   case ta_adjust:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;
 
   case ta_stem:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;
 
   case ta_blue:
@@ -2026,24 +2016,24 @@ TA_hints_recorder(TA_Action action,
         *(p++) = LOW(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
       }
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge, 0);
+      p = TA_hints_recorder_handle_segments(p, segments, edge);
       break;
     }
 
   case ta_serif:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
     break;
 
   case ta_serif_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
     break;
 
   case ta_serif_link1:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
     break;
 
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
     break;
 
   /* to pacify the compiler */
