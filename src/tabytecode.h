@@ -287,12 +287,14 @@
 #define bci_sal_assign bci_cvt_rescale + 1
 #define bci_loop_sal_assign bci_sal_assign + 1
 #define bci_blue_round bci_loop_sal_assign + 1
-#define bci_handle_remaining_segment bci_blue_round + 1
-#define bci_handle_segments bci_handle_remaining_segment + 1
+#define bci_handle_segment bci_blue_round + 1
+#define bci_align_segment bci_handle_segment + 1
+#define bci_handle_segments bci_align_segment + 1
+#define bci_align_segments bci_handle_segments + 1
 
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_adjust_bound bci_handle_segments + 1
+#define bci_action_adjust_bound bci_align_segments + 1
 #define bci_action_stem_bound bci_action_adjust_bound + 1
 #define bci_action_link bci_action_stem_bound + 1
 #define bci_action_anchor bci_action_link + 1

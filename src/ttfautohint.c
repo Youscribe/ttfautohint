@@ -737,7 +737,7 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   buf[MAXP_MAX_ZONES_OFFSET] = 0;
   buf[MAXP_MAX_ZONES_OFFSET + 1] = 2;
   buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET] = 0;
-  buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET + 1] = 0;
+  buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET + 1] = 2;
   buf[MAXP_MAX_STORAGE_OFFSET] = HIGH(sfnt->max_storage);
   buf[MAXP_MAX_STORAGE_OFFSET + 1] = LOW(sfnt->max_storage);
   buf[MAXP_MAX_FUNCTION_DEFS_OFFSET] = 0;

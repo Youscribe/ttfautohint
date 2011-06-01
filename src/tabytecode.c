@@ -262,7 +262,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_scale sal_limit + 1
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
-#define sal_segment_offset sal_is_extra_light + 1 /* must be last */
+#define sal_pos sal_is_extra_light + 1
+#define sal_segment_offset sal_pos + 1 /* must be last */
 
 
 /* we need the following macro */
@@ -326,7 +327,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *     stem_is_serif
  *     base_is_round
  * out: new_width
- * sal: is_extra_light
+ * sal: sal_is_extra_light
  * CVT: std_width
  */
 
@@ -727,48 +728,95 @@ unsigned char FPGM(bci_blue_round_b) [] = {
 
 };
 
-
-/*
- * bci_hint_glyph
- *
- *   This is the top-level glyph hinting function
- *   which parses the arguments on the stack and calls subroutines.
- *
- * in: num_actions (M)
- *       action_0_func_idx
- *         ... data ...
- *       action_1_func_idx
- *         ... data ...
- *       ...
- *       action_M_func_idx
- *         ... data ...
- *
- * uses: bci_handle_action
- *       bci_action_adjust_bound
- *       bci_action_stem_bound
- *
- *       bci_action_link
- *       bci_action_anchor
- *       bci_action_adjust
- *       bci_action_stem
- *
- *       bci_action_blue
- *       bci_action_serif
- *       bci_action_serif_anchor
- *       bci_action_serif_link1
- *       bci_action_serif_link2
- *
- *   All of the above action handlers use `bci_handle_segments' up to three
- *   times.
- */
-
-unsigned char FPGM(bci_handle_remaining_segment) [] = {
+unsigned char FPGM(bci_handle_segment) [] = {
 
   PUSHB_1,
-    bci_handle_remaining_segment,
+    bci_handle_segment,
   FDEF,
 
-  POP, /* XXX remaining segment */
+  POP, /* XXX segment */
+
+  ENDF,
+
+};
+
+/*
+ * bci_align_segment
+ *
+ *   Align all points in a segment to the value in `sal_pos'.
+ *
+ * in: segment_index
+ *
+ * sal: sal_pos
+ */
+
+unsigned char FPGM(bci_align_segment) [] = {
+
+  PUSHB_1,
+    bci_align_segment,
+  FDEF,
+
+  /* point 0 in the twilight zone (zp0) is originally located */
+  /* at the origin; we don't change that */
+
+  PUSHB_6,
+    1,
+    1,
+    sal_pos,
+    0,
+    0,
+    0,
+  SZP0, /* set zp0 to twilight zone 0 */
+  SZP1, /* set zp1 to twilight zone 0 */
+
+  /* we can't directly set rp0 to a stack value */
+  MDAP_noround, /* reset rp0 (and rp1) to the origin in the twilight zone */
+  RS,
+  MSIRP_rp0, /* set point 1 and rp0 in the twilight zone to `sal_pos' */
+
+  SZP1, /* set zp1 to normal zone 1 */
+
+  /* we need the values of `sal_segment_offset + 2*segment_index' */
+  /* and `sal_segment_offset + 2*segment_index + 1' */
+  DUP,
+  ADD,
+  PUSHB_1,
+    sal_segment_offset,
+  ADD,
+  DUP,
+  RS,
+  SWAP,
+  PUSHB_1,
+    1,
+  ADD,
+  RS, /* s: first last */
+
+/* start_loop: */
+  PUSHB_1,
+    2,
+  CINDEX, /* s: first last first */
+  PUSHB_1,
+    2,
+  CINDEX, /* s: first last first last */
+  LTEQ, /* first <= end */
+  IF, /* s: first last */
+    SWAP,
+    DUP, /* s: last first first */
+    ALIGNRP, /* align point with index `first' with rp0 */
+
+    PUSHB_1,
+      1,
+    ADD, /* first = first + 1 */
+    SWAP, /* s: first last */
+
+    PUSHB_1,
+      18,
+    NEG,
+    JMPR, /* goto start_loop */
+  ELSE,
+    POP,
+    POP,
+  EIF,
 
   ENDF,
 
@@ -785,12 +833,50 @@ unsigned char FPGM(bci_handle_segments) [] = {
   POP, /* XXX is_round */
 
   PUSHB_1,
-    bci_handle_remaining_segment,
+    bci_handle_segment,
   LOOPCALL,
 
   ENDF,
 
 };
+
+
+/*
+ * bci_align_segments
+ *
+ *   Align segments to the value in `sal_pos'.
+ *
+ * in: first_segment
+ *     loop_counter (N)
+ *       segment_1
+ *       segment_2
+ *       ...
+ *       segment_N
+ *
+ * sal: sal_pos
+ *
+ * uses: handle_segment
+ *
+ */
+
+unsigned char FPGM(bci_align_segments) [] = {
+
+  PUSHB_1,
+    bci_align_segments,
+  FDEF,
+
+  PUSHB_1,
+    bci_align_segment,
+  CALL,
+
+  PUSHB_1,
+    bci_align_segment,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
 
 unsigned char FPGM(bci_action_adjust_bound) [] = {
 
@@ -912,16 +998,30 @@ unsigned char FPGM(bci_action_stem) [] = {
 
 };
 
+/*
+ * bci_action_blue
+ *
+ *   Handle the BLUE action to align an edge with a blue zone.
+ *
+ * in: blue_cvt_idx
+ *     ... stuff for bci_align_segments ...
+ */
+
 unsigned char FPGM(bci_action_blue) [] = {
 
   PUSHB_1,
     bci_action_blue,
   FDEF,
 
-  POP, /* XXX blue */
+  /* store blue position in `sal_pos' */
+  RCVT,
+  PUSHB_1,
+    sal_pos,
+  SWAP,
+  WS,
 
   PUSHB_1,
-    bci_handle_segments,
+    bci_align_segments,
   CALL,
 
   /* XXX */
@@ -994,6 +1094,15 @@ unsigned char FPGM(bci_action_link2) [] = {
 
 };
 
+
+/*
+ * bci_handle_action
+ *
+ *   Execute function.
+ *
+ * in: function_index
+ */
+
 unsigned char FPGM(bci_handle_action) [] = {
 
   PUSHB_1,
@@ -1005,6 +1114,38 @@ unsigned char FPGM(bci_handle_action) [] = {
   ENDF,
 
 };
+
+
+/*
+ * bci_hint_glyph
+ *
+ *   This is the top-level glyph hinting function
+ *   which parses the arguments on the stack and calls subroutines.
+ *
+ * in: num_actions (M)
+ *       action_0_func_idx
+ *         ... data ...
+ *       action_1_func_idx
+ *         ... data ...
+ *       ...
+ *       action_M_func_idx
+ *         ... data ...
+ *
+ * uses: bci_handle_action
+ *       bci_action_adjust_bound
+ *       bci_action_stem_bound
+ *
+ *       bci_action_link
+ *       bci_action_anchor
+ *       bci_action_adjust
+ *       bci_action_stem
+ *
+ *       bci_action_blue
+ *       bci_action_serif
+ *       bci_action_serif_anchor
+ *       bci_action_serif_link1
+ *       bci_action_serif_link2
+ */
 
 unsigned char FPGM(bci_hint_glyph) [] = {
 
@@ -1049,8 +1190,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
-            + sizeof (FPGM(bci_handle_remaining_segment))
+            + sizeof (FPGM(bci_handle_segment))
+            + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_handle_segments))
+            + sizeof (FPGM(bci_align_segments))
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_link))
@@ -1090,8 +1233,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
-  COPY_FPGM(bci_handle_remaining_segment);
+  COPY_FPGM(bci_handle_segment);
+  COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_handle_segments);
+  COPY_FPGM(bci_align_segments);
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_link);
@@ -1287,7 +1432,6 @@ unsigned char PREP(round_blues_b) [] = {
   CALL
 
 };
-
 
 /* XXX talatin.c: 1671 */
 /* XXX talatin.c: 1708 */
@@ -1539,7 +1683,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
   BCI(CALL);
 
-  num_storage = sal_segment_offset + axis->num_segments;
+  num_storage = sal_segment_offset + axis->num_segments * 2;
   if (num_storage > sfnt->max_storage)
     sfnt->max_storage = num_storage;
 
@@ -1760,7 +1904,8 @@ TA_free_hints_records(Hints_Record* hints_records,
 static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
                                   TA_Segment segments,
-                                  TA_Edge edge)
+                                  TA_Edge edge,
+                                  FT_Bool emit_flags)
 {
   TA_Segment seg;
   FT_UInt seg_idx;
@@ -1772,10 +1917,13 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
   /* we store everything as 16bit numbers */
   *(bufp++) = HIGH(seg_idx);
   *(bufp++) = LOW(seg_idx);
-  *(bufp++) = 0;
-  *(bufp++) = edge->flags & TA_EDGE_SERIF;
-  *(bufp++) = 0;
-  *(bufp++) = edge->flags & TA_EDGE_ROUND;
+  if (emit_flags)
+  {
+    *(bufp++) = 0;
+    *(bufp++) = edge->flags & TA_EDGE_SERIF;
+    *(bufp++) = 0;
+    *(bufp++) = edge->flags & TA_EDGE_ROUND;
+  }
 
   seg = edge->first->edge_next;
   while (seg != edge->first)
@@ -1831,35 +1979,35 @@ TA_hints_recorder(TA_Action action,
   switch (action)
   {
   case ta_adjust_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3, 1);
     break;
 
   case ta_stem_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3, 1);
     break;
 
   case ta_link:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
     break;
 
   case ta_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
     break;
 
   case ta_adjust:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
     break;
 
   case ta_stem:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2, 1);
     break;
 
   case ta_blue:
@@ -1878,24 +2026,24 @@ TA_hints_recorder(TA_Action action,
         *(p++) = LOW(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
       }
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge);
+      p = TA_hints_recorder_handle_segments(p, segments, edge, 0);
       break;
     }
 
   case ta_serif:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
     break;
 
   case ta_serif_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
     break;
 
   case ta_serif_link1:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
     break;
 
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1, 1);
     break;
 
   /* to pacify the compiler */
