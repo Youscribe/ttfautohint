@@ -277,6 +277,9 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
 
+/* point 0 in the twilight zone (zp0) is originally located */
+/* at the origin; we don't change that */
+
 /*
  * bci_compute_stem_width
  *
@@ -757,9 +760,6 @@ unsigned char FPGM(bci_align_segment) [] = {
     bci_align_segment,
   FDEF,
 
-  /* point 0 in the twilight zone (zp0) is originally located */
-  /* at the origin; we don't change that */
-
   PUSHB_6,
     1,
     1,
@@ -921,20 +921,66 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
 
 };
 
+
+/*
+ * bci_action_link
+ *
+ *   Handle the LINK action to link an edge to another one.
+ *
+ * in: base_point
+ *     stem_point
+ *     stem_is_serif
+ *     base_is_round
+ *     ... stuff for bci_align_segments ...
+ *
+ * sal: sal_pos
+ *
+ * XXX: Instead of `base_point', use the median of the first segment in the
+ *      base edge.
+ */
+
 unsigned char FPGM(bci_action_link) [] = {
 
   PUSHB_1,
     bci_action_link,
   FDEF,
 
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
+  PUSHB_5,
+    1,
+    sal_pos,
+    3,
+    0,
+    1,
+  SZP0, /* set zp0 to normal zone 1 */
+  SZP1, /* set zp1 to twilight zone 0 */
+  CINDEX, /* s: ... stem_point base_point 1 sal_pos base_point */
 
-  /* XXX */
+  /* get distance between base_point and twilight point 0 (at origin) */
+  PUSHB_1,
+    0,
+  MD_cur, /* s: ... stem_point base_point 1 sal_pos base_point_y_pos */
+  WS, /* sal_pos: base_point_y_pos */
+
+  SZP1, /* set zp1 to normal zone 1 */
+
+  MD_orig, /* s: base_is_round stem_is_serif dist */
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL,  /* s: new_dist */
+
+  PUSHB_1,
+    sal_pos,
+  RS,
+  ADD,
+  PUSHB_1,
+    sal_pos,
+  SWAP,
+  WS, /* sal_pos: base_point_y_pos + new_dist */
+
+  PUSHB_1,
+    bci_align_segments,
+  CALL,
 
   ENDF,
 
@@ -1948,6 +1994,7 @@ TA_hints_recorder(TA_Action action,
                   void* arg3)
 {
   TA_AxisHints axis = &hints->axis[dim];
+  TA_Point points = hints->points;
   TA_Segment segments = axis->segments;
 
   Recorder* recorder = (Recorder*)hints->user;
@@ -1981,8 +2028,22 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_link:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    {
+      TA_Edge base_edge = (TA_Edge)arg1;
+      TA_Edge stem_edge = (TA_Edge)arg2;
+
+
+      *(p++) = HIGH(base_edge->first->first - points);
+      *(p++) = LOW(base_edge->first->first - points);
+      *(p++) = HIGH(stem_edge->first->first - points);
+      *(p++) = LOW(stem_edge->first->first - points);
+      *(p++) = 0;
+      *(p++) = stem_edge->flags & TA_EDGE_SERIF;
+      *(p++) = 0;
+      *(p++) = base_edge->flags & TA_EDGE_ROUND;
+
+      p = TA_hints_recorder_handle_segments(p, segments, stem_edge);
+    }
     break;
 
   case ta_anchor:
@@ -2017,8 +2078,8 @@ TA_hints_recorder(TA_Action action,
       }
 
       p = TA_hints_recorder_handle_segments(p, segments, edge);
-      break;
     }
+    break;
 
   case ta_serif:
     p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
