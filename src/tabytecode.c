@@ -295,8 +295,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *      else if base_is_round:
  *        if dist < 80
  *          dist = 64
- *      else:
- *        dist = MIN(56, dist)
+ *      else if dist < 56:
+ *        dist = 56
  *
  *      delta = ABS(dist - std_width)
  *
@@ -377,9 +377,15 @@ unsigned char FPGM(bci_compute_stem_width_a) [] = {
       EIF,
 
     ELSE,
+      DUP,
       PUSHB_1,
         56,
-      MIN, /* dist = min(56, dist) */
+      LT, /* dist < 56 */
+      IF, /* s: width dist */
+        POP,
+        PUSHB_1,
+          56, /* dist = 56 */
+      EIF,
     EIF,
 
     DUP, /* s: width dist dist */
