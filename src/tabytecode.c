@@ -2236,13 +2236,23 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     }
   }
 
-  /* clear `ins_buf' if we only have a single empty record */
   if (num_hints_records == 1 && !hints_records[0].num_actions)
+  {
+    /* clear `ins_buf' if we only have a single empty record */
     memset(ins_buf, INS_A0, (bufp + 2) - ins_buf);
+  }
   else
+  {
+    FT_Byte* p = bufp;
+
+
+    /* otherwise, clear the temporarily used part of `ins_buf' */
+    while (*p != INS_A0)
+      *(p++) = INS_A0;
     bufp = TA_sfnt_emit_hints_records(sfnt,
                                       hints_records, num_hints_records,
                                       bufp);
+  }
 
   /* we are done, so reallocate the instruction array to its real size */
   /* (memrchr is a GNU glibc extension, so we do it manually) */
