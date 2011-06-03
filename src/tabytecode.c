@@ -263,7 +263,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
 #define sal_pos sal_is_extra_light + 1
-#define sal_segment_offset sal_pos + 1 /* must be last */
+#define sal_anchor sal_pos + 1
+#define sal_segment_offset sal_anchor + 1 /* must be last */
 
 
 /* we need the following macro */
@@ -1011,20 +1012,46 @@ unsigned char FPGM(bci_action_anchor) [] = {
 
 };
 
+
+/*
+ * bci_action_blue_anchor
+ *
+ *   Handle the BLUE_ANCHOR action to align an edge with a blue zone
+ *   and to set the edge anchor.
+ *
+ * in: anchor_point
+ *     blue_cvt_idx
+ *     ... stuff for bci_align_segments ...
+ *
+ * sal: sal_anchor
+ *      sal_pos
+ *
+ * XXX: Instead of `anchor_point', use the median of the first segment in the
+ *      base edge.
+ */
+
 unsigned char FPGM(bci_action_blue_anchor) [] = {
 
   PUSHB_1,
     bci_action_blue_anchor,
   FDEF,
 
+  /* store anchor point number in `sal_anchor' */
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    sal_anchor,
+  SWAP,
+  WS,
 
-  /* XXX */
+  /* store blue position in `sal_pos' */
+  RCVT,
+  PUSHB_1,
+    sal_pos,
+  SWAP,
+  WS,
+
+  PUSHB_1,
+    bci_align_segments,
+  CALL,
 
   ENDF,
 
@@ -1076,6 +1103,8 @@ unsigned char FPGM(bci_action_stem) [] = {
  *
  * in: blue_cvt_idx
  *     ... stuff for bci_align_segments ...
+ *
+ * sal: sal_pos
  */
 
 unsigned char FPGM(bci_action_blue) [] = {
@@ -2080,8 +2109,27 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_blue_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    {
+      TA_Edge edge = (TA_Edge)arg1;
+      TA_Edge blue = (TA_Edge)arg2;
+
+
+      *(p++) = HIGH(blue->first->first - points);
+      *(p++) = LOW(blue->first->first - points);
+
+      if (edge->best_blue_is_shoot)
+      {
+        *(p++) = HIGH(CVT_BLUE_SHOOTS_OFFSET(font) + edge->best_blue_idx);
+        *(p++) = LOW(CVT_BLUE_SHOOTS_OFFSET(font) + edge->best_blue_idx);
+      }
+      else
+      {
+        *(p++) = HIGH(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
+        *(p++) = LOW(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
+      }
+
+      p = TA_hints_recorder_handle_segments(p, segments, edge);
+    }
     break;
 
   case ta_adjust:
