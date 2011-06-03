@@ -9,7 +9,7 @@
 /* a simple macro to emit bytecode instructions */
 #define BCI(code) *(bufp++) = (code)
 
-/* we increase the stack depth by amount */
+/* we increase the stack depth by this amount */
 #define ADDITIONAL_STACK_ELEMENTS 20
 
 
@@ -1011,6 +1011,25 @@ unsigned char FPGM(bci_action_anchor) [] = {
 
 };
 
+unsigned char FPGM(bci_action_blue_anchor) [] = {
+
+  PUSHB_1,
+    bci_action_blue_anchor,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
 unsigned char FPGM(bci_action_adjust) [] = {
 
   PUSHB_1,
@@ -1187,6 +1206,7 @@ unsigned char FPGM(bci_handle_action) [] = {
  *
  *       bci_action_link
  *       bci_action_anchor
+ *       bci_action_blue_anchor
  *       bci_action_adjust
  *       bci_action_stem
  *
@@ -1248,11 +1268,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_link))
             + sizeof (FPGM(bci_action_anchor))
+            + sizeof (FPGM(bci_action_blue_anchor))
             + sizeof (FPGM(bci_action_adjust))
             + sizeof (FPGM(bci_action_stem))
             + sizeof (FPGM(bci_action_blue))
             + sizeof (FPGM(bci_action_serif))
-            + sizeof (FPGM(bci_action_anchor))
+            + sizeof (FPGM(bci_action_serif_anchor))
             + sizeof (FPGM(bci_action_serif_link1))
             + sizeof (FPGM(bci_action_serif_link2))
             + sizeof (FPGM(bci_handle_action))
@@ -1291,11 +1312,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_link);
   COPY_FPGM(bci_action_anchor);
+  COPY_FPGM(bci_action_blue_anchor);
   COPY_FPGM(bci_action_adjust);
   COPY_FPGM(bci_action_stem);
   COPY_FPGM(bci_action_blue);
   COPY_FPGM(bci_action_serif);
-  COPY_FPGM(bci_action_anchor);
+  COPY_FPGM(bci_action_serif_anchor);
   COPY_FPGM(bci_action_serif_link1);
   COPY_FPGM(bci_action_serif_link2);
   COPY_FPGM(bci_handle_action);
@@ -2053,6 +2075,11 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_anchor:
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    break;
+
+  case ta_blue_anchor:
     p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
     p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;

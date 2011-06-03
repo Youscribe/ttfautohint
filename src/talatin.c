@@ -1773,16 +1773,28 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       if (!edge1)
         continue;
 
-      TA_LOG(("  BLUE: edge %d (opos=%.2f) snapped to %.2f, was %.2f\n",
-              edge1 - edges, edge1->opos / 64.0, blue->fit / 64.0,
-              edge1->pos / 64.0));
+      if (!anchor)
+        TA_LOG(("  BLUE_ANCHOR: edge %d (opos=%.2f) snapped to %.2f,"
+                  " was %.2f (anchor=edge %d)\n",
+                edge1 - edges, edge1->opos / 64.0, blue->fit / 64.0,
+                edge1->pos / 64.0, edge - edges));
+      else
+        TA_LOG(("  BLUE: edge %d (opos=%.2f) snapped to %.2f, was %.2f\n",
+                edge1 - edges, edge1->opos / 64.0, blue->fit / 64.0,
+                edge1->pos / 64.0));
 
       edge1->pos = blue->fit;
       edge1->flags |= TA_EDGE_DONE;
 
       if (hints->recorder)
-        hints->recorder(ta_blue, hints, dim,
-                        (void*)edge1, NULL, NULL);
+      {
+        if (!anchor)
+          hints->recorder(ta_blue_anchor, hints, dim,
+                          (void*)edge1, (void*)edge, NULL);
+        else
+          hints->recorder(ta_blue, hints, dim,
+                          (void*)edge1, NULL, NULL);
+      }
 
       if (edge2 && !edge2->blue_edge)
       {

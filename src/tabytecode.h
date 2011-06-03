@@ -298,7 +298,8 @@
 #define bci_action_stem_bound bci_action_adjust_bound + 1
 #define bci_action_link bci_action_stem_bound + 1
 #define bci_action_anchor bci_action_link + 1
-#define bci_action_adjust bci_action_anchor + 1
+#define bci_action_blue_anchor bci_action_anchor + 1
+#define bci_action_adjust bci_action_blue_anchor + 1
 #define bci_action_stem bci_action_adjust + 1
 #define bci_action_blue bci_action_stem + 1
 #define bci_action_serif bci_action_blue + 1
