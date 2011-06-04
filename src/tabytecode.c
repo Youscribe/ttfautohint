@@ -257,14 +257,17 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 /* symbolic names for storage area locations */
 
-#define sal_counter 0
-#define sal_limit sal_counter + 1
+#define sal_i 0
+#define sal_j sal_i + 1
+#define sal_limit sal_j + 1
 #define sal_scale sal_limit + 1
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
 #define sal_pos sal_is_extra_light + 1
 #define sal_anchor sal_pos + 1
-#define sal_segment_offset sal_anchor + 1 /* must be last */
+#define sal_point_min sal_anchor + 1
+#define sal_point_max sal_point_min + 1
+#define sal_segment_offset sal_point_max + 1 /* must be last */
 
 
 /* we need the following macro */
@@ -503,7 +506,7 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
  *     end
  *     start
  *
- * uses: sal_counter (counter initialized with `start')
+ * uses: sal_i (counter initialized with `start')
  *       sal_limit (`end')
  */
 
@@ -521,13 +524,13 @@ unsigned char FPGM(bci_loop) [] = {
   WS,
 
   PUSHB_1,
-    sal_counter,
+    sal_i,
   SWAP,
   WS,
 
 /* start_loop: */
   PUSHB_1,
-    sal_counter,
+    sal_i,
   RS,
   PUSHB_1,
     sal_limit,
@@ -536,14 +539,12 @@ unsigned char FPGM(bci_loop) [] = {
   IF, /* s: func_num */
     DUP,
     CALL,
-    PUSHB_2,
+    PUSHB_3,
+      sal_i,
       1,
-      sal_counter,
+      sal_i,
     RS,
     ADD, /* start = start + 1 */
-    PUSHB_1,
-      sal_counter,
-    SWAP,
     WS,
 
     PUSHB_1,
@@ -564,7 +565,7 @@ unsigned char FPGM(bci_loop) [] = {
  *
  *   Rescale CVT value by a given factor.
  *
- * uses: sal_counter (CVT index)
+ * uses: sal_i (CVT index)
  *       sal_scale (scale in 16.16 format)
  */
 
@@ -575,7 +576,7 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
   FDEF,
 
   PUSHB_1,
-    sal_counter,
+    sal_i,
   RS,
   DUP,
   RCVT,
@@ -652,7 +653,7 @@ unsigned char FPGM(bci_loop_sal_assign) [] = {
  *
  *   Round a blue ref value and adjust its corresponding shoot value.
  *
- * uses: sal_counter (CVT index)
+ * uses: sal_i (CVT index)
  *
  */
 
@@ -663,7 +664,7 @@ unsigned char FPGM(bci_blue_round_a) [] = {
   FDEF,
 
   PUSHB_1,
-    sal_counter,
+    sal_i,
   RS,
   DUP,
   RCVT, /* s: ref_idx ref */
@@ -733,6 +734,228 @@ unsigned char FPGM(bci_blue_round_b) [] = {
 
   WCVTP,
   WCVTP,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_get_point_extrema
+ *
+ *   An auxiliary function for `bci_create_segment_point'.
+ *
+ * in: point-1
+ * out: point
+ *
+ * sal: sal_point_min
+ *      sal_point_max
+ */
+
+unsigned char FPGM(bci_get_point_extrema) [] = {
+
+  PUSHB_1,
+    bci_get_point_extrema,
+  FDEF,
+
+  PUSHB_1,
+    1,
+  ADD, /* s: point */
+  DUP,
+  DUP,
+
+  /* check whether current point is a new minimum */
+  PUSHB_1,
+    sal_point_min,
+  RS, /* s: point point point point_min */
+  MD_orig,
+  /* if distance is negative, we have a new minimum */
+  PUSHB_1,
+    0,
+  LT,
+  IF, /* s: point point */
+    DUP,
+    PUSHB_1,
+      sal_point_min,
+    SWAP,
+    WS,
+  EIF,
+
+  /* check whether current point is a new maximum */
+  PUSHB_1,
+    sal_point_max,
+  RS, /* s: point point point_max */
+  MD_orig,
+  /* if distance is positive, we have a new maximum */
+  PUSHB_1,
+    0,
+  GT,
+  IF, /* s: point point */
+    PUSHB_1,
+      sal_point_max,
+    SWAP,
+    WS,
+  ELSE,
+    POP,
+  EIF, /* s: point */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_create_segment_point
+ *
+ *   Construct a point in the twilight zone which represents a segment.
+ *   This function is used by `bci_create_segment_points'.
+ *
+ * uses: bci_get_point_extrema
+ *
+ * sal: sal_i (start of current segment)
+ *      sal_j (current twilight point)
+ *      sal_point_min
+ *      sal_point_max
+ */
+
+unsigned char FPGM(bci_create_segment_point) [] = {
+
+  PUSHB_1,
+    bci_create_segment_point,
+  FDEF,
+
+  PUSHB_1,
+    sal_i,
+  RS,
+  RS, /* s: start_point */
+  DUP,
+
+  /* increase `sal_i'; with the outer loop, this makes sal_i += 2 */
+  PUSHB_2,
+    1,
+    sal_i,
+  RS,
+  ADD,
+  DUP,
+  PUSHB_1,
+    sal_i,
+  SWAP,
+  WS,
+  RS,
+  SWAP, /* s: start_point end_point start_point */
+
+  /* initialize inner loop */
+  DUP,
+  PUSHB_1,
+    sal_point_min,
+  SWAP,
+  WS, /* sal_point_min = start_point */
+  DUP,
+  PUSHB_1,
+    sal_point_max,
+  SWAP,
+  WS, /* sal_point_max = start_point */
+
+  SUB, /* s: start_point loop_count */
+
+  PUSHB_2,
+    1,
+    1,
+  SZP0, /* set zp0 to normal zone 1 */
+  SZP1, /* set zp1 to normal zone 1 */
+
+  PUSHB_1,
+    bci_get_point_extrema,
+  LOOPCALL,
+  /* clean up stack */
+  POP,
+
+  /* the twilight point representing a segment */
+  /* is in the middle between the minimum and maximum */
+  PUSHB_1,
+    sal_point_max,
+  RS,
+  PUSHB_1,
+    sal_point_min,
+  RS,
+  MD_orig,
+  PUSHB_1,
+    32, /* do the division with proper rounding */
+  ADD,
+  PUSHB_1,
+    2*64,
+  DIV, /* s: delta */
+
+  PUSHB_4,
+    sal_j,
+    0,
+    0,
+    sal_point_min,
+  RS,
+  MDAP_noround, /* set rp0 and rp1 tp `sal_point_min' */
+  SZP1, /* set zp1 to twilight zone 0 */
+  SZP2, /* set zp2 to twilight zone 0 */
+
+  RS,
+  DUP, /* delta point[sal_j] point[sal_j] */
+  ALIGNRP, /* align `point[sal_j]' with `sal_point_min' */
+  SWAP,
+  SHPIX, /* shift `point[sal_j]' by `delta' */
+
+  PUSHB_3,
+    sal_j,
+    1,
+    sal_j,
+  RS,
+  ADD, /* twilight_point = twilight_point + 1 */
+  WS,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_create_segment_points
+ *
+ *   Construct points in the twilight zone which represent segments.  This
+ *   function searches the points of a segment with the minimum and maximum
+ *   y-values, then takes the median.
+ *
+ * in: num_segments
+ *
+ * uses: bci_create_segment_point
+ *
+ * sal: sal_i (start of current segment)
+ *      sal_j (current twilight point)
+ */
+
+unsigned char FPGM(bci_create_segment_points) [] = {
+
+  PUSHB_1,
+    bci_create_segment_points,
+  FDEF,
+
+  DUP,
+  ADD,
+  PUSHB_2,
+    sal_segment_offset,
+    sal_segment_offset,
+  ROLL,
+  ADD, /* s: start_seg_1 end_seg_N */
+
+  PUSHB_2,
+    sal_j,
+    0,
+  WS,
+
+  PUSHB_2,
+    bci_create_segment_point,
+    bci_loop,
+  CALL,
+
+  /* clean up stack */
+  POP,
 
   ENDF,
 
@@ -1289,6 +1512,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
+            + sizeof (FPGM(bci_get_point_extrema))
+            + sizeof (FPGM(bci_create_segment_point))
+            + sizeof (FPGM(bci_create_segment_points))
             + sizeof (FPGM(bci_handle_segment))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_handle_segments))
@@ -1333,6 +1559,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
+  COPY_FPGM(bci_get_point_extrema);
+  COPY_FPGM(bci_create_segment_point);
+  COPY_FPGM(bci_create_segment_points);
   COPY_FPGM(bci_handle_segment);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_handle_segments);
