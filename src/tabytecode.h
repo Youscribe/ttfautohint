@@ -285,8 +285,8 @@
 #define bci_loop bci_compute_stem_width + 1
 #define bci_cvt_rescale bci_loop + 1
 #define bci_sal_assign bci_cvt_rescale + 1
-#define bci_loop_sal_assign bci_sal_assign + 1
-#define bci_blue_round bci_loop_sal_assign + 1
+#define bci_set_up_segments bci_sal_assign + 1
+#define bci_blue_round bci_set_up_segments + 1
 #define bci_get_point_extrema bci_blue_round + 1
 #define bci_create_segment_point bci_get_point_extrema + 1
 #define bci_create_segment_points bci_create_segment_point + 1

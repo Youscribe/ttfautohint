@@ -259,8 +259,10 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 #define sal_i 0
 #define sal_j sal_i + 1
-#define sal_limit sal_j + 1
-#define sal_scale sal_limit + 1
+#define sal_k sal_j + 1
+#define sal_limit sal_k + 1
+#define sal_num_segments sal_limit + 1
+#define sal_scale sal_num_segments + 1
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
 #define sal_pos sal_is_extra_light + 1
@@ -281,8 +283,13 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
 
-/* point 0 in the twilight zone (zp0) is originally located */
-/* at the origin; we don't change that */
+/* we use two sets of points in the twilight zone (zp0): */
+/* one set to hold the unhinted segment positions, */
+/* and another one to track the positions as changed by the hinting -- */
+/* this is necessary since all points in zp0 */
+/* have (0,0) as the original coordinates, */
+/* making e.g. `MD_cur' return useless results */
+
 
 /*
  * bci_compute_stem_width
@@ -548,7 +555,7 @@ unsigned char FPGM(bci_loop) [] = {
     WS,
 
     PUSHB_1,
-      22,
+      20,
     NEG,
     JMPR, /* goto start_loop */
   ELSE,
@@ -597,18 +604,14 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
 
 
 /*
- * bci_loop_sal_assign
+ * bci_sal_assign
  *
- *   Apply the WS instruction repeatedly to stack data.
+ *   Auxiliary function for `bci_set_up_segments'.
  *
- * in: counter (N)
- *     offset
- *     data_0
- *     data_1
- *     ...
- *     data_(N-1)
+ * in: offset
+ *     data
  *
- * uses: bci_sal_assign
+ * out: offset+1
  */
 
 unsigned char FPGM(bci_sal_assign) [] = {
@@ -629,11 +632,43 @@ unsigned char FPGM(bci_sal_assign) [] = {
 
 };
 
-unsigned char FPGM(bci_loop_sal_assign) [] = {
+
+/*
+ * bci_set_up_segments
+ *
+ *   Set up segments by defining the point ranges which defines them
+ *   and computing twilight points to represent them.
+ *
+ * in: num_segments (N)
+ *     offset
+ *     segment_start_0
+ *     segment_end_0
+ *     segment_start_1
+ *     segment_end_1
+ *     ...
+ *     segment_start_(N-1)
+ *     segment_end_(N-1)
+ *
+ * sal: sal_num_segments
+ *
+ * uses: bci_sal_assign
+ */
+
+unsigned char FPGM(bci_set_up_segments) [] = {
 
   PUSHB_1,
-    bci_loop_sal_assign,
+    bci_set_up_segments,
   FDEF,
+
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  SWAP,
+  WS,
+
+  /* we have 2*num_segments arguments */
+  DUP,
+  ADD,
 
   /* process the stack, popping off the elements in a loop */
   PUSHB_1,
@@ -642,6 +677,10 @@ unsigned char FPGM(bci_loop_sal_assign) [] = {
 
   /* clean up stack */
   POP,
+
+  PUSHB_1,
+    bci_create_segment_points,
+  CALL,
 
   ENDF,
 
@@ -764,7 +803,7 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
   DUP,
   DUP,
 
-  /* check whether current point is a new minimum */
+  /* check whether `point' is a new minimum */
   PUSHB_1,
     sal_point_min,
   RS, /* s: point point point point_min */
@@ -781,7 +820,7 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
     WS,
   EIF,
 
-  /* check whether current point is a new maximum */
+  /* check whether `point' is a new maximum */
   PUSHB_1,
     sal_point_max,
   RS, /* s: point point point_max */
@@ -790,13 +829,12 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
   PUSHB_1,
     0,
   GT,
-  IF, /* s: point point */
+  IF, /* s: point */
+    DUP,
     PUSHB_1,
       sal_point_max,
     SWAP,
     WS,
-  ELSE,
-    POP,
   EIF, /* s: point */
 
   ENDF,
@@ -807,13 +845,17 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
 /*
  * bci_create_segment_point
  *
- *   Construct a point in the twilight zone which represents a segment.
+ *   Construct two points in the twilight zone to represent a segment:
+ *   an original one (which stays unmodified) and a hinted one,
+ *   initialized with the original value.
+ *
  *   This function is used by `bci_create_segment_points'.
  *
  * uses: bci_get_point_extrema
  *
  * sal: sal_i (start of current segment)
- *      sal_j (current twilight point)
+ *      sal_j (current original twilight point)
+ *      sal_k (current hinted twilight point)
  *      sal_point_min
  *      sal_point_max
  */
@@ -830,7 +872,7 @@ unsigned char FPGM(bci_create_segment_point) [] = {
   RS, /* s: start_point */
   DUP,
 
-  /* increase `sal_i'; with the outer loop, this makes sal_i += 2 */
+  /* increase `sal_i'; together with the outer loop, this makes sal_i += 2 */
   PUSHB_2,
     1,
     sal_i,
@@ -864,6 +906,9 @@ unsigned char FPGM(bci_create_segment_point) [] = {
   SZP0, /* set zp0 to normal zone 1 */
   SZP1, /* set zp1 to normal zone 1 */
 
+  /* all our measurements are taken along the y axis */
+  SVTCA_y,
+
   PUSHB_1,
     bci_get_point_extrema,
   LOOPCALL,
@@ -880,9 +925,6 @@ unsigned char FPGM(bci_create_segment_point) [] = {
   RS,
   MD_orig,
   PUSHB_1,
-    32, /* do the division with proper rounding */
-  ADD,
-  PUSHB_1,
     2*64,
   DIV, /* s: delta */
 
@@ -892,22 +934,38 @@ unsigned char FPGM(bci_create_segment_point) [] = {
     0,
     sal_point_min,
   RS,
-  MDAP_noround, /* set rp0 and rp1 tp `sal_point_min' */
+  MDAP_noround, /* set rp0 and rp1 to `sal_point_min' */
   SZP1, /* set zp1 to twilight zone 0 */
   SZP2, /* set zp2 to twilight zone 0 */
 
   RS,
-  DUP, /* delta point[sal_j] point[sal_j] */
+  DUP, /* s: delta point[sal_j] point[sal_j] */
   ALIGNRP, /* align `point[sal_j]' with `sal_point_min' */
-  SWAP,
+  PUSHB_1,
+    2,
+  CINDEX, /* s: delta point[sal_j] delta */
   SHPIX, /* shift `point[sal_j]' by `delta' */
 
-  PUSHB_3,
+  PUSHB_1,
+    sal_k,
+  RS,
+  DUP, /* s: delta point[sal_k] point[sal_k] */
+  ALIGNRP, /* align `point[sal_k]' with `sal_point_min' */
+  SWAP,
+  SHPIX, /* shift `point[sal_k]' by `delta' */
+
+  PUSHB_6,
+    sal_k,
+    1,
+    sal_k,
     sal_j,
     1,
     sal_j,
   RS,
-  ADD, /* twilight_point = twilight_point + 1 */
+  ADD, /* original_twilight_point = original_twilight_point + 1 */
+  WS,
+  RS,
+  ADD, /* hinted_twilight_point = hinted_twilight_point + 1 */
   WS,
 
   ENDF,
@@ -918,16 +976,16 @@ unsigned char FPGM(bci_create_segment_point) [] = {
 /*
  * bci_create_segment_points
  *
- *   Construct points in the twilight zone which represent segments.  This
- *   function searches the points of a segment with the minimum and maximum
- *   y-values, then takes the median.
- *
- * in: num_segments
+ *   Construct two sets of points in the twilight zone to represent segments.
+ *   This function searches the points of a segment with the minimum and
+ *   maximum y-values, then takes the median.
  *
  * uses: bci_create_segment_point
  *
  * sal: sal_i (start of current segment)
- *      sal_j (current twilight point)
+ *      sal_j (current original twilight point)
+ *      sal_k (current hinted twilight point)
+ *      sal_num_segments
  */
 
 unsigned char FPGM(bci_create_segment_points) [] = {
@@ -936,26 +994,31 @@ unsigned char FPGM(bci_create_segment_points) [] = {
     bci_create_segment_points,
   FDEF,
 
+  PUSHB_7,
+    sal_segment_offset,
+    sal_segment_offset,
+    sal_num_segments,
+
+    sal_k,
+    0,
+    sal_j,
+    sal_num_segments,
+  RS,
+  WS, /* sal_j = num_segments (offset for original points) */
+  WS, /* sal_k = 0 (offset for hinted points) */
+
+  RS,
   DUP,
   ADD,
-  PUSHB_2,
-    sal_segment_offset,
-    sal_segment_offset,
-  ROLL,
-  ADD, /* s: start_seg_1 end_seg_N */
-
-  PUSHB_2,
-    sal_j,
-    0,
-  WS,
+  ADD,
+  PUSHB_1,
+    1,
+  SUB, /* s: sal_segment_offset (sal_segment_offset + 2*num_segments - 1) */
 
   PUSHB_2,
     bci_create_segment_point,
     bci_loop,
   CALL,
-
-  /* clean up stack */
-  POP,
 
   ENDF,
 
@@ -977,11 +1040,10 @@ unsigned char FPGM(bci_handle_segment) [] = {
 /*
  * bci_align_segment
  *
- *   Align all points in a segment to the value in `sal_pos'.
+ *   Align all points in a segment to the twilight point in rp0.
+ *   zp0 and zp1 must be set to 0 (twilight) and 1 (normal), respectively.
  *
  * in: segment_index
- *
- * sal: sal_pos
  */
 
 unsigned char FPGM(bci_align_segment) [] = {
@@ -989,23 +1051,6 @@ unsigned char FPGM(bci_align_segment) [] = {
   PUSHB_1,
     bci_align_segment,
   FDEF,
-
-  PUSHB_6,
-    1,
-    1,
-    sal_pos,
-    0,
-    0,
-    0,
-  SZP0, /* set zp0 to twilight zone 0 */
-  SZP1, /* set zp1 to twilight zone 0 */
-
-  /* we can't directly set rp0 to a stack value */
-  MDAP_noround, /* reset rp0 (and rp1) to the origin in the twilight zone */
-  RS,
-  MSIRP_rp0, /* set point 1 and rp0 in the twilight zone to `sal_pos' */
-
-  SZP1, /* set zp1 to normal zone 1 */
 
   /* we need the values of `sal_segment_offset + 2*segment_index' */
   /* and `sal_segment_offset + 2*segment_index + 1' */
@@ -1073,7 +1118,8 @@ unsigned char FPGM(bci_handle_segments) [] = {
 /*
  * bci_align_segments
  *
- *   Align segments to the value in `sal_pos'.
+ *   Align segments to the twilight point in rp0.
+ *   zp0 and zp1 must be set to 0 (twilight) and 1 (normal), respectively.
  *
  * in: first_segment
  *     loop_counter (N)
@@ -1081,8 +1127,6 @@ unsigned char FPGM(bci_handle_segments) [] = {
  *       segment_2
  *       ...
  *       segment_N
- *
- * sal: sal_pos
  *
  * uses: handle_segment
  *
@@ -1157,16 +1201,11 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
  *
  *   Handle the LINK action to link an edge to another one.
  *
- * in: base_point
- *     stem_point
- *     stem_is_serif
+ * in: stem_is_serif
  *     base_is_round
+ *     base_point (in twilight zone)
+ *     stem_point (in twilight zone)
  *     ... stuff for bci_align_segments ...
- *
- * sal: sal_pos
- *
- * XXX: Instead of `base_point', use the median of the first segment in the
- *      base edge.
  */
 
 unsigned char FPGM(bci_action_link) [] = {
@@ -1175,41 +1214,45 @@ unsigned char FPGM(bci_action_link) [] = {
     bci_action_link,
   FDEF,
 
-  PUSHB_5,
-    1,
-    sal_pos,
-    3,
-    0,
-    1,
-  SZP0, /* set zp0 to normal zone 1 */
-  SZP1, /* set zp1 to twilight zone 0 */
-  CINDEX, /* s: ... stem_point base_point 1 sal_pos base_point */
-
-  /* get distance between base_point and twilight point 0 (at origin) */
   PUSHB_1,
     0,
-  MD_cur, /* s: ... stem_point base_point 1 sal_pos base_point_y_pos */
-  WS, /* sal_pos: base_point_y_pos */
-
-  SZP1, /* set zp1 to normal zone 1 */
-
-  MD_orig, /* s: base_is_round stem_is_serif dist */
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
   PUSHB_1,
-    bci_compute_stem_width,
-  CALL,  /* s: new_dist */
-
+    4,
+  CINDEX,
   PUSHB_1,
-    sal_pos,
+    sal_num_segments,
   RS,
   ADD,
   PUSHB_1,
-    sal_pos,
-  SWAP,
-  WS, /* sal_pos: base_point_y_pos + new_dist */
+    4,
+  MINDEX,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `base_point' (for ALIGNRP below) */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: stem is_round is_serif stem_orig base_orig */
+
+  MD_cur, /* s: stem is_round is_serif dist_orig */
 
   PUSHB_1,
+    bci_compute_stem_width,
+  CALL, /* s: stem new_dist */
+
+  SWAP,
+  DUP,
+  ALIGNRP, /* align `stem_point' with `base_point' */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `stem_point' */
+  SWAP,
+  SHPIX, /* stem_point = base_point + new_dist */
+
+  PUSHB_2,
     bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
   CALL,
 
   ENDF,
@@ -1242,15 +1285,12 @@ unsigned char FPGM(bci_action_anchor) [] = {
  *   Handle the BLUE_ANCHOR action to align an edge with a blue zone
  *   and to set the edge anchor.
  *
- * in: anchor_point
+ * in: anchor_point (in twilight zone)
  *     blue_cvt_idx
+ *     edge_point (in twilight zone)
  *     ... stuff for bci_align_segments ...
  *
  * sal: sal_anchor
- *      sal_pos
- *
- * XXX: Instead of `anchor_point', use the median of the first segment in the
- *      base edge.
  */
 
 unsigned char FPGM(bci_action_blue_anchor) [] = {
@@ -1265,15 +1305,17 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
   SWAP,
   WS,
 
-  /* store blue position in `sal_pos' */
-  RCVT,
   PUSHB_1,
-    sal_pos,
-  SWAP,
-  WS,
+    0,
+  SZP0, /* set zp0 to twilight zone 0 */
 
-  PUSHB_1,
+  /* move `edge_point' to `blue_cvt_idx' position */
+  MIAP_noround, /* this also sets rp0 */
+
+  PUSHB_2,
     bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
   CALL,
 
   ENDF,
@@ -1325,6 +1367,7 @@ unsigned char FPGM(bci_action_stem) [] = {
  *   Handle the BLUE action to align an edge with a blue zone.
  *
  * in: blue_cvt_idx
+ *     edge_point (in twilight zone)
  *     ... stuff for bci_align_segments ...
  *
  * sal: sal_pos
@@ -1336,15 +1379,17 @@ unsigned char FPGM(bci_action_blue) [] = {
     bci_action_blue,
   FDEF,
 
-  /* store blue position in `sal_pos' */
-  RCVT,
   PUSHB_1,
-    sal_pos,
-  SWAP,
-  WS,
+    0,
+  SZP0, /* set zp0 to twilight zone 0 */
 
-  PUSHB_1,
+  /* move `edge_point' to `blue_cvt_idx' position */
+  MIAP_noround, /* this also sets rp0 */
+
+  PUSHB_2,
     bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
   CALL,
 
   ENDF,
@@ -1508,7 +1553,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_loop))
             + sizeof (FPGM(bci_cvt_rescale))
             + sizeof (FPGM(bci_sal_assign))
-            + sizeof (FPGM(bci_loop_sal_assign))
+            + sizeof (FPGM(bci_set_up_segments))
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
@@ -1555,7 +1600,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_loop);
   COPY_FPGM(bci_cvt_rescale);
   COPY_FPGM(bci_sal_assign);
-  COPY_FPGM(bci_loop_sal_assign);
+  COPY_FPGM(bci_set_up_segments);
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
@@ -1939,6 +1984,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   FT_UInt i, j;
   FT_UInt num_storage;
   FT_UInt num_stack_elements;
+  FT_UInt num_twilight_points;
 
 
   seg_limit = segments + axis->num_segments;
@@ -1956,8 +2002,8 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   if (axis->num_segments > 0xFF)
     need_words = 1;
 
-  *(arg--) = bci_loop_sal_assign;
-  *(arg--) = axis->num_segments * 2;
+  *(arg--) = bci_set_up_segments;
+  *(arg--) = axis->num_segments;
   *(arg--) = sal_segment_offset;
 
   for (seg = segments; seg < seg_limit; seg++)
@@ -2016,6 +2062,10 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   num_storage = sal_segment_offset + axis->num_segments * 2;
   if (num_storage > sfnt->max_storage)
     sfnt->max_storage = num_storage;
+
+  num_twilight_points = axis->num_segments * 2;
+  if (num_twilight_points > sfnt->max_twilight_points)
+    sfnt->max_twilight_points = num_twilight_points;
 
   num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
   if (num_stack_elements > sfnt->max_stack_elements)
@@ -2176,12 +2226,6 @@ TA_sfnt_emit_hints_records(SFNT* sfnt,
 
   hints_record = hints_records;
 
-  /* this instruction is essential for getting correct CVT values */
-  /* if horizontal and vertical resolutions differ; */
-  /* it assures that the projection vector is set to the y axis */
-  /* so that CVT values are handled as being `vertical' */
-  BCI(SVTCA_y);
-
   for (i = 0; i < num_hints_records - 1; i++)
   {
     BCI(MPPEM);
@@ -2280,7 +2324,6 @@ TA_hints_recorder(TA_Action action,
                   void* arg3)
 {
   TA_AxisHints axis = &hints->axis[dim];
-  TA_Point points = hints->points;
   TA_Segment segments = axis->segments;
 
   Recorder* recorder = (Recorder*)hints->user;
@@ -2319,14 +2362,14 @@ TA_hints_recorder(TA_Action action,
       TA_Edge stem_edge = (TA_Edge)arg2;
 
 
-      *(p++) = HIGH(base_edge->first->first - points);
-      *(p++) = LOW(base_edge->first->first - points);
-      *(p++) = HIGH(stem_edge->first->first - points);
-      *(p++) = LOW(stem_edge->first->first - points);
       *(p++) = 0;
       *(p++) = stem_edge->flags & TA_EDGE_SERIF;
       *(p++) = 0;
       *(p++) = base_edge->flags & TA_EDGE_ROUND;
+      *(p++) = HIGH(base_edge->first - segments);
+      *(p++) = LOW(base_edge->first - segments);
+      *(p++) = HIGH(stem_edge->first - segments);
+      *(p++) = LOW(stem_edge->first - segments);
 
       p = TA_hints_recorder_handle_segments(p, segments, stem_edge);
     }
@@ -2343,8 +2386,8 @@ TA_hints_recorder(TA_Action action,
       TA_Edge blue = (TA_Edge)arg2;
 
 
-      *(p++) = HIGH(blue->first->first - points);
-      *(p++) = LOW(blue->first->first - points);
+      *(p++) = HIGH(blue->first - segments);
+      *(p++) = LOW(blue->first - segments);
 
       if (edge->best_blue_is_shoot)
       {
@@ -2356,6 +2399,9 @@ TA_hints_recorder(TA_Action action,
         *(p++) = HIGH(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
         *(p++) = LOW(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
       }
+
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
 
       p = TA_hints_recorder_handle_segments(p, segments, edge);
     }
@@ -2386,6 +2432,9 @@ TA_hints_recorder(TA_Action action,
         *(p++) = HIGH(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
         *(p++) = LOW(CVT_BLUE_REFS_OFFSET(font) + edge->best_blue_idx);
       }
+
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
 
       p = TA_hints_recorder_handle_segments(p, segments, edge);
     }

@@ -121,6 +121,7 @@ typedef struct SFNT_ {
   /* values necessary to update the `maxp' table */
   FT_UShort max_storage;
   FT_UShort max_stack_elements;
+  FT_UShort max_twilight_points;
   FT_UShort max_instructions;
 } SFNT;
 
