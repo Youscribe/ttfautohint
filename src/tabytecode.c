@@ -265,8 +265,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_scale sal_num_segments + 1
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
-#define sal_pos sal_is_extra_light + 1
-#define sal_anchor sal_pos + 1
+#define sal_anchor sal_is_extra_light + 1
 #define sal_point_min sal_anchor + 1
 #define sal_point_max sal_point_min + 1
 #define sal_segment_offset sal_point_max + 1 /* must be last */
@@ -1369,8 +1368,6 @@ unsigned char FPGM(bci_action_stem) [] = {
  * in: blue_cvt_idx
  *     edge_point (in twilight zone)
  *     ... stuff for bci_align_segments ...
- *
- * sal: sal_pos
  */
 
 unsigned char FPGM(bci_action_blue) [] = {
