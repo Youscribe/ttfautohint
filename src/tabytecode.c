@@ -2542,8 +2542,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   if (num_hints_records == 1 && !hints_records[0].num_actions)
   {
-    /* clear `ins_buf' if we only have a single empty record */
-    memset(ins_buf, INS_A0, (bufp + 2) - ins_buf);
+    /* don't emit anything if we only have a single empty record */
+    ins_len = 0;
   }
   else
   {
@@ -2553,17 +2553,28 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     /* otherwise, clear the temporarily used part of `ins_buf' */
     while (*p != INS_A0)
       *(p++) = INS_A0;
+
     bufp = TA_sfnt_emit_hints_records(sfnt,
                                       hints_records, num_hints_records,
                                       bufp);
-  }
 
-  /* we are done, so reallocate the instruction array to its real size */
-  /* (memrchr is a GNU glibc extension, so we do it manually) */
-  bufp = ins_buf + ins_len;
-  while (*(--bufp) == INS_A0)
-    ;
-  ins_len = bufp - ins_buf + 1;
+    /* we are done, so reallocate the instruction array to its real size */
+    if (*bufp == INS_A0)
+    {
+      /* search backwards */
+      while (*bufp == INS_A0)
+        bufp--;
+      bufp++;
+    }
+    else
+    {
+      /* search forwards */
+      while (*bufp != INS_A0)
+        bufp++;
+    }
+
+    ins_len = bufp - ins_buf;
+  }
 
   if (ins_len > sfnt->max_instructions)
     sfnt->max_instructions = ins_len;
