@@ -260,7 +260,11 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_i 0
 #define sal_j sal_i + 1
 #define sal_k sal_j + 1
-#define sal_limit sal_k + 1
+#define sal_temp1 sal_k + 1
+#define sal_temp2 sal_temp1 + 1
+#define sal_temp3 sal_temp2 + 1
+#define sal_temp4 sal_temp3 + 1
+#define sal_limit sal_temp4 + 1
 #define sal_num_segments sal_limit + 1
 #define sal_scale sal_num_segments + 1
 #define sal_0x10000 sal_scale + 1
@@ -287,7 +291,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 /* and another one to track the positions as changed by the hinting -- */
 /* this is necessary since all points in zp0 */
 /* have (0,0) as the original coordinates, */
-/* making e.g. `MD_cur' return useless results */
+/* making e.g. `MD_orig' return useless results */
 
 
 /*
@@ -1258,20 +1262,218 @@ unsigned char FPGM(bci_action_link) [] = {
 
 };
 
+
+/*
+ * bci_action_anchor
+ *
+ *   Handle the ANCHOR action to align two edges
+ *   and to set the edge anchor.
+ *
+ *   The code after computing `cur_len' to shift `edge' and `edge2'
+ *   is equivalent to the snippet below (part of `ta_latin_hint_edges'):
+ *
+ *      if cur_len < 96:
+ *        if cur_len < = 64:
+ *          u_off = 32
+ *          d_off = 32
+ *        else:
+ *          u_off = 38
+ *          d_off = 26
+ *
+ *        org_center = edge_orig + org_len / 2
+ *        cur_pos1 = ROUND(org_center)
+ *
+ *        error1 = ABS(org_center - (cur_pos1 - u_off))
+ *        error2 = ABS(org_center - (cur_pos1 + d_off))
+ *        if (error1 < error2):
+ *          cur_pos1 = cur_pos1 - u_off
+ *        else:
+ *          cur_pos1 = cur_pos1 + d_off
+ *
+ *        edge = cur_pos1 - cur_len / 2
+ *        edge2 = edge + cur_len
+ *
+ *      else:
+ *        edge = ROUND(edge_orig)
+ *
+ * in: edge2_is_serif
+ *     edge_is_round
+ *     edge_point (in twilight zone)
+ *     edge2_point (in twilight zone)
+ *     ... stuff for bci_align_segments...
+ */
+
+#define sal_u_off sal_temp1
+#define sal_d_off sal_temp2
+#define sal_org_len sal_temp3
+
 unsigned char FPGM(bci_action_anchor) [] = {
 
   PUSHB_1,
     bci_action_anchor,
   FDEF,
 
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
+  /* store anchor point number in `sal_anchor' */
+  PUSHB_2,
+    sal_anchor,
+    4,
+  CINDEX,
+  WS, /* sal_anchor = edge_point */
 
-  /* XXX */
+  PUSHB_1,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD,
+  PUSHB_1,
+    4,
+  CINDEX,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge2 edge is_round is_serif stem_orig edge_orig */
+
+  MD_cur, /* s: edge2 edge is_round is_serif org_len */
+  DUP,
+  PUSHB_1,
+    sal_org_len,
+  SWAP,
+  WS,
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL, /* s: edge2 edge cur_len */
+
+  DUP,
+  PUSHB_1,
+    96,
+  LT, /* cur_len < 96 */
+  IF,
+    DUP,
+    PUSHB_1,
+      64,
+    LTEQ, /* cur_len <= 64 */
+    IF,
+      PUSHB_4,
+        sal_u_off,
+        32,
+        sal_d_off,
+        32,
+    ELSE,
+      PUSHB_4,
+        sal_u_off,
+        38,
+        sal_d_off,
+        26,
+    EIF,
+    WS,
+    WS,
+
+    SWAP, /* s: edge2 cur_len edge */
+    DUP,
+    PUSHB_1,
+      sal_num_segments,
+    RS,
+    ADD, /* s: edge2 cur_len edge edge_orig */
+
+    GC_cur,
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    PUSHB_1,
+      2*64,
+    DIV,
+    ADD, /* s: edge2 cur_len edge org_center */
+
+    DUP,
+    PUSHB_1,
+      32,
+    ADD,
+    FLOOR, /* s: edge2 cur_len edge org_center cur_pos1 */
+
+    DUP,
+    ROLL,
+    ROLL,
+    SUB, /* s: edge2 cur_len edge cur_pos1 (org_center - cur_pos1) */
+
+    DUP,
+    PUSHB_1,
+      sal_u_off,
+    RS,
+    ADD,
+    ABS, /* s: edge2 cur_len edge cur_pos1 (org_center - cur_pos1) error1 */
+
+    SWAP,
+    PUSHB_1,
+      sal_d_off,
+    RS,
+    SUB,
+    ABS, /* s: edge2 cur_len edge cur_pos1 error1 error2 */
+
+    LT, /* error1 < error2 */
+    IF,
+      PUSHB_1,
+        sal_u_off,
+      RS,
+      SUB, /* cur_pos1 = cur_pos1 - u_off */
+    ELSE,
+      PUSHB_1,
+        sal_d_off,
+      RS,
+      ADD, /* cur_pos1 = cur_pos1 + d_off */
+    EIF, /* s: edge2 cur_len edge cur_pos1 */
+
+    PUSHB_1,
+      3,
+    CINDEX,
+    PUSHB_1,
+      2*64,
+    DIV,
+    SUB, /* s: edge2 cur_len edge (cur_pos1 - cur_len/2) */
+
+    PUSHB_1,
+      2,
+    CINDEX, /* s: edge2 cur_len edge (cur_pos1 - cur_len/2) edge */
+    GC_cur,
+    SUB,
+    SHPIX, /* edge = cur_pos1 - cur_len/2 */
+
+    SWAP, /* s: cur_len edge2 */
+    DUP,
+    ALIGNRP, /* align `edge2' with rp0 (still `edge') */
+    SWAP,
+    SHPIX, /* edge2 = edge1 + cur_len */
+
+  ELSE,
+    POP, /* s: edge2 edge */
+    DUP,
+    PUSHB_1,
+      sal_num_segments,
+    RS,
+    ADD, /* s: edge2 edge edge_orig */
+
+    MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
+    DUP,
+    ALIGNRP, /* align `edge' with `edge_orig' */
+    MDAP_round, /* round `edge' */
+
+    /* clean up stack */
+    POP,
+  EIF,
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
@@ -2373,8 +2575,22 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    {
+      TA_Edge edge = (TA_Edge)arg1;
+      TA_Edge edge2 = (TA_Edge)arg2;
+
+
+      *(p++) = 0;
+      *(p++) = edge2->flags & TA_EDGE_SERIF;
+      *(p++) = 0;
+      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
+      *(p++) = HIGH(edge2->first - segments);
+      *(p++) = LOW(edge2->first - segments);
+
+      p = TA_hints_recorder_handle_segments(p, segments, edge);
+    }
     break;
 
   case ta_blue_anchor:
