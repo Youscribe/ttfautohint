@@ -1154,6 +1154,21 @@ unsigned char FPGM(bci_align_segments) [] = {
 };
 
 
+/*
+ * bci_action_adjust_bound
+ *
+ *   Handle the ADJUST_BOUND action to align an edge of a stem if the other
+ *   edge of the stem has already been moved, then moving it again if
+ *   necessary to stay bound.
+ *
+ * in: edge2_is_serif
+ *     edge_is_round
+ *     edge_point (in twilight zone)
+ *     edge2_point (in twilight zone)
+ *     edge[-1] (in twilight zone)
+ *     ... stuff for bci_align_segments ...
+ */
+
 unsigned char FPGM(bci_action_adjust_bound) [] = {
 
   PUSHB_1,
@@ -1161,16 +1176,60 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[-1] edge2 edge is_round is_serif edge2_orig */
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[-1] edge2 edge is_round is_serif edge2_orig edge_orig */
+  MD_cur, /* s: edge[-1] edge2 edge is_round is_serif org_len */
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL,
+  NEG, /* s: edge_minus_one edge2 edge -cur_len */
+
+  ROLL, /* s: edge_minus_one edge -cur_len edge2 */
+  MDAP_noround, /* set rp0 and rp1 to `edge2' */
+  SWAP,
+  DUP,
+  DUP, /* s: edge_minus_one -cur_len edge edge edge */
+  ALIGNRP, /* align `edge' with `edge2' */
+  ROLL,
+  SHPIX, /* shift `edge' by -cur_len */
+
+  SWAP, /* s: edge edge_minus_one */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge_minus_one' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge edge_minus_one_pos edge_pos */
+  GT, /* edge_pos < edge_minus_one_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `edge_minus_one' */
+  EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
@@ -1300,7 +1359,7 @@ unsigned char FPGM(bci_action_link) [] = {
  *     edge_is_round
  *     edge_point (in twilight zone)
  *     edge2_point (in twilight zone)
- *     ... stuff for bci_align_segments...
+ *     ... stuff for bci_align_segments ...
  */
 
 #define sal_u_off sal_temp1
@@ -1523,6 +1582,20 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
 
 };
 
+
+/*
+ * bci_action_adjust
+ *
+ *   Handle the ADJUST action to align an edge of a stem if the other edge
+ *   of the stem has already been moved.
+ *
+ * in: edge2_is_serif
+ *     edge_is_round
+ *     edge_point (in twilight zone)
+ *     edge2_point (in twilight zone)
+ *     ... stuff for bci_align_segments ...
+ */
+
 unsigned char FPGM(bci_action_adjust) [] = {
 
   PUSHB_1,
@@ -1530,13 +1603,46 @@ unsigned char FPGM(bci_action_adjust) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
-  PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge2 edge is_round is_serif edge2_orig */
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge2 edge is_round is_serif edge2_orig edge_orig */
+  MD_cur, /* s: edge2 edge is_round is_serif org_len */
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL,
+  NEG, /* s: edge2 edge -cur_len */
+
+  ROLL,
+  MDAP_noround, /* set rp0 and rp1 to `edge2' */
+  SWAP,
+  DUP,
+  DUP, /* s: -cur_len edge edge edge */
+  ALIGNRP, /* align `edge' with `edge2' */
+  ROLL,
+  SHPIX, /* shift `edge' by -cur_len */
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
@@ -2544,9 +2650,25 @@ TA_hints_recorder(TA_Action action,
   switch (action)
   {
   case ta_adjust_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
+    {
+      TA_Edge edge = (TA_Edge)arg1;
+      TA_Edge edge2 = (TA_Edge)arg2;
+      TA_Edge edge_minus_one = (TA_Edge)arg3;
+
+
+      *(p++) = 0;
+      *(p++) = edge2->flags & TA_EDGE_SERIF;
+      *(p++) = 0;
+      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
+      *(p++) = HIGH(edge2->first - segments);
+      *(p++) = LOW(edge2->first - segments);
+      *(p++) = HIGH(edge_minus_one->first - segments);
+      *(p++) = LOW(edge_minus_one->first - segments);
+
+      p = TA_hints_recorder_handle_segments(p, segments, edge);
+    }
     break;
 
   case ta_stem_bound:
@@ -2575,6 +2697,7 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_anchor:
+  case ta_adjust:
     {
       TA_Edge edge = (TA_Edge)arg1;
       TA_Edge edge2 = (TA_Edge)arg2;
@@ -2618,11 +2741,6 @@ TA_hints_recorder(TA_Action action,
 
       p = TA_hints_recorder_handle_segments(p, segments, edge);
     }
-    break;
-
-  case ta_adjust:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
     break;
 
   case ta_stem:
