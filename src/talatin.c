@@ -817,7 +817,6 @@ ta_latin_hints_compute_segments(TA_GlyphHints hints,
         min_pos = max_pos = point->u;
         segment->first = point;
         segment->last = point;
-        segment->contour = contour;
         on_edge = 1;
       }
 
