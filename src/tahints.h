@@ -257,6 +257,7 @@ typedef struct TA_SegmentRec_
   TA_Point first; /* first point in edge segment */
   TA_Point last; /* last point in edge segment */
   TA_Point* contour; /* ptr to first point of segment's contour */
+  FT_UInt wrap_around_idx; /* used in and managed by `tabytecode.c' */
 } TA_SegmentRec;
 
 

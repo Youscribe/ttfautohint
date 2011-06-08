@@ -265,7 +265,8 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_temp3 sal_temp2 + 1
 #define sal_temp4 sal_temp3 + 1
 #define sal_limit sal_temp4 + 1
-#define sal_num_segments sal_limit + 1
+#define sal_func sal_limit +1
+#define sal_num_segments sal_func + 1
 #define sal_scale sal_num_segments + 1
 #define sal_0x10000 sal_scale + 1
 #define sal_is_extra_light sal_0x10000 + 1
@@ -509,8 +510,7 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
  * bci_loop
  *
  *   Take a range and a function number and apply the function to all
- *   elements of the range.  The called function must not change the
- *   stack.
+ *   elements of the range.
  *
  * in: func_num
  *     end
@@ -518,6 +518,7 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
  *
  * uses: sal_i (counter initialized with `start')
  *       sal_limit (`end')
+ *       sal_func (`func_num')
  */
 
 unsigned char FPGM(bci_loop) [] = {
@@ -526,17 +527,18 @@ unsigned char FPGM(bci_loop) [] = {
     bci_loop,
   FDEF,
 
-  ROLL,
-  ROLL, /* s: func_num start end */
+  PUSHB_1,
+    sal_func,
+  SWAP,
+  WS, /* sal_func = func_num */
   PUSHB_1,
     sal_limit,
   SWAP,
-  WS,
-
+  WS, /* sal_limit = end */
   PUSHB_1,
     sal_i,
   SWAP,
-  WS,
+  WS, /* sal_i = start */
 
 /* start_loop: */
   PUSHB_1,
@@ -546,8 +548,10 @@ unsigned char FPGM(bci_loop) [] = {
     sal_limit,
   RS,
   LTEQ, /* start <= end */
-  IF, /* s: func_num */
-    DUP,
+  IF,
+    PUSHB_1,
+      sal_func,
+    RS,
     CALL,
     PUSHB_3,
       sal_i,
@@ -558,11 +562,9 @@ unsigned char FPGM(bci_loop) [] = {
     WS,
 
     PUSHB_1,
-      20,
+      22,
     NEG,
     JMPR, /* goto start_loop */
-  ELSE,
-    POP,
   EIF,
 
   ENDF,
@@ -600,90 +602,6 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
   DIV, /* CVT * scale */
 
   WCVTP,
-
-  ENDF,
-
-};
-
-
-/*
- * bci_sal_assign
- *
- *   Auxiliary function for `bci_set_up_segments'.
- *
- * in: offset
- *     data
- *
- * out: offset+1
- */
-
-unsigned char FPGM(bci_sal_assign) [] = {
-
-  PUSHB_1,
-    bci_sal_assign,
-  FDEF,
-
-  DUP,
-  ROLL, /* s: offset offset data */
-  WS,
-
-  PUSHB_1,
-    1,
-  ADD, /* s: (offset + 1) */
-
-  ENDF,
-
-};
-
-
-/*
- * bci_set_up_segments
- *
- *   Set up segments by defining the point ranges which defines them
- *   and computing twilight points to represent them.
- *
- * in: num_segments (N)
- *     offset
- *     segment_start_0
- *     segment_end_0
- *     segment_start_1
- *     segment_end_1
- *     ...
- *     segment_start_(N-1)
- *     segment_end_(N-1)
- *
- * sal: sal_num_segments
- *
- * uses: bci_sal_assign
- */
-
-unsigned char FPGM(bci_set_up_segments) [] = {
-
-  PUSHB_1,
-    bci_set_up_segments,
-  FDEF,
-
-  DUP,
-  PUSHB_1,
-    sal_num_segments,
-  SWAP,
-  WS,
-
-  /* we have 2*num_segments arguments */
-  DUP,
-  ADD,
-
-  /* process the stack, popping off the elements in a loop */
-  PUSHB_1,
-    bci_sal_assign,
-  LOOPCALL,
-
-  /* clean up stack */
-  POP,
-
-  PUSHB_1,
-    bci_create_segment_points,
-  CALL,
 
   ENDF,
 
@@ -785,7 +703,7 @@ unsigned char FPGM(bci_blue_round_b) [] = {
 /*
  * bci_get_point_extrema
  *
- *   An auxiliary function for `bci_create_segment_point'.
+ *   An auxiliary function for `bci_create_segment'.
  *
  * in: point-1
  * out: point
@@ -846,13 +764,19 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
 
 
 /*
- * bci_create_segment_point
+ * bci_create_segment
  *
- *   Construct two points in the twilight zone to represent a segment:
+ *   Store start and end point of a segment in the storage area,
+ *   then construct two points in the twilight zone to represent it:
  *   an original one (which stays unmodified) and a hinted one,
  *   initialized with the original value.
  *
  *   This function is used by `bci_create_segment_points'.
+ *
+ * in: start
+ *     end
+ *       [last (if wrap-around segment)]
+ *       [first (if wrap-around segment)]
  *
  * uses: bci_get_point_extrema
  *
@@ -863,60 +787,115 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
  *      sal_point_max
  */
 
-unsigned char FPGM(bci_create_segment_point) [] = {
+unsigned char FPGM(bci_create_segment) [] = {
 
   PUSHB_1,
-    bci_create_segment_point,
+    bci_create_segment,
   FDEF,
 
   PUSHB_1,
     sal_i,
   RS,
-  RS, /* s: start_point */
-  DUP,
+  PUSHB_1,
+    2,
+  CINDEX,
+  WS, /* sal[sal_i] = start */
 
   /* increase `sal_i'; together with the outer loop, this makes sal_i += 2 */
-  PUSHB_2,
+  PUSHB_3,
+    sal_i,
     1,
     sal_i,
   RS,
-  ADD,
-  DUP,
-  PUSHB_1,
-    sal_i,
-  SWAP,
+  ADD, /* sal_i = sal_i + 1 */
   WS,
-  RS,
-  SWAP, /* s: start_point end_point start_point */
 
-  /* initialize inner loop */
-  DUP,
-  PUSHB_1,
-    sal_point_min,
-  SWAP,
-  WS, /* sal_point_min = start_point */
-  DUP,
-  PUSHB_1,
-    sal_point_max,
-  SWAP,
-  WS, /* sal_point_max = start_point */
-
-  SUB, /* s: start_point loop_count */
-
+  /* initialize inner loop(s) */
   PUSHB_2,
-    1,
-    1,
-  SZP0, /* set zp0 to normal zone 1 */
-  SZP1, /* set zp1 to normal zone 1 */
-
-  /* all our measurements are taken along the y axis */
-  SVTCA_y,
+    sal_point_min,
+    2,
+  CINDEX,
+  WS, /* sal_point_min = start */
+  PUSHB_2,
+    sal_point_max,
+    2,
+  CINDEX,
+  WS, /* sal_point_max = start */
 
   PUSHB_1,
-    bci_get_point_extrema,
-  LOOPCALL,
-  /* clean up stack */
-  POP,
+    1,
+  SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+
+  SWAP,
+  DUP,
+  PUSHB_1,
+    3,
+  CINDEX, /* s: start end end start */
+  LT, /* start > end */
+  IF,
+    /* we have a wrap-around segment with two more arguments */
+    /* to give the last and first point of the contour, respectively; */
+    /* our job is to store a segment `start'-`last', */
+    /* and to get extrema for the two segments */
+    /* `start'-`last' and `first'-`end' */
+
+    /* s: first last start end */
+    PUSHB_1,
+      sal_i,
+    RS,
+    PUSHB_1,
+      4,
+    CINDEX,
+    WS, /* sal[sal_i] = last */
+
+    ROLL,
+    ROLL, /* s: first end last start */
+    DUP,
+    ROLL,
+    SWAP, /* s: first end start last start */
+    SUB, /* s: first end start loop_count */
+
+    PUSHB_1,
+      bci_get_point_extrema,
+    LOOPCALL,
+    /* clean up stack */
+    POP,
+
+    SWAP, /* s: end first */
+    PUSHB_1,
+      1,
+    SUB,
+    DUP,
+    ROLL, /* s: (first - 1) (first - 1) end */
+    SWAP,
+    SUB, /* s: (first - 1) loop_count */
+
+    PUSHB_1,
+      bci_get_point_extrema,
+    LOOPCALL,
+    /* clean up stack */
+    POP,
+
+  ELSE, /* s: start end */
+    PUSHB_1,
+      sal_i,
+    RS,
+    PUSHB_1,
+      2,
+    CINDEX,
+    WS, /* sal[sal_i] = end */
+
+    PUSHB_1,
+      2,
+    CINDEX,
+    SUB, /* s: start loop_count */
+
+    PUSHB_1,
+      bci_get_point_extrema,
+    LOOPCALL,
+    /* clean up stack */
+    POP,
+  EIF,
 
   /* the twilight point representing a segment */
   /* is in the middle between the minimum and maximum */
@@ -977,13 +956,27 @@ unsigned char FPGM(bci_create_segment_point) [] = {
 
 
 /*
- * bci_create_segment_points
+ * bci_create_segments
  *
- *   Construct two sets of points in the twilight zone to represent segments.
- *   This function searches the points of a segment with the minimum and
- *   maximum y-values, then takes the median.
+ *   Set up segments by defining point ranges which defines them
+ *   and computing twilight points to represent them.
  *
- * uses: bci_create_segment_point
+ * in: num_segments (N)
+ *     segment_start_0
+ *     segment_end_0
+ *       [contour_last 0 (if wrap-around segment)]
+ *       [contour_first 0 (if wrap-around segment)]
+ *     segment_start_1
+ *     segment_end_1
+ *       [contour_last 0 (if wrap-around segment)]
+ *       [contour_first 0 (if wrap-around segment)]
+ *     ...
+ *     segment_start_(N-1)
+ *     segment_end_(N-1)
+ *       [contour_last (N-1) (if wrap-around segment)]
+ *       [contour_first (N-1) (if wrap-around segment)]
+ *
+ * uses: bci_create_segment
  *
  * sal: sal_i (start of current segment)
  *      sal_j (current original twilight point)
@@ -991,11 +984,19 @@ unsigned char FPGM(bci_create_segment_point) [] = {
  *      sal_num_segments
  */
 
-unsigned char FPGM(bci_create_segment_points) [] = {
+unsigned char FPGM(bci_create_segments) [] = {
 
   PUSHB_1,
-    bci_create_segment_points,
+    bci_create_segments,
   FDEF,
+
+  /* all our measurements are taken along the y axis */
+  SVTCA_y,
+
+  PUSHB_1,
+    sal_num_segments,
+  SWAP,
+  WS, /* sal_num_segments = num_segments */
 
   PUSHB_7,
     sal_segment_offset,
@@ -1018,8 +1019,10 @@ unsigned char FPGM(bci_create_segment_points) [] = {
     1,
   SUB, /* s: sal_segment_offset (sal_segment_offset + 2*num_segments - 1) */
 
+  /* `bci_create_segment_point' also increases the loop counter by 1; */
+  /* this effectively means we have a loop step of 2 */
   PUSHB_2,
-    bci_create_segment_point,
+    bci_create_segment,
     bci_loop,
   CALL,
 
@@ -1092,6 +1095,7 @@ unsigned char FPGM(bci_align_segment) [] = {
       18,
     NEG,
     JMPR, /* goto start_loop */
+
   ELSE,
     POP,
     POP,
@@ -1426,6 +1430,7 @@ unsigned char FPGM(bci_action_anchor) [] = {
         32,
         sal_d_off,
         32,
+
     ELSE,
       PUSHB_4,
         sal_u_off,
@@ -1483,6 +1488,7 @@ unsigned char FPGM(bci_action_anchor) [] = {
         sal_u_off,
       RS,
       SUB, /* cur_pos1 = cur_pos1 - u_off */
+
     ELSE,
       PUSHB_1,
         sal_d_off,
@@ -1857,14 +1863,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_compute_stem_width_c))
             + sizeof (FPGM(bci_loop))
             + sizeof (FPGM(bci_cvt_rescale))
-            + sizeof (FPGM(bci_sal_assign))
-            + sizeof (FPGM(bci_set_up_segments))
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
             + sizeof (FPGM(bci_get_point_extrema))
-            + sizeof (FPGM(bci_create_segment_point))
-            + sizeof (FPGM(bci_create_segment_points))
+            + sizeof (FPGM(bci_create_segment))
+            + sizeof (FPGM(bci_create_segments))
             + sizeof (FPGM(bci_handle_segment))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_handle_segments))
@@ -1904,14 +1908,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_compute_stem_width_c);
   COPY_FPGM(bci_loop);
   COPY_FPGM(bci_cvt_rescale);
-  COPY_FPGM(bci_sal_assign);
-  COPY_FPGM(bci_set_up_segments);
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
   COPY_FPGM(bci_get_point_extrema);
-  COPY_FPGM(bci_create_segment_point);
-  COPY_FPGM(bci_create_segment_points);
+  COPY_FPGM(bci_create_segment);
+  COPY_FPGM(bci_create_segments);
   COPY_FPGM(bci_handle_segment);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_handle_segments);
@@ -2279,13 +2281,18 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   TA_Segment seg;
   TA_Segment seg_limit;
 
+  FT_Outline outline = font->loader->gloader->base.outline;
+
   FT_UInt* args;
   FT_UInt* arg;
   FT_UInt num_args;
   FT_UInt nargs;
+  FT_UInt num_segments;
+  FT_UInt num_wrap_around_segments;
 
   FT_Bool need_words = 0;
 
+  FT_Int n;
   FT_UInt i, j;
   FT_UInt num_storage;
   FT_UInt num_stack_elements;
@@ -2293,7 +2300,25 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
 
   seg_limit = segments + axis->num_segments;
-  num_args = 2 * axis->num_segments + 3;
+  num_segments = axis->num_segments;
+  num_wrap_around_segments = 0;
+
+  /* some segments can `wrap around' a contour's start point, */
+  /* like 24-25-26-0-1-2; we thus reserve some additional records */
+  /* to split them into 24-26 and 0-2 */
+  for (seg = segments; seg < seg_limit; seg++)
+    if (seg->first > seg->last)
+    {
+      /* store the index for later use */
+      seg->wrap_around_idx = num_wrap_around_segments;
+
+      num_wrap_around_segments++;
+    }
+
+  num_segments += num_wrap_around_segments;
+
+  /* wrap-around segments are pushed with four arguments */
+  num_args = 2 * num_segments + 2 * num_wrap_around_segments + 2;
 
   /* collect all arguments temporarily in an array (in reverse order) */
   /* so that we can easily split into chunks of 255 args */
@@ -2304,12 +2329,11 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
   arg = args + num_args - 1;
 
-  if (axis->num_segments > 0xFF)
+  if (num_segments > 0xFF)
     need_words = 1;
 
-  *(arg--) = bci_set_up_segments;
-  *(arg--) = axis->num_segments;
-  *(arg--) = sal_segment_offset;
+  *(arg--) = bci_create_segments;
+  *(arg--) = num_segments;
 
   for (seg = segments; seg < seg_limit; seg++)
   {
@@ -2320,10 +2344,59 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     *(arg--) = first;
     *(arg--) = last;
 
-    if (first > 0xFF || last > 0xFF)
+    /* we push the last and first contour point */
+    /* as a third and fourth argument in wrap-around segments */
+    if (first > last)
+    {
+      for (n = 0; n < outline.n_contours; n++)
+      {
+        FT_UInt end = (FT_UInt)outline.contours[n];
+
+
+        if (first <= end)
+        {
+          *(arg--) = end;
+          if (end > 0xFF)
+            need_words = 1;
+
+          if (n == 0)
+            *(arg--) = 0;
+          else
+            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
+          break;
+        }
+      }
+    }
+
+    if (last > 0xFF)
       need_words = 1;
   }
 
+  /* emit the second part of wrap-around segments as separate segments */
+  /* so that edges can easily link to them */
+  for (seg = segments; seg < seg_limit; seg++)
+  {
+    FT_UInt first = seg->first - points;
+    FT_UInt last = seg->last - points;
+
+
+    if (first > last)
+    {
+      for (n = 0; n < outline.n_contours; n++)
+      {
+        if (first <= (FT_UInt)outline.contours[n])
+        {
+          if (n == 0)
+            *(arg--) = 0;
+          else
+            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
+          break;
+        }
+      }
+
+      *(arg--) = last;
+    }
+  }
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
   /* thus we refrain from further optimizing this case */
@@ -2364,11 +2437,11 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
   BCI(CALL);
 
-  num_storage = sal_segment_offset + axis->num_segments * 2;
+  num_storage = sal_segment_offset + num_segments * 2;
   if (num_storage > sfnt->max_storage)
     sfnt->max_storage = num_storage;
 
-  num_twilight_points = axis->num_segments * 2;
+  num_twilight_points = num_segments * 2;
   if (num_twilight_points > sfnt->max_twilight_points)
     sfnt->max_twilight_points = num_twilight_points;
 
@@ -2582,9 +2655,10 @@ TA_free_hints_records(Hints_Record* hints_records,
 
 static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
-                                  TA_Segment segments,
+                                  TA_AxisHints axis,
                                   TA_Edge edge)
 {
+  TA_Segment segments = axis->segments;
   TA_Segment seg;
   FT_UInt seg_idx;
   FT_UInt num_segs = 0;
@@ -2596,24 +2670,47 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
   *(bufp++) = HIGH(seg_idx);
   *(bufp++) = LOW(seg_idx);
 
+  /* wrap-around segments are stored as two segments */
+  if (edge->first->first > edge->first->last)
+    num_segs++;
+
   seg = edge->first->edge_next;
   while (seg != edge->first)
   {
-    seg = seg->edge_next;
     num_segs++;
+
+    if (seg->first > seg->last)
+      num_segs++;
+
+    seg = seg->edge_next;
   }
 
   *(bufp++) = HIGH(num_segs);
   *(bufp++) = LOW(num_segs);
 
+  if (edge->first->first > edge->first->last)
+  {
+    /* emit second part of wrap-around segment; */
+    /* the bytecode positions such segments after `normal' ones */
+    *(bufp++) = HIGH(axis->num_segments + edge->first->wrap_around_idx);
+    *(bufp++) = LOW(axis->num_segments + edge->first->wrap_around_idx);
+  }
+
   seg = edge->first->edge_next;
   while (seg != edge->first)
   {
     seg_idx = seg - segments;
-    seg = seg->edge_next;
 
     *(bufp++) = HIGH(seg_idx);
     *(bufp++) = LOW(seg_idx);
+
+    if (seg->first > seg->last)
+    {
+      *(bufp++) = HIGH(axis->num_segments + seg->wrap_around_idx);
+      *(bufp++) = LOW(axis->num_segments + seg->wrap_around_idx);
+    }
+
+    seg = seg->edge_next;
   }
 
   return bufp;
@@ -2667,14 +2764,14 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge_minus_one->first - segments);
       *(p++) = LOW(edge_minus_one->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge);
     }
     break;
 
   case ta_stem_bound:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg3);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg3);
     break;
 
   case ta_link:
@@ -2692,7 +2789,7 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(stem_edge->first - segments);
       *(p++) = LOW(stem_edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, segments, stem_edge);
+      p = TA_hints_recorder_handle_segments(p, axis, stem_edge);
     }
     break;
 
@@ -2712,7 +2809,7 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge2->first - segments);
       *(p++) = LOW(edge2->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge);
     }
     break;
 
@@ -2739,13 +2836,13 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge);
     }
     break;
 
   case ta_stem:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg2);
     break;
 
   case ta_blue:
@@ -2767,24 +2864,24 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, segments, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge);
     }
     break;
 
   case ta_serif:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
     break;
 
   case ta_serif_anchor:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
     break;
 
   case ta_serif_link1:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
     break;
 
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, segments, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
     break;
 
   /* to pacify the compiler */
