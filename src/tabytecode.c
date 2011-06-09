@@ -263,8 +263,7 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 #define sal_temp1 sal_k + 1
 #define sal_temp2 sal_temp1 + 1
 #define sal_temp3 sal_temp2 + 1
-#define sal_temp4 sal_temp3 + 1
-#define sal_limit sal_temp4 + 1
+#define sal_limit sal_temp3 + 1
 #define sal_func sal_limit +1
 #define sal_num_segments sal_func + 1
 #define sal_scale sal_num_segments + 1
@@ -1170,7 +1169,7 @@ unsigned char FPGM(bci_align_segments) [] = {
  *     edge_point (in twilight zone)
  *     edge2_point (in twilight zone)
  *     edge[-1] (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (edge) ...
  */
 
 unsigned char FPGM(bci_action_adjust_bound) [] = {
@@ -1202,29 +1201,29 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
   PUSHB_1,
     bci_compute_stem_width,
   CALL,
-  NEG, /* s: edge_minus_one edge2 edge -cur_len */
+  NEG, /* s: edge[-1] edge2 edge -cur_len */
 
-  ROLL, /* s: edge_minus_one edge -cur_len edge2 */
+  ROLL, /* s: edge[-1] edge -cur_len edge2 */
   MDAP_noround, /* set rp0 and rp1 to `edge2' */
   SWAP,
   DUP,
-  DUP, /* s: edge_minus_one -cur_len edge edge edge */
+  DUP, /* s: edge[-1] -cur_len edge edge edge */
   ALIGNRP, /* align `edge' with `edge2' */
   ROLL,
   SHPIX, /* shift `edge' by -cur_len */
 
-  SWAP, /* s: edge edge_minus_one */
+  SWAP, /* s: edge edge[-1] */
   DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge_minus_one' */
+  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
   GC_cur,
   PUSHB_1,
     2,
   CINDEX,
-  GC_cur, /* s: edge edge_minus_one_pos edge_pos */
-  GT, /* edge_pos < edge_minus_one_pos */
+  GC_cur, /* s: edge edge[-1]_pos edge_pos */
+  GT, /* edge_pos < edge[-1]_pos */
   IF,
     DUP,
-    ALIGNRP, /* align `edge' to `edge_minus_one' */
+    ALIGNRP, /* align `edge' to `edge[-1]' */
   EIF,
 
   MDAP_noround, /* set rp0 and rp1 to `edge' */
@@ -1602,7 +1601,7 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
  *     base_is_round
  *     base_point (in twilight zone)
  *     stem_point (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (base) ...
  */
 
 unsigned char FPGM(bci_action_link) [] = {
@@ -1694,11 +1693,19 @@ unsigned char FPGM(bci_action_link) [] = {
  *     edge_is_round
  *     edge_point (in twilight zone)
  *     edge2_point (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (edge) ...
+ *
+ * sal: sal_anchor
+ *      sal_temp1
+ *      sal_temp2
+ *      sal_temp3
  */
 
+#undef sal_u_off
 #define sal_u_off sal_temp1
+#undef sal_d_off
 #define sal_d_off sal_temp2
+#undef sal_org_len
 #define sal_org_len sal_temp3
 
 unsigned char FPGM(bci_action_anchor) [] = {
@@ -1733,7 +1740,7 @@ unsigned char FPGM(bci_action_anchor) [] = {
   PUSHB_1,
     sal_num_segments,
   RS,
-  ADD, /* s: edge2 edge is_round is_serif stem_orig edge_orig */
+  ADD, /* s: edge2 edge is_round is_serif edge2_orig edge_orig */
 
   MD_cur, /* s: edge2 edge is_round is_serif org_len */
   DUP,
@@ -1885,7 +1892,7 @@ unsigned char FPGM(bci_action_anchor) [] = {
  * in: anchor_point (in twilight zone)
  *     blue_cvt_idx
  *     edge_point (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (edge) ...
  *
  * sal: sal_anchor
  */
@@ -1930,7 +1937,7 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
  *     edge_is_round
  *     edge_point (in twilight zone)
  *     edge2_point (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (edge) ...
  */
 
 unsigned char FPGM(bci_action_adjust) [] = {
@@ -2012,7 +2019,7 @@ unsigned char FPGM(bci_action_stem) [] = {
  *
  * in: blue_cvt_idx
  *     edge_point (in twilight zone)
- *     ... stuff for bci_align_segments ...
+ *     ... stuff for bci_align_segments (edge) ...
  */
 
 unsigned char FPGM(bci_action_blue) [] = {
