@@ -297,6 +297,41 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
 
 /*
+ * bci_round
+ *
+ *   Round a 26.6 number.  Contrary to the ROUND bytecode instruction, no
+ *   engine specific corrections are applied.
+ *
+ * in: val
+ * out: ROUND(val)
+ */
+
+unsigned char FPGM(bci_round) [] = {
+
+  PUSHB_1,
+    bci_round,
+  FDEF,
+
+  DUP,
+  ABS,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  SWAP,
+  PUSHB_1,
+    0,
+  LT,
+  IF,
+    NEG,
+  EIF,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_compute_stem_width
  *
  *   This is the equivalent to the following code from function
@@ -494,9 +529,8 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
 
         ELSE,
           PUSHB_1,
-            32,
-          ADD,
-          FLOOR, /* dist = round(dist) */
+            bci_round,
+          CALL, /* dist = round(dist) */
 
         EIF,
       EIF,
@@ -641,9 +675,8 @@ unsigned char FPGM(bci_blue_round_a) [] = {
 
   DUP,
   PUSHB_1,
-    32,
-  ADD,
-  FLOOR,
+    bci_round,
+  CALL,
   SWAP, /* s: ref_idx round(ref) ref */
 
   PUSHB_2,
@@ -1401,9 +1434,8 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
 
     DUP,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR, /* s: edge[-1] edge2 cur_len edge org_center cur_pos1 */
+      bci_round,
+    CALL, /* s: edge[-1] edge2 cur_len edge org_center cur_pos1 */
 
     DUP,
     ROLL,
@@ -1497,18 +1529,16 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
 
     DUP,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR, /* cur_pos1 = ROUND(org_pos) */
+      bci_round,
+    CALL, /* cur_pos1 = ROUND(org_pos) */
     SWAP,
     PUSHB_1,
       sal_org_len,
     RS,
     ADD,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR,
+      bci_round,
+    CALL,
     PUSHB_1,
       5,
     CINDEX,
@@ -1808,9 +1838,8 @@ unsigned char FPGM(bci_action_anchor) [] = {
 
     DUP,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR, /* s: edge2 cur_len edge org_center cur_pos1 */
+      bci_round,
+    CALL, /* s: edge2 cur_len edge org_center cur_pos1 */
 
     DUP,
     ROLL,
@@ -2153,9 +2182,8 @@ unsigned char FPGM(bci_action_stem) [] = {
 
     DUP,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR, /* s: edge2 cur_len edge org_center cur_pos1 */
+      bci_round,
+    CALL, /* s: edge2 cur_len edge org_center cur_pos1 */
 
     DUP,
     ROLL,
@@ -2248,18 +2276,16 @@ unsigned char FPGM(bci_action_stem) [] = {
 
     DUP,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR, /* cur_pos1 = ROUND(org_pos) */
+      bci_round,
+    CALL, /* cur_pos1 = ROUND(org_pos) */
     SWAP,
     PUSHB_1,
       sal_org_len,
     RS,
     ADD,
     PUSHB_1,
-      32,
-    ADD,
-    FLOOR,
+      bci_round,
+    CALL,
     PUSHB_1,
       5,
     CINDEX,
@@ -2518,7 +2544,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   FT_Byte* buf_p;
 
 
-  buf_len = sizeof (FPGM(bci_compute_stem_width_a))
+  buf_len = sizeof (FPGM(bci_round))
+            + sizeof (FPGM(bci_compute_stem_width_a))
             + 1
             + sizeof (FPGM(bci_compute_stem_width_b))
             + 1
@@ -2563,6 +2590,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   /* copy font program into buffer and fill in the missing variables */
   buf_p = buf;
 
+  COPY_FPGM(bci_round);
   COPY_FPGM(bci_compute_stem_width_a);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
   COPY_FPGM(bci_compute_stem_width_b);

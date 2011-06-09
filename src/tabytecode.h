@@ -281,7 +281,8 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
-#define bci_compute_stem_width 0
+#define bci_round 0
+#define bci_compute_stem_width bci_round + 1
 #define bci_loop bci_compute_stem_width + 1
 #define bci_cvt_rescale bci_loop + 1
 #define bci_blue_round bci_cvt_rescale + 1
