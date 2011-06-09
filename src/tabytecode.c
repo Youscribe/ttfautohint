@@ -35,6 +35,8 @@ typedef struct Hints_Record_ {
 typedef struct Recorder_ {
   FONT* font;
   Hints_Record hints_record;
+/* see explanations in `TA_sfnt_build_glyph_segments' */
+  FT_UInt* wrap_around_segments;
 } Recorder;
 
 
@@ -2609,9 +2611,10 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
 
 static FT_Byte*
 TA_sfnt_build_glyph_segments(SFNT* sfnt,
-                             FONT* font,
+                             Recorder* recorder,
                              FT_Byte* bufp)
 {
+  FONT* font = recorder->font;
   TA_GlyphHints hints = &font->loader->hints;
   TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
   TA_Point points = hints->points;
@@ -2626,6 +2629,8 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   FT_UInt num_args;
   FT_UInt nargs;
   FT_UInt num_segments;
+
+  FT_UInt* wrap_around_segment;
   FT_UInt num_wrap_around_segments;
 
   FT_Bool need_words = 0;
@@ -2639,20 +2644,21 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
   seg_limit = segments + axis->num_segments;
   num_segments = axis->num_segments;
-  num_wrap_around_segments = 0;
 
-  /* some segments can `wrap around' a contour's start point, */
-  /* like 24-25-26-0-1-2; we thus reserve some additional records */
-  /* to split them into 24-26 and 0-2 */
+  /* some segments can `wrap around' */
+  /* a contour's start point like 24-25-26-0-1-2 */
+  /* (there can be at most one such segment per contour); */
+  /* we thus append additional records to split them into 24-26 and 0-2 */
+  wrap_around_segment = recorder->wrap_around_segments;
   for (seg = segments; seg < seg_limit; seg++)
     if (seg->first > seg->last)
     {
-      /* store the index for later use */
-      seg->wrap_around_idx = num_wrap_around_segments;
-
-      num_wrap_around_segments++;
+      /* the stored data is used later for edge linking */
+      *(wrap_around_segment++) = seg - segments;
     }
 
+  num_wrap_around_segments = wrap_around_segment
+                             - recorder->wrap_around_segments;
   num_segments += num_wrap_around_segments;
 
   /* wrap-around segments are pushed with four arguments */
@@ -2994,12 +3000,14 @@ TA_free_hints_records(Hints_Record* hints_records,
 static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
                                   TA_AxisHints axis,
-                                  TA_Edge edge)
+                                  TA_Edge edge,
+                                  FT_UInt* wraps)
 {
   TA_Segment segments = axis->segments;
   TA_Segment seg;
   FT_UInt seg_idx;
   FT_UInt num_segs = 0;
+  FT_UInt* wrap;
 
 
   seg_idx = edge->first - segments;
@@ -3030,8 +3038,16 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
   {
     /* emit second part of wrap-around segment; */
     /* the bytecode positions such segments after `normal' ones */
-    *(bufp++) = HIGH(axis->num_segments + edge->first->wrap_around_idx);
-    *(bufp++) = LOW(axis->num_segments + edge->first->wrap_around_idx);
+    wrap = wraps;
+    for (;;)
+    {
+      if (seg_idx == *wrap)
+        break;
+      wrap++;
+    }
+
+    *(bufp++) = HIGH(axis->num_segments + (wrap - wraps));
+    *(bufp++) = LOW(axis->num_segments + (wrap - wraps));
   }
 
   seg = edge->first->edge_next;
@@ -3044,8 +3060,16 @@ TA_hints_recorder_handle_segments(FT_Byte* bufp,
 
     if (seg->first > seg->last)
     {
-      *(bufp++) = HIGH(axis->num_segments + seg->wrap_around_idx);
-      *(bufp++) = LOW(axis->num_segments + seg->wrap_around_idx);
+      wrap = wraps;
+      for (;;)
+      {
+        if (seg_idx == *wrap)
+          break;
+        wrap++;
+      }
+
+      *(bufp++) = HIGH(axis->num_segments + (wrap - wraps));
+      *(bufp++) = LOW(axis->num_segments + (wrap - wraps));
     }
 
     seg = seg->edge_next;
@@ -3068,6 +3092,7 @@ TA_hints_recorder(TA_Action action,
 
   Recorder* recorder = (Recorder*)hints->user;
   FONT* font = recorder->font;
+  FT_UInt* wraps = recorder->wrap_around_segments;
   FT_Byte* p = recorder->hints_record.buf;
 
 
@@ -3102,7 +3127,7 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge_minus_one->first - segments);
       *(p++) = LOW(edge_minus_one->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
     }
     break;
 
@@ -3124,8 +3149,8 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge_minus_one->first - segments);
       *(p++) = LOW(edge_minus_one->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, edge);
-      p = TA_hints_recorder_handle_segments(p, axis, edge2);
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
+      p = TA_hints_recorder_handle_segments(p, axis, edge2, wraps);
     }
     break;
 
@@ -3144,7 +3169,7 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(stem_edge->first - segments);
       *(p++) = LOW(stem_edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, stem_edge);
+      p = TA_hints_recorder_handle_segments(p, axis, stem_edge, wraps);
     }
     break;
 
@@ -3164,7 +3189,7 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge2->first - segments);
       *(p++) = LOW(edge2->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
     }
     break;
 
@@ -3191,13 +3216,13 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
     }
     break;
 
   case ta_stem:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg2);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg2, wraps);
     break;
 
   case ta_blue:
@@ -3219,24 +3244,24 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
 
-      p = TA_hints_recorder_handle_segments(p, axis, edge);
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
     }
     break;
 
   case ta_serif:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
     break;
 
   case ta_serif_anchor:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
     break;
 
   case ta_serif_link1:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
     break;
 
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1);
+    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
     break;
 
   /* to pacify the compiler */
@@ -3293,6 +3318,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (!face->glyph->outline.n_contours)
     return FT_Err_Ok;
 
+  /* do nothing if the dummy hinter has been used */
+  if (font->loader->metrics->clazz == &ta_dummy_script_class)
+    return FT_Err_Ok;
+
   hints = &font->loader->hints;
 
   /* we allocate a buffer which is certainly large enough */
@@ -3307,7 +3336,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* so that we can easily find the array length at reallocation time */
   memset(ins_buf, INS_A0, ins_len);
 
-  bufp = TA_sfnt_build_glyph_segments(sfnt, font, ins_buf);
+  recorder.font = font;
+  recorder.wrap_around_segments =
+    (FT_UInt*)malloc(face->glyph->outline.n_contours * sizeof (FT_UInt));
+
+  bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, ins_buf);
 
   /* now we loop over a large range of pixel sizes */
   /* to find hints records which get pushed onto the bytecode stack */
@@ -3321,7 +3354,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* we temporarily use `ins_buf' to record the current glyph hints, */
   /* leaving two bytes at the beginning so that the number of actions */
   /* can be inserted later on */
-  recorder.font = font;
   ta_loader_register_hints_recorder(font->loader,
                                     TA_hints_recorder,
                                     (void *)&recorder);
@@ -3415,11 +3447,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   glyph->ins_len = ins_len;
 
   TA_free_hints_records(hints_records, num_hints_records);
+  free(recorder.wrap_around_segments);
 
   return FT_Err_Ok;
 
 Err:
   TA_free_hints_records(hints_records, num_hints_records);
+  free(recorder.wrap_around_segments);
   free(ins_buf);
 
   return error;

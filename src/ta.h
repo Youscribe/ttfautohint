@@ -13,6 +13,7 @@
 #include FT_TRUETYPE_TAGS_H
 
 #include "taloader.h"
+#include "tadummy.h"
 #include "talatin.h"
 #include "ttfautohint.h"
 
