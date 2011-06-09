@@ -317,7 +317,9 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
  *      delta = ABS(dist - std_width)
  *
  *      if delta < 40:
- *        dist = MIN(48, std_width)
+ *        dist = std_width
+ *        if dist < 48
+ *          dist = 48
  *        goto End
  *
  *      if dist < 3*64:
@@ -422,8 +424,7 @@ unsigned char FPGM(bci_compute_stem_width_b) [] = {
     LT, /* delta < 40 */
     IF, /* s: width dist */
       POP,
-      PUSHB_2,
-        48,
+      PUSHB_1,
 
 };
 
@@ -431,8 +432,16 @@ unsigned char FPGM(bci_compute_stem_width_b) [] = {
 
 unsigned char FPGM(bci_compute_stem_width_c) [] = {
 
-      RCVT,
-      MIN, /* dist = min(48, std_width) */
+      RCVT, /* dist = std_width */
+      DUP,
+      PUSHB_1,
+        48,
+      LT, /* dist < 48 */
+      IF,
+        POP,
+        PUSHB_1,
+          48, /* dist = 48 */
+      EIF,
 
     ELSE,
       DUP, /* s: width dist dist */
