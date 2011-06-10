@@ -1701,7 +1701,7 @@ ta_latin_align_linked_edge(TA_GlyphHints hints,
 
   if (hints->recorder)
     hints->recorder(ta_link, hints, dim,
-                    (void*)base_edge, (void*)stem_edge, NULL);
+                    base_edge, stem_edge, NULL, NULL, NULL);
 }
 
 
@@ -1789,10 +1789,10 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       {
         if (!anchor)
           hints->recorder(ta_blue_anchor, hints, dim,
-                          (void*)edge1, (void*)edge, NULL);
+                          edge1, edge, NULL, NULL, NULL);
         else
           hints->recorder(ta_blue, hints, dim,
-                          (void*)edge1, NULL, NULL);
+                          edge1, NULL, NULL, NULL, NULL);
       }
 
       if (edge2 && !edge2->blue_edge)
@@ -1899,7 +1899,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
       if (hints->recorder)
         hints->recorder(ta_anchor, hints, dim,
-                        (void*)edge, (void*)edge2, NULL);
+                        edge, edge2, NULL, NULL, NULL);
 
       ta_latin_align_linked_edge(hints, dim, edge, edge2);
     }
@@ -1926,12 +1926,14 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
         {
+          TA_Edge bound = NULL;
+
+
           if (edge > edges)
-            hints->recorder(ta_adjust_bound, hints, dim,
-                            (void*)edge, (void*)edge2, (void*)&edge[-1]);
-          else
-            hints->recorder(ta_adjust, hints, dim,
-                            (void*)edge, (void*)edge2, NULL);
+            bound = &edge[-1];
+
+          hints->recorder(ta_adjust, hints, dim,
+                          edge, edge2, NULL, bound, NULL);
         }
       }
 
@@ -1977,12 +1979,14 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
         {
+          TA_Edge bound = NULL;
+
+
           if (edge > edges)
-            hints->recorder(ta_stem_bound, hints, dim,
-                            edge, edge2, &edge[-1]);
-          else
-            hints->recorder(ta_stem, hints, dim,
-                            (void*)edge, (void*)edge2, NULL);
+            bound = &edge[-1];
+
+          hints->recorder(ta_stem, hints, dim,
+                          edge, edge2, NULL, bound, NULL);
         }
       }
 
@@ -2016,12 +2020,14 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
         {
+          TA_Edge bound = NULL;
+
+
           if (edge > edges)
-            hints->recorder(ta_stem_bound, hints, dim,
-                            edge, edge2, &edge[-1]);
-          else
-            hints->recorder(ta_stem, hints, dim,
-                            (void*)edge, (void*)edge2, NULL);
+            bound = &edge[-1];
+
+          hints->recorder(ta_stem, hints, dim,
+                          edge, edge2, NULL, bound, NULL);
         }
       }
 
@@ -2038,7 +2044,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
           hints->recorder(ta_bound, hints, dim,
-                          (void*)edge, (void*)&edge[-1], NULL);
+                          edge, &edge[-1], NULL, NULL, NULL);
       }
     }
   }
@@ -2112,6 +2118,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
     /* in order to complete our processing */
     for (edge = edges; edge < edge_limit; edge++)
     {
+      TA_Edge lower_bound = NULL;
+      TA_Edge upper_bound = NULL;
+
       FT_Pos delta;
 
 
@@ -2127,6 +2136,14 @@ ta_latin_hint_edges(TA_GlyphHints hints,
           delta = -delta;
       }
 
+      if (edge > edges)
+        lower_bound = &edge[-1];
+
+      if (edge + 1 < edge_limit
+          && edge[1].flags & TA_EDGE_DONE)
+        upper_bound = &edge[1];
+
+
       if (delta < 64 + 16)
       {
         ta_latin_align_serif_edge(hints, edge->serif, edge);
@@ -2139,7 +2156,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
           hints->recorder(ta_serif, hints, dim,
-                          (void*)edge, NULL, NULL);
+                          edge, NULL, NULL, lower_bound, upper_bound);
       }
       else if (!anchor)
       {
@@ -2151,7 +2168,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
         if (hints->recorder)
           hints->recorder(ta_serif_anchor, hints, dim,
-                          (void*)edge, NULL, NULL);
+                          edge, NULL, NULL, lower_bound, upper_bound);
       }
       else
       {
@@ -2184,7 +2201,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
           if (hints->recorder)
             hints->recorder(ta_serif_link1, hints, dim,
-                            (void*)edge, NULL, NULL);
+                            edge, before, after, lower_bound, upper_bound);
         }
         else
         {
@@ -2195,7 +2212,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
           if (hints->recorder)
             hints->recorder(ta_serif_link2, hints, dim,
-                            (void*)edge, NULL, NULL);
+                            edge, NULL, NULL, lower_bound, upper_bound);
         }
       }
 
@@ -2203,12 +2220,30 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
       if (edge > edges
           && edge->pos < edge[-1].pos)
+      {
+        TA_LOG(("  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
+                edge - edges, edge->pos / 64.0, edge[-1].pos / 64.0));
+
         edge->pos = edge[-1].pos;
+
+        if (hints->recorder)
+          hints->recorder(ta_bound, hints, dim,
+                          edge, &edge[-1], NULL, NULL, NULL);
+      }
 
       if (edge + 1 < edge_limit
           && edge[1].flags & TA_EDGE_DONE
           && edge->pos > edge[1].pos)
+      {
+        TA_LOG(("  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
+                edge - edges, edge->pos / 64.0, edge[1].pos / 64.0));
+
         edge->pos = edge[1].pos;
+
+        if (hints->recorder)
+          hints->recorder(ta_bound, hints, dim,
+                          edge, &edge[1], NULL, NULL, NULL);
+      }
     }
   }
 

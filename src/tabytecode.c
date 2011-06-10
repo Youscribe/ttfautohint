@@ -2411,10 +2411,106 @@ unsigned char FPGM(bci_action_serif) [] = {
 
 };
 
+unsigned char FPGM(bci_action_serif_lower_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_lower_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_lower_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_lower_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
 unsigned char FPGM(bci_action_serif_anchor) [] = {
 
   PUSHB_1,
     bci_action_serif_anchor,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_anchor_lower_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_anchor_lower_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_anchor_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_anchor_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_anchor_lower_upper_bound,
   FDEF,
 
   PUSHB_1,
@@ -2443,10 +2539,106 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
 
 };
 
+unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link1_lower_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link1_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link1_lower_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
 unsigned char FPGM(bci_action_serif_link2) [] = {
 
   PUSHB_1,
     bci_action_serif_link2,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link2_lower_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link2_upper_bound,
+  FDEF,
+
+  PUSHB_1,
+    bci_handle_segments,
+  CALL,
+
+  /* XXX */
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link2_lower_upper_bound,
   FDEF,
 
   PUSHB_1,
@@ -2571,9 +2763,21 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_stem))
             + sizeof (FPGM(bci_action_blue))
             + sizeof (FPGM(bci_action_serif))
+            + sizeof (FPGM(bci_action_serif_lower_bound))
+            + sizeof (FPGM(bci_action_serif_upper_bound))
+            + sizeof (FPGM(bci_action_serif_lower_upper_bound))
             + sizeof (FPGM(bci_action_serif_anchor))
+            + sizeof (FPGM(bci_action_serif_anchor_lower_bound))
+            + sizeof (FPGM(bci_action_serif_anchor_upper_bound))
+            + sizeof (FPGM(bci_action_serif_anchor_lower_upper_bound))
             + sizeof (FPGM(bci_action_serif_link1))
+            + sizeof (FPGM(bci_action_serif_link1_lower_bound))
+            + sizeof (FPGM(bci_action_serif_link1_upper_bound))
+            + sizeof (FPGM(bci_action_serif_link1_lower_upper_bound))
             + sizeof (FPGM(bci_action_serif_link2))
+            + sizeof (FPGM(bci_action_serif_link2_lower_bound))
+            + sizeof (FPGM(bci_action_serif_link2_upper_bound))
+            + sizeof (FPGM(bci_action_serif_link2_lower_upper_bound))
             + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
   /* buffer length must be a multiple of four */
@@ -2617,9 +2821,21 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_stem);
   COPY_FPGM(bci_action_blue);
   COPY_FPGM(bci_action_serif);
+  COPY_FPGM(bci_action_serif_lower_bound);
+  COPY_FPGM(bci_action_serif_upper_bound);
+  COPY_FPGM(bci_action_serif_lower_upper_bound);
   COPY_FPGM(bci_action_serif_anchor);
+  COPY_FPGM(bci_action_serif_anchor_lower_bound);
+  COPY_FPGM(bci_action_serif_anchor_upper_bound);
+  COPY_FPGM(bci_action_serif_anchor_lower_upper_bound);
   COPY_FPGM(bci_action_serif_link1);
+  COPY_FPGM(bci_action_serif_link1_lower_bound);
+  COPY_FPGM(bci_action_serif_link1_upper_bound);
+  COPY_FPGM(bci_action_serif_link1_lower_upper_bound);
   COPY_FPGM(bci_action_serif_link2);
+  COPY_FPGM(bci_action_serif_link2_lower_bound);
+  COPY_FPGM(bci_action_serif_link2_upper_bound);
+  COPY_FPGM(bci_action_serif_link2_lower_upper_bound);
   COPY_FPGM(bci_handle_action);
   COPY_FPGM(bci_hint_glyph);
 
@@ -3433,9 +3649,11 @@ static void
 TA_hints_recorder(TA_Action action,
                   TA_GlyphHints hints,
                   TA_Dimension dim,
-                  void* arg1,
-                  void* arg2,
-                  void* arg3)
+                  TA_Edge arg1,
+                  TA_Edge arg2,
+                  TA_Edge arg3,
+                  TA_Edge lower_bound,
+                  TA_Edge upper_bound)
 {
   TA_AxisHints axis = &hints->axis[dim];
   TA_Segment segments = axis->segments;
@@ -3445,69 +3663,32 @@ TA_hints_recorder(TA_Action action,
   FT_UInt* wraps = recorder->wrap_around_segments;
   FT_Byte* p = recorder->hints_record.buf;
 
+  FT_Byte bound_offset = 0;
+
 
   if (dim == TA_DIMENSION_HORZ)
     return;
 
-  /* we ignore the BOUND action since the information is handled */
-  /* in `ta_adjust_bound' and `ta_stem_bound' */
+  /* we ignore the BOUND action since we signal this information */
+  /* with the `bound_offset' parameter */
   if (action == ta_bound)
     return;
 
+  if (lower_bound)
+    bound_offset += 1;
+  if (upper_bound)
+    bound_offset += 2;
+
+  /* this reflects the order in the TA_Action enumeration */
   *(p++) = 0;
-  *(p++) = (FT_Byte)action + ACTION_OFFSET;
+  *(p++) = (FT_Byte)action + bound_offset + ACTION_OFFSET;
 
   switch (action)
   {
-  case ta_adjust_bound:
-    {
-      TA_Edge edge = (TA_Edge)arg1;
-      TA_Edge edge2 = (TA_Edge)arg2;
-      TA_Edge edge_minus_one = (TA_Edge)arg3;
-
-
-      *(p++) = 0;
-      *(p++) = edge2->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = edge->flags & TA_EDGE_ROUND;
-      *(p++) = HIGH(edge->first - segments);
-      *(p++) = LOW(edge->first - segments);
-      *(p++) = HIGH(edge2->first - segments);
-      *(p++) = LOW(edge2->first - segments);
-      *(p++) = HIGH(edge_minus_one->first - segments);
-      *(p++) = LOW(edge_minus_one->first - segments);
-
-      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
-    }
-    break;
-
-  case ta_stem_bound:
-    {
-      TA_Edge edge = (TA_Edge)arg1;
-      TA_Edge edge2 = (TA_Edge)arg2;
-      TA_Edge edge_minus_one = (TA_Edge)arg3;
-
-
-      *(p++) = 0;
-      *(p++) = edge2->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = edge->flags & TA_EDGE_ROUND;
-      *(p++) = HIGH(edge->first - segments);
-      *(p++) = LOW(edge->first - segments);
-      *(p++) = HIGH(edge2->first - segments);
-      *(p++) = LOW(edge2->first - segments);
-      *(p++) = HIGH(edge_minus_one->first - segments);
-      *(p++) = LOW(edge_minus_one->first - segments);
-
-      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
-      p = TA_hints_recorder_handle_segments(p, axis, edge2, wraps);
-    }
-    break;
-
   case ta_link:
     {
-      TA_Edge base_edge = (TA_Edge)arg1;
-      TA_Edge stem_edge = (TA_Edge)arg2;
+      TA_Edge base_edge = arg1;
+      TA_Edge stem_edge = arg2;
 
 
       *(p++) = 0;
@@ -3524,10 +3705,9 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_anchor:
-  case ta_adjust:
     {
-      TA_Edge edge = (TA_Edge)arg1;
-      TA_Edge edge2 = (TA_Edge)arg2;
+      TA_Edge edge = arg1;
+      TA_Edge edge2 = arg2;
 
 
       *(p++) = 0;
@@ -3543,10 +3723,36 @@ TA_hints_recorder(TA_Action action,
     }
     break;
 
+  case ta_adjust:
+    {
+      TA_Edge edge = arg1;
+      TA_Edge edge2 = arg2;
+      TA_Edge edge_minus_one = lower_bound;
+
+
+      *(p++) = 0;
+      *(p++) = edge2->flags & TA_EDGE_SERIF;
+      *(p++) = 0;
+      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
+      *(p++) = HIGH(edge2->first - segments);
+      *(p++) = LOW(edge2->first - segments);
+
+      if (edge_minus_one)
+      {
+        *(p++) = HIGH(edge_minus_one->first - segments);
+        *(p++) = LOW(edge_minus_one->first - segments);
+      }
+
+      p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
+    }
+    break;
+
   case ta_blue_anchor:
     {
-      TA_Edge edge = (TA_Edge)arg1;
-      TA_Edge blue = (TA_Edge)arg2;
+      TA_Edge edge = arg1;
+      TA_Edge blue = arg2;
 
 
       *(p++) = HIGH(blue->first - segments);
@@ -3572,8 +3778,9 @@ TA_hints_recorder(TA_Action action,
 
   case ta_stem:
     {
-      TA_Edge edge = (TA_Edge)arg1;
-      TA_Edge edge2 = (TA_Edge)arg2;
+      TA_Edge edge = arg1;
+      TA_Edge edge2 = arg2;
+      TA_Edge edge_minus_one = lower_bound;
 
 
       *(p++) = 0;
@@ -3585,6 +3792,12 @@ TA_hints_recorder(TA_Action action,
       *(p++) = HIGH(edge2->first - segments);
       *(p++) = LOW(edge2->first - segments);
 
+      if (edge_minus_one)
+      {
+        *(p++) = HIGH(edge_minus_one->first - segments);
+        *(p++) = LOW(edge_minus_one->first - segments);
+      }
+
       p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
       p = TA_hints_recorder_handle_segments(p, axis, edge2, wraps);
     }
@@ -3592,7 +3805,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_blue:
     {
-      TA_Edge edge = (TA_Edge)arg1;
+      TA_Edge edge = arg1;
 
 
       if (edge->best_blue_is_shoot)
@@ -3614,23 +3827,24 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_serif:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
+    p = TA_hints_recorder_handle_segments(p, axis, arg1, wraps);
     break;
 
   case ta_serif_anchor:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
+    p = TA_hints_recorder_handle_segments(p, axis, arg1, wraps);
     break;
 
   case ta_serif_link1:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
+    p = TA_hints_recorder_handle_segments(p, axis, arg1, wraps);
     break;
 
   case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, axis, (TA_Edge)arg1, wraps);
+    p = TA_hints_recorder_handle_segments(p, axis, arg1, wraps);
     break;
 
-  /* to pacify the compiler */
-  case ta_bound:
+  default:
+    /* there are more cases in the enumeration */
+    /* which are handled with the `bound_offset' parameter */
     break;
   }
 

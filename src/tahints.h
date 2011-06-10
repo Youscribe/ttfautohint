@@ -301,20 +301,30 @@ typedef struct TA_AxisHintsRec_
 
 
 typedef enum TA_Action_ {
-  ta_adjust_bound,
-  ta_stem_bound,
-
-  ta_link,
-  ta_anchor,
-  ta_blue_anchor,
-  ta_adjust,
-  ta_stem,
-
   ta_blue,
+  ta_blue_anchor,
+  ta_anchor,
+  ta_adjust,
+  ta_adjust_bound,
+  ta_link,
+  ta_stem,
+  ta_stem_bound,
   ta_serif,
+  ta_serif_lower_bound,
+  ta_serif_upper_bound,
+  ta_serif_lower_upper_bound,
   ta_serif_anchor,
+  ta_serif_anchor_lower_bound,
+  ta_serif_anchor_upper_bound,
+  ta_serif_anchor_lower_upper_bound,
   ta_serif_link1,
+  ta_serif_link1_lower_bound,
+  ta_serif_link1_upper_bound,
+  ta_serif_link1_lower_upper_bound,
   ta_serif_link2,
+  ta_serif_link2_lower_bound,
+  ta_serif_link2_upper_bound,
+  ta_serif_link2_lower_upper_bound,
 
   ta_bound,
 } TA_Action;
@@ -324,9 +334,11 @@ typedef void
 (*TA_Hints_Recorder)(TA_Action action,
                      TA_GlyphHints hints,
                      TA_Dimension dim,
-                     void* arg1,
-                     void* arg2,
-                     void* arg3);
+                     TA_Edge arg1,
+                     TA_Edge arg2,
+                     TA_Edge arg3,
+                     TA_Edge lower_bound,
+                     TA_Edge upper_bound);
 
 typedef struct TA_GlyphHintsRec_
 {
