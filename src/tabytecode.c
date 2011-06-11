@@ -1073,18 +1073,6 @@ unsigned char FPGM(bci_create_segments) [] = {
 
 };
 
-unsigned char FPGM(bci_handle_segment) [] = {
-
-  PUSHB_1,
-    bci_handle_segment,
-  FDEF,
-
-  POP, /* XXX segment */
-
-  ENDF,
-
-};
-
 
 /*
  * bci_align_segment
@@ -1147,23 +1135,6 @@ unsigned char FPGM(bci_align_segment) [] = {
   ENDF,
 
 };
-
-unsigned char FPGM(bci_handle_segments) [] = {
-
-  PUSHB_1,
-    bci_handle_segments,
-  FDEF,
-
-  POP, /* XXX first segment */
-
-  PUSHB_1,
-    bci_handle_segment,
-  LOOPCALL,
-
-  ENDF,
-
-};
-
 
 /*
  * bci_align_segments
@@ -3940,9 +3911,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_get_point_extrema))
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
-            + sizeof (FPGM(bci_handle_segment))
             + sizeof (FPGM(bci_align_segment))
-            + sizeof (FPGM(bci_handle_segments))
             + sizeof (FPGM(bci_align_segments))
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_stem_bound))
@@ -3998,9 +3967,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_get_point_extrema);
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
-  COPY_FPGM(bci_handle_segment);
   COPY_FPGM(bci_align_segment);
-  COPY_FPGM(bci_handle_segments);
   COPY_FPGM(bci_align_segments);
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_stem_bound);
