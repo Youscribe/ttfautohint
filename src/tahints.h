@@ -301,12 +301,6 @@ typedef struct TA_AxisHintsRec_
 
 
 typedef enum TA_Action_ {
-  /* point actions */
-  ta_ip_before,
-  ta_ip_after,
-  ta_ip_on,
-  ta_ip_between,
-
   /* edge actions */
   ta_blue,
   ta_blue_anchor,
@@ -334,6 +328,12 @@ typedef enum TA_Action_ {
   ta_serif_link2_lower_upper_bound,
 
   ta_bound,
+
+  /* point actions */
+  ta_ip_before,
+  ta_ip_after,
+  ta_ip_on,
+  ta_ip_between,
 } TA_Action;
 
 

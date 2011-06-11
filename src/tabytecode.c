@@ -1172,16 +1172,15 @@ unsigned char FPGM(bci_align_segments) [] = {
 
 
 /*
- * bci_action_ip_before
+ * bci_handle_ip_before
  *
- *   Handle the IP_BEFORE action to align points located before the first
- *   edge.
+ *   Handle `ip_before' data to align points located before the first edge.
  */
 
-unsigned char FPGM(bci_action_ip_before) [] = {
+unsigned char FPGM(bci_handle_ip_before) [] = {
 
   PUSHB_1,
-    bci_action_ip_before,
+    bci_handle_ip_before,
   FDEF,
 
   ENDF,
@@ -1190,15 +1189,15 @@ unsigned char FPGM(bci_action_ip_before) [] = {
 
 
 /*
- * bci_action_ip_after
+ * bci_handle_ip_after
  *
- *   Handle the IP_AFTER action to align points located after the last edge.
+ *   Handle `ip_after' data to align points located after the last edge.
  */
 
-unsigned char FPGM(bci_action_ip_after) [] = {
+unsigned char FPGM(bci_handle_ip_after) [] = {
 
   PUSHB_1,
-    bci_action_ip_after,
+    bci_handle_ip_after,
   FDEF,
 
   ENDF,
@@ -1207,16 +1206,16 @@ unsigned char FPGM(bci_action_ip_after) [] = {
 
 
 /*
- * bci_action_ip_on
+ * bci_handle_ip_on
  *
- *   Handle the IP_ON action to align points located on an edge coordinate
- *   (but not part of an edge).
+ *   Handle `ip_on' data to align points located on an edge coordinate (but
+ *   not part of an edge).
  */
 
-unsigned char FPGM(bci_action_ip_on) [] = {
+unsigned char FPGM(bci_handle_ip_on) [] = {
 
   PUSHB_1,
-    bci_action_ip_on,
+    bci_handle_ip_on,
   FDEF,
 
   ENDF,
@@ -1225,15 +1224,15 @@ unsigned char FPGM(bci_action_ip_on) [] = {
 
 
 /*
- * bci_action_ip_between
+ * bci_handle_ip_between
  *
- *   Handle the IP_BETWEEN action to align points located between two edges.
+ *   Handle `ip_between' data to align points located between two edges.
  */
 
-unsigned char FPGM(bci_action_ip_between) [] = {
+unsigned char FPGM(bci_handle_ip_between) [] = {
 
   PUSHB_1,
-    bci_action_ip_between,
+    bci_handle_ip_between,
   FDEF,
 
   ENDF,
@@ -3982,6 +3981,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_create_segments))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
+            + sizeof (FPGM(bci_handle_ip_before))
+            + sizeof (FPGM(bci_handle_ip_after))
+            + sizeof (FPGM(bci_handle_ip_on))
+            + sizeof (FPGM(bci_handle_ip_between))
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_link))
@@ -4038,6 +4041,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_create_segments);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
+  COPY_FPGM(bci_handle_ip_before);
+  COPY_FPGM(bci_handle_ip_after);
+  COPY_FPGM(bci_handle_ip_on);
+  COPY_FPGM(bci_handle_ip_between);
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_link);
