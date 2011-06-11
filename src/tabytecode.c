@@ -5157,7 +5157,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                     TA_hints_recorder,
                                     (void *)&recorder);
 
-  for (size = 8; size <= 20; size++)
+  for (size = 8; size <= 1000; size++)
   {
     /* rewind buffer pointer for recorder */
     recorder.hints_record.buf = bufp + 2;
