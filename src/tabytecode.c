@@ -3515,6 +3515,16 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
 
 };
 
+
+/*
+ * bci_action_serif_link2
+ *
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *
+ * in: edge_point (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ */
+
 unsigned char FPGM(bci_action_serif_link2) [] = {
 
   PUSHB_1,
@@ -3522,14 +3532,66 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge edge_orig */
+  PUSHB_1,
+    sal_anchor,
+  RS,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge edge_orig anchor_orig */
+
+  MD_cur,
+  DUP,
+  ADD,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  PUSHB_1,
+    2*64,
+  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
+
+  SWAP,
+  DUP,
+  DUP,
+  ALIGNRP, /* align `edge' with `sal_anchor' */
+  ROLL,
+  SHPIX, /* shift `edge' by `delta' */
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
 };
+
+
+/*
+ * bci_action_serif_link2_lower_bound
+ *
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Additionally, move the serif again if necessary to stay within a lower
+ *   bound.
+ *
+ * in: edge_point (in twilight zone)
+ *     edge[-1] (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ */
 
 unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
 
@@ -3538,14 +3600,80 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[-1] edge edge_orig */
+  PUSHB_1,
+    sal_anchor,
+  RS,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[-1] edge edge_orig anchor_orig */
+
+  MD_cur,
+  DUP,
+  ADD,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  PUSHB_1,
+    2*64,
+  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
+
+  SWAP,
+  DUP,
+  DUP,
+  ALIGNRP, /* align `edge' with `sal_anchor' */
+  ROLL,
+  SHPIX, /* shift `edge' by `delta' */
+
+  SWAP, /* s: edge edge[-1] */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge edge[-1]_pos edge_pos */
+  GT, /* edge_pos < edge[-1]_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `edge[-1]' */
+  EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
 };
+
+
+/*
+ * bci_action_serif_link2_upper_bound
+ *
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Additionally, move the serif again if necessary to stay within an upper
+ *   bound.
+ *
+ * in: edge_point (in twilight zone)
+ *     edge[1] (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ */
 
 unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
 
@@ -3554,14 +3682,81 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[1] edge edge_orig */
+  PUSHB_1,
+    sal_anchor,
+  RS,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[1] edge edge_orig anchor_orig */
+
+  MD_cur,
+  DUP,
+  ADD,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  PUSHB_1,
+    2*64,
+  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
+
+  SWAP,
+  DUP,
+  DUP,
+  ALIGNRP, /* align `edge' with `sal_anchor' */
+  ROLL,
+  SHPIX, /* shift `edge' by `delta' */
+
+  SWAP, /* s: edge edge[1] */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge[1]' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge edge[1]_pos edge_pos */
+  LT, /* edge_pos > edge[1]_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `edge[1]' */
+  EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
 };
+
+
+/*
+ * bci_action_serif_link2_lower_upper_bound
+ *
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Additionally, move the serif again if necessary to stay within a lower
+ *   and upper bound.
+ *
+ * in: edge_point (in twilight zone)
+ *     edge[-1] (in twilight zone)
+ *     edge[1] (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ */
 
 unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
 
@@ -3570,10 +3765,77 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    bci_handle_segments,
-  CALL,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* XXX */
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[1] edge[-1] edge edge_orig */
+  PUSHB_1,
+    sal_anchor,
+  RS,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: edge[1] edge[-1] edge edge_orig anchor_orig */
+
+  MD_cur,
+  DUP,
+  ADD,
+  PUSHB_1,
+    32,
+  ADD,
+  FLOOR,
+  PUSHB_1,
+    2*64,
+  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
+
+  SWAP,
+  DUP,
+  DUP,
+  ALIGNRP, /* align `edge' with `sal_anchor' */
+  ROLL,
+  SHPIX, /* shift `edge' by `delta' */
+
+  SWAP, /* s: edge[1] edge edge[-1] */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge[1] edge edge[-1]_pos edge_pos */
+  GT, /* edge_pos < edge[-1]_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `edge[-1]' */
+  EIF,
+
+  SWAP, /* s: edge edge[1] */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge[1]' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge edge[1]_pos edge_pos */
+  LT, /* edge_pos > edge[1]_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `edge[1]' */
+  EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
 
   ENDF,
 
@@ -4781,6 +5043,7 @@ TA_hints_recorder(TA_Action action,
     break;
 
   case ta_serif_anchor:
+  case ta_serif_link2:
     {
       TA_Edge edge = arg1;
 
@@ -4830,10 +5093,6 @@ TA_hints_recorder(TA_Action action,
 
       p = TA_hints_recorder_handle_segments(p, axis, edge, wraps);
     }
-    break;
-
-  case ta_serif_link2:
-    p = TA_hints_recorder_handle_segments(p, axis, arg1, wraps);
     break;
 
   default:
@@ -4931,7 +5190,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                     TA_hints_recorder,
                                     (void *)&recorder);
 
-  for (size = 8; size <= 1000; size++)
+  for (size = 8; size <= 20; size++)
   {
     /* rewind buffer pointer for recorder */
     recorder.hints_record.buf = bufp + 2;
