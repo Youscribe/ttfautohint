@@ -2709,6 +2709,12 @@ unsigned char FPGM(bci_action_serif_anchor) [] = {
 
   DUP,
   PUSHB_1,
+    sal_anchor,
+  SWAP,
+  WS, /* sal_anchor = edge_point */
+
+  DUP,
+  PUSHB_1,
     sal_num_segments,
   RS,
   ADD, /* s: edge edge_orig */
@@ -2753,6 +2759,12 @@ unsigned char FPGM(bci_action_serif_anchor_lower_bound) [] = {
   PUSHB_1,
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  DUP,
+  PUSHB_1,
+    sal_anchor,
+  SWAP,
+  WS, /* sal_anchor = edge_point */
 
   DUP,
   PUSHB_1,
@@ -2817,6 +2829,12 @@ unsigned char FPGM(bci_action_serif_anchor_upper_bound) [] = {
 
   DUP,
   PUSHB_1,
+    sal_anchor,
+  SWAP,
+  WS, /* sal_anchor = edge_point */
+
+  DUP,
+  PUSHB_1,
     sal_num_segments,
   RS,
   ADD, /* s: edge[1] edge edge_orig */
@@ -2876,6 +2894,12 @@ unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] = {
   PUSHB_1,
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  DUP,
+  PUSHB_1,
+    sal_anchor,
+  SWAP,
+  WS, /* sal_anchor = edge_point */
 
   DUP,
   PUSHB_1,
