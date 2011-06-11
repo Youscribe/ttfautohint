@@ -35,8 +35,18 @@ typedef struct Hints_Record_ {
 typedef struct Recorder_ {
   FONT* font;
   Hints_Record hints_record;
-/* see explanations in `TA_sfnt_build_glyph_segments' */
+
+  /* see explanations in `TA_sfnt_build_glyph_segments' */
   FT_UInt* wrap_around_segments;
+
+  /* data necessary for strong point interpolation */
+  FT_UInt* ip_before_points;
+  FT_UInt* ip_after_points;
+  FT_UInt* ip_on_point_array;
+  FT_UInt* ip_between_point_array;
+
+  FT_UInt num_strong_points;
+  FT_UInt num_segments;
 } Recorder;
 
 
@@ -5160,6 +5170,112 @@ TA_hints_recorder(TA_Action action,
 
 
 static FT_Error
+TA_init_recorder(Recorder *recorder,
+                 FT_UInt wrap_around_size,
+                 FONT* font,
+                 TA_GlyphHints hints)
+{
+  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
+  TA_Point points = hints->points;
+  TA_Point point_limit = points + hints->num_points;
+  TA_Point point;
+
+  FT_UInt num_strong_points = 0;
+
+
+  recorder->font = font;
+  recorder->num_segments = axis->num_segments;
+
+  recorder->ip_before_points = NULL;
+  recorder->ip_after_points = NULL;
+  recorder->ip_on_point_array = NULL;
+  recorder->ip_between_point_array = NULL;
+
+  /* no need to clean up allocated arrays in case of error; */
+  /* this is handled later by `TA_free_recorder' */
+
+  recorder->wrap_around_segments =
+    (FT_UInt*)malloc(wrap_around_size * sizeof (FT_UInt));
+  if (!recorder->wrap_around_segments)
+    return FT_Err_Out_Of_Memory;
+
+  /* actually, we need `hints->num_edges' for the array sizes; */
+  /* however, this value isn't known yet */
+  /* (or rather, it can vary between different pixel sizes) */
+
+  recorder->ip_before_points =
+    (FT_UInt*)malloc(axis->num_segments * sizeof (FT_UInt));
+  if (!recorder->ip_before_points)
+    return FT_Err_Out_Of_Memory;
+
+  recorder->ip_after_points =
+    (FT_UInt*)malloc(axis->num_segments * sizeof (FT_UInt));
+  if (!recorder->ip_after_points)
+    return FT_Err_Out_Of_Memory;
+
+  /* get number of strong points */
+  for (point = points; point < point_limit; point++)
+  {
+    if (point->flags & TA_FLAG_TOUCH_Y
+        || point->flags & TA_FLAG_WEAK_INTERPOLATION)
+      continue;
+
+    num_strong_points++;
+  }
+
+  recorder->num_strong_points = num_strong_points;
+
+  recorder->ip_on_point_array =
+    (FT_UInt*)malloc(axis->num_segments
+                     * num_strong_points * sizeof (FT_UInt));
+  if (!recorder->ip_on_point_array)
+    return FT_Err_Out_Of_Memory;
+
+  recorder->ip_between_point_array =
+    (FT_UInt*)malloc(axis->num_segments * axis->num_segments
+                     * num_strong_points * sizeof (FT_UInt));
+  if (!recorder->ip_between_point_array)
+    return FT_Err_Out_Of_Memory;
+
+  return FT_Err_Ok;
+}
+
+
+static void
+TA_rewind_recorder(Recorder* recorder,
+                   FT_Byte* bufp,
+                   FT_UInt size)
+{
+  recorder->hints_record.buf = bufp + 2;
+  recorder->hints_record.num_actions = 0;
+  recorder->hints_record.size = size;
+
+  memset(recorder->ip_before_points, 0, recorder->num_segments);
+  memset(recorder->ip_after_points, 0, recorder->num_segments);
+
+  memset(recorder->ip_on_point_array, 0,
+         recorder->num_segments
+         * recorder->num_strong_points);
+  memset(recorder->ip_between_point_array, 0,
+         recorder->num_segments * recorder->num_segments
+         * recorder->num_strong_points);
+
+}
+
+
+static void
+TA_free_recorder(Recorder *recorder)
+{
+  free(recorder->wrap_around_segments);
+
+  free(recorder->ip_before_points);
+  free(recorder->ip_after_points);
+  free(recorder->ip_on_point_array);
+  free(recorder->ip_between_point_array);
+}
+
+
+static FT_Error
 TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                  FONT* font,
                                  FT_Long idx)
@@ -5224,14 +5340,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   num_hints_records = 0;
   hints_records = NULL;
 
-  recorder.font = font;
-  recorder.wrap_around_segments =
-    (FT_UInt*)malloc(face->glyph->outline.n_contours * sizeof (FT_UInt));
-  if (!recorder.wrap_around_segments)
-  {
-    error = FT_Err_Out_Of_Memory;
+  error = TA_init_recorder(&recorder, face->glyph->outline.n_contours,
+                          font, hints);
+  if (error)
     goto Err;
-  }
 
   bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, ins_buf);
 
@@ -5251,10 +5363,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   for (size = 8; size <= 1000; size++)
   {
-    /* rewind buffer pointer for recorder */
-    recorder.hints_record.buf = bufp + 2;
-    recorder.hints_record.num_actions = 0;
-    recorder.hints_record.size = size;
+    TA_rewind_recorder(&recorder, bufp, size);
 
     error = FT_Set_Pixel_Sizes(face, size, size);
     if (error)
@@ -5338,13 +5447,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   glyph->ins_len = ins_len;
 
   TA_free_hints_records(hints_records, num_hints_records);
-  free(recorder.wrap_around_segments);
+  TA_free_recorder(&recorder);
 
   return FT_Err_Ok;
 
 Err:
   TA_free_hints_records(hints_records, num_hints_records);
-  free(recorder.wrap_around_segments);
+  TA_free_recorder(&recorder);
   free(ins_buf);
 
   return error;
