@@ -330,7 +330,7 @@
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
 
 /* the first action handler */
-#define ACTION_OFFSET bci_action_blue
+#define ACTION_OFFSET bci_action_ip_before
 
 
 FT_Error
