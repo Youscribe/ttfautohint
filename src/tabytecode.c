@@ -5214,16 +5214,22 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* so that we can easily find the array length at reallocation time */
   memset(ins_buf, INS_A0, ins_len);
 
+  num_hints_records = 0;
+  hints_records = NULL;
+
   recorder.font = font;
   recorder.wrap_around_segments =
     (FT_UInt*)malloc(face->glyph->outline.n_contours * sizeof (FT_UInt));
+  if (!recorder.wrap_around_segments)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Err;
+  }
 
   bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, ins_buf);
 
   /* now we loop over a large range of pixel sizes */
   /* to find hints records which get pushed onto the bytecode stack */
-  num_hints_records = 0;
-  hints_records = NULL;
 
 #ifdef DEBUGGING
   printf("glyph %ld\n", idx);
