@@ -102,7 +102,6 @@ TA_table_build_cvt(FT_Byte** cvt,
   if (error)
     return error;
 
-  /* XXX check validity of pointers */
   haxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[0];
   vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
 
@@ -1166,6 +1165,76 @@ unsigned char FPGM(bci_align_segments) [] = {
   PUSHB_1,
     bci_align_segment,
   LOOPCALL,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_ip_before
+ *
+ *   Handle the IP_BEFORE action to align points located before the first
+ *   edge.
+ */
+
+unsigned char FPGM(bci_action_ip_before) [] = {
+
+  PUSHB_1,
+    bci_action_ip_before,
+  FDEF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_ip_after
+ *
+ *   Handle the IP_AFTER action to align points located after the last edge.
+ */
+
+unsigned char FPGM(bci_action_ip_after) [] = {
+
+  PUSHB_1,
+    bci_action_ip_after,
+  FDEF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_ip_on
+ *
+ *   Handle the IP_ON action to align points located on an edge coordinate
+ *   (but not part of an edge).
+ */
+
+unsigned char FPGM(bci_action_ip_on) [] = {
+
+  PUSHB_1,
+    bci_action_ip_on,
+  FDEF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_ip_between
+ *
+ *   Handle the IP_BETWEEN action to align points located between two edges.
+ */
+
+unsigned char FPGM(bci_action_ip_between) [] = {
+
+  PUSHB_1,
+    bci_action_ip_between,
+  FDEF,
 
   ENDF,
 
@@ -4178,10 +4247,6 @@ unsigned char PREP(round_blues_b) [] = {
 
 };
 
-/* XXX talatin.c: 1671 */
-/* XXX talatin.c: 1708 */
-/* XXX talatin.c: 2182 */
-
 
 #define COPY_PREP(snippet_name) \
           memcpy(buf_p, prep_ ## snippet_name, \
@@ -4806,7 +4871,7 @@ static void
 TA_hints_recorder(TA_Action action,
                   TA_GlyphHints hints,
                   TA_Dimension dim,
-                  TA_Edge arg1,
+                  void* arg1,
                   TA_Edge arg2,
                   TA_Edge arg3,
                   TA_Edge lower_bound,
@@ -4826,10 +4891,24 @@ TA_hints_recorder(TA_Action action,
   if (dim == TA_DIMENSION_HORZ)
     return;
 
-  /* we ignore the BOUND action since we signal this information */
-  /* with the `bound_offset' parameter */
-  if (action == ta_bound)
+  /* we collect point hints for later processing */
+  switch (action)
+  {
+  case ta_ip_before:
+  case ta_ip_after:
+  case ta_ip_on:
+  case ta_ip_between:
+    /* XXX */
     return;
+
+  case ta_bound:
+    /* we ignore the BOUND action since we signal this information */
+    /* with the `bound_offset' parameter below */
+    return;
+
+  default:
+    break;
+  }
 
   if (lower_bound)
     bound_offset += 1;
@@ -4844,7 +4923,7 @@ TA_hints_recorder(TA_Action action,
   {
   case ta_link:
     {
-      TA_Edge base_edge = arg1;
+      TA_Edge base_edge = (TA_Edge)arg1;
       TA_Edge stem_edge = arg2;
 
 
@@ -4863,7 +4942,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_anchor:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
       TA_Edge edge2 = arg2;
 
 
@@ -4882,7 +4961,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_adjust:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
       TA_Edge edge2 = arg2;
       TA_Edge edge_minus_one = lower_bound;
 
@@ -4908,7 +4987,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_blue_anchor:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
       TA_Edge blue = arg2;
 
 
@@ -4935,7 +5014,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_stem:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
       TA_Edge edge2 = arg2;
       TA_Edge edge_minus_one = lower_bound;
 
@@ -4962,7 +5041,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_blue:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
 
 
       if (edge->best_blue_is_shoot)
@@ -4985,8 +5064,8 @@ TA_hints_recorder(TA_Action action,
 
   case ta_serif:
     {
-      TA_Edge base = arg1->serif;
-      TA_Edge serif = arg1;
+      TA_Edge serif = (TA_Edge)arg1;
+      TA_Edge base = serif->serif;
 
 
       *(p++) = HIGH(serif->first - segments);
@@ -5012,7 +5091,7 @@ TA_hints_recorder(TA_Action action,
   case ta_serif_anchor:
   case ta_serif_link2:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
 
 
       *(p++) = HIGH(edge->first - segments);
@@ -5035,7 +5114,7 @@ TA_hints_recorder(TA_Action action,
 
   case ta_serif_link1:
     {
-      TA_Edge edge = arg1;
+      TA_Edge edge = (TA_Edge)arg1;
       TA_Edge before = arg2;
       TA_Edge after = arg3;
 

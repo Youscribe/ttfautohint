@@ -294,7 +294,12 @@
 
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_blue bci_align_segments + 1
+#define bci_action_ip_before bci_align_segments + 1
+#define bci_action_ip_after bci_action_ip_before + 1
+#define bci_action_ip_on bci_action_ip_after + 1
+#define bci_action_ip_between bci_action_ip_on + 1
+
+#define bci_action_blue bci_action_ip_between + 1
 #define bci_action_blue_anchor bci_action_blue + 1
 #define bci_action_anchor bci_action_blue_anchor + 1
 #define bci_action_adjust bci_action_anchor + 1

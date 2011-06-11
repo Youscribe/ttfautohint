@@ -901,6 +901,11 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
       if (delta >= 0)
       {
         u = edge->pos - (edge->opos - ou);
+
+        if (hints->recorder)
+          hints->recorder(ta_ip_before, hints, dim,
+                          point, edge, NULL, NULL, NULL);
+
         goto Store_Point;
       }
 
@@ -910,6 +915,11 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
       if (delta >= 0)
       {
         u = edge->pos + (ou - edge->opos);
+
+        if (hints->recorder)
+          hints->recorder(ta_ip_after, hints, dim,
+                          point, edge, NULL, NULL, NULL);
+
         goto Store_Point;
       }
 
@@ -935,6 +945,11 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
           if (edges[nn].fpos == u)
           {
             u = edges[nn].pos;
+
+            if (hints->recorder)
+              hints->recorder(ta_ip_on, hints, dim,
+                              point, edge, NULL, NULL, NULL);
+
             goto Store_Point;
           }
           min = nn;
@@ -954,6 +969,11 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
             {
               /* we are on the edge */
               u = edge->pos;
+
+              if (hints->recorder)
+                hints->recorder(ta_ip_on, hints, dim,
+                                point, edge, NULL, NULL, NULL);
+
               goto Store_Point;
             }
           }
@@ -971,6 +991,10 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
 
           u = before->pos + FT_MulFix(fu - before->fpos,
                                       before->scale);
+
+          if (hints->recorder)
+            hints->recorder(ta_ip_between, hints, dim,
+                            point, before, after, NULL, NULL);
         }
       }
 

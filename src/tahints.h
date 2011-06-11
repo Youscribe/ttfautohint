@@ -301,6 +301,13 @@ typedef struct TA_AxisHintsRec_
 
 
 typedef enum TA_Action_ {
+  /* point actions */
+  ta_ip_before,
+  ta_ip_after,
+  ta_ip_on,
+  ta_ip_between,
+
+  /* edge actions */
   ta_blue,
   ta_blue_anchor,
   ta_anchor,
@@ -334,7 +341,7 @@ typedef void
 (*TA_Hints_Recorder)(TA_Action action,
                      TA_GlyphHints hints,
                      TA_Dimension dim,
-                     TA_Edge arg1,
+                     void* arg1, /* TA_Point or TA_Edge */
                      TA_Edge arg2,
                      TA_Edge arg3,
                      TA_Edge lower_bound,
