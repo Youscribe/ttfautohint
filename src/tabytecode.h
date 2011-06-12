@@ -8,6 +8,8 @@
 #include "ta.h"
 
 
+/* symbolic names for bytecode instruction codes */
+
 #define SVTCA_y      0x00 /* set freedom and projection vectors to y axis */
 #define SVTCA_x      0x01 /* set freedom and projection vectors to x axis */
 #define SPVTCA_y     0x02 /* set projection vector to y axis */
@@ -281,20 +283,30 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
+/* bytecode function numbers */
+
 #define bci_round 0
 #define bci_compute_stem_width bci_round + 1
 #define bci_loop bci_compute_stem_width + 1
 #define bci_cvt_rescale bci_loop + 1
 #define bci_blue_round bci_cvt_rescale + 1
 #define bci_get_point_extrema bci_blue_round + 1
+
 #define bci_create_segment bci_get_point_extrema + 1
 #define bci_create_segments bci_create_segment + 1
 #define bci_align_segment bci_create_segments + 1
 #define bci_align_segments bci_align_segment + 1
 
+#define bci_ip_before_align_point bci_align_segments + 1
+#define bci_ip_after_align_point bci_ip_before_align_point + 1
+#define bci_ip_on_align_point bci_ip_after_align_point + 1
+#define bci_ip_on_align_points bci_ip_on_align_point + 1
+#define bci_ip_between_align_point bci_ip_on_align_points + 1
+#define bci_ip_between_align_points bci_ip_between_align_point + 1
+
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_ip_before bci_align_segments + 1
+#define bci_action_ip_before bci_ip_between_align_points + 1
 #define bci_action_ip_after bci_action_ip_before + 1
 #define bci_action_ip_on bci_action_ip_after + 1
 #define bci_action_ip_between bci_action_ip_on + 1

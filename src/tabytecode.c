@@ -1185,9 +1185,168 @@ unsigned char FPGM(bci_align_segments) [] = {
 
 
 /*
+ * bci_ip_before_align_point
+ *
+ *   Auxiliary function for `bci_action_ip_before'.
+ *
+ * in: point
+ */
+
+unsigned char FPGM(bci_ip_before_align_point) [] = {
+
+  PUSHB_1,
+    bci_ip_before_align_point,
+  FDEF,
+
+  POP, /* XXX */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_ip_after_align_point
+ *
+ *   Auxiliary function for `bci_action_ip_after'.
+ *
+ * in: point
+ */
+
+unsigned char FPGM(bci_ip_after_align_point) [] = {
+
+  PUSHB_1,
+    bci_ip_after_align_point,
+  FDEF,
+
+  POP, /* XXX */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_ip_on_align_point
+ *
+ *   Auxiliary function for `bci_ip_on_align_points'.
+ *
+ * in: point
+ */
+
+unsigned char FPGM(bci_ip_on_align_point) [] = {
+
+  PUSHB_1,
+    bci_ip_on_align_point,
+  FDEF,
+
+  POP, /* XXX */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_ip_on_align_points
+ *
+ *   Auxiliary function for `bci_action_ip_on'.
+ *
+ * in: edge
+ *     loop_counter (N)
+ *       point_1
+ *       point_2
+ *       ...
+ *       point_N
+ *
+ * uses: bci_ip_on_align_point
+ */
+
+unsigned char FPGM(bci_ip_on_align_points) [] = {
+
+  PUSHB_1,
+    bci_ip_on_align_points,
+  FDEF,
+
+  POP, /* XXX */
+
+  PUSHB_1,
+    bci_ip_on_align_point,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_ip_between_align_point
+ *
+ *   Auxiliary function for `bci_ip_between_align_points'.
+ *
+ * in: point
+ */
+
+unsigned char FPGM(bci_ip_between_align_point) [] = {
+
+  PUSHB_1,
+    bci_ip_between_align_point,
+  FDEF,
+
+  POP, /* XXX */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_ip_between_align_points
+ *
+ *   Auxiliary function for `bci_action_ip_between'.
+ *
+ * in: before_edge
+ *     after_edge
+ *     loop_counter (N)
+ *       point_1
+ *       point_2
+ *       ...
+ *       point_N
+ *
+ * uses: bci_ip_between_align_point
+ */
+
+unsigned char FPGM(bci_ip_between_align_points) [] = {
+
+  PUSHB_1,
+    bci_ip_between_align_points,
+  FDEF,
+
+  POP, /* XXX */
+  POP,
+
+  PUSHB_1,
+    bci_ip_between_align_point,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_action_ip_before
  *
  *   Handle `ip_before' data to align points located before the first edge.
+ *
+ * in: first_edge
+ *     loop_counter (N)
+ *       point_1
+ *       point_2
+ *       ...
+ *       point_N
+ *
+ * uses: bci_ip_before_align_point
  */
 
 unsigned char FPGM(bci_action_ip_before) [] = {
@@ -1195,6 +1354,12 @@ unsigned char FPGM(bci_action_ip_before) [] = {
   PUSHB_1,
     bci_action_ip_before,
   FDEF,
+
+  POP, /* XXX */
+
+  PUSHB_1,
+    bci_ip_before_align_point,
+  LOOPCALL,
 
   ENDF,
 
@@ -1205,6 +1370,15 @@ unsigned char FPGM(bci_action_ip_before) [] = {
  * bci_action_ip_after
  *
  *   Handle `ip_after' data to align points located after the last edge.
+ *
+ * in: last_edge
+ *     loop_counter (N)
+ *       point_1
+ *       point_2
+ *       ...
+ *       point_N
+ *
+ * uses: bci_ip_after_align_point
  */
 
 unsigned char FPGM(bci_action_ip_after) [] = {
@@ -1212,6 +1386,12 @@ unsigned char FPGM(bci_action_ip_after) [] = {
   PUSHB_1,
     bci_action_ip_after,
   FDEF,
+
+  POP, /* XXX */
+
+  PUSHB_1,
+    bci_ip_after_align_point,
+  LOOPCALL,
 
   ENDF,
 
@@ -1223,6 +1403,29 @@ unsigned char FPGM(bci_action_ip_after) [] = {
  *
  *   Handle `ip_on' data to align points located on an edge coordinate (but
  *   not part of an edge).
+ *
+ * in: loop_counter (M)
+ *       edge_1
+ *       loop_counter (N_1)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_1
+ *       edge_2
+ *       loop_counter (N_2)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_2
+ *       ...
+ *       edge_M
+ *       loop_counter (N_M)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_M
+ *
+ * uses: bci_ip_on_align_points
  */
 
 unsigned char FPGM(bci_action_ip_on) [] = {
@@ -1230,6 +1433,10 @@ unsigned char FPGM(bci_action_ip_on) [] = {
   PUSHB_1,
     bci_action_ip_on,
   FDEF,
+
+  PUSHB_1,
+    bci_ip_on_align_points,
+  LOOPCALL,
 
   ENDF,
 
@@ -1240,6 +1447,32 @@ unsigned char FPGM(bci_action_ip_on) [] = {
  * bci_action_ip_between
  *
  *   Handle `ip_between' data to align points located between two edges.
+ *
+ * in: loop_counter (M)
+ *       before_edge_1
+ *       after_edge_1
+ *       loop_counter (N_1)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_1
+ *       before_edge_2
+ *       after_edge_2
+ *       loop_counter (N_2)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_2
+ *       ...
+ *       before_edge_M
+ *       after_edge_M
+ *       loop_counter (N_M)
+ *         point_1
+ *         point_2
+ *         ...
+ *         point_N_M
+ *
+ * uses: bci_ip_between_align_points
  */
 
 unsigned char FPGM(bci_action_ip_between) [] = {
@@ -1247,6 +1480,10 @@ unsigned char FPGM(bci_action_ip_between) [] = {
   PUSHB_1,
     bci_action_ip_between,
   FDEF,
+
+  PUSHB_1,
+    bci_ip_between_align_points,
+  LOOPCALL,
 
   ENDF,
 
@@ -3990,14 +4227,24 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + 1
             + sizeof (FPGM(bci_blue_round_b))
             + sizeof (FPGM(bci_get_point_extrema))
+
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
+
+            + sizeof (FPGM(bci_ip_before_align_point))
+            + sizeof (FPGM(bci_ip_after_align_point))
+            + sizeof (FPGM(bci_ip_on_align_point))
+            + sizeof (FPGM(bci_ip_on_align_points))
+            + sizeof (FPGM(bci_ip_between_align_point))
+            + sizeof (FPGM(bci_ip_between_align_points))
+
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
             + sizeof (FPGM(bci_action_ip_on))
             + sizeof (FPGM(bci_action_ip_between))
+
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_link))
@@ -4022,6 +4269,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_serif_link2_lower_bound))
             + sizeof (FPGM(bci_action_serif_link2_upper_bound))
             + sizeof (FPGM(bci_action_serif_link2_lower_upper_bound))
+
             + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
   /* buffer length must be a multiple of four */
@@ -4050,14 +4298,24 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
   COPY_FPGM(bci_get_point_extrema);
+
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
+
+  COPY_FPGM(bci_ip_before_align_point);
+  COPY_FPGM(bci_ip_after_align_point);
+  COPY_FPGM(bci_ip_on_align_point);
+  COPY_FPGM(bci_ip_on_align_points);
+  COPY_FPGM(bci_ip_between_align_point);
+  COPY_FPGM(bci_ip_between_align_points);
+
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
   COPY_FPGM(bci_action_ip_on);
   COPY_FPGM(bci_action_ip_between);
+
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_link);
@@ -4082,6 +4340,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_serif_link2_lower_bound);
   COPY_FPGM(bci_action_serif_link2_upper_bound);
   COPY_FPGM(bci_action_serif_link2_lower_upper_bound);
+
   COPY_FPGM(bci_handle_action);
   COPY_FPGM(bci_hint_glyph);
 
@@ -4607,9 +4866,18 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 }
 
 
-/* we store everything as 16bit numbers; */
-/* the function numbers (`ta_ip_before', etc.) */
-/* reflect the order in the TA_Action enumeration */
+/*
+ * The four `ta_ip_*' actions in the `TA_hints_recorder' callback store its
+ * data in four arrays (which are simple but waste a lot of memory).  The
+ * function below converts them into bytecode.
+ *
+ * For `ta_ip_before' and `ta_ip_after', the collected points are emitted
+ * together with the edge they correspond to.
+ *
+ * For both `ta_ip_on' and `ta_ip_between', an outer loop is constructed to
+ * loop over the edge or edge pairs, respectively, and each edge or edge
+ * pair contains an inner loop to emit the correponding points.
+ */
 
 static void
 TA_build_point_hints(Recorder* recorder,
@@ -4638,6 +4906,10 @@ TA_build_point_hints(Recorder* recorder,
   FT_UInt* iq_limit;
   FT_UInt* ir_limit;
 
+
+  /* we store everything as 16bit numbers; */
+  /* the function numbers (`ta_ip_before', etc.) */
+  /* reflect the order in the TA_Action enumeration */
 
   /* ip_before_points */
 
