@@ -5,30 +5,20 @@ AM_LDFLAGS = $(FREETYPE_LDFLAGS)
 
 noinst_LIBRARIES = libttfautohint.a
 libttfautohint_a_SOURCES = ta.h \
-                           tabytecode.c \
-                           tabytecode.h \
+                           tabytecode.c tabytecode.h \
                            tacvt.c \
-                           tadummy.c \
-                           tadummy.h \
+                           tadummy.c tadummy.h \
                            tafpgm.c \
-                           tagloadr.c \
-                           tagloadr.h \
-                           taglobal.c \
-                           taglobal.h \
-                           tahints.c \
-                           tahints.h \
-                           talatin.c \
-                           talatin.h \
-                           taloader.c \
-                           taloader.h \
+                           tagloadr.c tagloadr.h \
+                           taglobal.c taglobal.h \
+                           tahints.c tahints.h \
+                           talatin.c talatin.h \
+                           taloader.c taloader.h \
                            taprep.c \
-                           tasort.c \
-                           tasort.h \
-                           tatables.c \
-                           tatables.h \
+                           tasort.c tasort.h \
+                           tatables.c tatables.h \
                            tatypes.h \
-                           ttfautohint.c \
-                           ttfautohint.h
+                           ttfautohint.c ttfautohint.h
 
 noinst_PROGRAMS = hint
 hint_SOURCES = hint.c \
