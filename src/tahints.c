@@ -904,7 +904,7 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
 
         if (hints->recorder)
           hints->recorder(ta_ip_before, hints, dim,
-                          point, edge, NULL, NULL, NULL);
+                          point, NULL, NULL, NULL, NULL);
 
         goto Store_Point;
       }
@@ -918,7 +918,7 @@ ta_glyph_hints_align_strong_points(TA_GlyphHints hints,
 
         if (hints->recorder)
           hints->recorder(ta_ip_after, hints, dim,
-                          point, edge, NULL, NULL, NULL);
+                          point, NULL, NULL, NULL, NULL);
 
         goto Store_Point;
       }

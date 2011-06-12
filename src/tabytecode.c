@@ -4895,7 +4895,9 @@ TA_hints_recorder(TA_Action action,
                   TA_Edge upper_bound)
 {
   TA_AxisHints axis = &hints->axis[dim];
+  TA_Edge edges = axis->edges;
   TA_Segment segments = axis->segments;
+  TA_Point points = hints->points;
 
   Recorder* recorder = (Recorder*)hints->user;
   FONT* font = recorder->font;
@@ -4903,6 +4905,9 @@ TA_hints_recorder(TA_Action action,
   FT_Byte* p = recorder->hints_record.buf;
 
   FT_Byte bound_offset = 0;
+
+  FT_UInt* ip;
+  FT_UInt* limit;
 
 
   if (dim == TA_DIMENSION_HORZ)
@@ -4912,10 +4917,84 @@ TA_hints_recorder(TA_Action action,
   switch (action)
   {
   case ta_ip_before:
+    {
+      TA_Point point = (TA_Point)arg1;
+
+
+      ip = recorder->ip_before_points;
+      limit = ip + recorder->num_strong_points;
+      for (; ip < limit; ip++)
+      {
+        if (*ip == (FT_UInt)~0)
+        {
+          *ip = point - points;
+          break;
+        }
+      }
+    }
+    return;
+
   case ta_ip_after:
+    {
+      TA_Point point = (TA_Point)arg1;
+
+
+      ip = recorder->ip_after_points;
+      limit = ip + recorder->num_strong_points;
+      for (; ip < limit; ip++)
+      {
+        if (*ip == (FT_UInt)~0)
+        {
+          *ip = point - points;
+          break;
+        }
+      }
+    }
+    return;
+
   case ta_ip_on:
+    {
+      TA_Point point = (TA_Point)arg1;
+      TA_Edge edge = arg2;
+
+
+      ip = recorder->ip_on_point_array
+           + recorder->num_strong_points
+             * (edge - edges);
+      limit = ip + recorder->num_strong_points;
+      for (; ip < limit; ip++)
+      {
+        if (*ip == (FT_UInt)~0)
+        {
+          *ip = point - points;
+          break;
+        }
+      }
+    }
+    return;
+
   case ta_ip_between:
-    /* XXX */
+    {
+      TA_Point point = (TA_Point)arg1;
+      TA_Edge before = arg2;
+      TA_Edge after = arg3;
+
+
+      ip = recorder->ip_between_point_array
+           + recorder->num_strong_points * axis->num_edges
+             * (before - edges)
+           + recorder->num_strong_points
+             * (after - edges);
+      limit = ip + recorder->num_strong_points;
+      for (; ip < limit; ip++)
+      {
+        if (*ip == (FT_UInt)~0)
+        {
+          *ip = point - points;
+          break;
+        }
+      }
+    }
     return;
 
   case ta_bound:
@@ -5199,25 +5278,13 @@ TA_init_recorder(Recorder *recorder,
   if (!recorder->wrap_around_segments)
     return FT_Err_Out_Of_Memory;
 
-  /* actually, we need `hints->num_edges' for the array sizes; */
-  /* however, this value isn't known yet */
-  /* (or rather, it can vary between different pixel sizes) */
-
-  recorder->ip_before_points =
-    (FT_UInt*)malloc(axis->num_segments * sizeof (FT_UInt));
-  if (!recorder->ip_before_points)
-    return FT_Err_Out_Of_Memory;
-
-  recorder->ip_after_points =
-    (FT_UInt*)malloc(axis->num_segments * sizeof (FT_UInt));
-  if (!recorder->ip_after_points)
-    return FT_Err_Out_Of_Memory;
-
   /* get number of strong points */
   for (point = points; point < point_limit; point++)
   {
-    if (point->flags & TA_FLAG_TOUCH_Y
-        || point->flags & TA_FLAG_WEAK_INTERPOLATION)
+    /* actually, we need to test `TA_FLAG_TOUCH_Y' also; */
+    /* however, this value isn't known yet */
+    /* (or rather, it can vary between different pixel sizes) */
+    if (point->flags & TA_FLAG_WEAK_INTERPOLATION)
       continue;
 
     num_strong_points++;
@@ -5225,6 +5292,19 @@ TA_init_recorder(Recorder *recorder,
 
   recorder->num_strong_points = num_strong_points;
 
+  recorder->ip_before_points =
+    (FT_UInt*)malloc(num_strong_points * sizeof (FT_UInt));
+  if (!recorder->ip_before_points)
+    return FT_Err_Out_Of_Memory;
+
+  recorder->ip_after_points =
+    (FT_UInt*)malloc(num_strong_points * sizeof (FT_UInt));
+  if (!recorder->ip_after_points)
+    return FT_Err_Out_Of_Memory;
+
+  /* actually, we need `hints->num_edges' for the array sizes; */
+  /* however, this value isn't known yet */
+  /* (or rather, it can vary between different pixel sizes) */
   recorder->ip_on_point_array =
     (FT_UInt*)malloc(axis->num_segments
                      * num_strong_points * sizeof (FT_UInt));
@@ -5250,15 +5330,17 @@ TA_rewind_recorder(Recorder* recorder,
   recorder->hints_record.num_actions = 0;
   recorder->hints_record.size = size;
 
-  memset(recorder->ip_before_points, 0, recorder->num_segments);
-  memset(recorder->ip_after_points, 0, recorder->num_segments);
+  memset(recorder->ip_before_points, 0xFF,
+         recorder->num_strong_points * sizeof (FT_UInt));
+  memset(recorder->ip_after_points, 0xFF,
+         recorder->num_strong_points * sizeof (FT_UInt));
 
-  memset(recorder->ip_on_point_array, 0,
+  memset(recorder->ip_on_point_array, 0xFF,
          recorder->num_segments
-         * recorder->num_strong_points);
-  memset(recorder->ip_between_point_array, 0,
+         * recorder->num_strong_points * sizeof (FT_UInt));
+  memset(recorder->ip_between_point_array, 0xFF,
          recorder->num_segments * recorder->num_segments
-         * recorder->num_strong_points);
+         * recorder->num_strong_points * sizeof (FT_UInt));
 
 }
 
