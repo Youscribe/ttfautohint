@@ -292,14 +292,14 @@
 #define bci_align_segment bci_create_segments + 1
 #define bci_align_segments bci_align_segment + 1
 
-#define bci_handle_ip_before bci_align_segments + 1
-#define bci_handle_ip_after bci_handle_ip_before + 1
-#define bci_handle_ip_on bci_handle_ip_after + 1
-#define bci_handle_ip_between bci_handle_ip_on + 1
-
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_blue bci_handle_ip_between + 1
+#define bci_action_ip_before bci_align_segments + 1
+#define bci_action_ip_after bci_action_ip_before + 1
+#define bci_action_ip_on bci_action_ip_after + 1
+#define bci_action_ip_between bci_action_ip_on + 1
+
+#define bci_action_blue bci_action_ip_between + 1
 #define bci_action_blue_anchor bci_action_blue + 1
 #define bci_action_anchor bci_action_blue_anchor + 1
 #define bci_action_adjust bci_action_anchor + 1
@@ -330,7 +330,7 @@
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
 
 /* the first action handler */
-#define ACTION_OFFSET bci_action_blue
+#define ACTION_OFFSET bci_action_ip_before
 
 
 FT_Error

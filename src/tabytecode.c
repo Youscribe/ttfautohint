@@ -6,6 +6,9 @@
 #include "tabytecode.h"
 
 
+#undef MISSING
+#define MISSING (FT_UInt)~0
+
 /* a simple macro to emit bytecode instructions */
 #define BCI(code) *(bufp++) = (code)
 
@@ -1182,15 +1185,15 @@ unsigned char FPGM(bci_align_segments) [] = {
 
 
 /*
- * bci_handle_ip_before
+ * bci_action_ip_before
  *
  *   Handle `ip_before' data to align points located before the first edge.
  */
 
-unsigned char FPGM(bci_handle_ip_before) [] = {
+unsigned char FPGM(bci_action_ip_before) [] = {
 
   PUSHB_1,
-    bci_handle_ip_before,
+    bci_action_ip_before,
   FDEF,
 
   ENDF,
@@ -1199,15 +1202,15 @@ unsigned char FPGM(bci_handle_ip_before) [] = {
 
 
 /*
- * bci_handle_ip_after
+ * bci_action_ip_after
  *
  *   Handle `ip_after' data to align points located after the last edge.
  */
 
-unsigned char FPGM(bci_handle_ip_after) [] = {
+unsigned char FPGM(bci_action_ip_after) [] = {
 
   PUSHB_1,
-    bci_handle_ip_after,
+    bci_action_ip_after,
   FDEF,
 
   ENDF,
@@ -1216,16 +1219,16 @@ unsigned char FPGM(bci_handle_ip_after) [] = {
 
 
 /*
- * bci_handle_ip_on
+ * bci_action_ip_on
  *
  *   Handle `ip_on' data to align points located on an edge coordinate (but
  *   not part of an edge).
  */
 
-unsigned char FPGM(bci_handle_ip_on) [] = {
+unsigned char FPGM(bci_action_ip_on) [] = {
 
   PUSHB_1,
-    bci_handle_ip_on,
+    bci_action_ip_on,
   FDEF,
 
   ENDF,
@@ -1234,15 +1237,15 @@ unsigned char FPGM(bci_handle_ip_on) [] = {
 
 
 /*
- * bci_handle_ip_between
+ * bci_action_ip_between
  *
  *   Handle `ip_between' data to align points located between two edges.
  */
 
-unsigned char FPGM(bci_handle_ip_between) [] = {
+unsigned char FPGM(bci_action_ip_between) [] = {
 
   PUSHB_1,
-    bci_handle_ip_between,
+    bci_action_ip_between,
   FDEF,
 
   ENDF,
@@ -3991,10 +3994,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_create_segments))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
-            + sizeof (FPGM(bci_handle_ip_before))
-            + sizeof (FPGM(bci_handle_ip_after))
-            + sizeof (FPGM(bci_handle_ip_on))
-            + sizeof (FPGM(bci_handle_ip_between))
+            + sizeof (FPGM(bci_action_ip_before))
+            + sizeof (FPGM(bci_action_ip_after))
+            + sizeof (FPGM(bci_action_ip_on))
+            + sizeof (FPGM(bci_action_ip_between))
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_link))
@@ -4051,10 +4054,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_create_segments);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
-  COPY_FPGM(bci_handle_ip_before);
-  COPY_FPGM(bci_handle_ip_after);
-  COPY_FPGM(bci_handle_ip_on);
-  COPY_FPGM(bci_handle_ip_between);
+  COPY_FPGM(bci_action_ip_before);
+  COPY_FPGM(bci_action_ip_after);
+  COPY_FPGM(bci_action_ip_on);
+  COPY_FPGM(bci_action_ip_between);
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_link);
@@ -4604,6 +4607,234 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 }
 
 
+/* we store everything as 16bit numbers; */
+/* the function numbers (`ta_ip_before', etc.) */
+/* reflect the order in the TA_Action enumeration */
+
+static void
+TA_build_point_hints(Recorder* recorder,
+                     TA_GlyphHints hints)
+{
+  TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
+  TA_Segment segments = axis->segments;
+  TA_Edge edges = axis->edges;
+
+  TA_Edge edge;
+  TA_Edge before;
+  TA_Edge after;
+
+  FT_Byte* p = recorder->hints_record.buf;
+  FT_UInt num_edges = axis->num_edges;
+  FT_UInt num_strong_points = recorder->num_strong_points;
+
+  FT_UInt i;
+  FT_UInt j;
+  FT_UInt k;
+
+  FT_UInt* ip;
+  FT_UInt* iq;
+  FT_UInt* ir;
+  FT_UInt* ip_limit;
+  FT_UInt* iq_limit;
+  FT_UInt* ir_limit;
+
+
+  /* ip_before_points */
+
+  i = 0;
+  ip = recorder->ip_before_points;
+  ip_limit = ip + num_strong_points;
+  for (; ip < ip_limit; ip++)
+  {
+    if (*ip != MISSING)
+      i++;
+    else
+      break;
+  }
+
+  if (i)
+  {
+    recorder->hints_record.num_actions++;
+
+    edge = edges;
+
+    *(p++) = 0;
+    *(p++) = (FT_Byte)ta_ip_before + ACTION_OFFSET;
+    *(p++) = HIGH(edge->first - segments);
+    *(p++) = LOW(edge->first - segments);
+    *(p++) = HIGH(i);
+    *(p++) = LOW(i);
+
+    ip = recorder->ip_before_points;
+    ip_limit = ip + i;
+    for (; ip < ip_limit; ip++)
+    {
+      *(p++) = HIGH(*ip);
+      *(p++) = LOW(*ip);
+    }
+  }
+
+  /* ip_after_points */
+
+  i = 0;
+  ip = recorder->ip_after_points;
+  ip_limit = ip + num_strong_points;
+  for (; ip < ip_limit; ip++)
+  {
+    if (*ip != MISSING)
+      i++;
+    else
+      break;
+  }
+
+  if (i)
+  {
+    recorder->hints_record.num_actions++;
+
+    edge = edges + axis->num_edges - 1;
+
+    *(p++) = 0;
+    *(p++) = (FT_Byte)ta_ip_after + ACTION_OFFSET;
+    *(p++) = HIGH(edge->first - segments);
+    *(p++) = LOW(edge->first - segments);
+    *(p++) = HIGH(i);
+    *(p++) = LOW(i);
+
+    ip = recorder->ip_after_points;
+    ip_limit = ip + i;
+    for (; ip < ip_limit; ip++)
+    {
+      *(p++) = HIGH(*ip);
+      *(p++) = LOW(*ip);
+    }
+  }
+
+  /* ip_on_point_array */
+
+  i = 0;
+  ip = recorder->ip_on_point_array;
+  ip_limit = ip + num_edges * num_strong_points;
+  for (; ip < ip_limit; ip += num_strong_points)
+    if (*ip != MISSING)
+      i++;
+
+  if (i)
+  {
+    recorder->hints_record.num_actions++;
+
+    *(p++) = 0;
+    *(p++) = (FT_Byte)ta_ip_on + ACTION_OFFSET;
+    *(p++) = HIGH(i);
+    *(p++) = LOW(i);
+
+    i = 0;
+    ip = recorder->ip_on_point_array;
+    ip_limit = ip + num_edges * num_strong_points;
+    for (; ip < ip_limit; ip += num_strong_points, i++)
+    {
+      if (*ip == MISSING)
+        continue;
+
+      edge = edges + i;
+
+      *(p++) = HIGH(edge->first - segments);
+      *(p++) = LOW(edge->first - segments);
+
+      j = 0;
+      iq = ip;
+      iq_limit = iq + num_strong_points;
+      for (; iq < iq_limit; iq++)
+      {
+        if (*iq != MISSING)
+          j++;
+        else
+          break;
+      }
+
+      *(p++) = HIGH(j);
+      *(p++) = LOW(j);
+
+      iq = ip;
+      iq_limit = iq + j;
+      for (; iq < iq_limit; iq++)
+      {
+        *(p++) = HIGH(*iq);
+        *(p++) = LOW(*iq);
+      }
+    }
+  }
+
+  /* ip_between_point_array */
+
+  i = 0;
+  ip = recorder->ip_between_point_array;
+  ip_limit = ip + num_edges * num_edges * num_strong_points;
+  for (; ip < ip_limit; ip += num_strong_points)
+    if (*ip != MISSING)
+      i++;
+
+  if (i)
+  {
+    recorder->hints_record.num_actions++;
+
+    *(p++) = 0;
+    *(p++) = (FT_Byte)ta_ip_between + ACTION_OFFSET;
+    *(p++) = HIGH(i);
+    *(p++) = LOW(i);
+
+    i = 0;
+    ip = recorder->ip_between_point_array;
+    ip_limit = ip + num_edges * num_edges * num_strong_points;
+    for (;
+         ip < ip_limit;
+         ip += num_edges * num_strong_points, i++)
+    {
+      before = edges + i;
+
+      j = 0;
+      iq = ip;
+      iq_limit = iq + num_edges * num_strong_points;
+      for (; iq < iq_limit; iq += num_strong_points, j++)
+      {
+        if (*iq == MISSING)
+          continue;
+
+        after = edges + j;
+
+        *(p++) = HIGH(before->first - segments);
+        *(p++) = LOW(before->first - segments);
+        *(p++) = HIGH(after->first - segments);
+        *(p++) = LOW(after->first - segments);
+
+        k = 0;
+        ir = iq;
+        ir_limit = ir + num_strong_points;
+        for (; ir < ir_limit; ir++)
+        {
+          if (*ir != MISSING)
+            k++;
+          else
+            break;
+        }
+
+        *(p++) = HIGH(k);
+        *(p++) = LOW(k);
+
+        ir = iq;
+        ir_limit = ir + k;
+        for (; ir < ir_limit; ir++)
+        {
+          *(p++) = HIGH(*ir);
+          *(p++) = LOW(*ir);
+        }
+      }
+    }
+  }
+
+  recorder->hints_record.buf = p;
+}
+
+
 static FT_Bool
 TA_hints_record_is_different(Hints_Record* hints_records,
                              FT_UInt num_hints_records,
@@ -4925,7 +5156,7 @@ TA_hints_recorder(TA_Action action,
       limit = ip + recorder->num_strong_points;
       for (; ip < limit; ip++)
       {
-        if (*ip == (FT_UInt)~0)
+        if (*ip == MISSING)
         {
           *ip = point - points;
           break;
@@ -4943,7 +5174,7 @@ TA_hints_recorder(TA_Action action,
       limit = ip + recorder->num_strong_points;
       for (; ip < limit; ip++)
       {
-        if (*ip == (FT_UInt)~0)
+        if (*ip == MISSING)
         {
           *ip = point - points;
           break;
@@ -4964,7 +5195,7 @@ TA_hints_recorder(TA_Action action,
       limit = ip + recorder->num_strong_points;
       for (; ip < limit; ip++)
       {
-        if (*ip == (FT_UInt)~0)
+        if (*ip == MISSING)
         {
           *ip = point - points;
           break;
@@ -4980,6 +5211,8 @@ TA_hints_recorder(TA_Action action,
       TA_Edge after = arg3;
 
 
+      /* note that `recorder->num_segments' has been used for allocation, */
+      /* but `axis->num_edges' is used for accessing this array */
       ip = recorder->ip_between_point_array
            + recorder->num_strong_points * axis->num_edges
              * (before - edges)
@@ -4988,7 +5221,7 @@ TA_hints_recorder(TA_Action action,
       limit = ip + recorder->num_strong_points;
       for (; ip < limit; ip++)
       {
-        if (*ip == (FT_UInt)~0)
+        if (*ip == MISSING)
         {
           *ip = point - points;
           break;
@@ -5330,6 +5563,8 @@ TA_rewind_recorder(Recorder* recorder,
   recorder->hints_record.num_actions = 0;
   recorder->hints_record.size = size;
 
+  /* We later check with MISSING (which expands to 0xFF bytes) */
+
   memset(recorder->ip_before_points, 0xFF,
          recorder->num_strong_points * sizeof (FT_UInt));
   memset(recorder->ip_after_points, 0xFF,
@@ -5457,6 +5692,9 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     error = ta_loader_load_glyph(font->loader, face, idx, 0);
     if (error)
       goto Err;
+
+    /* append the point hints data collected in `TA_hints_recorder' */
+    TA_build_point_hints(&recorder, hints);
 
     /* store the number of actions in `ins_buf' */
     *bufp = HIGH(recorder.hints_record.num_actions);
