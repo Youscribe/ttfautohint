@@ -283,6 +283,26 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
+/* symbolic names for storage area locations */
+
+#define sal_i 0
+#define sal_j sal_i + 1
+#define sal_k sal_j + 1
+#define sal_temp1 sal_k + 1
+#define sal_temp2 sal_temp1 + 1
+#define sal_temp3 sal_temp2 + 1
+#define sal_limit sal_temp3 + 1
+#define sal_func sal_limit +1
+#define sal_num_segments sal_func + 1
+#define sal_scale sal_num_segments + 1
+#define sal_0x10000 sal_scale + 1
+#define sal_is_extra_light sal_0x10000 + 1
+#define sal_anchor sal_is_extra_light + 1
+#define sal_point_min sal_anchor + 1
+#define sal_point_max sal_point_min + 1
+#define sal_segment_offset sal_point_max + 1 /* must be last */
+
+
 /* bytecode function numbers */
 
 #define bci_round 0
@@ -343,6 +363,36 @@
 
 /* the first action handler */
 #define ACTION_OFFSET bci_action_ip_before
+
+
+/* CVT stuff */
+
+/* the horizontal and vertical standard widths */
+#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 0
+#define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
+          CVT_HORZ_STANDARD_WIDTH_OFFSET(font) + 1
+
+/* the horizontal stem widths */
+#define CVT_HORZ_WIDTHS_OFFSET(font) \
+          CVT_VERT_STANDARD_WIDTH_OFFSET(font) + 1
+#define CVT_HORZ_WIDTHS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
+
+/* the vertical stem widths */
+#define CVT_VERT_WIDTHS_OFFSET(font) \
+          CVT_HORZ_WIDTHS_OFFSET(font) + CVT_HORZ_WIDTHS_SIZE(font)
+#define CVT_VERT_WIDTHS_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
+
+/* the number of blue zones */
+#define CVT_BLUES_SIZE(font) \
+          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+
+/* the blue zone values for flat and round edges */
+#define CVT_BLUE_REFS_OFFSET(font) \
+          CVT_VERT_WIDTHS_OFFSET(font) + CVT_VERT_WIDTHS_SIZE(font)
+#define CVT_BLUE_SHOOTS_OFFSET(font) \
+          CVT_BLUE_REFS_OFFSET(font) + CVT_BLUES_SIZE(font)
 
 
 FT_Error
