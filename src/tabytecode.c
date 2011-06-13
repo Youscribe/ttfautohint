@@ -618,7 +618,7 @@ TA_sfnt_emit_hints_record(SFNT* sfnt,
 
   num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_arguments;
   if (num_stack_elements > sfnt->max_stack_elements)
-    sfnt->max_stack_elements = sfnt->max_stack_elements;
+    sfnt->max_stack_elements = num_stack_elements;
 
   return bufp;
 }
