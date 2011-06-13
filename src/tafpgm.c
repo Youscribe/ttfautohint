@@ -901,62 +901,34 @@ unsigned char FPGM(bci_align_segments) [] = {
 
 
 /*
- * bci_ip_before_align_point
+ * bci_ip_outer_align_point
  *
- *   Auxiliary function for `bci_action_ip_before'.
+ *   Auxiliary function for `bci_action_ip_before' and
+ *   `bci_action_ip_after'.
  *
- * in: point
- */
-
-unsigned char FPGM(bci_ip_before_align_point) [] = {
-
-  PUSHB_1,
-    bci_ip_before_align_point,
-  FDEF,
-
-  POP, /* XXX */
-
-  ENDF,
-
-};
-
-
-/*
- * bci_ip_after_align_point
- *
- *   Auxiliary function for `bci_action_ip_after'.
+ *   It expects rp0 to contain the edge for alignment, zp0 set to twilight
+ *   zone, and both zp1 and zp2 set to normal zone.
  *
  * in: point
+ *
+ * sal: sal_i (edge_orig_pos)
  */
 
-unsigned char FPGM(bci_ip_after_align_point) [] = {
+unsigned char FPGM(bci_ip_outer_align_point) [] = {
 
   PUSHB_1,
-    bci_ip_after_align_point,
+    bci_ip_outer_align_point,
   FDEF,
 
-  POP, /* XXX */
-
-  ENDF,
-
-};
-
-
-/*
- * bci_ip_on_align_point
- *
- *   Auxiliary function for `bci_ip_on_align_points'.
- *
- * in: point
- */
-
-unsigned char FPGM(bci_ip_on_align_point) [] = {
-
+  DUP,
+  ALIGNRP, /* align `point' with `edge' */
+  DUP,
+  GC_orig,
   PUSHB_1,
-    bci_ip_on_align_point,
-  FDEF,
-
-  POP, /* XXX */
+    sal_i,
+  RS,
+  SUB, /* s: point (point_orig_pos - edge_orig_pos) */
+  SHPIX,
 
   ENDF,
 
@@ -974,8 +946,6 @@ unsigned char FPGM(bci_ip_on_align_point) [] = {
  *       point_2
  *       ...
  *       point_N
- *
- * uses: bci_ip_on_align_point
  */
 
 unsigned char FPGM(bci_ip_on_align_points) [] = {
@@ -984,11 +954,10 @@ unsigned char FPGM(bci_ip_on_align_points) [] = {
     bci_ip_on_align_points,
   FDEF,
 
-  POP, /* XXX */
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
 
-  PUSHB_1,
-    bci_ip_on_align_point,
-  LOOPCALL,
+  SLOOP,
+  ALIGNRP,
 
   ENDF,
 
@@ -1000,7 +969,13 @@ unsigned char FPGM(bci_ip_on_align_points) [] = {
  *
  *   Auxiliary function for `bci_ip_between_align_points'.
  *
+ *   It expects rp0 to contain the edge for alignment, zp0 set to twilight
+ *   zone, and both zp1 and zp2 set to normal zone.
+ *
  * in: point
+ *
+ * sal: sal_i (edge_orig_pos)
+ *      sal_j (scale_factor)
  */
 
 unsigned char FPGM(bci_ip_between_align_point) [] = {
@@ -1009,7 +984,19 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
     bci_ip_between_align_point,
   FDEF,
 
-  POP, /* XXX */
+  DUP,
+  ALIGNRP, /* align `point' with `edge' */
+  DUP,
+  GC_orig,
+  PUSHB_1,
+    sal_i,
+  RS,
+  SUB, /* s: point (point_orig_pos - edge_orig_pos) */
+  PUSHB_1,
+    sal_j,
+  RS,
+  MUL, /* s: point delta */
+  SHPIX,
 
   ENDF,
 
@@ -1021,13 +1008,16 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
  *
  *   Auxiliary function for `bci_action_ip_between'.
  *
- * in: before_edge
- *     after_edge
+ * in: after_edge
+ *     before_edge
  *     loop_counter (N)
  *       point_1
  *       point_2
  *       ...
  *       point_N
+ *
+ * sal: sal_i (before_orig_pos)
+ *      sal_j (scale_factor)
  *
  * uses: bci_ip_between_align_point
  */
@@ -1038,11 +1028,48 @@ unsigned char FPGM(bci_ip_between_align_points) [] = {
     bci_ip_between_align_points,
   FDEF,
 
-  POP, /* XXX */
-  POP,
-
+  PUSHB_2,
+    2,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+  CINDEX,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `before' */
   PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: before after before_orig */
+  DUP,
+  GC_cur,
+  PUSHB_1,
+    sal_i,
+  SWAP,
+  WS, /* sal_i = before_orig_pos */
+  PUSHB_1,
+    2,
+  CINDEX,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD, /* s: before after before_orig after_orig */
+
+  MD_cur, /* a = after_orig_pos - before_orig_pos */
+  ROLL,
+  ROLL,
+  MD_cur, /* b = after_pos - before_pos */
+  SWAP,
+  DIV, /* s: a/b */
+  PUSHB_1,
+    sal_j,
+  SWAP,
+  WS, /* sal_j = scale_factor */
+
+  PUSHB_3,
     bci_ip_between_align_point,
+    1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
+  SZP1, /* set zp1 to normal zone 1 */
   LOOPCALL,
 
   ENDF,
@@ -1062,7 +1089,9 @@ unsigned char FPGM(bci_ip_between_align_points) [] = {
  *       ...
  *       point_N
  *
- * uses: bci_ip_before_align_point
+ * sal: sal_i (first_edge_orig_pos)
+ *
+ * uses: bci_ip_outer_align_point
  */
 
 unsigned char FPGM(bci_action_ip_before) [] = {
@@ -1071,10 +1100,33 @@ unsigned char FPGM(bci_action_ip_before) [] = {
     bci_action_ip_before,
   FDEF,
 
-  POP, /* XXX */
+  PUSHB_1,
+    0,
+  SZP2, /* set zp2 to normal zone 0 */
+
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD,
+  GC_cur,
+  PUSHB_1,
+    sal_i,
+  SWAP,
+  WS, /* sal_i = first_edge_orig_pos */
+
+  PUSHB_3,
+    0,
+    1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
+  SZP1, /* set zp1 to normal zone 1 */
+  SZP0, /* set zp0 to twilight zone 0 */
+
+  MDAP_noround, /* set rp0 and rp1 to `first_edge' */
 
   PUSHB_1,
-    bci_ip_before_align_point,
+    bci_ip_outer_align_point,
   LOOPCALL,
 
   ENDF,
@@ -1094,7 +1146,9 @@ unsigned char FPGM(bci_action_ip_before) [] = {
  *       ...
  *       point_N
  *
- * uses: bci_ip_after_align_point
+ * sal: sal_i (last_edge_orig_pos)
+ *
+ * uses: bci_ip_outer_align_point
  */
 
 unsigned char FPGM(bci_action_ip_after) [] = {
@@ -1103,10 +1157,33 @@ unsigned char FPGM(bci_action_ip_after) [] = {
     bci_action_ip_after,
   FDEF,
 
-  POP, /* XXX */
+  PUSHB_1,
+    0,
+  SZP2, /* set zp2 to normal zone 0 */
+
+  DUP,
+  PUSHB_1,
+    sal_num_segments,
+  RS,
+  ADD,
+  GC_cur,
+  PUSHB_1,
+    sal_i,
+  SWAP,
+  WS, /* sal_i = last_edge_orig_pos */
+
+  PUSHB_3,
+    0,
+    1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
+  SZP1, /* set zp1 to normal zone 1 */
+  SZP0, /* set zp0 to twilight zone 0 */
+
+  MDAP_noround, /* set rp0 and rp1 to `last_edge' */
 
   PUSHB_1,
-    bci_ip_after_align_point,
+    bci_ip_outer_align_point,
   LOOPCALL,
 
   ENDF,
@@ -1149,6 +1226,12 @@ unsigned char FPGM(bci_action_ip_on) [] = {
   PUSHB_1,
     bci_action_ip_on,
   FDEF,
+
+  PUSHB_2,
+    0,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  SZP0, /* set zp0 to twilight zone 0 */
 
   PUSHB_1,
     bci_ip_on_align_points,
@@ -3524,7 +3607,7 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
 /*
  * bci_action_serif_link2
  *
- *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
  *
  * in: edge_point (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
@@ -3589,7 +3672,7 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
 /*
  * bci_action_serif_link2_lower_bound
  *
- *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
  *   Additionally, move the serif again if necessary to stay within a lower
  *   bound.
  *
@@ -3671,7 +3754,7 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
 /*
  * bci_action_serif_link2_upper_bound
  *
- *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
  *   Additionally, move the serif again if necessary to stay within an upper
  *   bound.
  *
@@ -3753,7 +3836,7 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
 /*
  * bci_action_serif_link2_lower_upper_bound
  *
- *   Handle the SERIF_LINK2 action to align a serif relative to the anchor. 
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
  *   Additionally, move the serif again if necessary to stay within a lower
  *   and upper bound.
  *
@@ -3949,9 +4032,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
 
-            + sizeof (FPGM(bci_ip_before_align_point))
-            + sizeof (FPGM(bci_ip_after_align_point))
-            + sizeof (FPGM(bci_ip_on_align_point))
+            + sizeof (FPGM(bci_ip_outer_align_point))
             + sizeof (FPGM(bci_ip_on_align_points))
             + sizeof (FPGM(bci_ip_between_align_point))
             + sizeof (FPGM(bci_ip_between_align_points))
@@ -4020,9 +4101,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
 
-  COPY_FPGM(bci_ip_before_align_point);
-  COPY_FPGM(bci_ip_after_align_point);
-  COPY_FPGM(bci_ip_on_align_point);
+  COPY_FPGM(bci_ip_outer_align_point);
   COPY_FPGM(bci_ip_on_align_points);
   COPY_FPGM(bci_ip_between_align_point);
   COPY_FPGM(bci_ip_between_align_points);

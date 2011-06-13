@@ -317,10 +317,8 @@
 #define bci_align_segment bci_create_segments + 1
 #define bci_align_segments bci_align_segment + 1
 
-#define bci_ip_before_align_point bci_align_segments + 1
-#define bci_ip_after_align_point bci_ip_before_align_point + 1
-#define bci_ip_on_align_point bci_ip_after_align_point + 1
-#define bci_ip_on_align_points bci_ip_on_align_point + 1
+#define bci_ip_outer_align_point bci_align_segments + 1
+#define bci_ip_on_align_points bci_ip_outer_align_point + 1
 #define bci_ip_between_align_point bci_ip_on_align_points + 1
 #define bci_ip_between_align_points bci_ip_between_align_point + 1
 

@@ -453,10 +453,10 @@ TA_build_point_hints(Recorder* recorder,
 
         after = edges + j;
 
-        *(p++) = HIGH(before->first - segments);
-        *(p++) = LOW(before->first - segments);
         *(p++) = HIGH(after->first - segments);
         *(p++) = LOW(after->first - segments);
+        *(p++) = HIGH(before->first - segments);
+        *(p++) = LOW(before->first - segments);
 
         k = 0;
         ir = iq;
