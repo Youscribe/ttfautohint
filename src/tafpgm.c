@@ -1388,9 +1388,10 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
  *          u_off = 38
  *          d_off = 26
  *
- *        org_center = edge_orig + org_len / 2
- *        cur_pos1 = ROUND(org_center)
+ *        org_pos = anchor + (edge_orig - anchor_orig);
+ *        org_center = org_pos + org_len / 2;
  *
+ *        cur_pos1 = ROUND(org_center)
  *        delta1 = ABS(org_center - (cur_pos1 - u_off))
  *        delta2 = ABS(org_center - (cur_pos1 + d_off))
  *        if (delta1 < delta2):
@@ -1402,7 +1403,7 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
  *
  *      else:
  *        org_pos = anchor + (edge_orig - anchor_orig)
- *        org_center = edge_orig + org_len / 2
+ *        org_center = org_pos + org_len / 2;
  *
  *        cur_pos1 = ROUND(org_pos)
  *        delta1 = ABS(cur_pos1 + cur_len / 2 - org_center)
@@ -1510,8 +1511,20 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
       sal_num_segments,
     RS,
     ADD, /* s: edge[-1] edge2 cur_len edge edge_orig */
-
+    PUSHB_1,
+      sal_anchor,
+    RS,
+    DUP,
+    PUSHB_1,
+      sal_num_segments,
+    RS,
+    ADD, /* s: edge[-1] edge2 cur_len edge edge_orig anchor anchor_orig */
+    ROLL,
+    SWAP,
+    MD_cur,
+    SWAP,
     GC_cur,
+    ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
     PUSHB_1,
       sal_org_len,
     RS,
@@ -1579,27 +1592,12 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
 
   ELSE,
     SWAP, /* s: edge[-1] edge2 cur_len edge */
-    DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge[-1] edge2 cur_len edge edge_orig */
-
-    GC_cur,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_center */
-
     PUSHB_1,
       sal_anchor,
     RS,
-    GC_cur, /* s: edge[-1] edge2 cur_len edge org_center anchor_pos */
+    GC_cur, /* s: edge[-1] edge2 cur_len edge anchor_pos */
     PUSHB_1,
-      3,
+      2,
     CINDEX,
     PUSHB_1,
       sal_num_segments,
@@ -1613,8 +1611,18 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
     RS,
     ADD,
     MD_cur,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_center org_pos */
+    ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
 
+    DUP,
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    PUSHB_1,
+      2*64,
+    DIV,
+    ADD, /* s: edge[-1] edge2 cur_len edge org_pos org_center */
+
+    SWAP,
     DUP,
     PUSHB_1,
       bci_round,
@@ -2137,9 +2145,10 @@ unsigned char FPGM(bci_action_adjust) [] = {
  *          u_off = 38
  *          d_off = 26
  *
- *        org_center = edge_orig + org_len / 2
+ *        org_pos = anchor + (edge_orig - anchor_orig);
+ *        org_center = org_pos + org_len / 2;
+  *
  *        cur_pos1 = ROUND(org_center)
- *
  *        delta1 = ABS(org_center - (cur_pos1 - u_off))
  *        delta2 = ABS(org_center - (cur_pos1 + d_off))
  *        if (delta1 < delta2):
@@ -2151,7 +2160,7 @@ unsigned char FPGM(bci_action_adjust) [] = {
  *
  *      else:
  *        org_pos = anchor + (edge_orig - anchor_orig)
- *        org_center = edge_orig + org_len / 2
+ *        org_center = org_pos + org_len / 2;
  *
  *        cur_pos1 = ROUND(org_pos)
  *        delta1 = ABS(cur_pos1 + cur_len / 2 - org_center)
@@ -2258,8 +2267,20 @@ unsigned char FPGM(bci_action_stem) [] = {
       sal_num_segments,
     RS,
     ADD, /* s: edge2 cur_len edge edge_orig */
-
+    PUSHB_1,
+      sal_anchor,
+    RS,
+    DUP,
+    PUSHB_1,
+      sal_num_segments,
+    RS,
+    ADD, /* s: edge2 cur_len edge edge_orig anchor anchor_orig */
+    ROLL,
+    SWAP,
+    MD_cur,
+    SWAP,
     GC_cur,
+    ADD, /* s: edge2 cur_len edge org_pos */
     PUSHB_1,
       sal_org_len,
     RS,
@@ -2326,27 +2347,12 @@ unsigned char FPGM(bci_action_stem) [] = {
 
   ELSE,
     SWAP, /* s: edge2 cur_len edge */
-    DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge2 cur_len edge edge_orig */
-
-    GC_cur,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge2 cur_len edge org_center */
-
     PUSHB_1,
       sal_anchor,
     RS,
-    GC_cur, /* s: edge2 cur_len edge org_center anchor_pos */
+    GC_cur, /* s: edge2 cur_len edge anchor_pos */
     PUSHB_1,
-      3,
+      2,
     CINDEX,
     PUSHB_1,
       sal_num_segments,
@@ -2360,8 +2366,18 @@ unsigned char FPGM(bci_action_stem) [] = {
     RS,
     ADD,
     MD_cur,
-    ADD, /* s: edge2 cur_len edge org_center org_pos */
+    ADD, /* s: edge2 cur_len edge org_pos */
 
+    DUP,
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    PUSHB_1,
+      2*64,
+    DIV,
+    ADD, /* s: edge2 cur_len edge org_pos org_center */
+
+    SWAP,
     DUP,
     PUSHB_1,
       bci_round,
@@ -3992,6 +4008,8 @@ unsigned char FPGM(bci_hint_glyph) [] = {
   PUSHB_1,
     bci_handle_action,
   LOOPCALL,
+
+  IUP_y,
 
   ENDF,
 
