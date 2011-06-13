@@ -556,6 +556,7 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
  *      sal_k (current hinted twilight point)
  *      sal_point_min
  *      sal_point_max
+ *      sal_scale
  */
 
 unsigned char FPGM(bci_create_segment) [] = {
@@ -671,41 +672,50 @@ unsigned char FPGM(bci_create_segment) [] = {
   /* the twilight point representing a segment */
   /* is in the middle between the minimum and maximum */
   PUSHB_1,
+    sal_point_min,
+  RS,
+  GC_orig,
+  PUSHB_1,
     sal_point_max,
   RS,
-  PUSHB_1,
-    sal_point_min,
-  RS,
-  MD_orig,
+  GC_orig,
+  ADD,
   PUSHB_1,
     2*64,
-  DIV, /* s: delta */
+  DIV, /* s: middle_pos */
 
-  PUSHB_4,
+  /* now scale it */
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* middle_pos * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* middle_pos = middle_pos * scale */
+
+  DUP,
+  PUSHB_2,
     sal_j,
     0,
-    0,
-    sal_point_min,
-  RS,
-  MDAP_noround, /* set rp0 and rp1 to `sal_point_min' */
-  SZP1, /* set zp1 to twilight zone 0 */
   SZP2, /* set zp2 to twilight zone 0 */
-
   RS,
-  DUP, /* s: delta point[sal_j] point[sal_j] */
-  ALIGNRP, /* align `point[sal_j]' with `sal_point_min' */
-  PUSHB_1,
-    2,
-  CINDEX, /* s: delta point[sal_j] delta */
-  SHPIX, /* shift `point[sal_j]' by `delta' */
+  DUP,
+  GC_cur, /* s: middle_pos middle_pos point[sal_j] point[sal_j]_pos */
+  ROLL,
+  SWAP,
+  SUB,
+  SHPIX, /* align `point[sal_j]' with middle point */
 
   PUSHB_1,
     sal_k,
   RS,
-  DUP, /* s: delta point[sal_k] point[sal_k] */
-  ALIGNRP, /* align `point[sal_k]' with `sal_point_min' */
+  DUP,
+  GC_cur, /* s: middle_pos point[sal_k] point[sal_k]_pos */
+  ROLL,
   SWAP,
-  SHPIX, /* shift `point[sal_k]' by `delta' */
+  SUB,
+  SHPIX, /* align `point[sal_k]' with middle point */
 
   PUSHB_6,
     sal_k,
@@ -753,6 +763,7 @@ unsigned char FPGM(bci_create_segment) [] = {
  *      sal_j (current original twilight point)
  *      sal_k (current hinted twilight point)
  *      sal_num_segments
+ *      sal_scale
  */
 
 unsigned char FPGM(bci_create_segments) [] = {
@@ -924,6 +935,16 @@ unsigned char FPGM(bci_ip_outer_align_point) [] = {
   ALIGNRP, /* align `point' with `edge' */
   DUP,
   GC_orig,
+  /* now scale it */
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* point_orig_pos * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* point_orig_pos = point_orig_pos * scale */
+
   PUSHB_1,
     sal_i,
   RS,
@@ -975,7 +996,7 @@ unsigned char FPGM(bci_ip_on_align_points) [] = {
  * in: point
  *
  * sal: sal_i (edge_orig_pos)
- *      sal_j (scale_factor)
+ *      sal_j (stretch_factor)
  */
 
 unsigned char FPGM(bci_ip_between_align_point) [] = {
@@ -988,6 +1009,16 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
   ALIGNRP, /* align `point' with `edge' */
   DUP,
   GC_orig,
+  /* now scale it */
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* edge_orig_pos * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* edge_orig_pos = edge_orig_pos * scale */
+
   PUSHB_1,
     sal_i,
   RS,
@@ -1017,7 +1048,7 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
  *       point_N
  *
  * sal: sal_i (before_orig_pos)
- *      sal_j (scale_factor)
+ *      sal_j (stretch_factor)
  *
  * uses: bci_ip_between_align_point
  */
@@ -1062,7 +1093,7 @@ unsigned char FPGM(bci_ip_between_align_points) [] = {
   PUSHB_1,
     sal_j,
   SWAP,
-  WS, /* sal_j = scale_factor */
+  WS, /* sal_j = stretch_factor */
 
   PUSHB_3,
     bci_ip_between_align_point,
