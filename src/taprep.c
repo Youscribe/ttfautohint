@@ -104,6 +104,13 @@ unsigned char PREP(loop_cvt_d) [] = {
       bci_cvt_rescale,
       bci_loop,
     CALL,
+
+  ELSE,
+    PUSHB_2,
+      sal_scale,
+      sal_0x10000,
+    RS,
+    WS,
   EIF,
 
 };
