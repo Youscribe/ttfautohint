@@ -912,6 +912,104 @@ unsigned char FPGM(bci_align_segments) [] = {
 
 
 /*
+ * bci_scale_contour
+ *
+ *   Scale a contour using two points giving the maximum and minimum
+ *   coordinates.
+ *
+ *   It expects that all points on the contour are not touched.
+ *
+ * in: min_point
+ *     max_point
+ *
+ * sal: sal_scale
+ */
+
+unsigned char FPGM(bci_scale_contour) [] = {
+
+  PUSHB_1,
+    bci_scale_contour,
+  FDEF,
+
+  DUP,
+  GC_orig,
+  DUP,
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* min_pos * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* min_pos_new = min_pos * scale */
+  SWAP,
+  SUB,
+  SHPIX,
+
+  DUP,
+  GC_orig,
+  DUP,
+  PUSHB_1,
+    sal_scale,
+  RS,
+  MUL, /* max_pos * scale * 2^10 */
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* max_pos_new = max_pos * scale */
+  SWAP,
+  SUB,
+  SHPIX,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_scale_glyph
+ *
+ *   Scale a glyph using a list of points (two points per contour, giving
+ *   the maximum and mininum coordinates).
+ *
+ *   It expects that no point in the glyph is touched.
+ *
+ * in: num_contours (N)
+ *       min_point_1
+ *       max_point_1
+ *       min_point_2
+ *       max_point_2
+ *       ...
+ *       min_point_N
+ *       max_point_N
+ *
+ * sal: sal_scale
+ *
+ * uses: bci_scale_contour
+ */
+
+unsigned char FPGM(bci_scale_glyph) [] = {
+
+  PUSHB_1,
+    bci_scale_glyph,
+  FDEF,
+
+  PUSHB_1,
+    1,
+  SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+
+  PUSHB_1,
+    bci_scale_contour,
+  LOOPCALL,
+
+  IUP_y,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_ip_outer_align_point
  *
  *   Auxiliary function for `bci_action_ip_before' and
@@ -4081,6 +4179,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
 
+            + sizeof (FPGM(bci_scale_contour))
+            + sizeof (FPGM(bci_scale_glyph))
+
             + sizeof (FPGM(bci_ip_outer_align_point))
             + sizeof (FPGM(bci_ip_on_align_points))
             + sizeof (FPGM(bci_ip_between_align_point))
@@ -4149,6 +4250,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_create_segments);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
+
+  COPY_FPGM(bci_scale_contour);
+  COPY_FPGM(bci_scale_glyph);
 
   COPY_FPGM(bci_ip_outer_align_point);
   COPY_FPGM(bci_ip_on_align_points);
