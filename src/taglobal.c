@@ -37,7 +37,7 @@ static TA_ScriptClass const ta_script_classes[] =
 
 
 /* XXX index of default script in `ta_script_classes' */
-#define TA_SCRIPT_LIST_DEFAULT 1
+#define TA_SCRIPT_LIST_DEFAULT 0
 /* a bit mask indicating an uncovered glyph */
 #define TA_SCRIPT_LIST_NONE 0x7F
 /* if this flag is set, we have an ASCII digit */

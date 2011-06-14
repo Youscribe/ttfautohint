@@ -554,6 +554,118 @@ TA_add_hints_record(Hints_Record** hints_records,
 
 
 static FT_Byte*
+TA_sfnt_build_glyph_scaler(SFNT* sfnt,
+                           FT_Byte* bufp)
+{
+  FT_GlyphSlot glyph = sfnt->face->glyph;
+  FT_Vector* points = glyph->outline.points;
+  FT_Int num_contours = glyph->outline.n_contours;
+
+  FT_UInt* args;
+  FT_UInt* arg;
+  FT_UInt num_args;
+  FT_UInt nargs;
+
+  FT_Bool need_words = 0;
+  FT_Int p, q;
+  FT_UInt i, j;
+  FT_Int start, end;
+  FT_UInt num_stack_elements;
+
+  num_args = 2 * num_contours + 2;
+
+  /* collect all arguments temporarily in an array (in reverse order) */
+  /* so that we can easily split into chunks of 255 args */
+  /* as needed by NPUSHB and NPUSHW, respectively */
+  args = (FT_UInt*)malloc(num_args * sizeof (FT_UInt));
+  if (!args)
+    return NULL;
+
+  arg = args + num_args - 1;
+
+  if (num_args > 0xFF)
+    need_words = 1;
+
+  *(arg--) = bci_scale_glyph;
+  *(arg--) = num_contours;
+
+  start = 0;
+
+  for (p = 0; p < num_contours; p++)
+  {
+    FT_Int max = start;
+    FT_Int min = start;
+
+    end = glyph->outline.contours[p];
+
+    for (q = start; q <= end; q++)
+    {
+      if (points[q].y < points[min].y)
+        min = q;
+      if (points[q].y > points[max].y)
+        max = q;
+    }
+
+    *(arg--) = min;
+    *(arg--) = max;
+
+    start = end + 1;
+  }
+
+  if (end > 0xFF)
+    need_words = 1;
+
+  /* with most fonts it is very rare */
+  /* that any of the pushed arguments is larger than 0xFF, */
+  /* thus we refrain from further optimizing this case */
+
+  arg = args;
+
+  if (need_words)
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      BCI(NPUSHW);
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(HIGH(*arg));
+        BCI(LOW(*arg));
+        arg++;
+      }
+    }
+  }
+  else
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      BCI(NPUSHB);
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(*arg);
+        arg++;
+      }
+    }
+  }
+
+  BCI(CALL);
+
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
+  if (num_stack_elements > sfnt->max_stack_elements)
+    sfnt->max_stack_elements = num_stack_elements;
+
+  free(args);
+
+  return bufp;
+}
+
+
+static FT_Byte*
 TA_sfnt_emit_hints_record(SFNT* sfnt,
                           Hints_Record* hints_record,
                           FT_Byte* bufp)
@@ -1255,6 +1367,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Byte* ins_buf;
   FT_UInt ins_len;
   FT_Byte* bufp;
+  FT_Byte* p;
 
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
@@ -1285,16 +1398,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (error)
     return error;
 
-  /* do XXX if we have a composite glyph */
-  if (font->loader->gloader->base.num_subglyphs)
-    return FT_Err_Ok;
-
   /* do nothing if we have an empty glyph */
   if (!face->glyph->outline.n_contours)
-    return FT_Err_Ok;
-
-  /* do nothing if the dummy hinter has been used */
-  if (font->loader->metrics->clazz == &ta_dummy_script_class)
     return FT_Err_Ok;
 
   hints = &font->loader->hints;
@@ -1314,12 +1419,37 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   num_hints_records = 0;
   hints_records = NULL;
 
+  /* do XXX if we have a composite glyph */
+  if (font->loader->gloader->base.num_subglyphs)
+  {
+    bufp = ins_buf;
+    goto Done2; /* XXX */
+  }
+
+  /* only scale the glyph if the dummy hinter has been used */
+  if (font->loader->metrics->clazz == &ta_dummy_script_class)
+  {
+    bufp = TA_sfnt_build_glyph_scaler(sfnt, ins_buf);
+    if (!bufp)
+    {
+      error = FT_Err_Out_Of_Memory;
+      goto Err;
+    }
+
+    goto Done1;
+  }
+
   error = TA_init_recorder(&recorder, face->glyph->outline.n_contours,
                           font, hints);
   if (error)
     goto Err;
 
   bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, ins_buf);
+  if (!bufp)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Err;
+  }
 
   /* now we loop over a large range of pixel sizes */
   /* to find hints records which get pushed onto the bytecode stack */
@@ -1363,9 +1493,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     {
 #ifdef DEBUGGING
       {
-        FT_Byte* p;
-
-
         printf("  %d:\n", size);
         for (p = bufp; p < recorder.hints_record.buf; p += 2)
           printf(" %2d", *p * 256 + *(p + 1));
@@ -1383,48 +1510,63 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   if (num_hints_records == 1 && !hints_records[0].num_actions)
   {
-    /* don't emit anything if we only have a single empty record */
-    ins_len = 0;
-  }
-  else
-  {
-    FT_Byte* p = bufp;
+    /* since we only have a single empty record we just scale the glyph, */
+    /* overwriting the data from `TA_sfnt_build_glyph_segments' */
+    bufp = TA_sfnt_build_glyph_scaler(sfnt, ins_buf);
+    if (!bufp)
+    {
+      error = FT_Err_Out_Of_Memory;
+      goto Err;
+    }
 
-
-    /* otherwise, clear the temporarily used part of `ins_buf' */
+    /* clear the rest of the temporarily used part of `ins_buf' */
+    p = bufp;
     while (*p != INS_A0)
       *(p++) = INS_A0;
 
-    bufp = TA_sfnt_emit_hints_records(sfnt,
-                                      hints_records, num_hints_records,
-                                      bufp);
-
-    /* we are done, so reallocate the instruction array to its real size */
-    if (*bufp == INS_A0)
-    {
-      /* search backwards */
-      while (*bufp == INS_A0)
-        bufp--;
-      bufp++;
-    }
-    else
-    {
-      /* search forwards */
-      while (*bufp != INS_A0)
-        bufp++;
-    }
-
-    ins_len = bufp - ins_buf;
+    goto Done;
   }
+
+  /* in most cases, the output of `TA_sfnt_build_glyph_segments' */
+  /* is shorter than the previously stored data, */
+  /* so clear the rest of the temporarily used part of `ins_buf' */
+  /* before appending the hints records */
+  p = bufp;
+  while (*p != INS_A0)
+    *(p++) = INS_A0;
+
+  bufp = TA_sfnt_emit_hints_records(sfnt,
+                                    hints_records, num_hints_records,
+                                    bufp);
+
+Done:
+  TA_free_hints_records(hints_records, num_hints_records);
+  TA_free_recorder(&recorder);
+
+Done1:
+  /* we are done, so reallocate the instruction array to its real size */
+  if (*bufp == INS_A0)
+  {
+    /* search backwards */
+    while (*bufp == INS_A0)
+      bufp--;
+    bufp++;
+  }
+  else
+  {
+    /* search forwards */
+    while (*bufp != INS_A0)
+      bufp++;
+  }
+
+Done2:
+  ins_len = bufp - ins_buf;
 
   if (ins_len > sfnt->max_instructions)
     sfnt->max_instructions = ins_len;
 
   glyph->ins_buf = (FT_Byte*)realloc(ins_buf, ins_len);
   glyph->ins_len = ins_len;
-
-  TA_free_hints_records(hints_records, num_hints_records);
-  TA_free_recorder(&recorder);
 
   return FT_Err_Ok;
 

@@ -932,6 +932,7 @@ unsigned char FPGM(bci_scale_contour) [] = {
   FDEF,
 
   DUP,
+  DUP,
   GC_orig,
   DUP,
   PUSHB_1,
@@ -946,20 +947,30 @@ unsigned char FPGM(bci_scale_contour) [] = {
   SUB,
   SHPIX,
 
-  DUP,
-  GC_orig,
-  DUP,
-  PUSHB_1,
-    sal_scale,
-  RS,
-  MUL, /* max_pos * scale * 2^10 */
-  PUSHB_1,
-    sal_0x10000,
-  RS,
-  DIV, /* max_pos_new = max_pos * scale */
+  /* don't scale a single-point contour twice */
   SWAP,
-  SUB,
-  SHPIX,
+  DUP,
+  ROLL,
+  NEQ,
+  IF,
+    DUP,
+    GC_orig,
+    DUP,
+    PUSHB_1,
+      sal_scale,
+    RS,
+    MUL, /* max_pos * scale * 2^10 */
+    PUSHB_1,
+      sal_0x10000,
+    RS,
+    DIV, /* max_pos_new = max_pos * scale */
+    SWAP,
+    SUB,
+    SHPIX,
+
+  ELSE,
+    POP,
+  EIF,
 
   ENDF,
 
@@ -993,6 +1004,8 @@ unsigned char FPGM(bci_scale_glyph) [] = {
   PUSHB_1,
     bci_scale_glyph,
   FDEF,
+
+  SVTCA_y,
 
   PUSHB_1,
     1,
