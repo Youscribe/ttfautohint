@@ -1280,9 +1280,14 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     return error;
 
   ta_loader_register_hints_recorder(font->loader, NULL, NULL);
-  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, 0);
+  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx,
+                               FT_LOAD_NO_RECURSE);
   if (error)
     return error;
+
+  /* do XXX if we have a composite glyph */
+  if (font->loader->gloader->base.num_subglyphs)
+    return FT_Err_Ok;
 
   /* do nothing if we have an empty glyph */
   if (!face->glyph->outline.n_contours)
