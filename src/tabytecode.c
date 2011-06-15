@@ -246,6 +246,118 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 }
 
 
+static FT_Byte*
+TA_sfnt_build_glyph_scaler(SFNT* sfnt,
+                           FT_Byte* bufp)
+{
+  FT_GlyphSlot glyph = sfnt->face->glyph;
+  FT_Vector* points = glyph->outline.points;
+  FT_Int num_contours = glyph->outline.n_contours;
+
+  FT_UInt* args;
+  FT_UInt* arg;
+  FT_UInt num_args;
+  FT_UInt nargs;
+
+  FT_Bool need_words = 0;
+  FT_Int p, q;
+  FT_UInt i, j;
+  FT_Int start, end;
+  FT_UInt num_stack_elements;
+
+  num_args = 2 * num_contours + 2;
+
+  /* collect all arguments temporarily in an array (in reverse order) */
+  /* so that we can easily split into chunks of 255 args */
+  /* as needed by NPUSHB and NPUSHW, respectively */
+  args = (FT_UInt*)malloc(num_args * sizeof (FT_UInt));
+  if (!args)
+    return NULL;
+
+  arg = args + num_args - 1;
+
+  if (num_args > 0xFF)
+    need_words = 1;
+
+  *(arg--) = bci_scale_glyph;
+  *(arg--) = num_contours;
+
+  start = 0;
+
+  for (p = 0; p < num_contours; p++)
+  {
+    FT_Int max = start;
+    FT_Int min = start;
+
+    end = glyph->outline.contours[p];
+
+    for (q = start; q <= end; q++)
+    {
+      if (points[q].y < points[min].y)
+        min = q;
+      if (points[q].y > points[max].y)
+        max = q;
+    }
+
+    *(arg--) = min;
+    *(arg--) = max;
+
+    start = end + 1;
+  }
+
+  if (end > 0xFF)
+    need_words = 1;
+
+  /* with most fonts it is very rare */
+  /* that any of the pushed arguments is larger than 0xFF, */
+  /* thus we refrain from further optimizing this case */
+
+  arg = args;
+
+  if (need_words)
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      BCI(NPUSHW);
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(HIGH(*arg));
+        BCI(LOW(*arg));
+        arg++;
+      }
+    }
+  }
+  else
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      BCI(NPUSHB);
+      BCI(nargs);
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(*arg);
+        arg++;
+      }
+    }
+  }
+
+  BCI(CALL);
+
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
+  if (num_stack_elements > sfnt->max_stack_elements)
+    sfnt->max_stack_elements = num_stack_elements;
+
+  free(args);
+
+  return bufp;
+}
+
+
 /*
  * The four `ta_ip_*' actions in the `TA_hints_recorder' callback store its
  * data in four arrays (which are simple but waste a lot of memory).  The
@@ -550,118 +662,6 @@ TA_add_hints_record(Hints_Record** hints_records,
   (*hints_records)[*num_hints_records - 1] = hints_record;
 
   return FT_Err_Ok;
-}
-
-
-static FT_Byte*
-TA_sfnt_build_glyph_scaler(SFNT* sfnt,
-                           FT_Byte* bufp)
-{
-  FT_GlyphSlot glyph = sfnt->face->glyph;
-  FT_Vector* points = glyph->outline.points;
-  FT_Int num_contours = glyph->outline.n_contours;
-
-  FT_UInt* args;
-  FT_UInt* arg;
-  FT_UInt num_args;
-  FT_UInt nargs;
-
-  FT_Bool need_words = 0;
-  FT_Int p, q;
-  FT_UInt i, j;
-  FT_Int start, end;
-  FT_UInt num_stack_elements;
-
-  num_args = 2 * num_contours + 2;
-
-  /* collect all arguments temporarily in an array (in reverse order) */
-  /* so that we can easily split into chunks of 255 args */
-  /* as needed by NPUSHB and NPUSHW, respectively */
-  args = (FT_UInt*)malloc(num_args * sizeof (FT_UInt));
-  if (!args)
-    return NULL;
-
-  arg = args + num_args - 1;
-
-  if (num_args > 0xFF)
-    need_words = 1;
-
-  *(arg--) = bci_scale_glyph;
-  *(arg--) = num_contours;
-
-  start = 0;
-
-  for (p = 0; p < num_contours; p++)
-  {
-    FT_Int max = start;
-    FT_Int min = start;
-
-    end = glyph->outline.contours[p];
-
-    for (q = start; q <= end; q++)
-    {
-      if (points[q].y < points[min].y)
-        min = q;
-      if (points[q].y > points[max].y)
-        max = q;
-    }
-
-    *(arg--) = min;
-    *(arg--) = max;
-
-    start = end + 1;
-  }
-
-  if (end > 0xFF)
-    need_words = 1;
-
-  /* with most fonts it is very rare */
-  /* that any of the pushed arguments is larger than 0xFF, */
-  /* thus we refrain from further optimizing this case */
-
-  arg = args;
-
-  if (need_words)
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      BCI(NPUSHW);
-      BCI(nargs);
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(HIGH(*arg));
-        BCI(LOW(*arg));
-        arg++;
-      }
-    }
-  }
-  else
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      BCI(NPUSHB);
-      BCI(nargs);
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(*arg);
-        arg++;
-      }
-    }
-  }
-
-  BCI(CALL);
-
-  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
-  if (num_stack_elements > sfnt->max_stack_elements)
-    sfnt->max_stack_elements = num_stack_elements;
-
-  free(args);
-
-  return bufp;
 }
 
 
