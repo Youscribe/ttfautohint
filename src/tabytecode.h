@@ -319,8 +319,10 @@
 
 #define bci_scale_contour bci_align_segments + 1
 #define bci_scale_glyph bci_scale_contour + 1
+#define bci_shift_contour bci_scale_glyph + 1
+#define bci_shift_subglyph bci_shift_contour + 1
 
-#define bci_ip_outer_align_point bci_scale_glyph + 1
+#define bci_ip_outer_align_point bci_shift_subglyph + 1
 #define bci_ip_on_align_points bci_ip_outer_align_point + 1
 #define bci_ip_between_align_point bci_ip_on_align_points + 1
 #define bci_ip_between_align_points bci_ip_between_align_point + 1

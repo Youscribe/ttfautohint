@@ -1023,6 +1023,110 @@ unsigned char FPGM(bci_scale_glyph) [] = {
 
 
 /*
+ * bci_shift_contour
+ *
+ *   Shift a contour by a given amount.
+ *
+ *   It expects that rp1 (point to by zp0) is set up properly; zp2 must
+ *   point to the normal zone 1.
+ *
+ * in:  contour
+ * out: contour + 1
+ */
+
+unsigned char FPGM(bci_shift_contour) [] = {
+
+  PUSHB_1,
+    bci_shift_contour,
+  FDEF,
+
+  DUP,
+  SHC_rp1, /* shift `contour' by (rp1_pos - rp1_orig_pos) */
+
+  PUSHB_1,
+    1,
+  ADD,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_shift_subglyph
+ *
+ *   Shift a subglyph.  To be more specific, it corrects the already applied
+ *   subglyph offset (if any) from the `glyf' table which needs to be scaled
+ *   also.
+ *
+ *   If this function is called, a point `x' in the subglyph has been scaled
+ *   by `sal_scale' already (during the hinting of the subglyph itself), and
+ *   `offset' has been applied also:
+ *
+ *     x  ->  x * scale + offset         (1)
+ *
+ *   However, the offset should be applied first, then the scaling:
+ *
+ *     x  ->  (x + offset) * scale       (2)
+ *
+ *   Our job is now to transform (1) to (2); a simple calculation shows that
+ *   we have to shift all points of the subglyph by
+ *
+ *     offset * scale - offset = offset * (scale - 1)
+ *
+ * in: offset
+ *     num_contours
+ *     first_contour
+ *
+ * sal: sal_scale
+ */
+
+unsigned char FPGM(bci_shift_subglyph) [] = {
+
+  PUSHB_1,
+    bci_shift_subglyph,
+  FDEF,
+
+  SVTCA_y,
+
+  PUSHB_1,
+    sal_scale,
+  RS,
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  SUB, /* scale - 1 (in 16.16 format) */
+  MUL,
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV, /* offset * (scale - 1) */
+
+  PUSHB_1,
+    0,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
+  SZP0, /* set zp0 to twilight zone 0 */
+
+  /* at this point, all twilight points are located at (0,0); */
+  /* we arbitrarily use twilight point 0 as the reference point */
+  PUSHB_1,
+    0,
+    0,
+  MDAP_noround, /* set rp0 and rp1 to twilight point 0 */
+  SWAP,
+  SHPIX, /* rp1_pos = offset * (scale - 1) */
+
+  PUSHB_1,
+    bci_shift_contour,
+  LOOPCALL,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_ip_outer_align_point
  *
  *   Auxiliary function for `bci_action_ip_before' and
@@ -4194,6 +4298,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
             + sizeof (FPGM(bci_scale_contour))
             + sizeof (FPGM(bci_scale_glyph))
+            + sizeof (FPGM(bci_shift_contour))
+            + sizeof (FPGM(bci_shift_subglyph))
 
             + sizeof (FPGM(bci_ip_outer_align_point))
             + sizeof (FPGM(bci_ip_on_align_points))
@@ -4266,6 +4372,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
   COPY_FPGM(bci_scale_contour);
   COPY_FPGM(bci_scale_glyph);
+  COPY_FPGM(bci_shift_contour);
+  COPY_FPGM(bci_shift_subglyph);
 
   COPY_FPGM(bci_ip_outer_align_point);
   COPY_FPGM(bci_ip_on_align_points);
