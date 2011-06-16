@@ -8,19 +8,30 @@
 #define PREP(snippet_name) prep_ ## snippet_name
 
 /* we often need 0x10000 which can't be pushed directly onto the stack, */
-/* thus we provide it in the storage area */
+/* thus we provide it in the storage area; */
+/* at the same time, we store it in CVT index 0 also */
+/* to get a scaling value from FUnits to pixels */
 
 unsigned char PREP(store_0x10000) [] = {
 
-  PUSHB_1,
-    sal_0x10000,
   PUSHW_2,
     0x08, /* 0x800 */
     0x00,
     0x08, /* 0x800 */
     0x00,
   MUL, /* 0x10000 */
+
+  DUP,
+  PUSHB_1,
+    sal_0x10000,
+  SWAP,
   WS,
+
+  DUP,
+  PUSHB_1,
+    0,
+  SWAP,
+  WCVTF, /* store value 1 in 16.16 format, scaled */
 
 };
 

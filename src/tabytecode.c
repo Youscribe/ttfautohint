@@ -358,6 +358,95 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
 }
 
 
+static FT_Byte*
+TA_font_build_subglyph_shifter(FONT* font,
+                               FT_Byte* bufp)
+{
+  FT_Face face = font->loader->face;
+  FT_GlyphSlot glyph = face->glyph;
+
+  TA_GlyphLoader gloader = font->loader->gloader;
+
+  TA_SubGlyph subglyphs = gloader->base.subglyphs;
+  TA_SubGlyph subglyph_limit = subglyphs + gloader->base.num_subglyphs;
+  TA_SubGlyph subglyph;
+
+  FT_Int curr_contour = 0;
+
+
+  for (subglyph = subglyphs; subglyph < subglyph_limit; subglyph++)
+  {
+    FT_Error error;
+
+    FT_UShort flags = subglyph->flags;
+    FT_Pos y_offset = subglyph->arg2;
+
+    FT_Int num_contours;
+
+
+    /* load subglyph to get the number of contours */
+    error = FT_Load_Glyph(face, subglyph->index, FT_LOAD_NO_SCALE);
+    if (error)
+      return NULL;
+    num_contours = glyph->outline.n_contours;
+
+    /* nothing to do if there is a point-to-point alignment */
+    if (!(flags & FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES))
+      goto End;
+
+    /* nothing to do if y offset is zero */
+    if (!y_offset)
+      goto End;
+
+    /* nothing to do if there are no contours */
+    if (!num_contours)
+      goto End;
+
+    /* note that calling `FT_Load_Glyph' without FT_LOAD_NO_RECURSE */
+    /* ensures that composites are resolved into simple glyphs */
+
+    if (num_contours > 0xFF
+        || curr_contour > 0xFF)
+    {
+      BCI(PUSHW_2);
+      BCI(HIGH(curr_contour));
+      BCI(LOW(curr_contour));
+      BCI(HIGH(num_contours));
+      BCI(LOW(num_contours));
+    }
+    else
+    {
+      BCI(PUSHB_2);
+      BCI(curr_contour);
+      BCI(num_contours);
+    }
+
+    /* there are high chances that this value needs PUSHW, */
+    /* thus we handle it separately */
+    if (y_offset > 0xFF || y_offset < 0)
+    {
+      BCI(PUSHW_1);
+      BCI(HIGH(y_offset));
+      BCI(LOW(y_offset));
+    }
+    else
+    {
+      BCI(PUSHB_1);
+      BCI(y_offset);
+    }
+
+    BCI(PUSHB_1);
+    BCI(bci_shift_subglyph);
+    BCI(CALL);
+
+  End:
+    curr_contour += num_contours;
+  }
+
+  return bufp;
+}
+
+
 /*
  * The four `ta_ip_*' actions in the `TA_hints_recorder' callback store its
  * data in four arrays (which are simple but waste a lot of memory).  The
@@ -1419,11 +1508,17 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   num_hints_records = 0;
   hints_records = NULL;
 
-  /* do XXX if we have a composite glyph */
+  /* handle composite glyph */
   if (font->loader->gloader->base.num_subglyphs)
   {
-    bufp = ins_buf;
-    goto Done2; /* XXX */
+    bufp = TA_font_build_subglyph_shifter(font, ins_buf);
+    if (!bufp)
+    {
+      error = FT_Err_Out_Of_Memory;
+      goto Err;
+    }
+
+    goto Done1;
   }
 
   /* only scale the glyph if the dummy hinter has been used */
@@ -1543,7 +1638,6 @@ Done:
   TA_free_hints_records(hints_records, num_hints_records);
   TA_free_recorder(&recorder);
 
-Done1:
   /* we are done, so reallocate the instruction array to its real size */
   if (*bufp == INS_A0)
   {
@@ -1559,7 +1653,7 @@ Done1:
       bufp++;
   }
 
-Done2:
+Done1:
   ins_len = bufp - ins_buf;
 
   if (ins_len > sfnt->max_instructions)

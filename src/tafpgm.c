@@ -1074,7 +1074,7 @@ unsigned char FPGM(bci_shift_contour) [] = {
  *
  *     offset * scale - offset = offset * (scale - 1)
  *
- * in: offset
+ * in: offset (in FUnits)
  *     num_contours
  *     first_contour
  *
@@ -1090,6 +1090,20 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   SVTCA_y,
 
   PUSHB_1,
+    0,
+  RCVT, /* scaling factor FUnits -> pixels */
+  MUL,
+  PUSHB_1,
+    sal_0x10000,
+  RS,
+  DIV,
+
+  /* the autohinter always rounds offsets */
+  PUSHB_1,
+    bci_round,
+  CALL, /* offset = round(offset) */
+
+  PUSHB_1,
     sal_scale,
   RS,
   PUSHB_1,
@@ -1100,25 +1114,38 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   PUSHB_1,
     sal_0x10000,
   RS,
-  DIV, /* offset * (scale - 1) */
+  DIV, /* delta = offset * (scale - 1) */
+
+  /* and round again */
+  PUSHB_1,
+    bci_round,
+  CALL, /* offset = round(offset) */
 
   PUSHB_1,
     0,
-    1,
-  SZP2, /* set zp2 to normal zone 1 */
-  SZP0, /* set zp0 to twilight zone 0 */
+  SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
 
-  /* at this point, all twilight points are located at (0,0); */
-  /* we arbitrarily use twilight point 0 as the reference point */
-  PUSHB_1,
+  /* we arbitrarily use twilight point 0 as the reference point; */
+  PUSHB_2,
     0,
     0,
   MDAP_noround, /* set rp0 and rp1 to twilight point 0 */
-  SWAP,
-  SHPIX, /* rp1_pos = offset * (scale - 1) */
+  SWAP, /* c: first_contour num_contours 0 delta */
 
   PUSHB_1,
+    0,
+  GC_orig,
+  PUSHB_1,
+    0,
+  GC_cur,
+  SUB,
+  ADD,
+  SHPIX, /* rp1_pos - rp1_pos_orig = delta */
+
+  PUSHB_2,
     bci_shift_contour,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
   LOOPCALL,
 
   ENDF,

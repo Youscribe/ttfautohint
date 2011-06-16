@@ -370,8 +370,10 @@
 
 /* CVT stuff */
 
+/* CVT index 0 gets assigned in the `prep' table */
+
 /* the horizontal and vertical standard widths */
-#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 0
+#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 1
 #define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
           CVT_HORZ_STANDARD_WIDTH_OFFSET(font) + 1
 

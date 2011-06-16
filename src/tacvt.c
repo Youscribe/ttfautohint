@@ -70,7 +70,7 @@ TA_table_build_cvt(FT_Byte** cvt,
   haxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[0];
   vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
 
-  buf_len = 2 * (2
+  buf_len = 2 * (3
                  + haxis->width_count
                  + vaxis->width_count
                  + 2 * vaxis->blue_count);
@@ -87,6 +87,12 @@ TA_table_build_cvt(FT_Byte** cvt,
   buf[len - 3] = 0x00;
 
   buf_p = buf;
+
+  /* CVT index 0 is reserved for value 1 in 16.16 format */
+  /* (which gets automatically scaled, and this scaling factor we need); */
+  /* however, it is too large to be stored directly via the `cvt ' table */
+  *(buf_p++) = 0;
+  *(buf_p++) = 0;
 
   if (haxis->width_count > 0)
   {
