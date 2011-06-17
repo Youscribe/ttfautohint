@@ -9,8 +9,8 @@ AM_SILENT_RULES([yes])
 
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_RANLIB
 
+LT_INIT
 
 AC_ARG_WITH(freetype-config,
             [  --with-freetype-config=PROG   Use FreeType configuration program PROG],
@@ -29,7 +29,7 @@ else
 fi
 
 FREETYPE_CPPFLAGS="`$ft_config --cflags`"
-FREETYPE_LDFLAGS="`$ft_config --libs`"
+FREETYPE_LDFLAGS="`$ft_config --libtool`"
 
 AC_SUBST(FREETYPE_CPPFLAGS)
 AC_SUBST(FREETYPE_LDFLAGS)

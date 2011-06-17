@@ -20,9 +20,10 @@ libttfautohint_a_SOURCES = ta.h \
                            tatypes.h \
                            ttfautohint.c ttfautohint.h
 
-noinst_PROGRAMS = hint
-hint_SOURCES = hint.c \
-               ttfautohint.h
-hint_LDADD = libttfautohint.a
+bin_PROGRAMS = ttfautohint
+ttfautohint_SOURCES = hint.c \
+                      ttfautohint.h
+ttfautohint_LDADD = libttfautohint.a \
+                    $(FREETYPE_LDFLAGS)
 
 ## end of Makefile.am
