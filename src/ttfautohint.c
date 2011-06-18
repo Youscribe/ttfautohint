@@ -13,11 +13,14 @@
 
 static FT_Error
 TA_font_read(FONT* font,
-             FILE* in)
+             void* in)
 {
-  fseek(in, 0, SEEK_END);
-  font->in_len = ftell(in);
-  fseek(in, 0, SEEK_SET);
+  /* XXX provide different means to read a font */
+  FILE* in_file = (FILE*)in;
+
+  fseek(in_file, 0, SEEK_END);
+  font->in_len = ftell(in_file);
+  fseek(in_file, 0, SEEK_SET);
 
   /* a valid TTF can never be that small */
   if (font->in_len < 100)
@@ -27,7 +30,7 @@ TA_font_read(FONT* font,
   if (!font->in_buf)
     return FT_Err_Out_Of_Memory;
 
-  if (fread(font->in_buf, 1, font->in_len, in) != font->in_len)
+  if (fread(font->in_buf, 1, font->in_len, in_file) != font->in_len)
     return FT_Err_Invalid_Stream_Read;
 
   return TA_Err_Ok;
@@ -1325,9 +1328,13 @@ Err:
 
 static FT_Error
 TA_font_write(FONT* font,
-              FILE* out)
+              void* out)
 {
-  if (fwrite(font->out_buf, 1, font->out_len, out) != font->out_len)
+  /* XXX provide different means to write a font */
+  FILE* out_font = (FILE*)out;
+
+
+  if (fwrite(font->out_buf, 1, font->out_len, out_font) != font->out_len)
     return TA_Err_Invalid_Stream_Write;
 
   return TA_Err_Ok;
@@ -1396,8 +1403,9 @@ TA_font_unload(FONT* font)
 
 
 TA_Error
-TTF_autohint(FILE* in,
-             FILE* out)
+TTF_autohint(void* in,
+             void* out,
+             const char* options)
 {
   FONT* font;
   FT_Error error;

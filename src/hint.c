@@ -50,7 +50,7 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
-  error = TTF_autohint(in, out);
+  error = TTF_autohint((void*)in, (void*)out, NULL);
   if (error)
   {
     fprintf(stderr, "Error code `0x%02x' while autohinting font\n", error);

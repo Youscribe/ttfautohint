@@ -25,15 +25,25 @@ typedef int TA_Error;
  * `prep', `fpgm', `cvt ', and `glyf'), and write a new TrueType font with
  * new bytecode based on the autohinting of the FreeType library.
  *
- * It expects two file handles: `in', opened for binary reading, which
- * points to the input TrueType font, and `out', opened for binary writing,
- * which points to the output TrueType font.
+ * It expects three arguments:
+ *
+ *   in        A void pointer to the input data.
+ *
+ *   out       A void pointer to the output data.
+ *
+ *   options   A string giving options to control the conversion.
+ *
+ * By default, `in' and `out' are cast to `FILE*', opened for binary reading
+ * and writing, respectively.
+ *
+ * Currently, `options' is ignored.
  *
  */
 
 TA_Error
-TTF_autohint(FILE *in,
-             FILE *out);
+TTF_autohint(void *in,
+             void *out,
+             const char* options);
 
 #endif /* __TTFAUTOHINT_H__ */
 
