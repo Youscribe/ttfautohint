@@ -1,26 +1,15 @@
-ttfautohint
------------
+ttfautohint 0.1
+---------------
 
 by Werner Lemberg <wl@gnu.org>
 
 
-This project will eventually lead to a new library which takes a TrueType
-font as the input, remove its bytecode instructions (if any), and return a
-new font where all glyphs are bytecode hinted using the information given by
-FreeType's autohinting module.  The idea is to provide the excellent quality
-of the autohinter on platforms which don't use FreeType.
+This project provides a library which takes a TrueType font as the input,
+remove its bytecode instructions (if any), and return a new font where all
+glyphs are bytecode hinted using the information given by FreeType's
+autohinting module.  The idea is to provide the excellent quality of the
+autohinter on platforms which don't use FreeType.
 
-Right now, I'm still in a phase of collecting ideas, analyzing previous art. 
-In particular, I've already examined the TrueType auto-instructor of
-FontForge (written originally by Michał Nowakowski), but this is too tightly
-integrated into FontForge to be of much help currently.
-
-Note that, contrary to the autohinter, generating such fonts is not a
-time-critical issue.  In other words, it might be possible (probably in a
-follow-up project) to add further, more time-consuming analysis to the glyph
-shapes for improving the output bytecode.
-
-Ideas, suggestions, comments are highly welcomed!  I'm especially interested
-in thoughts how possible function parameters might look like to control the
-generation of the hints.  Currently, it would be a black box process
-(essentially the same as the autohinter).
+The library has a single API function, `TTF_autohint', which takes two
+parameters, `in' and `out', together with a constant string specifying
+options to control the conversion.

@@ -1,0 +1,15 @@
+progress indicator
+option handling
+Windows font checker
+handling of copyrighted fonts
+
+`modified' field in `head'
+`lowestRecPPEM' field in `head'
+
+options:
+  size range
+  native TT pre-hinting
+  setting fallback hinting module
+  handling OT features -> use HarfBuzz?
+  x-height snapping -> switch off, list of exceptions, etc.
+  specifying the types of `in' and `out'
