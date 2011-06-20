@@ -617,6 +617,9 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
         if (delta1 < 0)
           delta2 = -delta2;
+
+        blue->ref.fit = TA_PIX_ROUND(blue->ref.cur);
+        blue->shoot.fit = blue->ref.fit + delta2;
 #else
         /* simplified version due to abs(dist) <= 48 */
         delta2 = dist;
@@ -632,10 +635,10 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
         if (dist < 0)
           delta2 = -delta2;
-#endif
 
         blue->ref.fit = TA_PIX_ROUND(blue->ref.cur);
-        blue->shoot.fit = blue->ref.fit + delta2;
+        blue->shoot.fit = blue->ref.fit - delta2;
+#endif
 
         blue->flags |= TA_LATIN_BLUE_ACTIVE;
       }

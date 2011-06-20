@@ -461,7 +461,8 @@ unsigned char FPGM(bci_blue_round_b) [] = {
   PUSHB_1,
     3,
   CINDEX,
-  ADD, /* s: ref_idx round(ref) shoot_idx (round(ref) + delta) */
+  SWAP,
+  SUB, /* s: ref_idx round(ref) shoot_idx (round(ref) - delta) */
 
   WCVTP,
   WCVTP,
