@@ -3,6 +3,9 @@ option handling
 Windows font checker
 handling of copyrighted fonts
 
+man page for ttfautohint demo program?
+man page for ttfautohint library?
+
 `modified' field in `head'
 `lowestRecPPEM' field in `head'
 
@@ -13,3 +16,5 @@ options:
   handling OT features -> use HarfBuzz?
   x-height snapping -> switch off, list of exceptions, etc.
   specifying the types of `in' and `out'
+
+EOF

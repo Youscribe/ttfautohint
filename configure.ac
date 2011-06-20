@@ -3,7 +3,7 @@
 AC_INIT([ttfautohint],
         [0.1],
         [freetype-devel@nongnu.org])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror gnu])
 
 AM_SILENT_RULES([yes])
 

@@ -1,0 +1,12 @@
+The ttfautohint library has been written by Werner Lemberg <wl@gnu.org>.
+
+It is largely based on the FreeType autohinting module, written by David
+Turner <david@freetype.org>.
+
+The following people have provided help in developing and testing the
+library:
+
+James Cloos <cloos@jhcloos.com>
+Vernon Adams <vern@newtypography.co.uk>
+
+EOF

@@ -13,3 +13,5 @@ autohinter on platforms which don't use FreeType.
 The library has a single API function, `TTF_autohint', which takes two
 parameters, `in' and `out', together with a constant string specifying
 options to control the conversion.
+
+EOF
