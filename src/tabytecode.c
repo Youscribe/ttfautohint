@@ -283,6 +283,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   *(arg--) = num_contours;
 
   start = 0;
+  end = 0;
 
   for (p = 0; p < num_contours; p++)
   {

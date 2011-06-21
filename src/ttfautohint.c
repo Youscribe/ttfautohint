@@ -1223,8 +1223,8 @@ TA_font_build_TTC(FONT* font)
   FT_Byte* TTC_header_buf;
   FT_ULong TTC_header_len;
 
-  FT_Byte** TTF_header_bufs;
-  FT_ULong* TTF_header_lens;
+  FT_Byte** TTF_header_bufs = NULL;
+  FT_ULong* TTF_header_lens = NULL;
 
   FT_ULong offset;
   FT_Long i;
