@@ -51,13 +51,14 @@ typedef int TA_Error;
  *                                stream of the output font, opened for
  *                                binary writing.
  *
- *   out-buffer                   A pointer of type `char*' to a buffer
+ *   out-buffer                   A pointer of type `char**' to a buffer
  *                                which contains the output font.  Needs
- *                                `out-buffer-len'.  Not implemented yet.
+ *                                `out-buffer-len'.  Deallocate the memory
+ *                                with `free'.  Not implemented yet.
  *
- *   out-buffer-len               A value of type `size_t', giving the
- *                                length of the output buffer.  Needs
- *                                `out-buffer'.  Not implemented yet.
+ *   out-buffer-len               A pointer of type `size_t*' to a value
+ *                                giving the length of the output buffer.
+ *                                Needs `out-buffer'.  Not implemented yet.
  *
  *   progress-callback            A pointer of type `TA_Progress_Func',
  *                                specifying a callback function for
