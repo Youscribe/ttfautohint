@@ -40,12 +40,11 @@ typedef int TA_Error;
  *
  *   in-buffer                    A pointer of type `const char*' to a
  *                                buffer which contains the input font.
- *                                Needs `in-buffer-len'.  Not implemented
- *                                yet.
+ *                                Needs `in-buffer-len'.
  *
  *   in-buffer-len                A value of type `size_t', giving the
  *                                length of the input buffer.  Needs
- *                                `in-buffer'.  Not implemented yet.
+ *                                `in-buffer'.
  *
  *   out-file                     A pointer of type `FILE*' to the data
  *                                stream of the output font, opened for
@@ -54,11 +53,11 @@ typedef int TA_Error;
  *   out-buffer                   A pointer of type `char**' to a buffer
  *                                which contains the output font.  Needs
  *                                `out-buffer-len'.  Deallocate the memory
- *                                with `free'.  Not implemented yet.
+ *                                with `free'.
  *
  *   out-buffer-len               A pointer of type `size_t*' to a value
  *                                giving the length of the output buffer.
- *                                Needs `out-buffer'.  Not implemented yet.
+ *                                Needs `out-buffer'.
  *
  *   progress-callback            A pointer of type `TA_Progress_Func',
  *                                specifying a callback function for

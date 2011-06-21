@@ -1336,7 +1336,9 @@ TA_font_file_write(FONT* font,
 
 
 static void
-TA_font_unload(FONT* font)
+TA_font_unload(FONT* font,
+               const char *in_buf,
+               char** out_bufp)
 {
   /* in case of error it is expected that unallocated pointers */
   /* are NULL (and counters are zero) */
@@ -1390,8 +1392,10 @@ TA_font_unload(FONT* font)
   }
 
   FT_Done_FreeType(font->lib);
-  free(font->in_buf);
-  free(font->out_buf);
+  if (!in_buf)
+    free(font->in_buf);
+  if (!out_bufp)
+    free(font->out_buf);
   free(font);
 }
 
@@ -1412,6 +1416,11 @@ TTF_autohint(const char* options,
 
   FILE* in_file = NULL;
   FILE* out_file = NULL;
+
+  const char* in_buf = NULL;
+  size_t in_len = 0;
+  char** out_bufp = NULL;
+  size_t* out_lenp = NULL;
 
   const char *op;
 
@@ -1452,18 +1461,37 @@ TTF_autohint(const char* options,
     if (COMPARE("in-file"))
     {
       in_file = va_arg(ap, FILE*);
+      in_buf = NULL;
+      in_len = 0;
+    }
+    else if (COMPARE("in-buffer"))
+    {
+      in_file = NULL;
+      in_buf = va_arg(ap, const char*);
+    }
+    else if (COMPARE("in-buffer-len"))
+    {
+      in_file = NULL;
+      in_len = va_arg(ap, size_t);
     }
     else if (COMPARE("out-file"))
     {
       out_file = va_arg(ap, FILE*);
+      out_bufp = NULL;
+      out_lenp = NULL;
+    }
+    else if (COMPARE("out-buffer"))
+    {
+      out_file = NULL;
+      out_bufp = va_arg(ap, char**);
+    }
+    else if (COMPARE("out-buffer-len"))
+    {
+      out_file = NULL;
+      out_lenp = va_arg(ap, size_t*);
     }
 
     /*
-      in-buffer
-      in-buffer-len
-      out-file
-      out-buffer
-      out-buffer-len
       progress-callback
       hinting-range-min
       hinting-range-max
@@ -1482,16 +1510,32 @@ TTF_autohint(const char* options,
 
   va_end(ap);
 
-  if (!in_file || !out_file)
+  if (!(in_file
+        || (in_buf && in_len)))
+    return FT_Err_Invalid_Argument;
+
+  if (!(out_file
+        || (out_bufp && out_lenp)))
     return FT_Err_Invalid_Argument;
 
   font = (FONT*)calloc(1, sizeof (FONT));
   if (!font)
     return FT_Err_Out_Of_Memory;
 
-  error = TA_font_file_read(font, in_file);
-  if (error)
-    goto Err;
+  if (in_file)
+  {
+    error = TA_font_file_read(font, in_file);
+    if (error)
+      goto Err;
+  }
+  else
+  {
+    /* a valid TTF can never be that small */
+    if (in_len < 100)
+      return FT_Err_Invalid_Argument;
+    font->in_buf = (FT_Byte*)in_buf;
+    font->in_len = in_len;
+  }
 
   error = TA_font_init(font);
   if (error)
@@ -1568,14 +1612,22 @@ TTF_autohint(const char* options,
   if (error)
     goto Err;
 
-  error = TA_font_file_write(font, out_file);
-  if (error)
-    goto Err;
+  if (out_file)
+  {
+    error = TA_font_file_write(font, out_file);
+    if (error)
+      goto Err;
+  }
+  else
+  {
+    *out_bufp = (char*)font->out_buf;
+    *out_lenp = font->out_len;
+  }
 
   error = TA_Err_Ok;
 
 Err:
-  TA_font_unload(font);
+  TA_font_unload(font, in_buf, out_bufp);
 
   return error;
 }
