@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "ta.h"
 
@@ -1395,6 +1396,10 @@ TA_font_unload(FONT* font)
 }
 
 
+#define COMPARE(str) (len == (sizeof (str) - 1) \
+                      && !strncmp(start, str, sizeof (str) - 1))
+
+
 TA_Error
 TTF_autohint(const char* options,
              ...)
@@ -1405,16 +1410,80 @@ TTF_autohint(const char* options,
   FT_Error error;
   FT_Long i;
 
-  FILE* in_file;
-  FILE* out_file;
+  FILE* in_file = NULL;
+  FILE* out_file = NULL;
+
+  const char *op;
+
+
+  if (!options || !*options)
+    return FT_Err_Invalid_Argument;
 
   /* XXX */
   va_start(ap, options);
 
-  in_file = va_arg(ap, FILE*);
-  out_file = va_arg(ap, FILE*);
+  op = options;
+
+  for(;;)
+  {
+    const char* start;
+    size_t len;
+
+
+    start = op;
+
+    /* search comma */
+    while (*op && *op != ',')
+      op++;
+
+    /* remove leading whitespace */
+    while (isspace(*start))
+      start++;
+
+    /* check for empty option */
+    if (start == op)
+      goto End;
+
+    len = op - start;
+
+    /* the `COMPARE' macro uses `len' and `start' */
+
+    /* handle option */
+    if (COMPARE("in-file"))
+    {
+      in_file = va_arg(ap, FILE*);
+    }
+    else if (COMPARE("out-file"))
+    {
+      out_file = va_arg(ap, FILE*);
+    }
+
+    /*
+      in-buffer
+      in-buffer-len
+      out-file
+      out-buffer
+      out-buffer-len
+      progress-callback
+      hinting-range-min
+      hinting-range-max
+      pre-hinting
+      no-x-height-snapping
+      x-height-snapping-exceptions
+      ignore-permissions
+      latin-fallback
+     */
+
+  End:
+    if (!*op)
+      break;
+    op++;
+  }
 
   va_end(ap);
+
+  if (!in_file || !out_file)
+    return FT_Err_Invalid_Argument;
 
   font = (FONT*)calloc(1, sizeof (FONT));
   if (!font)
