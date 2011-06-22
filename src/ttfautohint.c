@@ -1501,7 +1501,6 @@ TTF_autohint(const char* options,
     /*
       progress-callback
       pre-hinting
-      no-x-height-snapping
       x-height-snapping-exceptions
       ignore-permissions
       latin-fallback

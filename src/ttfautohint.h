@@ -106,9 +106,6 @@ typedef void
  *                                This field has no argument.  Not
  *                                implemented yet.
  *
- *   no-x-height-snapping         Disable x-height snapping.  This field has
- *                                no argument.  Not implemented yet.
- *
  *   x-height-snapping-exceptions A pointer of type `const char*' to a
  *                                null-terminated string which gives a list
  *                                of comma separated ppem values or value
@@ -116,9 +113,11 @@ typedef void
  *                                be applied.  A value range has the form
  *                                `value1-value2', meaning `value1' <= ppem
  *                                <= `value2'.  Whitespace is not
- *                                significant; a trailing comma is ignored. 
- *                                By default, there are no snapping
- *                                exceptions.  Not implemented yet.
+ *                                significant; a trailing comma is ignored.
+ *                                If the supplied argument is NULL, no
+ *                                x-height snapping takes place at all.  By
+ *                                default, there are no snapping exceptions.
+ *                                Not implemented yet.
  *
  *   ignore-permissions           If the font has set bit 1 in the `fsType'
  *                                field of the `OS/2' table, the ttfautohint
