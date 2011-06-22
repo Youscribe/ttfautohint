@@ -143,6 +143,16 @@ typedef struct FONT_ {
   FT_ULong num_tables;
 
   TA_LoaderRec loader[1]; /* the interface to the autohinter */
+
+  /* configuration options */
+  TA_Progress_Func progress;
+  FT_UInt hinting_range_min;
+  FT_UInt hinting_range_max;
+  FT_Bool pre_hinting;
+  FT_Bool no_x_height_snapping;
+  FT_Byte* x_height_snapping_exceptions;
+  FT_Bool ignore_permissions;
+  FT_Bool latin_fallback;
 } FONT;
 
 #include "tatables.h"

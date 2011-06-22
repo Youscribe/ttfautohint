@@ -1422,6 +1422,9 @@ TTF_autohint(const char* options,
   char** out_bufp = NULL;
   size_t* out_lenp = NULL;
 
+  FT_Long hinting_range_min = -1;
+  FT_Long hinting_range_max = -1;
+
   const char *op;
 
 
@@ -1490,11 +1493,13 @@ TTF_autohint(const char* options,
       out_file = NULL;
       out_lenp = va_arg(ap, size_t*);
     }
+    else if (COMPARE("hinting-range-min"))
+      hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("hinting-range-max"))
+      hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
 
     /*
       progress-callback
-      hinting-range-min
-      hinting-range-max
       pre-hinting
       no-x-height-snapping
       x-height-snapping-exceptions
@@ -1521,6 +1526,19 @@ TTF_autohint(const char* options,
   font = (FONT*)calloc(1, sizeof (FONT));
   if (!font)
     return FT_Err_Out_Of_Memory;
+
+  if (hinting_range_min >= 0 && hinting_range_min < 2)
+    return FT_Err_Invalid_Argument;
+  if (hinting_range_min < 0)
+    hinting_range_min = 8;
+
+  if (hinting_range_max >= 0 && hinting_range_max < hinting_range_min)
+    return FT_Err_Invalid_Argument;
+  if (hinting_range_max < 0)
+    hinting_range_max = 1000;
+
+  font->hinting_range_min = (FT_UInt)hinting_range_min;
+  font->hinting_range_max = (FT_UInt)hinting_range_max;
 
   if (in_file)
   {
@@ -1566,7 +1584,7 @@ TTF_autohint(const char* options,
   if (error)
     goto Err;
 
-  /* XXX handle subfonts for bytecode tables? */
+  /* XXX handle subfonts for bytecode tables */
 
   /* build `cvt ' table */
   error = TA_sfnt_build_cvt_table(&font->sfnts[0], font);

@@ -1561,7 +1561,9 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                     TA_hints_recorder,
                                     (void *)&recorder);
 
-  for (size = 8; size <= 1000; size++)
+  for (size = font->hinting_range_min;
+       size <= font->hinting_range_max;
+       size++)
   {
     TA_rewind_recorder(&recorder, bufp, size);
 
