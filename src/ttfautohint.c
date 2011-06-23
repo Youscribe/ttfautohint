@@ -1425,6 +1425,9 @@ TTF_autohint(const char* options,
   FT_Long hinting_range_min = -1;
   FT_Long hinting_range_max = -1;
 
+  TA_Progress_Func progress;
+  void* progress_data;
+
   const char *op;
 
 
@@ -1497,9 +1500,12 @@ TTF_autohint(const char* options,
       hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-max"))
       hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("progress-callback"))
+      progress = (TA_Progress_Func)va_arg(ap, void*);
+    else if (COMPARE("progress-callback-data"))
+      progress_data = va_arg(ap, void*);
 
     /*
-      progress-callback
       pre-hinting
       x-height-snapping-exceptions
       ignore-permissions
@@ -1513,6 +1519,8 @@ TTF_autohint(const char* options,
   }
 
   va_end(ap);
+
+  /* check options */
 
   if (!(in_file
         || (in_buf && in_len)))
@@ -1538,6 +1546,11 @@ TTF_autohint(const char* options,
 
   font->hinting_range_min = (FT_UInt)hinting_range_min;
   font->hinting_range_max = (FT_UInt)hinting_range_max;
+
+  font->progress = progress;
+  font->progress_data = progress_data;
+
+  /* now start with processing the data */
 
   if (in_file)
   {

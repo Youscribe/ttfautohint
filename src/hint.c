@@ -16,7 +16,54 @@
 #include "ttfautohint.h"
 
 
+typedef struct Progress_Data_ {
+  long last_sfnt;
+  int begin;
+  int last_percent;
+} Progress_Data;
+
+
 void
+progress(long curr_idx,
+         long num_glyphs,
+         long curr_sfnt,
+         long num_sfnts,
+         void *user)
+{
+  Progress_Data* data = (Progress_Data*)user;
+  int curr_percent;
+  int curr_diff;
+
+
+  if (num_sfnts > 1 && curr_sfnt != data->last_sfnt)
+  {
+    fprintf(stderr, "subfont %ld of %ld\n", curr_sfnt + 1, num_sfnts);
+    data->last_sfnt = curr_sfnt;
+    data->begin = 1;
+  }
+
+  if (data->begin)
+  {
+    fprintf(stderr, "  %ld glyphs\n"
+                    "   ", num_glyphs);
+    data->begin = 0;
+  }
+
+  /* print progress approx. all 10% */
+  curr_percent = curr_idx * 100 / num_glyphs;
+  curr_diff = curr_percent - data->last_percent;
+  if (curr_diff >= 10)
+  {
+    fprintf(stderr, " %d%%", curr_percent);
+    data->last_percent = curr_percent - curr_percent % 10;
+  }
+
+  if (curr_idx + 1 == num_glyphs)
+    fprintf(stderr, "\n");
+}
+
+
+static void
 usage(char* program_name,
       int is_error)
 {
@@ -42,6 +89,9 @@ main(int argc,
   FILE *in;
   FILE *out;
   TA_Error error;
+
+  Progress_Data progress_data = {-1, 1, 0};
+  TA_Progress_Func progress_func = NULL;
 
   int hinting_range_min = 0;
   int hinting_range_max = 0;
@@ -97,6 +147,7 @@ main(int argc,
       break;
 
     case 'V':
+      progress_func = progress;
       break;
 
     case 'v':
@@ -152,9 +203,11 @@ main(int argc,
   }
 
   error = TTF_autohint("in-file, out-file,"
-                       "hinting-range-min, hinting-range-max",
+                       "hinting-range-min, hinting-range-max,"
+                       "progress-callback, progress-callback-data",
                        in, out,
-                       hinting_range_min, hinting_range_max);
+                       hinting_range_min, hinting_range_max,
+                       progress_func, &progress_data);
   if (error)
   {
     fprintf(stderr, "Error code `0x%02x' while autohinting font\n", error);

@@ -1690,6 +1690,10 @@ TA_sfnt_build_glyf_hints(SFNT* sfnt,
     error = TA_sfnt_build_glyph_instructions(sfnt, font, idx);
     if (error)
       return error;
+    if (font->progress)
+      font->progress(idx, face->num_glyphs,
+                     sfnt - font->sfnts, font->num_sfnts,
+                     font->progress_data);
   }
 
   return FT_Err_Ok;

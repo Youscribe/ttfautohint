@@ -22,13 +22,16 @@ typedef int TA_Error;
  * `curr_sfnt' gives the current subfont within a TrueType Collection (TTC),
  * and `num_sfnts' the total number of subfonts.  Currently, the ttfautohint
  * library only hints glyphs from the `glyf' table used in subfont 0.
+ *
+ * `progress_data' is a void pointer to user supplied data.
  */
 
 typedef void
 (*TA_Progress_Func)(long curr_idx,
                     long num_glyphs,
                     long curr_sfnt,
-                    long num_sfnts);
+                    long num_sfnts,
+                    void *progress_data);
 
 
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */
@@ -84,6 +87,10 @@ typedef void
  *                                processed.  If this field is not set, no
  *                                progress callback function is used.  Not
  *                                implemented yet.
+ *
+ *   progress-callback-data       A pointer of type `void*' to user data
+ *                                which is passed to the progress callback
+ *                                function.
  *
  *   hinting-range-min            An integer (which must be larger than or
  *                                equal to 2) giving the lowest ppem value

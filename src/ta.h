@@ -146,6 +146,7 @@ typedef struct FONT_ {
 
   /* configuration options */
   TA_Progress_Func progress;
+  void *progress_data;
   FT_UInt hinting_range_min;
   FT_UInt hinting_range_max;
   FT_Bool pre_hinting;
