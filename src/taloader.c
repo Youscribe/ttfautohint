@@ -45,7 +45,8 @@ ta_loader_init(TA_Loader loader)
 
 FT_Error
 ta_loader_reset(TA_Loader loader,
-                FT_Face face)
+                FT_Face face,
+                FT_UInt fallback_script)
 {
   FT_Error error = FT_Err_Ok;
 
@@ -57,7 +58,7 @@ ta_loader_reset(TA_Loader loader,
 
   if (loader->globals == NULL)
   {
-    error = ta_face_globals_new(face, &loader->globals);
+    error = ta_face_globals_new(face, &loader->globals, fallback_script);
     if (!error)
     {
       face->autohint.data = (FT_Pointer)loader->globals;
@@ -480,6 +481,7 @@ ta_loader_load_glyph(TA_Loader loader,
   FT_Error error;
   FT_Size size = face->size;
   TA_ScalerRec scaler;
+  FT_UInt fallback_script;
 
 
   if (!size)
@@ -496,7 +498,13 @@ ta_loader_load_glyph(TA_Loader loader,
   scaler.render_mode = FT_LOAD_TARGET_MODE(load_flags);
   scaler.flags = 0; /* XXX: fix this */
 
-  error = ta_loader_reset(loader, face);
+  /* XXX this is an ugly hack of ttfautohint: */
+  /* bit 30 and 31 of `load_flags' specify the fallback script */
+  fallback_script = load_flags >> 30;
+
+  /* note that the fallback script can't be changed anymore */
+  /* after the first call of `ta_loader_load_glyph' */
+  error = ta_loader_reset(loader, face, fallback_script);
   if (!error)
   {
     TA_ScriptMetrics metrics;

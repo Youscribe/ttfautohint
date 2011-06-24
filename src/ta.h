@@ -53,6 +53,9 @@
 
 #define MAXP_LEN 32
 
+/* the offset of the type flags field in the `OS/2' table */
+#define OS2_FSTYPE_OFFSET 8
+
 
 /* flags in composite glyph records */
 #define ARGS_ARE_WORDS 0x0001
@@ -118,6 +121,7 @@ typedef struct SFNT_ {
   FT_ULong loca_idx;
   FT_ULong head_idx;
   FT_ULong maxp_idx;
+  FT_ULong OS2_idx;
 
   /* values necessary to update the `maxp' table */
   FT_UShort max_storage;
@@ -153,7 +157,7 @@ typedef struct FONT_ {
   FT_Bool no_x_height_snapping;
   FT_Byte* x_height_snapping_exceptions;
   FT_Bool ignore_permissions;
-  FT_Bool latin_fallback;
+  FT_UInt fallback_script;
 } FONT;
 
 #include "tatables.h"

@@ -36,8 +36,6 @@ static TA_ScriptClass const ta_script_classes[] =
 };
 
 
-/* XXX index of default script in `ta_script_classes' */
-#define TA_SCRIPT_LIST_DEFAULT 0
 /* a bit mask indicating an uncovered glyph */
 #define TA_SCRIPT_LIST_NONE 0x7F
 /* if this flag is set, we have an ASCII digit */
@@ -59,7 +57,8 @@ typedef struct TA_FaceGlobalsRec_
 /* Compute the script index of each glyph within a given face. */
 
 static FT_Error
-ta_face_globals_compute_script_coverage(TA_FaceGlobals globals)
+ta_face_globals_compute_script_coverage(TA_FaceGlobals globals,
+                                        FT_UInt fallback_script)
 {
   FT_Error error = FT_Err_Ok;
   FT_Face face = globals->face;
@@ -75,7 +74,7 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals)
   error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
   if (error)
   {
-    /* ignore this error; we simply use the default script */
+    /* ignore this error; we simply use the fallback script */
     /* XXX: Shouldn't we rather disable hinting? */
     error = FT_Err_Ok;
     goto Exit;
@@ -132,7 +131,7 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals)
   }
 
 Exit:
-  /* by default, all uncovered glyphs are set to the latin script */
+  /* by default, all uncovered glyphs are set to the fallback script */
   /* XXX: Shouldn't we disable hinting or do something similar? */
   {
     FT_Long nn;
@@ -143,7 +142,7 @@ Exit:
       if ((gscripts[nn] & ~TA_DIGIT) == TA_SCRIPT_LIST_NONE)
       {
         gscripts[nn] &= ~TA_SCRIPT_LIST_NONE;
-        gscripts[nn] |= TA_SCRIPT_LIST_DEFAULT;
+        gscripts[nn] |= fallback_script;
       }
     }
   }
@@ -155,7 +154,8 @@ Exit:
 
 FT_Error
 ta_face_globals_new(FT_Face face,
-                    TA_FaceGlobals *aglobals)
+                    TA_FaceGlobals *aglobals,
+                    FT_UInt fallback_script)
 {
   FT_Error error;
   TA_FaceGlobals globals;
@@ -173,7 +173,7 @@ ta_face_globals_new(FT_Face face,
   globals->glyph_count = face->num_glyphs;
   globals->glyph_scripts = (FT_Byte*)(globals + 1);
 
-  error = ta_face_globals_compute_script_coverage(globals);
+  error = ta_face_globals_compute_script_coverage(globals, fallback_script);
   if (error)
   {
     ta_face_globals_free(globals);

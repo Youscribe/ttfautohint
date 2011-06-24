@@ -39,7 +39,8 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
 
   /* load latin glyph `a' to trigger all initializations */
   idx = FT_Get_Char_Index(face, 'a');
-  error = ta_loader_load_glyph(font->loader, face, idx, 0);
+  error = ta_loader_load_glyph(font->loader, face, idx,
+                               font->fallback_script << 30);
 
   return error;
 }

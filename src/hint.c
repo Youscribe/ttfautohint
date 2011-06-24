@@ -64,19 +64,65 @@ progress(long curr_idx,
 
 
 static void
-usage(char* program_name,
-      int is_error)
+show_help(char* program_name,
+          int is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
 
 
-  fprintf(handle, "Usage: %s [options] <in-font> <out-font>\n",
-                  program_name);
+  fprintf(handle,
+
+"Usage: %s [OPTION] IN-FILE OUT-FILE\n"
+"Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
+"The new hints are based on FreeType's autohinter.\n"
+"\n"
+"This program is a simple front-end to the `ttfautohint' library.\n"
+"\n"
+"Options:\n"
+"  -f, --latin-fallback       set fallback script to latin\n"
+"  -h, --help                 display this help and exit\n"
+"  -i, --ignore-permissions   override font license restrictions\n"
+"  -l, --hinting-range-min=N  the minimum ppem value for generating hints\n"
+"  -p, --pre-hinting          apply original hints before generating hints\n"
+"  -r, --hinting-range-max=N  the maximum ppem value for generating hints\n"
+"  -v, --verbose              show progress information\n"
+"  -V, --version              print version information and exit\n"
+"  -x, --x-height-snapping-exceptions=STRING\n"
+"                             specify a comma-separated list of x-height\n"
+"                             snapping exceptions ranges and single values\n"
+"\n"
+"The program accepts both TTF and TTC files as input.\n"
+"The `gasp' table of OUT-FILE enables grayscale hinting for all sizes.\n"
+"Use option -i only if you have a legal permission to modify the font.\n"
+"If option -f is not set, glyphs not in the latin range stay unhinted.\n"
+"The used ppem value for option -p is FUnits per em, normally 2048.\n"
+"\n"
+"Report bugs to: freetype-devel@nongnu.org\n"
+"FreeType home page: <http://www.freetype.org>\n",
+
+          program_name);
 
   if (is_error)
     exit(EXIT_FAILURE);
   else
     exit(EXIT_SUCCESS);
+}
+
+
+static void
+show_version(void)
+{
+  fprintf(stdout,
+
+"ttfautohint version " VERSION "\n"
+"Copyright (C) 2011 Werner Lemberg <wl@gnu.org>.\n"
+"License: FreeType License (FTL) or GNU GPLv2.\n"
+"This is free software: you are free to change and redistribute it.\n"
+"There is NO WARRANTY, to the extent permitted by law.\n"
+
+  );
+
+  exit(EXIT_SUCCESS);
 }
 
 
@@ -98,6 +144,9 @@ main(int argc,
   int have_hinting_range_min = 0;
   int have_hinting_range_max = 0;
 
+  int ignore_permissions = 0;
+  int latin_fallback = 0;
+
 
   while (1)
   {
@@ -108,8 +157,8 @@ main(int argc,
       {"ignore-permissions", no_argument, 0, 'i'},
       {"latin-fallback", no_argument, 0, 'f'},
       {"pre-hinting", no_argument, 0, 'p'},
-      {"verbose", no_argument, 0, 'V'},
-      {"version", no_argument, 0, 'v'},
+      {"verbose", no_argument, 0, 'v'},
+      {"version", no_argument, 0, 'V'},
       {"x-height-snapping-exceptions", required_argument, 0, 'x'},
       {0, 0, 0, 0}
     };
@@ -124,13 +173,15 @@ main(int argc,
     switch (c)
     {
     case 'f':
+      latin_fallback = 1;
       break;
 
     case 'h':
-      usage(argv[0], 0);
+      show_help(argv[0], 0);
       break;
 
     case 'i':
+      ignore_permissions = 1;
       break;
 
     case 'l':
@@ -144,16 +195,19 @@ main(int argc,
       break;
 
     case 'p':
-      break;
-
-    case 'V':
-      progress_func = progress;
+      fprintf(stderr, "Option `-p' not implemented yet\n");
       break;
 
     case 'v':
+      progress_func = progress;
+      break;
+
+    case 'V':
+      show_version();
       break;
 
     case 'x':
+      fprintf(stderr, "Option `-x' not implemented yet\n");
       break;
 
     default:
@@ -168,7 +222,7 @@ main(int argc,
 
   if (hinting_range_min < 2)
   {
-    fprintf(stderr, "The hinting range minimum must be at least 2.\n");
+    fprintf(stderr, "The hinting range minimum must be at least 2\n");
     exit(EXIT_FAILURE);
   }
   if (hinting_range_max < hinting_range_min)
@@ -180,7 +234,7 @@ main(int argc,
   }
 
   if (argc - optind != 2)
-    usage(argv[0], 1);
+    show_help(argv[0], 1);
 
   in = fopen(argv[optind], "rb");
   if (!in)
@@ -204,13 +258,25 @@ main(int argc,
 
   error = TTF_autohint("in-file, out-file,"
                        "hinting-range-min, hinting-range-max,"
-                       "progress-callback, progress-callback-data",
+                       "progress-callback, progress-callback-data,"
+                       "ignore-permissions, fallback-script",
                        in, out,
                        hinting_range_min, hinting_range_max,
-                       progress_func, &progress_data);
+                       progress_func, &progress_data,
+                       ignore_permissions, latin_fallback);
+
   if (error)
   {
-    fprintf(stderr, "Error code `0x%02x' while autohinting font\n", error);
+    if (error == TA_Err_Missing_Legal_Permission)
+      fprintf(stderr,
+              "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
+              "This font must not be modified"
+                " without permission of the legal owner.\n"
+              "Use command line option `-i' to continue"
+                " if you have such a permission\n");
+    else
+      fprintf(stderr,
+              "Error code `0x%02x' while autohinting font\n", error);
     exit(EXIT_FAILURE);
   }
 

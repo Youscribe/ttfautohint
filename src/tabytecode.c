@@ -1484,7 +1484,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   ta_loader_register_hints_recorder(font->loader, NULL, NULL);
   error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx,
-                               FT_LOAD_NO_RECURSE);
+                               FT_LOAD_NO_RECURSE
+                                 | (font->fallback_script << 30));
   if (error)
     return error;
 
@@ -1574,7 +1575,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     /* calling `ta_loader_load_glyph' uses the */
     /* `TA_hints_recorder' function as a callback, */
     /* modifying `hints_record' */
-    error = ta_loader_load_glyph(font->loader, face, idx, 0);
+    error = ta_loader_load_glyph(font->loader, face, idx,
+                                 font->fallback_script << 30);
     if (error)
       goto Err;
 

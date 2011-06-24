@@ -88,6 +88,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->loca_idx = MISSING;
   sfnt->head_idx = MISSING;
   sfnt->maxp_idx = MISSING;
+  sfnt->OS2_idx = MISSING;
 
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
@@ -160,6 +161,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       sfnt->loca_idx = j;
     else if (tag == TTAG_maxp)
       sfnt->maxp_idx = j;
+    else if (tag == TTAG_OS2)
+      sfnt->OS2_idx = j;
 
     if (j == font->num_tables)
     {
@@ -1428,6 +1431,9 @@ TTF_autohint(const char* options,
   TA_Progress_Func progress;
   void* progress_data;
 
+  FT_Bool ignore_permissions = 0;
+  FT_UInt fallback_script = 0;
+
   const char *op;
 
 
@@ -1504,12 +1510,14 @@ TTF_autohint(const char* options,
       progress = (TA_Progress_Func)va_arg(ap, void*);
     else if (COMPARE("progress-callback-data"))
       progress_data = va_arg(ap, void*);
+    else if (COMPARE("ignore-permissions"))
+      ignore_permissions = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("fallback-script"))
+      fallback_script = va_arg(ap, FT_UInt);
 
     /*
       pre-hinting
       x-height-snapping-exceptions
-      ignore-permissions
-      latin-fallback
      */
 
   End:
@@ -1550,6 +1558,10 @@ TTF_autohint(const char* options,
   font->progress = progress;
   font->progress_data = progress_data;
 
+  font->ignore_permissions = ignore_permissions;
+  /* restrict value to two bits */
+  font->fallback_script = fallback_script & 3;
+
   /* now start with processing the data */
 
   if (in_file)
@@ -1589,6 +1601,21 @@ TTF_autohint(const char* options,
     error = TA_sfnt_split_glyf_table(sfnt, font);
     if (error)
       goto Err;
+
+    /* check permission  */
+    if (sfnt->OS2_idx != MISSING)
+    {
+      SFNT_Table* OS2_table = &font->tables[sfnt->OS2_idx];
+
+
+      /* check lower byte of the `fsType' field */
+      if (OS2_table->buf[OS2_FSTYPE_OFFSET + 1] == 0x02
+          && !font->ignore_permissions)
+      {
+        error = TA_Err_Missing_Legal_Permission;
+        goto Err;
+      }
+    }
   }
 
   /* build `gasp' table */

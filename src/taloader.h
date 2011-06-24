@@ -34,7 +34,8 @@ ta_loader_init(TA_Loader loader);
 
 FT_Error
 ta_loader_reset(TA_Loader loader,
-                FT_Face face);
+                FT_Face face,
+                FT_UInt fallback_script);
 
 void
 ta_loader_done(TA_Loader loader);

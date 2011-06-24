@@ -37,6 +37,7 @@ typedef void
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */
 
 #define TA_Err_Ok 0x00
+#define TA_Err_Missing_Legal_Permission 0x0F
 #define TA_Err_Invalid_Stream_Write 0x5F
 #define TA_Err_Hinter_Overflow 0xF0
 
@@ -103,15 +104,16 @@ typedef void
  *                                autohinting.  If this field is not set, it
  *                                defaults to value 1000.
  *
- *   pre-hinting                  Apply native TrueType hinting to all
- *                                glyphs before passing them to the
+ *   pre-hinting                  An integer (1 for `on' and 0 for `off',
+ *                                which is the default) to specify whether
+ *                                native TrueType hinting shall be applied
+ *                                to all glyphs before passing them to the
  *                                (internal) autohinter.  The used
  *                                resolution is the em-size in font units;
  *                                for most fonts this is 2048ppem.  Use this
  *                                if the hints move or scale subglyphs
  *                                independently of the output resolution.
- *                                This field has no argument.  Not
- *                                implemented yet.
+ *                                Not implemented yet.
  *
  *   x-height-snapping-exceptions A pointer of type `const char*' to a
  *                                null-terminated string which gives a list
@@ -131,16 +133,16 @@ typedef void
  *                                library refuses to process the font since
  *                                a permission to do that is required from
  *                                the font's legal owner.  In case you have
- *                                such a permission you might set this
- *                                option to make ttfautohint handle the
- *                                font.  This field has no argument.  Not
- *                                implemented yet.
+ *                                such a permission you might set the
+ *                                integer argument to value 1 to make
+ *                                ttfautohint handle the font.
  *
- *   latin-fallback               Use the `latin' autohinting module as a
- *                                fallback for glyphs not in the `latin'
- *                                range.  This field has no argument.  By
- *                                default, the `dummy' fallback module is
- *                                used.  Not implemented yet.
+ *   fallback-script              An integer which specifies the default
+ *                                script for glyphs not in the `latin'
+ *                                range.  If set to 1, the `latin' script is
+ *                                used.  By default, no script is used
+ *                                (value 0; this disables autohinting for
+ *                                such glyphs).
  *
  * Remarks:
  *

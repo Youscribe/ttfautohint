@@ -16,7 +16,8 @@ typedef struct TA_FaceGlobalsRec_* TA_FaceGlobals;
 
 FT_Error
 ta_face_globals_new(FT_Face face,
-                    TA_FaceGlobals *aglobals);
+                    TA_FaceGlobals *aglobals,
+                    FT_UInt fallback_script);
 
 FT_Error
 ta_face_globals_get_metrics(TA_FaceGlobals globals,
