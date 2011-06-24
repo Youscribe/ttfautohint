@@ -1518,7 +1518,7 @@ TTF_autohint(const char* options,
     else if (COMPARE("hinting-range-max"))
       hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("progress-callback"))
-      progress = (TA_Progress_Func)va_arg(ap, void*);
+      progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
       progress_data = va_arg(ap, void*);
     else if (COMPARE("ignore-permissions"))

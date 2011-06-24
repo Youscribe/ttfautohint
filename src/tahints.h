@@ -346,7 +346,7 @@ typedef enum TA_Action_ {
   ta_serif_link2_upper_bound,
   ta_serif_link2_lower_upper_bound,
 
-  ta_bound,
+  ta_bound
 } TA_Action;
 
 

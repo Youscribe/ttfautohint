@@ -81,26 +81,29 @@ show_help(char* program_name,
 
 
   fprintf(handle,
-
 "Usage: %s [OPTION] IN-FILE OUT-FILE\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
 "This program is a simple front-end to the `ttfautohint' library.\n"
-"\n"
+"\n",
+          program_name);
+  fprintf(handle,
 "Options:\n"
 "  -f, --latin-fallback       set fallback script to latin\n"
 "  -h, --help                 display this help and exit\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum ppem value for generating hints\n"
-"  -p, --pre-hinting          apply original hints before generating hints\n"
+"  -p, --pre-hinting          apply original hints before generating hints\n");
+  fprintf(handle,
 "  -r, --hinting-range-max=N  the maximum ppem value for generating hints\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
 "  -x, --x-height-snapping-exceptions=STRING\n"
 "                             specify a comma-separated list of x-height\n"
 "                             snapping exceptions ranges and single values\n"
-"\n"
+"\n");
+  fprintf(handle,
 "The program accepts both TTF and TTC files as input.\n"
 "The `gasp' table of OUT-FILE enables grayscale hinting for all sizes.\n"
 "Use option -i only if you have a legal permission to modify the font.\n"
@@ -108,9 +111,7 @@ show_help(char* program_name,
 "The used ppem value for option -p is FUnits per em, normally 2048.\n"
 "\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
-"FreeType home page: <http://www.freetype.org>\n",
-
-          program_name);
+"FreeType home page: <http://www.freetype.org>\n");
 
   if (is_error)
     exit(EXIT_FAILURE);
