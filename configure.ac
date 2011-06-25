@@ -45,22 +45,21 @@ AC_SUBST(FREETYPE_CPPFLAGS)
 AC_SUBST(FREETYPE_LDFLAGS)
 
 
-# XXX need 2.4.5
-AC_MSG_CHECKING([whether FreeType version is 2.4.4 or higher])
+AC_MSG_CHECKING([whether FreeType version is 2.4.5 or higher])
 old_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS=$FREETYPE_CPPFLAGS
 AC_TRY_CPP([
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#if (FREETYPE_MAJOR*1000 + FREETYPE_MINOR)*1000 + FREETYPE_PATCH < 2004004
+#if (FREETYPE_MAJOR*1000 + FREETYPE_MINOR)*1000 + FREETYPE_PATCH < 2004005
 #error Freetype version too low.
 #endif
 
 ],
 [AC_MSG_RESULT(yes)
  CPPFLAGS="$old_CPPFLAGS"],
-[AC_MSG_ERROR([Need FreeType library version 2.4.4 or higher])])
+[AC_MSG_ERROR([Need FreeType library version 2.4.5 or higher])])
 
 
 AC_CONFIG_HEADERS([config.h])
