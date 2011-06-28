@@ -8,4 +8,7 @@ man page for ttfautohint library?
 
 handling OT features -> use HarfBuzz?
 
+controlling `gasp' table
+controlling activation threshold of blue zone widths
+
 EOF
