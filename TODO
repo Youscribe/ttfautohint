@@ -1,7 +1,7 @@
 testing with Windows font checker
 
-man page for ttfautohint demo program?
 man page for ttfautohint library?
+install library?
 
 `modified' field in `head'
 `lowestRecPPEM' field in `head'
@@ -10,5 +10,11 @@ handling OT features -> use HarfBuzz?
 
 controlling `gasp' table
 controlling activation threshold of blue zone widths
+
+Implementing `x-height-snapping-exceptions' and `pre-hinting'.
+
+write a GUI
+
+add CJK autohinting module?
 
 EOF

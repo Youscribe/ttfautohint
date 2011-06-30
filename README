@@ -10,8 +10,19 @@ glyphs are bytecode hinted using the information given by FreeType's
 autohinting module.  The idea is to provide the excellent quality of the
 autohinter on platforms which don't use FreeType.
 
-The library has a single API function, `TTF_autohint', which takes two
-parameters, `in' and `out', together with a constant string specifying
-options to control the conversion.
+The library has a single API function, `TTF_autohint'; see
+`src/ttfautohint.h' for a detailed description.  Note that the library
+itself won't get installed currently.
+
+A simple command-line interface to the library is the demo program
+`ttfautohint'; after compilation and installation, say
+
+  ttfautohint --help
+
+for usage information, or say
+
+  man ttfautohint
+
+to read its manual page.
 
 EOF
