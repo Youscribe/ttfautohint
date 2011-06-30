@@ -4477,6 +4477,9 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
   if (error)
     return error;
 
+  if (fpgm_len > sfnt->max_instructions)
+    sfnt->max_instructions = fpgm_len;
+
   /* in case of success, `fpgm_buf' gets linked */
   /* and is eventually freed in `TA_font_unload' */
   error = TA_font_add_table(font,
