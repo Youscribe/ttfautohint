@@ -17,4 +17,6 @@ write a GUI
 
 add CJK autohinting module?
 
+try to reduce size of hints by handling strong points separately
+
 EOF
