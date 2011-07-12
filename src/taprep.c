@@ -306,6 +306,14 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
   if (error)
     return error;
 
+#if 0
+  /* ttfautohint's bytecode in `fpgm' is larger */
+  /* than the bytecode in `prep'; */
+  /* this commented out code here is just for completeness */
+  if (prep_len > sfnt->max_instructions)
+    sfnt->max_instructions = prep_len;
+#endif
+
   /* in case of success, `prep_buf' gets linked */
   /* and is eventually freed in `TA_font_unload' */
   error = TA_font_add_table(font,
