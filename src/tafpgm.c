@@ -1026,6 +1026,9 @@ unsigned char FPGM(bci_scale_glyph) [] = {
     bci_scale_contour,
   LOOPCALL,
 
+  PUSHB_1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
   IUP_y,
 
   ENDF,
@@ -4293,6 +4296,9 @@ unsigned char FPGM(bci_hint_glyph) [] = {
     bci_handle_action,
   LOOPCALL,
 
+  PUSHB_1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
   IUP_y,
 
   ENDF,
