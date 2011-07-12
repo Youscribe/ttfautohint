@@ -266,21 +266,20 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
           EIF,
         EIF,
 
-        ELSE,
-          PUSHB_1,
-            bci_round,
-          CALL, /* dist = round(dist) */
+      ELSE,
+        PUSHB_1,
+          bci_round,
+        CALL, /* dist = round(dist) */
 
-        EIF,
       EIF,
+    EIF,
 
-      SWAP, /* s: dist width */
-      PUSHB_1,
-        0,
-      LT, /* width < 0 */
-      IF,
-        NEG, /* dist = -dist */
-      EIF,
+    SWAP, /* s: dist width */
+    PUSHB_1,
+      0,
+    LT, /* width < 0 */
+    IF,
+      NEG, /* dist = -dist */
     EIF,
   EIF,
 
@@ -2432,7 +2431,7 @@ unsigned char FPGM(bci_action_adjust) [] = {
  *
  *        org_pos = anchor + (edge_orig - anchor_orig);
  *        org_center = org_pos + org_len / 2;
-  *
+ *
  *        cur_pos1 = ROUND(org_center)
  *        delta1 = ABS(org_center - (cur_pos1 - u_off))
  *        delta2 = ABS(org_center - (cur_pos1 + d_off))

@@ -10,6 +10,7 @@ handling OT features -> use HarfBuzz?
 
 controlling `gasp' table
 controlling activation threshold of blue zone widths
+handle normal and bold fonts differently; cf. Infinality patches
 
 Implementing `x-height-snapping-exceptions' and `pre-hinting'.
 
