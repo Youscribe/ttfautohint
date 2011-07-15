@@ -9,15 +9,26 @@ install library?
 handling OT features -> use HarfBuzz?
 
 controlling `gasp' table
+
 controlling activation threshold of blue zone widths
+
+controlling the width of blue zones
+
 handle normal and bold fonts differently; cf. Infinality patches
 
 Implementing `x-height-snapping-exceptions' and `pre-hinting'.
 
-write a GUI
+write a platform-independent GUI
 
 add CJK autohinting module?
 
+hinting in x direction also?
+
 try to reduce size of hints by handling strong points separately
+
+add a config and/or command file for batch handling
+
+allow hinting of single glyphs, using a config file which holds the global
+settings
 
 EOF
