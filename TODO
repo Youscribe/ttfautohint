@@ -31,4 +31,6 @@ add a config and/or command file for batch handling
 allow hinting of single glyphs, using a config file which holds the global
 settings
 
+instead of emitting bytecode, write the hints as a VTT or FontLab script?
+
 EOF
