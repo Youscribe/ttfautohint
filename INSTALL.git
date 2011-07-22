@@ -1,0 +1,23 @@
+
+building and installing ttfautohint from git
+--------------------------------------------
+
+Building ttfautohint from the git repository needs some tools which are not
+required when building from a release:
+
+  autoconf (2.68)
+  automake (1.11.1)
+  libtool (2.4)
+  help2man (1.40.1)
+
+The version numbers in parentheses are known to work.  Newer versions should
+work also.
+
+Say
+
+  ./autogen.sh
+
+to build the `configure' script and to add necessary auxiliary files, then
+you can proceed with the instructions given in the `INSTALL' file.
+
+EOF
