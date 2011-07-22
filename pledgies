@@ -1,0 +1,53 @@
+a script for a pledgie video
+----------------------------
+
+The video presents
+
+  ttfautohint
+
+a new library based on FreeType's autohinting module.
+
+  -> FreeType is a freely available library for rendering many font formats
+
+The idea is to let a small routine automatically compute TrueType hints for
+a given font.
+
+  -> hints are a means to improve legibility for small sizes on the computer
+     screen
+
+Currently, the ttfautohint is in an early state which gives very promising
+results, and which has received a warm welcome by the font designing
+community (and even some quite enthusiastic reactions) but it could be made
+much better and more user-friendly.
+
+  -> screen shots and animations demonstrate the hinting process
+
+The plan is to collect enough money so that I can work on it within the next
+six months, providing the following goodies:
+
+. the cake
+
+    develop a standalone GUI which runs on all major platforms (Windows,
+    MacOS, GNU/Linux)
+
+    improve hinting for TrueType fonts which use OpenType features
+
+    develop interfaces to various font editors so that ttfautohint can be
+    smoothly integrated into their font development process
+
+    add more knobs for better fine-tuning the hinting results
+
+    better support for font families
+
+. the icing
+
+    support more scripts, most notably Arabic and CJK
+
+    investigate hinting along the x-axis
+
+      -> currently, only vertical hinting is implemented
+
+. the cherry
+
+    explore the possibility to emit higher-level TrueType hinting commands
+    as used in hinting scripts provided by Visual TrueType or FontLab
