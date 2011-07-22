@@ -3,6 +3,13 @@ The ttfautohint library has been written by Werner Lemberg <wl@gnu.org>.
 It is largely based on the FreeType autohinting module, written by David
 Turner <david@freetype.org>.
 
+
+Special thanks to Dave Crossland <dave@understandingfonts.com> for proposing
+the original idea, and to Raph Levien <http://raph.levien.com> and the
+Google Web Fonts team <www.google.com/webfonts> for providing financial
+support to initiate the project.
+
+
 The following people have provided help in developing and testing the
 library:
 
