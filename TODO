@@ -34,3 +34,5 @@ settings
 instead of emitting bytecode, write the hints as a VTT or FontLab script?
 
 EOF
+
+make creation of DSIG table optional
