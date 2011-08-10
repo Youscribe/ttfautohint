@@ -1,3 +1,7 @@
+simplify hinting bytecode by using the undocumented properties of some
+  instructions to shift the original coordinates of twilight points
+  (as confirmed by Greg)
+
 testing with Windows font checker
 
 man page for ttfautohint library?
@@ -23,6 +27,8 @@ write a platform-independent GUI
 add CJK autohinting module?
 
 hinting in x direction also?
+  -> warper: shifting with and without scaling
+  -> `standard' autofit hinting
 
 try to reduce size of hints by handling strong points separately
 
@@ -33,6 +39,6 @@ settings
 
 instead of emitting bytecode, write the hints as a VTT or FontLab script?
 
-EOF
-
 make creation of DSIG table optional
+
+EOF
