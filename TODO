@@ -9,6 +9,7 @@ install library?
 
 `modified' field in `head'
 `lowestRecPPEM' field in `head'
+set dropout mode et al.
 
 handling OT features -> use HarfBuzz?
 
@@ -23,6 +24,8 @@ handle normal and bold fonts differently; cf. Infinality patches
 Implementing `x-height-snapping-exceptions' and `pre-hinting'.
 
 write a platform-independent GUI
+  -> direct control over `actions'
+  -> preview similar to ftgrid
 
 add CJK autohinting module?
 
