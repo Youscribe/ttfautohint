@@ -137,7 +137,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       continue;
 
     /* make the allocated buffer length a multiple of 4 */
-    buf_len = (len + 3) & -3;
+    buf_len = (len + 3) & ~3;
     buf = (FT_Byte*)malloc(buf_len);
     if (!buf)
       return FT_Err_Out_Of_Memory;
@@ -541,7 +541,10 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
       len += 2;
   }
 
-  glyf_table->len = len;
+  /* to make the short format of the `loca' table always work, */
+  /* assure an even length of the `glyf' table */
+  glyf_table->len = (len + 1) & ~1;
+
   buf_new = (FT_Byte*)realloc(glyf_table->buf, (len + 3) & ~3);
   if (!buf_new)
     return FT_Err_Out_Of_Memory;
