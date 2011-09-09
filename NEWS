@@ -1,3 +1,9 @@
+New in 0.3:
+
+* Fix font generation; sometimes the `glyf' table was one byte too short,
+  making the font invalid.
+
+
 New in 0.2:
 
 * Fix bytecode bugs which prevented correct rendering on some platforms.

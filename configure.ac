@@ -11,7 +11,7 @@
 # with the ttfautohint library.
 
 AC_INIT([ttfautohint],
-        [0.2],
+        [0.3],
         [freetype-devel@nongnu.org])
 AM_INIT_AUTOMAKE([-Wall -Werror gnits])
 
