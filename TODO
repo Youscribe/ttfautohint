@@ -7,6 +7,9 @@ testing with Windows font checker
 man page for ttfautohint library?
 install library?
 
+make FreeType error codes human-readable
+explicitly check for new functionality of `FT_Sfnt_Table_Info'
+
 `modified' field in `head'
 `lowestRecPPEM' field in `head'
 set dropout mode et al.
