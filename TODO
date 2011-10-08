@@ -1,38 +1,49 @@
+essential fixes
+---------------
+
 simplify hinting bytecode by using the undocumented properties of some
-  instructions to shift the original coordinates of twilight points
-  (as confirmed by Greg)
+  instructions to shift the original coordinates of twilight points; this
+  should also fix the rendering problems on platforms like OS X.
 
-testing with Windows font checker
-
-man page for ttfautohint library?
-install library?
-
-make FreeType error codes human-readable
 explicitly check for new functionality of `FT_Sfnt_Table_Info'
-
-`modified' field in `head'
-`lowestRecPPEM' field in `head'
-set dropout mode et al.
-
-handling OT features -> use HarfBuzz?
-
-controlling `gasp' table
-
-controlling activation threshold of blue zone widths
-
-controlling the width of blue zones
-
-handle normal and bold fonts differently; cf. Infinality patches
-
-Implementing `x-height-snapping-exceptions' and `pre-hinting'.
 
 write a platform-independent GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
 
-add CJK autohinting module?
 
-hinting in x direction also?
+important improvements
+----------------------
+
+handle OT features
+  -> use HarfBuzz?
+
+control `gasp' table
+
+control activation threshold of blue zone widths
+
+control the width of blue zones
+
+handle normal and bold fonts differently; cf. Infinality patches
+
+implement `x-height-snapping-exceptions' and `pre-hinting'
+
+allow hinting of single glyphs, using a config file which holds the global
+  settings
+
+
+minor improvements
+------------------
+
+make FreeType error codes human-readable
+
+correctly set `modified' field in `head'
+
+correctly set `lowestRecPPEM' field in `head'
+
+set dropout mode et al.
+
+apply hinting in x direction also?
   -> warper: shifting with and without scaling
   -> `standard' autofit hinting
 
@@ -40,11 +51,27 @@ try to reduce size of hints by handling strong points separately
 
 add a config and/or command file for batch handling
 
-allow hinting of single glyphs, using a config file which holds the global
-settings
-
-instead of emitting bytecode, write the hints as a VTT or FontLab script?
-
 make creation of DSIG table optional
+
+
+later enhancements
+------------------
+
+add CJK autohinting module
+add Hebrew autohinting module
+
+instead of emitting bytecode, write the hints as a VTT or FontLab script
+
+Windows/Mac installer
+
+
+various
+-------
+
+testing with Windows font checker
+
+man page for ttfautohint library
+install library
+
 
 EOF
