@@ -18,13 +18,33 @@ important improvements
 handle OT features
   -> use HarfBuzz?
 
-control `gasp' table
+control `gasp' table; Adam Twardoch suggest the following:
+
+  1. Calculate "gaspstem", i.e. the most common thickness of horizontal
+     stems (y-direction distances) for lowercase Latin letters.
+  2. If gaspstem <= 0.03 * upm, apply gasp symmetric smoothing across the
+     entire range (rangeMaxPPEM 0xFFFF, value 15)
+  3. Else, calculate gaspthreshold as follows:
+       ceil(1.33 * upm / gaspstem) - 1
+  4. Apply no symmetric smoothing up to the gaspthreshold ppem (rangeMaxPPEM
+     gaspthreshold, value 7), and apply symmetric smoothing above.
+
+  In addition, ttfautohint should provide a commandline parameter that
+  allows the user to override the automatic logic.  If that parameter = 0,
+  then gasp value 15 should be applied across the entire range.  If the
+  parameter > 0, then up to that parameter value the gasp value 7 should be
+  applied, and gasp value 15 should be applied above.
+
+control dropout mode
 
 control activation threshold of blue zone widths
 
 control the width of blue zones
 
 handle normal and bold fonts differently; cf. Infinality patches
+
+try to `embolden' fonts at small sizes to avoid drop-outs; cf. Infinality
+  patches
 
 implement `x-height-snapping-exceptions' and `pre-hinting'
 
