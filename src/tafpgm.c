@@ -928,7 +928,7 @@ unsigned char FPGM(bci_align_segments) [] = {
  *   Scale a contour using two points giving the maximum and minimum
  *   coordinates.
  *
- *   It expects that all points on the contour are not touched.
+ *   It expects that no point on the contour is touched.
  *
  * in: min_point
  *     max_point
@@ -1041,7 +1041,7 @@ unsigned char FPGM(bci_scale_glyph) [] = {
  *
  *   Shift a contour by a given amount.
  *
- *   It expects that rp1 (point to by zp0) is set up properly; zp2 must
+ *   It expects that rp1 (pointed to by zp0) is set up properly; zp2 must
  *   point to the normal zone 1.
  *
  * in:  contour
