@@ -100,11 +100,13 @@ TA_table_build_cvt(FT_Byte** cvt,
 
   buf_p = buf;
 
-  /* CVT index 0 is reserved for value 1 in 16.16 format */
-  /* (which gets automatically scaled, and this scaling factor we need); */
-  /* however, it is too large to be stored directly via the `cvt ' table */
-  *(buf_p++) = 0;
-  *(buf_p++) = 0;
+  /* some CVT values are initialized (and modified) at runtime; */
+  /* see the `cvtl_xxx' macros in tabytecode.h */
+  for (i = 0; i < CVT_HORZ_STANDARD_WIDTH_OFFSET(font); i++)
+  {
+    *(buf_p++) = 0;
+    *(buf_p++) = 0;
+  }
 
   if (haxis->width_count > 0)
   {

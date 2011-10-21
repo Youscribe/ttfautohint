@@ -379,12 +379,14 @@
 #define ACTION_OFFSET bci_action_ip_before
 
 
-/* CVT stuff */
+/* symbolic names for CVT locations */
 
-/* CVT index 0 gets assigned in the `prep' table */
+#define cvtl_temp 0 /* used for creating twilight points */
+#define cvtl_scale cvtl_temp + 1 /* assigned in the `prep' table */
+
 
 /* the horizontal and vertical standard widths */
-#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) 1
+#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) cvtl_scale + 1
 #define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
           CVT_HORZ_STANDARD_WIDTH_OFFSET(font) + 1
 

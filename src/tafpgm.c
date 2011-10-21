@@ -1104,7 +1104,7 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   SVTCA_y,
 
   PUSHB_1,
-    0,
+    cvtl_scale,
   RCVT, /* scaling factor FUnits -> pixels */
   MUL,
   PUSHB_1,

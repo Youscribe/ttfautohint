@@ -20,7 +20,7 @@
 
 /* we often need 0x10000 which can't be pushed directly onto the stack, */
 /* thus we provide it in the storage area; */
-/* at the same time, we store it in CVT index 0 also */
+/* at the same time, we store it in CVT index `cvtl_scale' also */
 /* to get a scaling value from FUnits to pixels */
 
 unsigned char PREP(store_0x10000) [] = {
@@ -40,7 +40,7 @@ unsigned char PREP(store_0x10000) [] = {
 
   DUP,
   PUSHB_1,
-    0,
+    cvtl_scale,
   SWAP,
   WCVTF, /* store value 1 in 16.16 format, scaled */
 
