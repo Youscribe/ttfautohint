@@ -1389,7 +1389,7 @@ unsigned char FPGM(bci_action_ip_before) [] = {
 
   PUSHB_1,
     0,
-  SZP2, /* set zp2 to normal zone 0 */
+  SZP2, /* set zp2 to twilight zone 0 */
 
   DUP,
   PUSHB_1,
@@ -1446,7 +1446,7 @@ unsigned char FPGM(bci_action_ip_after) [] = {
 
   PUSHB_1,
     0,
-  SZP2, /* set zp2 to normal zone 0 */
+  SZP2, /* set zp2 to twilight zone 0 */
 
   DUP,
   PUSHB_1,
