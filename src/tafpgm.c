@@ -1137,7 +1137,7 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
 
   PUSHB_1,
     0,
-  SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
   /* we arbitrarily use twilight point 0 as the reference point; */
   PUSHB_2,
