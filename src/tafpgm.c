@@ -1269,11 +1269,11 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
   PUSHB_1,
     sal_scale,
   RS,
-  MUL, /* edge_orig_pos * scale * 2^10 */
+  MUL, /* point_orig_pos * scale * 2^10 */
   PUSHB_1,
     sal_0x10000,
   RS,
-  DIV, /* edge_orig_pos = edge_orig_pos * scale */
+  DIV, /* point_orig_pos = point_orig_pos * scale */
 
   PUSHB_1,
     sal_i,
