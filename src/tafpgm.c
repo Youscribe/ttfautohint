@@ -1217,7 +1217,7 @@ unsigned char FPGM(bci_ip_outer_align_point) [] = {
  *
  *   Auxiliary function for `bci_action_ip_on'.
  *
- * in: edge
+ * in: edge (in twilight zone)
  *     loop_counter (N)
  *       point_1
  *       point_2
@@ -1295,8 +1295,8 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
  *
  *   Auxiliary function for `bci_action_ip_between'.
  *
- * in: after_edge
- *     before_edge
+ * in: after_edge (in twilight zone)
+ *     before_edge (in twilight zone)
  *     loop_counter (N)
  *       point_1
  *       point_2
@@ -1369,7 +1369,7 @@ unsigned char FPGM(bci_ip_between_align_points) [] = {
  *
  *   Handle `ip_before' data to align points located before the first edge.
  *
- * in: first_edge
+ * in: first_edge (in twilight zone)
  *     loop_counter (N)
  *       point_1
  *       point_2
@@ -1426,7 +1426,7 @@ unsigned char FPGM(bci_action_ip_before) [] = {
  *
  *   Handle `ip_after' data to align points located after the last edge.
  *
- * in: last_edge
+ * in: last_edge (in twilight zone)
  *     loop_counter (N)
  *       point_1
  *       point_2
@@ -1485,20 +1485,20 @@ unsigned char FPGM(bci_action_ip_after) [] = {
  *   not part of an edge).
  *
  * in: loop_counter (M)
- *       edge_1
+ *       edge_1 (in twilight zone)
  *       loop_counter (N_1)
  *         point_1
  *         point_2
  *         ...
  *         point_N_1
- *       edge_2
+ *       edge_2 (in twilight zone)
  *       loop_counter (N_2)
  *         point_1
  *         point_2
  *         ...
  *         point_N_2
  *       ...
- *       edge_M
+ *       edge_M (in twilight zone)
  *       loop_counter (N_M)
  *         point_1
  *         point_2
@@ -1535,23 +1535,23 @@ unsigned char FPGM(bci_action_ip_on) [] = {
  *   Handle `ip_between' data to align points located between two edges.
  *
  * in: loop_counter (M)
- *       before_edge_1
- *       after_edge_1
+ *       before_edge_1 (in twilight zone)
+ *       after_edge_1 (in twilight zone)
  *       loop_counter (N_1)
  *         point_1
  *         point_2
  *         ...
  *         point_N_1
- *       before_edge_2
- *       after_edge_2
+ *       before_edge_2 (in twilight zone)
+ *       after_edge_2 (in twilight zone)
  *       loop_counter (N_2)
  *         point_1
  *         point_2
  *         ...
  *         point_N_2
  *       ...
- *       before_edge_M
- *       after_edge_M
+ *       before_edge_M (in twilight zone)
+ *       after_edge_M (in twilight zone)
  *       loop_counter (N_M)
  *         point_1
  *         point_2
