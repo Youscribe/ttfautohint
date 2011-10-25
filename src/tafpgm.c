@@ -4270,6 +4270,12 @@ unsigned char FPGM(bci_handle_action) [] = {
  *         ... data ...
  *
  * uses: bci_handle_action
+ *
+ *       bci_action_ip_before
+ *       bci_action_ip_after
+ *       bci_action_ip_on
+ *       bci_action_ip_between
+ *
  *       bci_action_adjust_bound
  *       bci_action_stem_bound
  *
@@ -4278,12 +4284,27 @@ unsigned char FPGM(bci_handle_action) [] = {
  *       bci_action_blue_anchor
  *       bci_action_adjust
  *       bci_action_stem
- *
  *       bci_action_blue
+ *
  *       bci_action_serif
+ *       bci_action_serif_lower_bound
+ *       bci_action_serif_upper_bound
+ *       bci_action_serif_lower_upper_bound
+ *
  *       bci_action_serif_anchor
+ *       bci_action_serif_anchor_lower_bound
+ *       bci_action_serif_anchor_upper_bound
+ *       bci_action_serif_anchor_lower_upper_bound
+ *
  *       bci_action_serif_link1
+ *       bci_action_serif_link1_lower_bound
+ *       bci_action_serif_link1_upper_bound
+ *       bci_action_serif_link1_lower_upper_bound
+ *
  *       bci_action_serif_link2
+ *       bci_action_serif_link2_lower_bound
+ *       bci_action_serif_link2_upper_bound
+ *       bci_action_serif_link2_lower_upper_bound
  */
 
 unsigned char FPGM(bci_hint_glyph) [] = {
