@@ -1,3 +1,9 @@
+New in 0.4:
+
+* The bytecode has been changed to `create' twilight points.  This should
+  avoid rendering artifacts on some platforms.
+
+
 New in 0.3:
 
 * Fix font generation; sometimes the `glyf' table was one byte too short,
