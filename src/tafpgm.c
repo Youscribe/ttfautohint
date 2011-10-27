@@ -23,16 +23,34 @@
 #define FPGM(func_name) fpgm_ ## func_name
 
 
+/*
+ * Due to a bug in FreeType up to and including version 2.4.7,
+ * it is not possible to use MD_orig with twilight points.
+ * We circumvent this by using GC_orig.
+ */
+#define MD_orig_fixed \
+  GC_orig, \
+  SWAP, \
+  GC_orig, \
+  SWAP, \
+  SUB
+
+#define MD_orig_ZP2_0 \
+  MD_orig_fixed
+
+#define MD_orig_ZP2_1 \
+  PUSHB_1, \
+    0, \
+  SZP2, \
+  MD_orig_fixed, \
+  PUSHB_1, \
+    1, \
+  SZP2
+
+
 /* in the comments below, the top of the stack (`s:') */
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
-
-/* we use two sets of points in the twilight zone (zp0): */
-/* one set to hold the unhinted segment positions, */
-/* and another one to track the positions as changed by the hinting -- */
-/* this is necessary since all points in zp0 */
-/* have (0,0) as the original coordinates, */
-/* making e.g. `MD_orig' return useless results */
 
 
 /*
@@ -549,9 +567,7 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
  * bci_create_segment
  *
  *   Store start and end point of a segment in the storage area,
- *   then construct two points in the twilight zone to represent it:
- *   an original one (which stays unmodified) and a hinted one,
- *   initialized with the original value.
+ *   then construct a point in the twilight zone to represent it.
  *
  *   This function is used by `bci_create_segment_points'.
  *
@@ -563,8 +579,7 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
  * uses: bci_get_point_extrema
  *
  * sal: sal_i (start of current segment)
- *      sal_j (current original twilight point)
- *      sal_k (current hinted twilight point)
+ *      sal_j (current twilight point)
  *      sal_point_min
  *      sal_point_max
  *      sal_scale
@@ -705,41 +720,28 @@ unsigned char FPGM(bci_create_segment) [] = {
   RS,
   DIV, /* middle_pos = middle_pos * scale */
 
-  DUP,
+  /* write it to temporary CVT location */
   PUSHB_2,
-    sal_j,
+    cvtl_temp,
     0,
-  SZP2, /* set zp2 to twilight zone 0 */
-  RS,
-  DUP,
-  GC_cur, /* s: middle_pos middle_pos point[sal_j] point[sal_j]_pos */
-  ROLL,
+  SZP0, /* set zp0 to twilight zone 0 */
   SWAP,
-  SUB,
-  SHPIX, /* align `point[sal_j]' with middle point */
+  WCVTP,
 
+  /* create twilight point with index `sal_j' */
   PUSHB_1,
-    sal_k,
+    sal_j,
   RS,
-  DUP,
-  GC_cur, /* s: middle_pos point[sal_k] point[sal_k]_pos */
-  ROLL,
-  SWAP,
-  SUB,
-  SHPIX, /* align `point[sal_k]' with middle point */
+  PUSHB_1,
+    cvtl_temp,
+  MIAP_noround,
 
-  PUSHB_6,
-    sal_k,
-    1,
-    sal_k,
+  PUSHB_3,
     sal_j,
     1,
     sal_j,
   RS,
-  ADD, /* original_twilight_point = original_twilight_point + 1 */
-  WS,
-  RS,
-  ADD, /* hinted_twilight_point = hinted_twilight_point + 1 */
+  ADD, /* twilight_point = twilight_point + 1 */
   WS,
 
   ENDF,
@@ -771,8 +773,7 @@ unsigned char FPGM(bci_create_segment) [] = {
  * uses: bci_create_segment
  *
  * sal: sal_i (start of current segment)
- *      sal_j (current original twilight point)
- *      sal_k (current hinted twilight point)
+ *      sal_j (current twilight point)
  *      sal_num_segments
  *      sal_scale
  */
@@ -791,18 +792,14 @@ unsigned char FPGM(bci_create_segments) [] = {
   SWAP,
   WS, /* sal_num_segments = num_segments */
 
-  PUSHB_7,
+  PUSHB_5,
     sal_segment_offset,
     sal_segment_offset,
     sal_num_segments,
 
-    sal_k,
-    0,
     sal_j,
-    sal_num_segments,
-  RS,
-  WS, /* sal_j = num_segments (offset for original points) */
-  WS, /* sal_k = 0 (offset for hinted points) */
+    0,
+  WS, /* sal_j = 0 (point offset) */
 
   RS,
   DUP,
@@ -885,6 +882,7 @@ unsigned char FPGM(bci_align_segment) [] = {
   ENDF,
 
 };
+
 
 /*
  * bci_align_segments
@@ -1139,22 +1137,19 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* we arbitrarily use twilight point 0 as the reference point; */
-  PUSHB_2,
+  /* we create twilight point 0 as a reference point, */
+  /* setting the original position to zero (using `cvtl_temp') */
+  PUSHB_5,
     0,
     0,
-  MDAP_noround, /* set rp0 and rp1 to twilight point 0 */
-  SWAP, /* c: first_contour num_contours 0 delta */
+    cvtl_temp,
+    cvtl_temp,
+    0,
+  WCVTP,
+  MIAP_noround, /* rp0 and rp1 now point to twilight point 0 */
 
-  PUSHB_1,
-    0,
-  GC_orig,
-  PUSHB_1,
-    0,
-  GC_cur,
-  SUB,
-  ADD,
-  SHPIX, /* rp1_pos - rp1_pos_orig = delta */
+  SWAP, /* s: first_contour num_contours 0 delta */
+  SHPIX, /* rp1_pos - rp1_orig_pos = delta */
 
   PUSHB_2,
     bci_shift_contour,
@@ -1320,31 +1315,21 @@ unsigned char FPGM(bci_ip_between_align_points) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
   CINDEX,
-  DUP,
+  DUP, /* s: ... before after before before */
   MDAP_noround, /* set rp0 and rp1 to `before' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: before after before_orig */
   DUP,
-  GC_cur,
+  GC_orig, /* s: ... before after before before_orig_pos */
   PUSHB_1,
     sal_i,
   SWAP,
   WS, /* sal_i = before_orig_pos */
   PUSHB_1,
     2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: before after before_orig after_orig */
-
-  MD_cur, /* a = after_orig_pos - before_orig_pos */
-  ROLL,
-  ROLL,
+  CINDEX, /* s: ... before after before after */
   MD_cur, /* b = after_pos - before_pos */
-  SWAP,
+  ROLL,
+  ROLL,
+  MD_orig_ZP2_0, /* a = after_orig_pos - before_orig_pos */
   DIV, /* s: a/b */
   PUSHB_1,
     sal_j,
@@ -1392,11 +1377,7 @@ unsigned char FPGM(bci_action_ip_before) [] = {
   SZP2, /* set zp2 to twilight zone 0 */
 
   DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  GC_cur,
+  GC_orig,
   PUSHB_1,
     sal_i,
   SWAP,
@@ -1449,11 +1430,7 @@ unsigned char FPGM(bci_action_ip_after) [] = {
   SZP2, /* set zp2 to twilight zone 0 */
 
   DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  GC_cur,
+  GC_orig,
   PUSHB_1,
     sal_i,
   SWAP,
@@ -1603,19 +1580,11 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
 
   PUSHB_1,
     4,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge2 edge is_round is_serif edge2_orig */
+  CINDEX, /* s: edge[-1] edge2 edge is_round is_serif edge2 */
   PUSHB_1,
     4,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge2 edge is_round is_serif edge2_orig edge_orig */
-  MD_cur, /* s: edge[-1] edge2 edge is_round is_serif org_len */
+  CINDEX, /* s: edge[-1] edge2 edge is_round is_serif edge2 edge */
+  MD_orig_ZP2_0, /* s: edge[-1] edge2 edge is_round is_serif org_len */
 
   PUSHB_1,
     bci_compute_stem_width,
@@ -1742,20 +1711,12 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
     4,
   CINDEX,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  PUSHB_1,
     4,
   CINDEX,
-  DUP,
+  DUP, /* s: edge[-1] edge2 edge is_round is_serif edge2 edge edge */
   MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge2 edge is_round is_serif edge2_orig edge_orig */
 
-  MD_cur, /* s: edge[-1] edge2 edge is_round is_serif org_len */
+  MD_orig_ZP2_0, /* s: edge[-1] edge2 edge is_round is_serif org_len */
   DUP,
   PUSHB_1,
     sal_org_len,
@@ -1795,20 +1756,12 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
     SWAP, /* s: edge[-1] edge2 cur_len edge */
     DUP,
     PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge[-1] edge2 cur_len edge edge_orig */
-    PUSHB_1,
       sal_anchor,
     RS,
-    DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge[-1] edge2 cur_len edge edge_orig anchor anchor_orig */
+    DUP, /* s: edge[-1] edge2 cur_len edge edge anchor anchor */
     ROLL,
     SWAP,
-    MD_cur,
+    MD_orig_ZP2_0,
     SWAP,
     GC_cur,
     ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
@@ -1887,17 +1840,9 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
       2,
     CINDEX,
     PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD,
-    PUSHB_1,
       sal_anchor,
     RS,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD,
-    MD_cur,
+    MD_orig_ZP2_0,
     ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
 
     DUP,
@@ -1953,6 +1898,7 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
     LT, /* delta1 < delta2 */
     IF,
       POP, /* arg = cur_pos1 */
+
     ELSE,
       SWAP,
       POP, /* arg = cur_pos2 */
@@ -2042,20 +1988,12 @@ unsigned char FPGM(bci_action_link) [] = {
     4,
   CINDEX,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  PUSHB_1,
     4,
   MINDEX,
-  DUP,
+  DUP, /* s: stem is_round is_serif stem base base */
   MDAP_noround, /* set rp0 and rp1 to `base_point' (for ALIGNRP below) */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: stem is_round is_serif stem_orig base_orig */
 
-  MD_cur, /* s: stem is_round is_serif dist_orig */
+  MD_orig_ZP2_0, /* s: stem is_round is_serif dist_orig */
 
   PUSHB_1,
     bci_compute_stem_width,
@@ -2153,20 +2091,12 @@ unsigned char FPGM(bci_action_anchor) [] = {
     4,
   CINDEX,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  PUSHB_1,
     4,
   CINDEX,
-  DUP,
+  DUP, /* s: edge2 edge is_round is_serif edge2 edge edge */
   MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge2 edge is_round is_serif edge2_orig edge_orig */
 
-  MD_cur, /* s: edge2 edge is_round is_serif org_len */
+  MD_orig_ZP2_0, /* s: edge2 edge is_round is_serif org_len */
   DUP,
   PUSHB_1,
     sal_org_len,
@@ -2204,13 +2134,9 @@ unsigned char FPGM(bci_action_anchor) [] = {
     WS,
 
     SWAP, /* s: edge2 cur_len edge */
-    DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge2 cur_len edge edge_orig */
+    DUP, /* s: edge2 cur_len edge edge */
 
-    GC_cur,
+    GC_orig,
     PUSHB_1,
       sal_org_len,
     RS,
@@ -2281,15 +2207,16 @@ unsigned char FPGM(bci_action_anchor) [] = {
   ELSE,
     POP, /* s: edge2 edge */
     DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge2 edge edge_orig */
-
-    MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
     DUP,
-    ALIGNRP, /* align `edge' with `edge_orig' */
-    MDAP_round, /* round `edge' */
+    GC_cur,
+    SWAP,
+    GC_orig,
+    PUSHB_1,
+      bci_round,
+    CALL, /* s: edge2 edge edge_pos round(edge_orig_pos) */
+    SWAP,
+    SUB,
+    SHPIX, /* edge = round(edge_orig) */
 
     /* clean up stack */
     POP,
@@ -2334,10 +2261,21 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
 
   PUSHB_1,
     0,
-  SZP0, /* set zp0 to twilight zone 0 */
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* move `edge_point' to `blue_cvt_idx' position */
-  MIAP_noround, /* this also sets rp0 */
+  /* move `edge_point' to `blue_cvt_idx' position; */
+  /* note that we can't use MIAP since this would modify */
+  /* the twilight point's original coordinates also */
+  RCVT,
+  SWAP,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+  DUP,
+  GC_cur, /* s: new_pos edge edge_pos */
+  ROLL,
+  SWAP,
+  SUB, /* s: edge (new_pos - edge_pos) */
+  SHPIX,
 
   PUSHB_2,
     bci_align_segments,
@@ -2375,19 +2313,11 @@ unsigned char FPGM(bci_action_adjust) [] = {
 
   PUSHB_1,
     4,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge2 edge is_round is_serif edge2_orig */
+  CINDEX, /* s: edge2 edge is_round is_serif edge2 */
   PUSHB_1,
     4,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge2 edge is_round is_serif edge2_orig edge_orig */
-  MD_cur, /* s: edge2 edge is_round is_serif org_len */
+  CINDEX, /* s: edge2 edge is_round is_serif edge2 edge */
+  MD_orig_ZP2_0, /* s: edge2 edge is_round is_serif org_len */
 
   PUSHB_1,
     bci_compute_stem_width,
@@ -2498,20 +2428,12 @@ unsigned char FPGM(bci_action_stem) [] = {
     4,
   CINDEX,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD,
-  PUSHB_1,
     4,
   CINDEX,
-  DUP,
+  DUP, /* s: edge2 edge is_round is_serif edge2 edge edge */
   MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge2 edge is_round is_serif edge2_orig edge_orig */
 
-  MD_cur, /* s: edge2 edge is_round is_serif org_len */
+  MD_orig_ZP2_0, /* s: edge2 edge is_round is_serif org_len */
   DUP,
   PUSHB_1,
     sal_org_len,
@@ -2551,20 +2473,12 @@ unsigned char FPGM(bci_action_stem) [] = {
     SWAP, /* s: edge2 cur_len edge */
     DUP,
     PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge2 cur_len edge edge_orig */
-    PUSHB_1,
       sal_anchor,
     RS,
-    DUP,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: edge2 cur_len edge edge_orig anchor anchor_orig */
+    DUP, /* s: edge2 cur_len edge edge anchor anchor */
     ROLL,
     SWAP,
-    MD_cur,
+    MD_orig_ZP2_0,
     SWAP,
     GC_cur,
     ADD, /* s: edge2 cur_len edge org_pos */
@@ -2642,17 +2556,9 @@ unsigned char FPGM(bci_action_stem) [] = {
       2,
     CINDEX,
     PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD,
-    PUSHB_1,
       sal_anchor,
     RS,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD,
-    MD_cur,
+    MD_orig_ZP2_0,
     ADD, /* s: edge2 cur_len edge org_pos */
 
     DUP,
@@ -2708,6 +2614,7 @@ unsigned char FPGM(bci_action_stem) [] = {
     LT, /* delta1 < delta2 */
     IF,
       POP, /* arg = cur_pos1 */
+
     ELSE,
       SWAP,
       POP, /* arg = cur_pos2 */
@@ -2771,10 +2678,21 @@ unsigned char FPGM(bci_action_blue) [] = {
 
   PUSHB_1,
     0,
-  SZP0, /* set zp0 to twilight zone 0 */
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  /* move `edge_point' to `blue_cvt_idx' position */
-  MIAP_noround, /* this also sets rp0 */
+  /* move `edge_point' to `blue_cvt_idx' position; */
+  /* note that we can't use MIAP since this would modify */
+  /* the twilight point's original coordinates also */
+  RCVT,
+  SWAP,
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+  DUP,
+  GC_cur, /* s: new_pos edge edge_pos */
+  ROLL,
+  SWAP,
+  SUB, /* s: edge (new_pos - edge_pos) */
+  SHPIX,
 
   PUSHB_2,
     bci_align_segments,
@@ -2809,24 +2727,13 @@ unsigned char FPGM(bci_action_serif) [] = {
 
   DUP,
   DUP,
+  DUP,
   PUSHB_1,
-    4,
-  MINDEX, /* s: serif serif serif base */
-  PUSHB_1,
-    2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: serif serif serif base serif_orig */
-  SWAP,
+    5,
+  MINDEX, /* s: serif serif serif serif base */
   DUP,
   MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: serif serif serif serif_orig base_orig */
-  MD_cur,
+  MD_orig_ZP2_0,
   SWAP,
   ALIGNRP, /* align `serif_point' with `base_point' */
   SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
@@ -2868,24 +2775,13 @@ unsigned char FPGM(bci_action_serif_lower_bound) [] = {
 
   DUP,
   DUP,
+  DUP,
   PUSHB_1,
-    4,
-  MINDEX, /* s: edge[-1] serif serif serif base */
-  PUSHB_1,
-    2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] serif serif serif base serif_orig */
-  SWAP,
+    5,
+  MINDEX, /* s: edge[-1] serif serif serif serif base */
   DUP,
   MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] serif serif serif serif_orig base_orig */
-  MD_cur,
+  MD_orig_ZP2_0,
   SWAP,
   ALIGNRP, /* align `serif_point' with `base_point' */
   SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
@@ -2941,24 +2837,13 @@ unsigned char FPGM(bci_action_serif_upper_bound) [] = {
 
   DUP,
   DUP,
+  DUP,
   PUSHB_1,
-    4,
-  MINDEX, /* s: edge[1] serif serif serif base */
-  PUSHB_1,
-    2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] serif serif serif base serif_orig */
-  SWAP,
+    5,
+  MINDEX, /* s: edge[1] serif serif serif serif base */
   DUP,
   MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] serif serif serif serif_orig base_orig */
-  MD_cur,
+  MD_orig_ZP2_0,
   SWAP,
   ALIGNRP, /* align `serif_point' with `base_point' */
   SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
@@ -3015,24 +2900,13 @@ unsigned char FPGM(bci_action_serif_lower_upper_bound) [] = {
 
   DUP,
   DUP,
+  DUP,
   PUSHB_1,
-    4,
-  MINDEX, /* s: edge[1] edge[-1] serif serif serif base */
-  PUSHB_1,
-    2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] serif serif serif base serif_orig */
-  SWAP,
+    5,
+  MINDEX, /* s: edge[1] edge[-1] serif serif serif serif base */
   DUP,
   MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] serif serif serif serif_orig base_orig */
-  MD_cur,
+  MD_orig_ZP2_0,
   SWAP,
   ALIGNRP, /* align `serif_point' with `base_point' */
   SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
@@ -3105,16 +2979,17 @@ unsigned char FPGM(bci_action_serif_anchor) [] = {
   WS, /* sal_anchor = edge_point */
 
   DUP,
+  DUP,
+  DUP,
+  GC_cur,
+  SWAP,
+  GC_orig,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge edge_orig */
-
-  MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `edge_orig' */
-  MDAP_round, /* round `edge' */
+    bci_round,
+  CALL, /* s: edge edge edge_pos round(edge_orig_pos) */
+  SWAP,
+  SUB,
+  SHPIX, /* edge = round(edge_orig) */
 
   MDAP_noround, /* set rp0 and rp1 to `edge' */
 
@@ -3158,16 +3033,17 @@ unsigned char FPGM(bci_action_serif_anchor_lower_bound) [] = {
   WS, /* sal_anchor = edge_point */
 
   DUP,
+  DUP,
+  DUP,
+  GC_cur,
+  SWAP,
+  GC_orig,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge edge_orig */
-
-  MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `edge_orig' */
-  MDAP_round, /* round `edge' */
+    bci_round,
+  CALL, /* s: edge[-1] edge edge edge_pos round(edge_orig_pos) */
+  SWAP,
+  SUB,
+  SHPIX, /* edge = round(edge_orig) */
 
   SWAP, /* s: edge edge[-1] */
   DUP,
@@ -3225,16 +3101,17 @@ unsigned char FPGM(bci_action_serif_anchor_upper_bound) [] = {
   WS, /* sal_anchor = edge_point */
 
   DUP,
+  DUP,
+  DUP,
+  GC_cur,
+  SWAP,
+  GC_orig,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge edge_orig */
-
-  MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `edge_orig' */
-  MDAP_round, /* round `edge' */
+    bci_round,
+  CALL, /* s: edge[1] edge edge edge_pos round(edge_orig_pos) */
+  SWAP,
+  SUB,
+  SHPIX, /* edge = round(edge_orig) */
 
   SWAP, /* s: edge edge[1] */
   DUP,
@@ -3293,16 +3170,17 @@ unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] = {
   WS, /* sal_anchor = edge_point */
 
   DUP,
+  DUP,
+  DUP,
+  GC_cur,
+  SWAP,
+  GC_orig,
   PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] edge edge_orig */
-
-  MDAP_noround, /* set rp0 and rp1 to `edge_orig' */
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `edge_orig' */
-  MDAP_round, /* round `edge' */
+    bci_round,
+  CALL, /* s: edge[1] edge[-1] edge edge edge_pos round(edge_orig_pos) */
+  SWAP,
+  SUB,
+  SHPIX, /* edge = round(edge_orig) */
 
   SWAP, /* s: edge[1] edge edge[-1] */
   DUP,
@@ -3369,19 +3247,11 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
 
   PUSHB_1,
     3,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: after edge before after_orig */
+  CINDEX, /* s: after edge before after */
   PUSHB_1,
     2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: after edge before after_orig before_orig */
-  MD_cur,
+  CINDEX, /* s: after edge before after before */
+  MD_orig_ZP2_0,
   PUSHB_1,
     0,
   EQ, /* after_orig_pos == before_orig_pos */
@@ -3395,19 +3265,11 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
   ELSE,
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig */
+    CINDEX, /* s: ... after edge before edge */
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig before_orig */
-    MD_cur, /* a = edge_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before edge before */
+    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3424,19 +3286,11 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
 
     PUSHB_1,
       4,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig */
+    CINDEX, /* s: ... after edge before a*b after */
     PUSHB_1,
       3,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig before_orig */
-    MD_cur, /* c = after_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before a*b after before */
+    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3496,19 +3350,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
 
   PUSHB_1,
     3,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] after edge before after_orig */
+  CINDEX, /* s: edge[-1] after edge before after */
   PUSHB_1,
     2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] after edge before after_orig before_orig */
-  MD_cur,
+  CINDEX, /* s: edge[-1] after edge before after before */
+  MD_orig_ZP2_0,
   PUSHB_1,
     0,
   EQ, /* after_orig_pos == before_orig_pos */
@@ -3522,19 +3368,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
   ELSE,
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig */
+    CINDEX, /* s: ... after edge before edge */
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig before_orig */
-    MD_cur, /* a = edge_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before edge before */
+    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3551,19 +3389,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
 
     PUSHB_1,
       4,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig */
+    CINDEX, /* s: ... after edge before a*b after */
     PUSHB_1,
       3,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig before_orig */
-    MD_cur, /* c = after_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before a*b after before */
+    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3636,19 +3466,11 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
 
   PUSHB_1,
     3,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] after edge before after_orig */
+  CINDEX, /* s: edge[1] after edge before after */
   PUSHB_1,
     2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] after edge before after_orig before_orig */
-  MD_cur,
+  CINDEX, /* s: edge[1] after edge before after before */
+  MD_orig_ZP2_0,
   PUSHB_1,
     0,
   EQ, /* after_orig_pos == before_orig_pos */
@@ -3662,19 +3484,11 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
   ELSE,
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig */
+    CINDEX, /* s: ... after edge before edge */
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig before_orig */
-    MD_cur, /* a = edge_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before edge before */
+    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3691,19 +3505,11 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
 
     PUSHB_1,
       4,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig */
+    CINDEX, /* s: ... after edge before a*b after */
     PUSHB_1,
       3,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig before_orig */
-    MD_cur, /* c = after_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before a*b after before */
+    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3778,19 +3584,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
 
   PUSHB_1,
     3,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] after edge before after_orig */
+  CINDEX, /* s: edge[1] edge[-1] after edge before after */
   PUSHB_1,
     2,
-  CINDEX,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] after edge before after_orig before_orig */
-  MD_cur,
+  CINDEX, /* s: edge[1] edge[-1] after edge before after before */
+  MD_orig_ZP2_0,
   PUSHB_1,
     0,
   EQ, /* after_orig_pos == before_orig_pos */
@@ -3804,19 +3602,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
   ELSE,
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig */
+    CINDEX, /* s: ... after edge before edge */
     PUSHB_1,
       2,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before edge_orig before_orig */
-    MD_cur, /* a = edge_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before edge before */
+    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3833,19 +3623,11 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
 
     PUSHB_1,
       4,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig */
+    CINDEX, /* s: ... after edge before a*b after */
     PUSHB_1,
       3,
-    CINDEX,
-    PUSHB_1,
-      sal_num_segments,
-    RS,
-    ADD, /* s: ... after edge before a*b after_orig before_orig */
-    MD_cur, /* c = after_orig_pos - before_orig_pos */
+    CINDEX, /* s: ... after edge before a*b after_orig before */
+    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
@@ -3926,22 +3708,14 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge edge_orig */
+  DUP, /* s: edge edge */
   PUSHB_1,
     sal_anchor,
   RS,
-  DUP,
+  DUP, /* s: edge edge anchor anchor */
   MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge edge_orig anchor_orig */
 
-  MD_cur,
+  MD_orig_ZP2_0,
   DUP,
   ADD,
   PUSHB_1,
@@ -3994,22 +3768,14 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge edge_orig */
+  DUP, /* s: edge[-1] edge edge */
   PUSHB_1,
     sal_anchor,
   RS,
-  DUP,
+  DUP, /* s: edge[-1] edge edge anchor anchor */
   MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[-1] edge edge_orig anchor_orig */
 
-  MD_cur,
+  MD_orig_ZP2_0,
   DUP,
   ADD,
   PUSHB_1,
@@ -4076,22 +3842,14 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge edge_orig */
+  DUP, /* s: edge[1] edge edge */
   PUSHB_1,
     sal_anchor,
   RS,
-  DUP,
+  DUP, /* s: edge[1] edge edge anchor anchor */
   MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge edge_orig anchor_orig */
 
-  MD_cur,
+  MD_orig_ZP2_0,
   DUP,
   ADD,
   PUSHB_1,
@@ -4159,22 +3917,14 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP,
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] edge edge_orig */
+  DUP, /* s: edge[1] edge[-1] edge edge */
   PUSHB_1,
     sal_anchor,
   RS,
-  DUP,
+  DUP, /* s: edge[1] edge[-1] edge edge anchor anchor */
   MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-  PUSHB_1,
-    sal_num_segments,
-  RS,
-  ADD, /* s: edge[1] edge[-1] edge edge_orig anchor_orig */
 
-  MD_cur,
+  MD_orig_ZP2_0,
   DUP,
   ADD,
   PUSHB_1,
