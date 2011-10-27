@@ -82,7 +82,8 @@ TA_table_build_cvt(FT_Byte** cvt,
   haxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[0];
   vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
 
-  buf_len = 2 * (3
+  buf_len = 2 * (cvtl_max_runtime /* runtime values */
+                 + 2 /* vertical and horizontal standard width */
                  + haxis->width_count
                  + vaxis->width_count
                  + 2 * vaxis->blue_count);
@@ -102,7 +103,7 @@ TA_table_build_cvt(FT_Byte** cvt,
 
   /* some CVT values are initialized (and modified) at runtime; */
   /* see the `cvtl_xxx' macros in tabytecode.h */
-  for (i = 0; i < CVT_HORZ_STANDARD_WIDTH_OFFSET(font); i++)
+  for (i = 0; i < cvtl_max_runtime; i++)
   {
     *(buf_p++) = 0;
     *(buf_p++) = 0;

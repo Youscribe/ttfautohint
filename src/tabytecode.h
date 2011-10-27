@@ -383,10 +383,10 @@
 
 #define cvtl_temp 0 /* used for creating twilight points */
 #define cvtl_scale cvtl_temp + 1 /* assigned in the `prep' table */
-
+#define cvtl_max_runtime cvtl_scale + 1 /* must be last */
 
 /* the horizontal and vertical standard widths */
-#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) cvtl_scale + 1
+#define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) cvtl_max_runtime
 #define CVT_VERT_STANDARD_WIDTH_OFFSET(font) \
           CVT_HORZ_STANDARD_WIDTH_OFFSET(font) + 1
 
