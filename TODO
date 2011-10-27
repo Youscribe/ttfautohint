@@ -43,6 +43,8 @@ control the width of blue zones
 
 handle normal and bold fonts differently; cf. Infinality patches
 
+control the minimum stem width
+
 try to `embolden' fonts at small sizes to avoid drop-outs; cf. Infinality
   patches
 
