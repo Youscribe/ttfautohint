@@ -305,10 +305,7 @@
 #define sal_limit sal_temp3 + 1
 #define sal_func sal_limit +1
 #define sal_num_segments sal_func + 1
-#define sal_scale sal_num_segments + 1
-#define sal_0x10000 sal_scale + 1
-#define sal_is_extra_light sal_0x10000 + 1
-#define sal_anchor sal_is_extra_light + 1
+#define sal_anchor sal_num_segments + 1
 #define sal_point_min sal_anchor + 1
 #define sal_point_max sal_point_min + 1
 #define sal_segment_offset sal_point_max + 1 /* must be last */
@@ -379,11 +376,18 @@
 #define ACTION_OFFSET bci_action_ip_before
 
 
-/* symbolic names for CVT locations */
+/* symbolic names for run-time CVT locations */
+/* (assigned in `prep' or `fpgm') */
 
 #define cvtl_temp 0 /* used for creating twilight points */
-#define cvtl_scale cvtl_temp + 1 /* assigned in the `prep' table */
-#define cvtl_max_runtime cvtl_scale + 1 /* must be last */
+#define cvtl_0x10000 cvtl_temp + 1
+#define cvtl_scale cvtl_0x10000 + 1
+#define cvtl_funits_to_pixels cvtl_scale + 1
+#define cvtl_is_extra_light cvtl_funits_to_pixels + 1
+#define cvtl_max_runtime cvtl_is_extra_light + 1 /* must be last */
+
+/* symbolic names for compile-time CVT locations */
+/* (assigned in `cvt') */
 
 /* the horizontal and vertical standard widths */
 #define CVT_HORZ_STANDARD_WIDTH_OFFSET(font) cvtl_max_runtime

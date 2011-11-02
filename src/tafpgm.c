@@ -139,9 +139,11 @@ unsigned char FPGM(bci_round) [] = {
  * in: width
  *     stem_is_serif
  *     base_is_round
+ *
  * out: new_width
- * sal: sal_is_extra_light
- * CVT: std_width
+ *
+ * CVT: cvtl_is_extra_light
+ *      std_width
  */
 
 unsigned char FPGM(bci_compute_stem_width_a) [] = {
@@ -164,8 +166,8 @@ unsigned char FPGM(bci_compute_stem_width_a) [] = {
   AND, /* stem_is_serif && dist < 3*64 */
 
   PUSHB_1,
-    sal_is_extra_light,
-  RS,
+    cvtl_is_extra_light,
+  RCVT,
   OR, /* (stem_is_serif && dist < 3*64) || is_extra_light */
 
   IF, /* s: base_is_round width dist */
@@ -316,9 +318,9 @@ unsigned char FPGM(bci_compute_stem_width_c) [] = {
  *     end
  *     start
  *
- * uses: sal_i (counter initialized with `start')
- *       sal_limit (`end')
- *       sal_func (`func_num')
+ * sal: sal_i (counter initialized with `start')
+ *      sal_limit (`end')
+ *      sal_func (`func_num')
  */
 
 unsigned char FPGM(bci_loop) [] = {
@@ -375,10 +377,12 @@ unsigned char FPGM(bci_loop) [] = {
 /*
  * bci_cvt_rescale
  *
- *   Rescale CVT value by a given factor.
+ *   Rescale CVT value by `cvtl_scale' (in 16.16 format).
  *
- * uses: sal_i (CVT index)
- *       sal_scale (scale in 16.16 format)
+ * sal: sal_i (CVT index)
+ *
+ * CVT: cvtl_scale
+ *      cvtl_0x10000
  */
 
 unsigned char FPGM(bci_cvt_rescale) [] = {
@@ -393,12 +397,12 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
   DUP,
   RCVT,
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   MUL, /* CVT * scale * 2^10 */
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* CVT * scale */
 
   WCVTP,
@@ -413,7 +417,7 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
  *
  *   Round a blue ref value and adjust its corresponding shoot value.
  *
- * uses: sal_i (CVT index)
+ * sal: sal_i (CVT index)
  *
  */
 
@@ -582,7 +586,10 @@ unsigned char FPGM(bci_get_point_extrema) [] = {
  *      sal_j (current twilight point)
  *      sal_point_min
  *      sal_point_max
- *      sal_scale
+ *
+ * CVT: cvtl_scale
+ *      cvtl_0x10000
+ *      cvtl_temp
  */
 
 unsigned char FPGM(bci_create_segment) [] = {
@@ -712,12 +719,12 @@ unsigned char FPGM(bci_create_segment) [] = {
 
   /* now scale it */
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   MUL, /* middle_pos * scale * 2^10 */
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* middle_pos = middle_pos * scale */
 
   /* write it to temporary CVT location */
@@ -775,7 +782,6 @@ unsigned char FPGM(bci_create_segment) [] = {
  * sal: sal_i (start of current segment)
  *      sal_j (current twilight point)
  *      sal_num_segments
- *      sal_scale
  */
 
 unsigned char FPGM(bci_create_segments) [] = {
@@ -931,7 +937,8 @@ unsigned char FPGM(bci_align_segments) [] = {
  * in: min_point
  *     max_point
  *
- * sal: sal_scale
+ * CVT: cvtl_scale
+ *      cvtl_0x10000
  */
 
 unsigned char FPGM(bci_scale_contour) [] = {
@@ -945,12 +952,12 @@ unsigned char FPGM(bci_scale_contour) [] = {
   GC_orig,
   DUP,
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   MUL, /* min_pos * scale * 2^10 */
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* min_pos_new = min_pos * scale */
   SWAP,
   SUB,
@@ -966,12 +973,12 @@ unsigned char FPGM(bci_scale_contour) [] = {
     GC_orig,
     DUP,
     PUSHB_1,
-      sal_scale,
-    RS,
+      cvtl_scale,
+    RCVT,
     MUL, /* max_pos * scale * 2^10 */
     PUSHB_1,
-      sal_0x10000,
-    RS,
+      cvtl_0x10000,
+    RCVT,
     DIV, /* max_pos_new = max_pos * scale */
     SWAP,
     SUB,
@@ -1002,8 +1009,6 @@ unsigned char FPGM(bci_scale_contour) [] = {
  *       ...
  *       min_point_N
  *       max_point_N
- *
- * sal: sal_scale
  *
  * uses: bci_scale_contour
  */
@@ -1072,7 +1077,7 @@ unsigned char FPGM(bci_shift_contour) [] = {
  *   also.
  *
  *   If this function is called, a point `x' in the subglyph has been scaled
- *   by `sal_scale' already (during the hinting of the subglyph itself), and
+ *   by `cvtl_scale' already (during the hinting of the subglyph itself), and
  *   `offset' has been applied also:
  *
  *     x  ->  x * scale + offset         (1)
@@ -1090,7 +1095,9 @@ unsigned char FPGM(bci_shift_contour) [] = {
  *     num_contours
  *     first_contour
  *
- * sal: sal_scale
+ * CVT: cvtl_funits_to_pixels
+ *      cvtl_0x10000
+ *      cvtl_scale
  */
 
 unsigned char FPGM(bci_shift_subglyph) [] = {
@@ -1102,12 +1109,12 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   SVTCA_y,
 
   PUSHB_1,
-    cvtl_scale,
+    cvtl_funits_to_pixels,
   RCVT, /* scaling factor FUnits -> pixels */
   MUL,
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV,
 
   /* the autohinter always rounds offsets */
@@ -1116,16 +1123,16 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   CALL, /* offset = round(offset) */
 
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   SUB, /* scale - 1 (in 16.16 format) */
   MUL,
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* delta = offset * (scale - 1) */
 
   /* and round again */
@@ -1174,6 +1181,9 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
  * in: point
  *
  * sal: sal_i (edge_orig_pos)
+ *
+ * CVT: cvtl_scale
+ *      cvtl_0x10000
  */
 
 unsigned char FPGM(bci_ip_outer_align_point) [] = {
@@ -1188,12 +1198,12 @@ unsigned char FPGM(bci_ip_outer_align_point) [] = {
   GC_orig,
   /* now scale it */
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   MUL, /* point_orig_pos * scale * 2^10 */
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* point_orig_pos = point_orig_pos * scale */
 
   PUSHB_1,
@@ -1248,6 +1258,9 @@ unsigned char FPGM(bci_ip_on_align_points) [] = {
  *
  * sal: sal_i (edge_orig_pos)
  *      sal_j (stretch_factor)
+ *
+ * CVT: cvtl_scale
+ *      cvtl_0x10000
  */
 
 unsigned char FPGM(bci_ip_between_align_point) [] = {
@@ -1262,12 +1275,12 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
   GC_orig,
   /* now scale it */
   PUSHB_1,
-    sal_scale,
-  RS,
+    cvtl_scale,
+  RCVT,
   MUL, /* point_orig_pos * scale * 2^10 */
   PUSHB_1,
-    sal_0x10000,
-  RS,
+    cvtl_0x10000,
+  RCVT,
   DIV, /* point_orig_pos = point_orig_pos * scale */
 
   PUSHB_1,

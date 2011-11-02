@@ -19,9 +19,9 @@
 #define PREP(snippet_name) prep_ ## snippet_name
 
 /* we often need 0x10000 which can't be pushed directly onto the stack, */
-/* thus we provide it in the storage area; */
-/* at the same time, we store it in CVT index `cvtl_scale' also */
-/* to get a scaling value from FUnits to pixels */
+/* thus we provide it in the CVS as `cvtl_0x10000'; */
+/* at the same time, we store it in CVT index `cvtl_funits_to_pixels' also */
+/* as a scaled value to have a conversion factor from FUnits to pixels */
 
 unsigned char PREP(store_0x10000) [] = {
 
@@ -34,13 +34,13 @@ unsigned char PREP(store_0x10000) [] = {
 
   DUP,
   PUSHB_1,
-    sal_0x10000,
+    cvtl_0x10000,
   SWAP,
-  WS,
+  WCVTP,
 
   DUP,
   PUSHB_1,
-    cvtl_scale,
+    cvtl_funits_to_pixels,
   SWAP,
   WCVTF, /* store value 1 in 16.16 format, scaled */
 
@@ -70,16 +70,16 @@ unsigned char PREP(align_top_b) [] = {
   NEQ,
   IF, /* s: scaled fitted */
     PUSHB_1,
-      sal_0x10000,
-    RS,
+      cvtl_0x10000,
+    RCVT,
     MUL, /* scaled in 16.16 format */
     SWAP,
     DIV, /* (fitted / scaled) in 16.16 format */
 
     PUSHB_1,
-      sal_scale,
+      cvtl_scale,
     SWAP,
-    WS,
+    WCVTP,
 
 };
 
@@ -129,10 +129,10 @@ unsigned char PREP(loop_cvt_d) [] = {
 
   ELSE,
     PUSHB_2,
-      sal_scale,
-      sal_0x10000,
-    RS,
-    WS,
+      cvtl_scale,
+      cvtl_0x10000,
+    RCVT,
+    WCVTP,
   EIF,
 
 };
@@ -141,7 +141,7 @@ unsigned char PREP(compute_extra_light_a) [] = {
 
   /* compute (vertical) `extra_light' flag */
   PUSHB_3,
-    sal_is_extra_light,
+    cvtl_is_extra_light,
     40,
 
 };
@@ -152,7 +152,7 @@ unsigned char PREP(compute_extra_light_b) [] = {
 
   RCVT,
   GT, /* standard_width < 40 */
-  WS,
+  WCVTP,
 
 };
 
