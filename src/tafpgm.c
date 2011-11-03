@@ -1658,6 +1658,44 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
 
 
 /*
+ * bci_action_adjust
+ *
+ *   Handle the ADJUST action to align an edge of a stem if the other edge
+ *   of the stem has already been moved.
+ *
+ * in: edge2_is_serif
+ *     edge_is_round
+ *     edge_point (in twilight zone)
+ *     edge2_point (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_adjust_common
+ */
+
+unsigned char FPGM(bci_action_adjust) [] = {
+
+  PUSHB_1,
+    bci_action_adjust,
+  FDEF,
+
+  PUSHB_1,
+    bci_action_adjust_common,
+  CALL,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_action_stem_common
  *
  *   Common code for bci_action_stem routines.
@@ -2015,6 +2053,107 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
 
 
 /*
+ * bci_action_stem
+ *
+ *   Handle the STEM action to align two edges of a stem.
+ *
+ *   The code after computing `cur_len' to shift `edge' and `edge2'
+ *   is equivalent to the snippet below (part of `ta_latin_hint_edges'):
+ *
+ *      if cur_len < 96:
+ *        if cur_len < = 64:
+ *          u_off = 32
+ *          d_off = 32
+ *        else:
+ *          u_off = 38
+ *          d_off = 26
+ *
+ *        org_pos = anchor + (edge_orig - anchor_orig);
+ *        org_center = org_pos + org_len / 2;
+ *
+ *        cur_pos1 = ROUND(org_center)
+ *        delta1 = ABS(org_center - (cur_pos1 - u_off))
+ *        delta2 = ABS(org_center - (cur_pos1 + d_off))
+ *        if (delta1 < delta2):
+ *          cur_pos1 = cur_pos1 - u_off
+ *        else:
+ *          cur_pos1 = cur_pos1 + d_off
+ *
+ *        edge = cur_pos1 - cur_len / 2
+ *
+ *      else:
+ *        org_pos = anchor + (edge_orig - anchor_orig)
+ *        org_center = org_pos + org_len / 2;
+ *
+ *        cur_pos1 = ROUND(org_pos)
+ *        delta1 = ABS(cur_pos1 + cur_len / 2 - org_center)
+ *        cur_pos2 = ROUND(org_pos + org_len) - cur_len
+ *        delta2 = ABS(cur_pos2 + cur_len / 2 - org_center)
+ *
+ *        if (delta1 < delta2):
+ *          edge = cur_pos1
+ *        else:
+ *          edge = cur_pos2
+ *
+ *      edge2 = edge + cur_len
+ *
+ * in: edge2_is_serif
+ *     edge_is_round
+ *     edge_point (in twilight zone)
+ *     edge2_point (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ *     ... stuff for bci_align_segments (edge2)...
+ *
+ * sal: sal_anchor
+ *      sal_temp1
+ *      sal_temp2
+ *      sal_temp3
+ *
+ * uses: bci_action_stem_common
+ */
+
+unsigned char FPGM(bci_action_stem) [] = {
+
+  PUSHB_1,
+    bci_action_stem,
+  FDEF,
+
+  PUSHB_1,
+    bci_action_stem_common,
+  CALL,
+
+  POP,
+  SWAP, /* s: cur_len edge2 */
+  DUP,
+  DUP,
+  ALIGNRP, /* align `edge2' with rp0 (still `edge') */
+  PUSHB_1,
+    sal_edge2,
+  SWAP,
+  WS, /* s: cur_len edge2 */
+  SWAP,
+  SHPIX, /* edge2 = edge + cur_len */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
+
+  PUSHB_1,
+    sal_edge2,
+  RS,
+  MDAP_noround, /* set rp0 and rp1 to `edge2' */
+
+  PUSHB_1,
+    bci_align_segments,
+  CALL,
+  ENDF,
+
+};
+
+
+/*
  * bci_action_link
  *
  *   Handle the LINK action to link an edge to another one.
@@ -2335,145 +2474,6 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
   SZP1, /* set zp1 to normal zone 1 */
   CALL,
 
-  ENDF,
-
-};
-
-
-/*
- * bci_action_adjust
- *
- *   Handle the ADJUST action to align an edge of a stem if the other edge
- *   of the stem has already been moved.
- *
- * in: edge2_is_serif
- *     edge_is_round
- *     edge_point (in twilight zone)
- *     edge2_point (in twilight zone)
- *     ... stuff for bci_align_segments (edge) ...
- *
- * uses: bci_action_adjust_common
- */
-
-unsigned char FPGM(bci_action_adjust) [] = {
-
-  PUSHB_1,
-    bci_action_adjust,
-  FDEF,
-
-  PUSHB_1,
-    bci_action_adjust_common,
-  CALL,
-
-  MDAP_noround, /* set rp0 and rp1 to `edge' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
-  CALL,
-
-  ENDF,
-
-};
-
-
-/*
- * bci_action_stem
- *
- *   Handle the STEM action to align two edges of a stem.
- *
- *   The code after computing `cur_len' to shift `edge' and `edge2'
- *   is equivalent to the snippet below (part of `ta_latin_hint_edges'):
- *
- *      if cur_len < 96:
- *        if cur_len < = 64:
- *          u_off = 32
- *          d_off = 32
- *        else:
- *          u_off = 38
- *          d_off = 26
- *
- *        org_pos = anchor + (edge_orig - anchor_orig);
- *        org_center = org_pos + org_len / 2;
- *
- *        cur_pos1 = ROUND(org_center)
- *        delta1 = ABS(org_center - (cur_pos1 - u_off))
- *        delta2 = ABS(org_center - (cur_pos1 + d_off))
- *        if (delta1 < delta2):
- *          cur_pos1 = cur_pos1 - u_off
- *        else:
- *          cur_pos1 = cur_pos1 + d_off
- *
- *        edge = cur_pos1 - cur_len / 2
- *
- *      else:
- *        org_pos = anchor + (edge_orig - anchor_orig)
- *        org_center = org_pos + org_len / 2;
- *
- *        cur_pos1 = ROUND(org_pos)
- *        delta1 = ABS(cur_pos1 + cur_len / 2 - org_center)
- *        cur_pos2 = ROUND(org_pos + org_len) - cur_len
- *        delta2 = ABS(cur_pos2 + cur_len / 2 - org_center)
- *
- *        if (delta1 < delta2):
- *          edge = cur_pos1
- *        else:
- *          edge = cur_pos2
- *
- *      edge2 = edge + cur_len
- *
- * in: edge2_is_serif
- *     edge_is_round
- *     edge_point (in twilight zone)
- *     edge2_point (in twilight zone)
- *     ... stuff for bci_align_segments (edge) ...
- *     ... stuff for bci_align_segments (edge2)...
- *
- * sal: sal_anchor
- *      sal_temp1
- *      sal_temp2
- *      sal_temp3
- *
- * uses: bci_action_stem_common
- */
-
-unsigned char FPGM(bci_action_stem) [] = {
-
-  PUSHB_1,
-    bci_action_stem,
-  FDEF,
-
-  PUSHB_1,
-    bci_action_stem_common,
-  CALL,
-
-  POP,
-  SWAP, /* s: cur_len edge2 */
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge2' with rp0 (still `edge') */
-  PUSHB_1,
-    sal_edge2,
-  SWAP,
-  WS, /* s: cur_len edge2 */
-  SWAP,
-  SHPIX, /* edge2 = edge + cur_len */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
-  CALL,
-
-  PUSHB_1,
-    sal_edge2,
-  RS,
-  MDAP_noround, /* set rp0 and rp1 to `edge2' */
-
-  PUSHB_1,
-    bci_align_segments,
-  CALL,
   ENDF,
 
 };
