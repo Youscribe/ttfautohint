@@ -1561,6 +1561,49 @@ unsigned char FPGM(bci_action_ip_between) [] = {
 
 
 /*
+ * bci_action_adjust_common
+ *
+ *   Common code for bci_action_adjust routines.
+ */
+
+unsigned char FPGM(bci_action_adjust_common) [] = {
+
+  PUSHB_1,
+    bci_action_adjust_common,
+  FDEF,
+
+  PUSHB_1,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  PUSHB_1,
+    4,
+  CINDEX, /* s: [...] edge2 edge is_round is_serif edge2 */
+  PUSHB_1,
+    4,
+  CINDEX, /* s: [...] edge2 edge is_round is_serif edge2 edge */
+  MD_orig_ZP2_0, /* s: [...] edge2 edge is_round is_serif org_len */
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL,
+  NEG, /* s: [...] edge2 edge -cur_len */
+
+  ROLL, /* s: [...] edge -cur_len edge2 */
+  MDAP_noround, /* set rp0 and rp1 to `edge2' */
+  SWAP,
+  DUP,
+  DUP, /* s: [...] -cur_len edge edge edge */
+  ALIGNRP, /* align `edge' with `edge2' */
+  ROLL,
+  SHPIX, /* shift `edge' by -cur_len */
+
+  ENDF,
+
+};
+
+
+/*
  * bci_action_adjust_bound
  *
  *   Handle the ADJUST_BOUND action to align an edge of a stem if the other
@@ -1573,6 +1616,8 @@ unsigned char FPGM(bci_action_ip_between) [] = {
  *     edge2_point (in twilight zone)
  *     edge[-1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_adjust_common
  */
 
 unsigned char FPGM(bci_action_adjust_bound) [] = {
@@ -1582,30 +1627,8 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    4,
-  CINDEX, /* s: edge[-1] edge2 edge is_round is_serif edge2 */
-  PUSHB_1,
-    4,
-  CINDEX, /* s: edge[-1] edge2 edge is_round is_serif edge2 edge */
-  MD_orig_ZP2_0, /* s: edge[-1] edge2 edge is_round is_serif org_len */
-
-  PUSHB_1,
-    bci_compute_stem_width,
+    bci_action_adjust_common,
   CALL,
-  NEG, /* s: edge[-1] edge2 edge -cur_len */
-
-  ROLL, /* s: edge[-1] edge -cur_len edge2 */
-  MDAP_noround, /* set rp0 and rp1 to `edge2' */
-  SWAP,
-  DUP,
-  DUP, /* s: edge[-1] -cur_len edge edge edge */
-  ALIGNRP, /* align `edge' with `edge2' */
-  ROLL,
-  SHPIX, /* shift `edge' by -cur_len */
 
   SWAP, /* s: edge edge[-1] */
   DUP,
@@ -2305,6 +2328,8 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
  *     edge_point (in twilight zone)
  *     edge2_point (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_adjust_common
  */
 
 unsigned char FPGM(bci_action_adjust) [] = {
@@ -2314,30 +2339,8 @@ unsigned char FPGM(bci_action_adjust) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    4,
-  CINDEX, /* s: edge2 edge is_round is_serif edge2 */
-  PUSHB_1,
-    4,
-  CINDEX, /* s: edge2 edge is_round is_serif edge2 edge */
-  MD_orig_ZP2_0, /* s: edge2 edge is_round is_serif org_len */
-
-  PUSHB_1,
-    bci_compute_stem_width,
+    bci_action_adjust_common,
   CALL,
-  NEG, /* s: edge2 edge -cur_len */
-
-  ROLL,
-  MDAP_noround, /* set rp0 and rp1 to `edge2' */
-  SWAP,
-  DUP,
-  DUP, /* s: -cur_len edge edge edge */
-  ALIGNRP, /* align `edge' with `edge2' */
-  ROLL,
-  SHPIX, /* shift `edge' by -cur_len */
 
   MDAP_noround, /* set rp0 and rp1 to `edge' */
 
@@ -4126,6 +4129,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_ip_between_align_point))
             + sizeof (FPGM(bci_ip_between_align_points))
 
+            + sizeof (FPGM(bci_action_adjust_common))
+
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
             + sizeof (FPGM(bci_action_ip_on))
@@ -4199,6 +4204,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_ip_on_align_points);
   COPY_FPGM(bci_ip_between_align_point);
   COPY_FPGM(bci_ip_between_align_points);
+
+  COPY_FPGM(bci_action_adjust_common);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
