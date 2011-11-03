@@ -2057,45 +2057,7 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
  *
  *   Handle the STEM action to align two edges of a stem.
  *
- *   The code after computing `cur_len' to shift `edge' and `edge2'
- *   is equivalent to the snippet below (part of `ta_latin_hint_edges'):
- *
- *      if cur_len < 96:
- *        if cur_len < = 64:
- *          u_off = 32
- *          d_off = 32
- *        else:
- *          u_off = 38
- *          d_off = 26
- *
- *        org_pos = anchor + (edge_orig - anchor_orig);
- *        org_center = org_pos + org_len / 2;
- *
- *        cur_pos1 = ROUND(org_center)
- *        delta1 = ABS(org_center - (cur_pos1 - u_off))
- *        delta2 = ABS(org_center - (cur_pos1 + d_off))
- *        if (delta1 < delta2):
- *          cur_pos1 = cur_pos1 - u_off
- *        else:
- *          cur_pos1 = cur_pos1 + d_off
- *
- *        edge = cur_pos1 - cur_len / 2
- *
- *      else:
- *        org_pos = anchor + (edge_orig - anchor_orig)
- *        org_center = org_pos + org_len / 2;
- *
- *        cur_pos1 = ROUND(org_pos)
- *        delta1 = ABS(cur_pos1 + cur_len / 2 - org_center)
- *        cur_pos2 = ROUND(org_pos + org_len) - cur_len
- *        delta2 = ABS(cur_pos2 + cur_len / 2 - org_center)
- *
- *        if (delta1 < delta2):
- *          edge = cur_pos1
- *        else:
- *          edge = cur_pos2
- *
- *      edge2 = edge + cur_len
+ *   See `bci_action_stem_bound' for more details.
  *
  * in: edge2_is_serif
  *     edge_is_round
