@@ -2469,6 +2469,41 @@ unsigned char FPGM(bci_action_blue) [] = {
 
 
 /*
+ * bci_action_serif_common
+ *
+ *   Common code for bci_action_serif routines.
+ */
+
+unsigned char FPGM(bci_action_serif_common) [] = {
+
+  PUSHB_1,
+    bci_action_serif_common,
+  FDEF,
+
+  PUSHB_1,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  DUP,
+  DUP,
+  DUP,
+  PUSHB_1,
+    5,
+  MINDEX, /* s: [...] serif serif serif serif base */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `base_point' */
+  MD_orig_ZP2_0,
+  SWAP,
+  ALIGNRP, /* align `serif_point' with `base_point' */
+  SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
+
+  ENDF,
+
+};
+
+
+
+/*
  * bci_action_serif
  *
  *   Handle the SERIF action to align a serif with its base.
@@ -2485,21 +2520,8 @@ unsigned char FPGM(bci_action_serif) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP,
-  DUP,
-  DUP,
-  PUSHB_1,
-    5,
-  MINDEX, /* s: serif serif serif serif base */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  MD_orig_ZP2_0,
-  SWAP,
-  ALIGNRP, /* align `serif_point' with `base_point' */
-  SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
+    bci_action_serif_common,
+  CALL,
 
   MDAP_noround, /* set rp0 and rp1 to `serif_point' */
 
@@ -2533,21 +2555,8 @@ unsigned char FPGM(bci_action_serif_lower_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP,
-  DUP,
-  DUP,
-  PUSHB_1,
-    5,
-  MINDEX, /* s: edge[-1] serif serif serif serif base */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  MD_orig_ZP2_0,
-  SWAP,
-  ALIGNRP, /* align `serif_point' with `base_point' */
-  SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
+    bci_action_serif_common,
+  CALL,
 
   SWAP, /* s: serif edge[-1] */
   DUP,
@@ -2595,21 +2604,8 @@ unsigned char FPGM(bci_action_serif_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP,
-  DUP,
-  DUP,
-  PUSHB_1,
-    5,
-  MINDEX, /* s: edge[1] serif serif serif serif base */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  MD_orig_ZP2_0,
-  SWAP,
-  ALIGNRP, /* align `serif_point' with `base_point' */
-  SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
+    bci_action_serif_common,
+  CALL,
 
   SWAP, /* s: serif edge[1] */
   DUP,
@@ -2661,18 +2657,9 @@ unsigned char FPGM(bci_action_serif_lower_upper_bound) [] = {
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP,
-  DUP,
-  DUP,
   PUSHB_1,
-    5,
-  MINDEX, /* s: edge[1] edge[-1] serif serif serif serif base */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `base_point' */
-  MD_orig_ZP2_0,
-  SWAP,
-  ALIGNRP, /* align `serif_point' with `base_point' */
-  SHPIX, /* serif = base + (serif_orig_pos - base_orig_pos) */
+    bci_action_serif_common,
+  CALL,
 
   SWAP, /* s: edge[1] serif edge[-1] */
   DUP,
@@ -3886,6 +3873,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
             + sizeof (FPGM(bci_action_adjust_common))
             + sizeof (FPGM(bci_action_stem_common))
+            + sizeof (FPGM(bci_action_serif_common))
 
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
@@ -3963,6 +3951,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
   COPY_FPGM(bci_action_adjust_common);
   COPY_FPGM(bci_action_stem_common);
+  COPY_FPGM(bci_action_serif_common);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
