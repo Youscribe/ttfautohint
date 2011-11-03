@@ -2511,6 +2511,8 @@ unsigned char FPGM(bci_action_serif_common) [] = {
  * in: serif_point (in twilight zone)
  *     base_point (in twilight zone)
  *     ... stuff for bci_align_segments (serif) ...
+ *
+ * uses: bci_action_serif_common
  */
 
 unsigned char FPGM(bci_action_serif) [] = {
@@ -2546,6 +2548,8 @@ unsigned char FPGM(bci_action_serif) [] = {
  *     base_point (in twilight zone)
  *     edge[-1] (in twilight zone)
  *     ... stuff for bci_align_segments (serif) ...
+ *
+ * uses: bci_action_serif_common
  */
 
 unsigned char FPGM(bci_action_serif_lower_bound) [] = {
@@ -2595,6 +2599,8 @@ unsigned char FPGM(bci_action_serif_lower_bound) [] = {
  *     base_point (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (serif) ...
+ *
+ * uses: bci_action_serif_common
  */
 
 unsigned char FPGM(bci_action_serif_upper_bound) [] = {
@@ -2645,6 +2651,8 @@ unsigned char FPGM(bci_action_serif_upper_bound) [] = {
  *     edge[-1] (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (serif) ...
+ *
+ * uses: bci_action_serif_common
  */
 
 unsigned char FPGM(bci_action_serif_lower_upper_bound) [] = {
