@@ -2398,6 +2398,8 @@ unsigned char FPGM(bci_action_anchor) [] = {
  *     ... stuff for bci_align_segments (edge) ...
  *
  * sal: sal_anchor
+ *
+ * uses: bci_action_blue
  */
 
 unsigned char FPGM(bci_action_blue_anchor) [] = {
