@@ -3251,29 +3251,26 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
 
 
 /*
- * bci_action_serif_link2
+ * bci_action_serif_link2_common
  *
- *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
- *
- * in: edge_point (in twilight zone)
- *     ... stuff for bci_align_segments (edge) ...
+ *   Common code for bci_action_serif_link2 routines.
  */
 
-unsigned char FPGM(bci_action_serif_link2) [] = {
+unsigned char FPGM(bci_action_serif_link2_common) [] = {
 
   PUSHB_1,
-    bci_action_serif_link2,
+    bci_action_serif_link2_common,
   FDEF,
 
   PUSHB_1,
     0,
   SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
 
-  DUP, /* s: edge edge */
+  DUP, /* s: [...] edge edge */
   PUSHB_1,
     sal_anchor,
   RS,
-  DUP, /* s: edge edge anchor anchor */
+  DUP, /* s: [...] edge edge anchor anchor */
   MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
 
   MD_orig_ZP2_0,
@@ -3293,6 +3290,32 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
   ALIGNRP, /* align `edge' with `sal_anchor' */
   ROLL,
   SHPIX, /* shift `edge' by `delta' */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_serif_link2
+ *
+ *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
+ *
+ * in: edge_point (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link2_common
+ */
+
+unsigned char FPGM(bci_action_serif_link2) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link2,
+  FDEF,
+
+  PUSHB_1,
+    bci_action_serif_link2_common,
+  CALL,
 
   MDAP_noround, /* set rp0 and rp1 to `edge' */
 
@@ -3317,6 +3340,8 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
  * in: edge_point (in twilight zone)
  *     edge[-1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link2_common
  */
 
 unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
@@ -3326,33 +3351,8 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP, /* s: edge[-1] edge edge */
-  PUSHB_1,
-    sal_anchor,
-  RS,
-  DUP, /* s: edge[-1] edge edge anchor anchor */
-  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-
-  MD_orig_ZP2_0,
-  DUP,
-  ADD,
-  PUSHB_1,
-    32,
-  ADD,
-  FLOOR,
-  PUSHB_1,
-    2*64,
-  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
-
-  SWAP,
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `sal_anchor' */
-  ROLL,
-  SHPIX, /* shift `edge' by `delta' */
+    bci_action_serif_link2_common,
+  CALL,
 
   SWAP, /* s: edge edge[-1] */
   DUP,
@@ -3391,6 +3391,8 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
  * in: edge_point (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link2_common
  */
 
 unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
@@ -3400,33 +3402,8 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP, /* s: edge[1] edge edge */
-  PUSHB_1,
-    sal_anchor,
-  RS,
-  DUP, /* s: edge[1] edge edge anchor anchor */
-  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-
-  MD_orig_ZP2_0,
-  DUP,
-  ADD,
-  PUSHB_1,
-    32,
-  ADD,
-  FLOOR,
-  PUSHB_1,
-    2*64,
-  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
-
-  SWAP,
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `sal_anchor' */
-  ROLL,
-  SHPIX, /* shift `edge' by `delta' */
+    bci_action_serif_link2_common,
+  CALL,
 
   SWAP, /* s: edge edge[1] */
   DUP,
@@ -3466,6 +3443,8 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] = {
  *     edge[-1] (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link2_common
  */
 
 unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
@@ -3475,33 +3454,8 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  DUP, /* s: edge[1] edge[-1] edge edge */
-  PUSHB_1,
-    sal_anchor,
-  RS,
-  DUP, /* s: edge[1] edge[-1] edge edge anchor anchor */
-  MDAP_noround, /* set rp0 and rp1 to `sal_anchor' */
-
-  MD_orig_ZP2_0,
-  DUP,
-  ADD,
-  PUSHB_1,
-    32,
-  ADD,
-  FLOOR,
-  PUSHB_1,
-    2*64,
-  DIV, /* delta = (edge_orig_pos - anchor_orig_pos + 16) & ~31 */
-
-  SWAP,
-  DUP,
-  DUP,
-  ALIGNRP, /* align `edge' with `sal_anchor' */
-  ROLL,
-  SHPIX, /* shift `edge' by `delta' */
+    bci_action_serif_link2_common,
+  CALL,
 
   SWAP, /* s: edge[1] edge edge[-1] */
   DUP,
@@ -3687,6 +3641,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_serif_common))
             + sizeof (FPGM(bci_action_serif_anchor_common))
             + sizeof (FPGM(bci_action_serif_link1_common))
+            + sizeof (FPGM(bci_action_serif_link2_common))
 
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
@@ -3767,6 +3722,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_serif_common);
   COPY_FPGM(bci_action_serif_anchor_common);
   COPY_FPGM(bci_action_serif_link1_common);
+  COPY_FPGM(bci_action_serif_link2_common);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);

@@ -339,10 +339,11 @@
 #define bci_action_serif_common bci_action_stem_common + 1
 #define bci_action_serif_anchor_common bci_action_serif_common + 1
 #define bci_action_serif_link1_common bci_action_serif_anchor_common + 1
+#define bci_action_serif_link2_common bci_action_serif_link1_common + 1
 
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_ip_before bci_action_serif_link1_common + 1
+#define bci_action_ip_before bci_action_serif_link2_common + 1
 #define bci_action_ip_after bci_action_ip_before + 1
 #define bci_action_ip_on bci_action_ip_after + 1
 #define bci_action_ip_between bci_action_ip_on + 1
