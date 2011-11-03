@@ -2954,21 +2954,15 @@ unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] = {
 
 
 /*
- * bci_action_serif_link1
+ * bci_action_serif_link1_common
  *
- *   Handle the SERIF_LINK1 action to align a serif, depending on edges
- *   before and after.
- *
- * in: before_point (in twilight zone)
- *     edge_point (in twilight zone)
- *     after_point (in twilight zone)
- *     ... stuff for bci_align_segments (edge) ...
+ *   Common code for bci_action_serif_link1 routines.
  */
 
-unsigned char FPGM(bci_action_serif_link1) [] = {
+unsigned char FPGM(bci_action_serif_link1_common) [] = {
 
   PUSHB_1,
-    bci_action_serif_link1,
+    bci_action_serif_link1_common,
   FDEF,
 
   PUSHB_1,
@@ -2977,15 +2971,15 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
 
   PUSHB_1,
     3,
-  CINDEX, /* s: after edge before after */
+  CINDEX, /* s: [...] after edge before after */
   PUSHB_1,
     2,
-  CINDEX, /* s: after edge before after before */
+  CINDEX, /* s: [...] after edge before after before */
   MD_orig_ZP2_0,
   PUSHB_1,
     0,
   EQ, /* after_orig_pos == before_orig_pos */
-  IF, /* s: after edge before */
+  IF, /* s: [...] after edge before */
     MDAP_noround, /* set rp0 and rp1 to `before' */
     DUP,
     ALIGNRP, /* align `edge' with `before' */
@@ -2995,10 +2989,10 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
   ELSE,
     PUSHB_1,
       2,
-    CINDEX, /* s: ... after edge before edge */
+    CINDEX, /* s: [...] after edge before edge */
     PUSHB_1,
       2,
-    CINDEX, /* s: ... after edge before edge before */
+    CINDEX, /* s: [...] after edge before edge before */
     MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
@@ -3007,39 +3001,68 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
 
     PUSHB_1,
       4,
-    CINDEX, /* s: ... after edge before a*64 after */
+    CINDEX, /* s: [...] after edge before a*64 after */
     PUSHB_1,
       3,
-    CINDEX, /* s: ... after edge before a*64 after before */
+    CINDEX, /* s: [...] after edge before a*64 after before */
     MD_cur, /* b = after_pos - before_pos */
-    MUL, /* s: ... after edge before a*b */
+    MUL, /* s: [...] after edge before a*b */
 
     PUSHB_1,
       4,
-    CINDEX, /* s: ... after edge before a*b after */
+    CINDEX, /* s: [...] after edge before a*b after */
     PUSHB_1,
       3,
-    CINDEX, /* s: ... after edge before a*b after before */
+    CINDEX, /* s: [...] after edge before a*b after before */
     MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
     PUSHW_1,
       0x10, /* 64*64 */
       0x00,
     MUL,
 
-    DIV, /* s: after edge before a*b/c */
+    DIV, /* s: [...] after edge before a*b/c */
 
     SWAP,
     MDAP_noround, /* set rp0 and rp1 to `before' */
-    SWAP, /* s: after a*b/c edge */
+    SWAP, /* s: [...] after a*b/c edge */
     DUP,
     DUP,
     ALIGNRP, /* align `edge' with `before' */
     ROLL,
     SHPIX, /* shift `edge' by `a*b/c' */
 
-    SWAP, /* s: edge after */
+    SWAP, /* s: [...] edge after */
     POP,
   EIF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_serif_link1
+ *
+ *   Handle the SERIF_LINK1 action to align a serif, depending on edges
+ *   before and after.
+ *
+ * in: before_point (in twilight zone)
+ *     edge_point (in twilight zone)
+ *     after_point (in twilight zone)
+ *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link1_common
+ */
+
+unsigned char FPGM(bci_action_serif_link1) [] = {
+
+  PUSHB_1,
+    bci_action_serif_link1,
+  FDEF,
+
+  PUSHB_1,
+    bci_action_serif_link1_common,
+  CALL,
 
   MDAP_noround, /* set rp0 and rp1 to `edge' */
 
@@ -3066,6 +3089,8 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
  *     after_point (in twilight zone)
  *     edge[-1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link1_common
  */
 
 unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
@@ -3075,74 +3100,8 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    3,
-  CINDEX, /* s: edge[-1] after edge before after */
-  PUSHB_1,
-    2,
-  CINDEX, /* s: edge[-1] after edge before after before */
-  MD_orig_ZP2_0,
-  PUSHB_1,
-    0,
-  EQ, /* after_orig_pos == before_orig_pos */
-  IF, /* s: edge[-1] after edge before */
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    SWAP,
-    POP,
-
-  ELSE,
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge */
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge before */
-    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*64 after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*64 after before */
-    MD_cur, /* b = after_pos - before_pos */
-    MUL, /* s: ... after edge before a*b */
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*b after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*b after before */
-    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    DIV, /* s: edge[-1] after edge before a*b/c */
-
-    SWAP,
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    SWAP, /* s: edge[-1] after a*b/c edge */
-    DUP,
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    ROLL,
-    SHPIX, /* shift `edge' by `a*b/c' */
-
-    SWAP, /* s: edge[-1] edge after */
-    POP,
-  EIF,
+    bci_action_serif_link1_common,
+  CALL,
 
   SWAP, /* s: edge edge[-1] */
   DUP,
@@ -3182,6 +3141,8 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
  *     after_point (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link1_common
  */
 
 unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
@@ -3191,74 +3152,8 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    3,
-  CINDEX, /* s: edge[1] after edge before after */
-  PUSHB_1,
-    2,
-  CINDEX, /* s: edge[1] after edge before after before */
-  MD_orig_ZP2_0,
-  PUSHB_1,
-    0,
-  EQ, /* after_orig_pos == before_orig_pos */
-  IF, /* s: edge[1] after edge before */
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    SWAP,
-    POP,
-
-  ELSE,
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge */
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge before */
-    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*64 after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*64 after before */
-    MD_cur, /* b = after_pos - before_pos */
-    MUL, /* s: ... after edge before a*b */
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*b after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*b after before */
-    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    DIV, /* s: edge[1] after edge before a*b/c */
-
-    SWAP,
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    SWAP, /* s: edge[1] after a*b/c edge */
-    DUP,
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    ROLL,
-    SHPIX, /* shift `edge' by `a*b/c' */
-
-    SWAP, /* s: edge[1] edge after */
-    POP,
-  EIF,
+    bci_action_serif_link1_common,
+  CALL,
 
   SWAP, /* s: edge edge[1] */
   DUP,
@@ -3300,6 +3195,8 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] = {
  *     edge[-1] (in twilight zone)
  *     edge[1] (in twilight zone)
  *     ... stuff for bci_align_segments (edge) ...
+ *
+ * uses: bci_action_serif_link1_common
  */
 
 unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
@@ -3309,74 +3206,8 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    3,
-  CINDEX, /* s: edge[1] edge[-1] after edge before after */
-  PUSHB_1,
-    2,
-  CINDEX, /* s: edge[1] edge[-1] after edge before after before */
-  MD_orig_ZP2_0,
-  PUSHB_1,
-    0,
-  EQ, /* after_orig_pos == before_orig_pos */
-  IF, /* s: edge[1] edge[-1] after edge before */
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    SWAP,
-    POP,
-
-  ELSE,
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge */
-    PUSHB_1,
-      2,
-    CINDEX, /* s: ... after edge before edge before */
-    MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*64 after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*64 after before */
-    MD_cur, /* b = after_pos - before_pos */
-    MUL, /* s: ... after edge before a*b */
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: ... after edge before a*b after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: ... after edge before a*b after_orig before */
-    MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
-
-    DIV, /* s: edge[1] edge[-1] after edge before a*b/c */
-
-    SWAP,
-    MDAP_noround, /* set rp0 and rp1 to `before' */
-    SWAP, /* s: edge[1] edge[-1] after a*b/c edge */
-    DUP,
-    DUP,
-    ALIGNRP, /* align `edge' with `before' */
-    ROLL,
-    SHPIX, /* shift `edge' by `a*b/c' */
-
-    SWAP, /* s: edge[1] edge[-1] edge after */
-    POP,
-  EIF,
+    bci_action_serif_link1_common,
+  CALL,
 
   SWAP, /* s: edge[1] edge edge[-1] */
   DUP,
@@ -3855,6 +3686,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_stem_common))
             + sizeof (FPGM(bci_action_serif_common))
             + sizeof (FPGM(bci_action_serif_anchor_common))
+            + sizeof (FPGM(bci_action_serif_link1_common))
 
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
@@ -3934,6 +3766,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_stem_common);
   COPY_FPGM(bci_action_serif_common);
   COPY_FPGM(bci_action_serif_anchor_common);
+  COPY_FPGM(bci_action_serif_link1_common);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
