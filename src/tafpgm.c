@@ -1658,6 +1658,244 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
 
 
 /*
+ * bci_action_stem_common
+ *
+ *   Common code for bci_action_stem routines.
+ */
+
+#undef sal_u_off
+#define sal_u_off sal_temp1
+#undef sal_d_off
+#define sal_d_off sal_temp2
+#undef sal_org_len
+#define sal_org_len sal_temp3
+#undef sal_edge2
+#define sal_edge2 sal_temp3
+
+unsigned char FPGM(bci_action_stem_common) [] = {
+
+  PUSHB_1,
+    bci_action_stem_common,
+  FDEF,
+
+  PUSHB_1,
+    0,
+  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+
+  PUSHB_1,
+    4,
+  CINDEX,
+  PUSHB_1,
+    4,
+  CINDEX,
+  DUP, /* s: [...] edge2 edge is_round is_serif edge2 edge edge */
+  MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
+
+  MD_orig_ZP2_0, /* s: [...] edge2 edge is_round is_serif org_len */
+  DUP,
+  PUSHB_1,
+    sal_org_len,
+  SWAP,
+  WS,
+
+  PUSHB_1,
+    bci_compute_stem_width,
+  CALL, /* s: [...] edge2 edge cur_len */
+
+  DUP,
+  PUSHB_1,
+    96,
+  LT, /* cur_len < 96 */
+  IF,
+    DUP,
+    PUSHB_1,
+      64,
+    LTEQ, /* cur_len <= 64 */
+    IF,
+      PUSHB_4,
+        sal_u_off,
+        32,
+        sal_d_off,
+        32,
+
+    ELSE,
+      PUSHB_4,
+        sal_u_off,
+        38,
+        sal_d_off,
+        26,
+    EIF,
+    WS,
+    WS,
+
+    SWAP, /* s: [...] edge2 cur_len edge */
+    DUP,
+    PUSHB_1,
+      sal_anchor,
+    RS,
+    DUP, /* s: [...] edge2 cur_len edge edge anchor anchor */
+    ROLL,
+    SWAP,
+    MD_orig_ZP2_0,
+    SWAP,
+    GC_cur,
+    ADD, /* s: [...] edge2 cur_len edge org_pos */
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    PUSHB_1,
+      2*64,
+    DIV,
+    ADD, /* s: [...] edge2 cur_len edge org_center */
+
+    DUP,
+    PUSHB_1,
+      bci_round,
+    CALL, /* s: [...] edge2 cur_len edge org_center cur_pos1 */
+
+    DUP,
+    ROLL,
+    ROLL,
+    SUB, /* s: ... cur_len edge cur_pos1 (org_center - cur_pos1) */
+
+    DUP,
+    PUSHB_1,
+      sal_u_off,
+    RS,
+    ADD,
+    ABS, /* s: ... cur_len edge cur_pos1 (org_center - cur_pos1) delta1 */
+
+    SWAP,
+    PUSHB_1,
+      sal_d_off,
+    RS,
+    SUB,
+    ABS, /* s: [...] edge2 cur_len edge cur_pos1 delta1 delta2 */
+
+    LT, /* delta1 < delta2 */
+    IF,
+      PUSHB_1,
+        sal_u_off,
+      RS,
+      SUB, /* cur_pos1 = cur_pos1 - u_off */
+
+    ELSE,
+      PUSHB_1,
+        sal_d_off,
+      RS,
+      ADD, /* cur_pos1 = cur_pos1 + d_off */
+    EIF, /* s: [...] edge2 cur_len edge cur_pos1 */
+
+    PUSHB_1,
+      3,
+    CINDEX,
+    PUSHB_1,
+      2*64,
+    DIV,
+    SUB, /* arg = cur_pos1 - cur_len/2 */
+
+    SWAP, /* s: [...] edge2 cur_len arg edge */
+    DUP,
+    DUP,
+    PUSHB_1,
+      4,
+    MINDEX,
+    SWAP, /* s: [...] edge2 cur_len edge edge arg edge */
+    GC_cur,
+    SUB,
+    SHPIX, /* edge = cur_pos1 - cur_len/2 */
+
+  ELSE,
+    SWAP, /* s: [...] edge2 cur_len edge */
+    PUSHB_1,
+      sal_anchor,
+    RS,
+    GC_cur, /* s: [...] edge2 cur_len edge anchor_pos */
+    PUSHB_1,
+      2,
+    CINDEX,
+    PUSHB_1,
+      sal_anchor,
+    RS,
+    MD_orig_ZP2_0,
+    ADD, /* s: [...] edge2 cur_len edge org_pos */
+
+    DUP,
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    PUSHB_1,
+      2*64,
+    DIV,
+    ADD, /* s: [...] edge2 cur_len edge org_pos org_center */
+
+    SWAP,
+    DUP,
+    PUSHB_1,
+      bci_round,
+    CALL, /* cur_pos1 = ROUND(org_pos) */
+    SWAP,
+    PUSHB_1,
+      sal_org_len,
+    RS,
+    ADD,
+    PUSHB_1,
+      bci_round,
+    CALL,
+    PUSHB_1,
+      5,
+    CINDEX,
+    SUB, /* s: [...] edge2 cur_len edge org_center cur_pos1 cur_pos2 */
+
+    PUSHB_1,
+      5,
+    CINDEX,
+    PUSHB_1,
+      2*64,
+    DIV,
+    PUSHB_1,
+      4,
+    MINDEX,
+    SUB, /* s: ... cur_len edge cur_pos1 cur_pos2 (cur_len/2 - org_center) */
+
+    DUP,
+    PUSHB_1,
+      4,
+    CINDEX,
+    ADD,
+    ABS, /* delta1 = ABS(cur_pos1 + cur_len / 2 - org_center) */
+    SWAP,
+    PUSHB_1,
+      3,
+    CINDEX,
+    ADD,
+    ABS, /* s: ... edge2 cur_len edge cur_pos1 cur_pos2 delta1 delta2 */
+    LT, /* delta1 < delta2 */
+    IF,
+      POP, /* arg = cur_pos1 */
+
+    ELSE,
+      SWAP,
+      POP, /* arg = cur_pos2 */
+    EIF, /* s: [...] edge2 cur_len edge arg */
+    SWAP,
+    DUP,
+    DUP,
+    PUSHB_1,
+      4,
+    MINDEX,
+    SWAP, /* s: [...] edge2 cur_len edge edge arg edge */
+    GC_cur,
+    SUB,
+    SHPIX, /* edge = arg */
+  EIF, /* s: [...] edge2 cur_len edge */
+
+  ENDF,
+
+};
+
+
+/*
  * bci_action_stem_bound
  *
  *   Handle the STEM action to align two edges of a stem, then moving one
@@ -1715,16 +1953,9 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
  *      sal_temp1
  *      sal_temp2
  *      sal_temp3
+ *
+ * uses: bci_action_stem_common
  */
-
-#undef sal_u_off
-#define sal_u_off sal_temp1
-#undef sal_d_off
-#define sal_d_off sal_temp2
-#undef sal_org_len
-#define sal_org_len sal_temp3
-#undef sal_edge2
-#define sal_edge2 sal_temp3
 
 unsigned char FPGM(bci_action_stem_bound) [] = {
 
@@ -1733,216 +1964,8 @@ unsigned char FPGM(bci_action_stem_bound) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  PUSHB_1,
-    4,
-  CINDEX,
-  PUSHB_1,
-    4,
-  CINDEX,
-  DUP, /* s: edge[-1] edge2 edge is_round is_serif edge2 edge edge */
-  MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
-
-  MD_orig_ZP2_0, /* s: edge[-1] edge2 edge is_round is_serif org_len */
-  DUP,
-  PUSHB_1,
-    sal_org_len,
-  SWAP,
-  WS,
-
-  PUSHB_1,
-    bci_compute_stem_width,
-  CALL, /* s: edge[-1] edge2 edge cur_len */
-
-  DUP,
-  PUSHB_1,
-    96,
-  LT, /* cur_len < 96 */
-  IF,
-    DUP,
-    PUSHB_1,
-      64,
-    LTEQ, /* cur_len <= 64 */
-    IF,
-      PUSHB_4,
-        sal_u_off,
-        32,
-        sal_d_off,
-        32,
-
-    ELSE,
-      PUSHB_4,
-        sal_u_off,
-        38,
-        sal_d_off,
-        26,
-    EIF,
-    WS,
-    WS,
-
-    SWAP, /* s: edge[-1] edge2 cur_len edge */
-    DUP,
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    DUP, /* s: edge[-1] edge2 cur_len edge edge anchor anchor */
-    ROLL,
-    SWAP,
-    MD_orig_ZP2_0,
-    SWAP,
-    GC_cur,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_center */
-
-    DUP,
-    PUSHB_1,
-      bci_round,
-    CALL, /* s: edge[-1] edge2 cur_len edge org_center cur_pos1 */
-
-    DUP,
-    ROLL,
-    ROLL,
-    SUB, /* s: ... cur_len edge cur_pos1 (org_center - cur_pos1) */
-
-    DUP,
-    PUSHB_1,
-      sal_u_off,
-    RS,
-    ADD,
-    ABS, /* s: ... cur_len edge cur_pos1 (org_center - cur_pos1) delta1 */
-
-    SWAP,
-    PUSHB_1,
-      sal_d_off,
-    RS,
-    SUB,
-    ABS, /* s: edge[-1] edge2 cur_len edge cur_pos1 delta1 delta2 */
-
-    LT, /* delta1 < delta2 */
-    IF,
-      PUSHB_1,
-        sal_u_off,
-      RS,
-      SUB, /* cur_pos1 = cur_pos1 - u_off */
-
-    ELSE,
-      PUSHB_1,
-        sal_d_off,
-      RS,
-      ADD, /* cur_pos1 = cur_pos1 + d_off */
-    EIF, /* s: edge[-1] edge2 cur_len edge cur_pos1 */
-
-    PUSHB_1,
-      3,
-    CINDEX,
-    PUSHB_1,
-      2*64,
-    DIV,
-    SUB, /* arg = cur_pos1 - cur_len/2 */
-
-    SWAP, /* s: edge[-1] edge2 cur_len arg edge */
-    DUP,
-    DUP,
-    PUSHB_1,
-      4,
-    MINDEX,
-    SWAP, /* s: edge[-1] edge2 cur_len edge edge arg edge */
-    GC_cur,
-    SUB,
-    SHPIX, /* edge = cur_pos1 - cur_len/2 */
-
-  ELSE,
-    SWAP, /* s: edge[-1] edge2 cur_len edge */
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    GC_cur, /* s: edge[-1] edge2 cur_len edge anchor_pos */
-    PUSHB_1,
-      2,
-    CINDEX,
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    MD_orig_ZP2_0,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_pos */
-
-    DUP,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge[-1] edge2 cur_len edge org_pos org_center */
-
-    SWAP,
-    DUP,
-    PUSHB_1,
-      bci_round,
-    CALL, /* cur_pos1 = ROUND(org_pos) */
-    SWAP,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    ADD,
-    PUSHB_1,
-      bci_round,
-    CALL,
-    PUSHB_1,
-      5,
-    CINDEX,
-    SUB, /* s: edge[-1] edge2 cur_len edge org_center cur_pos1 cur_pos2 */
-
-    PUSHB_1,
-      5,
-    CINDEX,
-    PUSHB_1,
-      2*64,
-    DIV,
-    PUSHB_1,
-      4,
-    MINDEX,
-    SUB, /* s: ... cur_len edge cur_pos1 cur_pos2 (cur_len/2 - org_center) */
-
-    DUP,
-    PUSHB_1,
-      4,
-    CINDEX,
-    ADD,
-    ABS, /* delta1 = ABS(cur_pos1 + cur_len / 2 - org_center) */
-    SWAP,
-    PUSHB_1,
-      3,
-    CINDEX,
-    ADD,
-    ABS, /* s: ... edge2 cur_len edge cur_pos1 cur_pos2 delta1 delta2 */
-    LT, /* delta1 < delta2 */
-    IF,
-      POP, /* arg = cur_pos1 */
-
-    ELSE,
-      SWAP,
-      POP, /* arg = cur_pos2 */
-    EIF, /* s: edge[-1] edge2 cur_len edge arg */
-    SWAP,
-    DUP,
-    DUP,
-    PUSHB_1,
-      4,
-    MINDEX,
-    SWAP, /* s: edge[-1] edge2 cur_len edge edge arg edge */
-    GC_cur,
-    SUB,
-    SHPIX, /* edge = arg */
-  EIF, /* s: edge[-1] edge2 cur_len edge */
+    bci_action_stem_common,
+  CALL,
 
   ROLL, /* s: edge[-1] cur_len edge edge2 */
   DUP,
@@ -2411,16 +2434,9 @@ unsigned char FPGM(bci_action_adjust) [] = {
  *      sal_temp1
  *      sal_temp2
  *      sal_temp3
+ *
+ * uses: bci_action_stem_common
  */
-
-#undef sal_u_off
-#define sal_u_off sal_temp1
-#undef sal_d_off
-#define sal_d_off sal_temp2
-#undef sal_org_len
-#define sal_org_len sal_temp3
-#undef sal_edge2
-#define sal_edge2 sal_temp3
 
 unsigned char FPGM(bci_action_stem) [] = {
 
@@ -2429,215 +2445,10 @@ unsigned char FPGM(bci_action_stem) [] = {
   FDEF,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
+    bci_action_stem_common,
+  CALL,
 
-  PUSHB_1,
-    4,
-  CINDEX,
-  PUSHB_1,
-    4,
-  CINDEX,
-  DUP, /* s: edge2 edge is_round is_serif edge2 edge edge */
-  MDAP_noround, /* set rp0 and rp1 to `edge_point' (for ALIGNRP below) */
-
-  MD_orig_ZP2_0, /* s: edge2 edge is_round is_serif org_len */
-  DUP,
-  PUSHB_1,
-    sal_org_len,
-  SWAP,
-  WS,
-
-  PUSHB_1,
-    bci_compute_stem_width,
-  CALL, /* s: edge2 edge cur_len */
-
-  DUP,
-  PUSHB_1,
-    96,
-  LT, /* cur_len < 96 */
-  IF,
-    DUP,
-    PUSHB_1,
-      64,
-    LTEQ, /* cur_len <= 64 */
-    IF,
-      PUSHB_4,
-        sal_u_off,
-        32,
-        sal_d_off,
-        32,
-
-    ELSE,
-      PUSHB_4,
-        sal_u_off,
-        38,
-        sal_d_off,
-        26,
-    EIF,
-    WS,
-    WS,
-
-    SWAP, /* s: edge2 cur_len edge */
-    DUP,
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    DUP, /* s: edge2 cur_len edge edge anchor anchor */
-    ROLL,
-    SWAP,
-    MD_orig_ZP2_0,
-    SWAP,
-    GC_cur,
-    ADD, /* s: edge2 cur_len edge org_pos */
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge2 cur_len edge org_center */
-
-    DUP,
-    PUSHB_1,
-      bci_round,
-    CALL, /* s: edge2 cur_len edge org_center cur_pos1 */
-
-    DUP,
-    ROLL,
-    ROLL,
-    SUB, /* s: edge2 cur_len edge cur_pos1 (org_center - cur_pos1) */
-
-    DUP,
-    PUSHB_1,
-      sal_u_off,
-    RS,
-    ADD,
-    ABS, /* s: ... cur_len edge cur_pos1 (org_center - cur_pos1) delta1 */
-
-    SWAP,
-    PUSHB_1,
-      sal_d_off,
-    RS,
-    SUB,
-    ABS, /* s: edge2 cur_len edge cur_pos1 delta1 delta2 */
-
-    LT, /* delta1 < delta2 */
-    IF,
-      PUSHB_1,
-        sal_u_off,
-      RS,
-      SUB, /* cur_pos1 = cur_pos1 - u_off */
-
-    ELSE,
-      PUSHB_1,
-        sal_d_off,
-      RS,
-      ADD, /* cur_pos1 = cur_pos1 + d_off */
-    EIF, /* s: edge2 cur_len edge cur_pos1 */
-
-    PUSHB_1,
-      3,
-    CINDEX,
-    PUSHB_1,
-      2*64,
-    DIV,
-    SUB, /* arg = cur_pos1 - cur_len/2 */
-
-    SWAP, /* s: edge2 cur_len arg edge */
-    DUP,
-    PUSHB_1,
-      3,
-    MINDEX,
-    SWAP, /* s: edge2 cur_len edge arg edge */
-    GC_cur,
-    SUB,
-    SHPIX, /* edge = cur_pos1 - cur_len/2 */
-
-  ELSE,
-    SWAP, /* s: edge2 cur_len edge */
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    GC_cur, /* s: edge2 cur_len edge anchor_pos */
-    PUSHB_1,
-      2,
-    CINDEX,
-    PUSHB_1,
-      sal_anchor,
-    RS,
-    MD_orig_ZP2_0,
-    ADD, /* s: edge2 cur_len edge org_pos */
-
-    DUP,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    PUSHB_1,
-      2*64,
-    DIV,
-    ADD, /* s: edge2 cur_len edge org_pos org_center */
-
-    SWAP,
-    DUP,
-    PUSHB_1,
-      bci_round,
-    CALL, /* cur_pos1 = ROUND(org_pos) */
-    SWAP,
-    PUSHB_1,
-      sal_org_len,
-    RS,
-    ADD,
-    PUSHB_1,
-      bci_round,
-    CALL,
-    PUSHB_1,
-      5,
-    CINDEX,
-    SUB, /* s: edge2 cur_len edge org_center cur_pos1 cur_pos2 */
-
-    PUSHB_1,
-      5,
-    CINDEX,
-    PUSHB_1,
-      2*64,
-    DIV,
-    PUSHB_1,
-      4,
-    MINDEX,
-    SUB, /* s: ... cur_len edge cur_pos1 cur_pos2 (cur_len/2 - org_center) */
-
-    DUP,
-    PUSHB_1,
-      4,
-    CINDEX,
-    ADD,
-    ABS, /* delta1 = ABS(cur_pos1 + cur_len / 2 - org_center) */
-    SWAP,
-    PUSHB_1,
-      3,
-    CINDEX,
-    ADD,
-    ABS, /* s: edge2 cur_len edge cur_pos1 cur_pos2 delta1 delta2 */
-    LT, /* delta1 < delta2 */
-    IF,
-      POP, /* arg = cur_pos1 */
-
-    ELSE,
-      SWAP,
-      POP, /* arg = cur_pos2 */
-    EIF, /* s: edge2 cur_len edge arg */
-    SWAP,
-    DUP,
-    PUSHB_1,
-      3,
-    MINDEX,
-    SWAP, /* s: edge2 cur_len edge arg edge */
-    GC_cur,
-    SUB,
-    SHPIX, /* edge = arg */
-  EIF, /* s: edge2 cur_len */
-
+  POP,
   SWAP, /* s: cur_len edge2 */
   DUP,
   DUP,
@@ -4130,6 +3941,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_ip_between_align_points))
 
             + sizeof (FPGM(bci_action_adjust_common))
+            + sizeof (FPGM(bci_action_stem_common))
 
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
@@ -4206,6 +4018,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_ip_between_align_points);
 
   COPY_FPGM(bci_action_adjust_common);
+  COPY_FPGM(bci_action_stem_common);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
