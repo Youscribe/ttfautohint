@@ -2502,7 +2502,6 @@ unsigned char FPGM(bci_action_serif_common) [] = {
 };
 
 
-
 /*
  * bci_action_serif
  *
@@ -2539,6 +2538,49 @@ unsigned char FPGM(bci_action_serif) [] = {
 
 
 /*
+ * bci_lower_bound
+ *
+ *   Move an edge if necessary to stay within a lower bound.
+ *
+ * in: edge
+ *     bound
+ */
+
+
+unsigned char FPGM(bci_lower_bound) [] = {
+
+  PUSHB_1,
+    bci_lower_bound,
+  FDEF,
+
+  SWAP, /* s: edge bound */
+  DUP,
+  MDAP_noround, /* set rp0 and rp1 to `bound' */
+  GC_cur,
+  PUSHB_1,
+    2,
+  CINDEX,
+  GC_cur, /* s: edge bound_pos edge_pos */
+  GT, /* edge_pos < bound_pos */
+  IF,
+    DUP,
+    ALIGNRP, /* align `edge' to `bound' */
+  EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `edge_point' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_action_serif_lower_bound
  *
  *   Handle the SERIF action to align a serif with its base, then moving it
@@ -2550,6 +2592,7 @@ unsigned char FPGM(bci_action_serif) [] = {
  *     ... stuff for bci_align_segments (serif) ...
  *
  * uses: bci_action_serif_common
+ *       bci_lower_bound
  */
 
 unsigned char FPGM(bci_action_serif_lower_bound) [] = {
@@ -2562,26 +2605,8 @@ unsigned char FPGM(bci_action_serif_lower_bound) [] = {
     bci_action_serif_common,
   CALL,
 
-  SWAP, /* s: serif edge[-1] */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
-  GC_cur,
   PUSHB_1,
-    2,
-  CINDEX,
-  GC_cur, /* s: serif edge[-1]_pos serif_pos */
-  GT, /* serif_pos < edge[-1]_pos */
-  IF,
-    DUP,
-    ALIGNRP, /* align `serif' to `edge[-1]' */
-  EIF,
-
-  MDAP_noround, /* set rp0 and rp1 to `serif_point' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
+    bci_lower_bound,
   CALL,
 
   ENDF,
@@ -2797,6 +2822,7 @@ unsigned char FPGM(bci_action_serif_anchor) [] = {
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_action_serif_anchor_common
+ *       bci_lower_bound
  */
 
 unsigned char FPGM(bci_action_serif_anchor_lower_bound) [] = {
@@ -2809,26 +2835,8 @@ unsigned char FPGM(bci_action_serif_anchor_lower_bound) [] = {
     bci_action_serif_anchor_common,
   CALL,
 
-  SWAP, /* s: edge edge[-1] */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
-  GC_cur,
   PUSHB_1,
-    2,
-  CINDEX,
-  GC_cur, /* s: edge edge[-1]_pos edge_pos */
-  GT, /* edge_pos < edge[-1]_pos */
-  IF,
-    DUP,
-    ALIGNRP, /* align `edge' to `edge[-1]' */
-  EIF,
-
-  MDAP_noround, /* set rp0 and rp1 to `edge' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
+    bci_lower_bound,
   CALL,
 
   ENDF,
@@ -3091,6 +3099,7 @@ unsigned char FPGM(bci_action_serif_link1) [] = {
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_action_serif_link1_common
+ *       bci_lower_bound
  */
 
 unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
@@ -3103,27 +3112,10 @@ unsigned char FPGM(bci_action_serif_link1_lower_bound) [] = {
     bci_action_serif_link1_common,
   CALL,
 
-  SWAP, /* s: edge edge[-1] */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
-  GC_cur,
   PUSHB_1,
-    2,
-  CINDEX,
-  GC_cur, /* s: edge edge[-1]_pos edge_pos */
-  GT, /* edge_pos < edge[-1]_pos */
-  IF,
-    DUP,
-    ALIGNRP, /* align `edge' to `edge[-1]' */
-  EIF,
-
-  MDAP_noround, /* set rp0 and rp1 to `edge' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
+    bci_lower_bound,
   CALL,
+
   ENDF,
 
 };
@@ -3342,6 +3334,7 @@ unsigned char FPGM(bci_action_serif_link2) [] = {
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_action_serif_link2_common
+ *       bci_lower_bound
  */
 
 unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
@@ -3354,26 +3347,8 @@ unsigned char FPGM(bci_action_serif_link2_lower_bound) [] = {
     bci_action_serif_link2_common,
   CALL,
 
-  SWAP, /* s: edge edge[-1] */
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge[-1]' */
-  GC_cur,
   PUSHB_1,
-    2,
-  CINDEX,
-  GC_cur, /* s: edge edge[-1]_pos edge_pos */
-  GT, /* edge_pos < edge[-1]_pos */
-  IF,
-    DUP,
-    ALIGNRP, /* align `edge' to `edge[-1]' */
-  EIF,
-
-  MDAP_noround, /* set rp0 and rp1 to `edge' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
+    bci_lower_bound,
   CALL,
 
   ENDF,
@@ -3643,6 +3618,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_serif_link1_common))
             + sizeof (FPGM(bci_action_serif_link2_common))
 
+            + sizeof (FPGM(bci_lower_bound))
+
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
             + sizeof (FPGM(bci_action_ip_on))
@@ -3723,6 +3700,8 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_serif_anchor_common);
   COPY_FPGM(bci_action_serif_link1_common);
   COPY_FPGM(bci_action_serif_link2_common);
+
+  COPY_FPGM(bci_lower_bound);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
