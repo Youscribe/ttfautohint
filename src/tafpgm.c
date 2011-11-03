@@ -781,7 +781,6 @@ unsigned char FPGM(bci_create_segment) [] = {
  *
  * sal: sal_i (start of current segment)
  *      sal_j (current twilight point)
- *      sal_num_segments
  */
 
 unsigned char FPGM(bci_create_segments) [] = {
@@ -793,27 +792,22 @@ unsigned char FPGM(bci_create_segments) [] = {
   /* all our measurements are taken along the y axis */
   SVTCA_y,
 
+  DUP,
+  ADD,
   PUSHB_1,
-    sal_num_segments,
-  SWAP,
-  WS, /* sal_num_segments = num_segments */
+    1,
+  SUB, /* delta = (2*num_segments - 1) */
 
-  PUSHB_5,
+  PUSHB_4,
     sal_segment_offset,
     sal_segment_offset,
-    sal_num_segments,
 
     sal_j,
     0,
   WS, /* sal_j = 0 (point offset) */
 
-  RS,
-  DUP,
-  ADD,
-  ADD,
-  PUSHB_1,
-    1,
-  SUB, /* s: sal_segment_offset (sal_segment_offset + 2*num_segments - 1) */
+  ROLL,
+  ADD, /* s: ... sal_segment_offset (sal_segment_offset + delta) */
 
   /* `bci_create_segment_point' also increases the loop counter by 1; */
   /* this effectively means we have a loop step of 2 */
@@ -1698,7 +1692,6 @@ unsigned char FPGM(bci_action_adjust_bound) [] = {
  *      sal_temp1
  *      sal_temp2
  *      sal_temp3
- *      sal_num_segments
  */
 
 #undef sal_u_off
@@ -2415,7 +2408,6 @@ unsigned char FPGM(bci_action_adjust) [] = {
  *      sal_temp1
  *      sal_temp2
  *      sal_temp3
- *      sal_num_segments
  */
 
 #undef sal_u_off

@@ -304,8 +304,7 @@
 #define sal_temp3 sal_temp2 + 1
 #define sal_limit sal_temp3 + 1
 #define sal_func sal_limit +1
-#define sal_num_segments sal_func + 1
-#define sal_anchor sal_num_segments + 1
+#define sal_anchor sal_func + 1
 #define sal_point_min sal_anchor + 1
 #define sal_point_max sal_point_min + 1
 #define sal_segment_offset sal_point_max + 1 /* must be last */
