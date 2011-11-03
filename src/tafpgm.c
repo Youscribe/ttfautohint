@@ -2413,27 +2413,7 @@ unsigned char FPGM(bci_action_blue_anchor) [] = {
   WS,
 
   PUSHB_1,
-    0,
-  SZPS, /* set zp0, zp1, and zp2 to twilight zone 0 */
-
-  /* move `edge_point' to `blue_cvt_idx' position; */
-  /* note that we can't use MIAP since this would modify */
-  /* the twilight point's original coordinates also */
-  RCVT,
-  SWAP,
-  DUP,
-  MDAP_noround, /* set rp0 and rp1 to `edge' */
-  DUP,
-  GC_cur, /* s: new_pos edge edge_pos */
-  ROLL,
-  SWAP,
-  SUB, /* s: edge (new_pos - edge_pos) */
-  SHPIX,
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
+    bci_action_blue,
   CALL,
 
   ENDF,
