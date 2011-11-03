@@ -53,6 +53,9 @@ implement `x-height-snapping-exceptions' and `pre-hinting'
 allow hinting of single glyphs, using a config file which holds the global
   settings
 
+better handling of `incomplete' fonts (this is, fonts which lack the minimum
+  set of glyphs necessary to determine the blue zones)
+
 
 minor improvements
 ------------------
