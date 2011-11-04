@@ -72,7 +72,7 @@ unsigned char PREP(align_top_b) [] = {
     PUSHB_1,
       cvtl_0x10000,
     RCVT,
-    MUL, /* scaled in 16.16 format */
+    MUL, /* fitted in 16.16 format */
     SWAP,
     DIV, /* (fitted / scaled) in 16.16 format */
 
