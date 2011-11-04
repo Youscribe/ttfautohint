@@ -2503,41 +2503,6 @@ unsigned char FPGM(bci_action_serif_common) [] = {
 
 
 /*
- * bci_action_serif
- *
- *   Handle the SERIF action to align a serif with its base.
- *
- * in: serif_point (in twilight zone)
- *     base_point (in twilight zone)
- *     ... stuff for bci_align_segments (serif) ...
- *
- * uses: bci_action_serif_common
- */
-
-unsigned char FPGM(bci_action_serif) [] = {
-
-  PUSHB_1,
-    bci_action_serif,
-  FDEF,
-
-  PUSHB_1,
-    bci_action_serif_common,
-  CALL,
-
-  MDAP_noround, /* set rp0 and rp1 to `serif_point' */
-
-  PUSHB_2,
-    bci_align_segments,
-    1,
-  SZP1, /* set zp1 to normal zone 1 */
-  CALL,
-
-  ENDF,
-
-};
-
-
-/*
  * bci_lower_bound
  *
  *   Move an edge if necessary to stay within a lower bound.
@@ -2545,7 +2510,6 @@ unsigned char FPGM(bci_action_serif) [] = {
  * in: edge
  *     bound
  */
-
 
 unsigned char FPGM(bci_lower_bound) [] = {
 
@@ -2588,7 +2552,6 @@ unsigned char FPGM(bci_lower_bound) [] = {
  * in: edge
  *     bound
  */
-
 
 unsigned char FPGM(bci_upper_bound) [] = {
 
@@ -2633,7 +2596,6 @@ unsigned char FPGM(bci_upper_bound) [] = {
  *     upper
  */
 
-
 unsigned char FPGM(bci_lower_upper_bound) [] = {
 
   PUSHB_1,
@@ -2667,6 +2629,41 @@ unsigned char FPGM(bci_lower_upper_bound) [] = {
     DUP,
     ALIGNRP, /* align `serif' to `upper' */
   EIF,
+
+  MDAP_noround, /* set rp0 and rp1 to `serif_point' */
+
+  PUSHB_2,
+    bci_align_segments,
+    1,
+  SZP1, /* set zp1 to normal zone 1 */
+  CALL,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_action_serif
+ *
+ *   Handle the SERIF action to align a serif with its base.
+ *
+ * in: serif_point (in twilight zone)
+ *     base_point (in twilight zone)
+ *     ... stuff for bci_align_segments (serif) ...
+ *
+ * uses: bci_action_serif_common
+ */
+
+unsigned char FPGM(bci_action_serif) [] = {
+
+  PUSHB_1,
+    bci_action_serif,
+  FDEF,
+
+  PUSHB_1,
+    bci_action_serif_common,
+  CALL,
 
   MDAP_noround, /* set rp0 and rp1 to `serif_point' */
 
