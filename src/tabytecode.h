@@ -342,10 +342,12 @@
 #define bci_action_serif_link2_common bci_action_serif_link1_common + 1
 
 #define bci_lower_bound bci_action_serif_link2_common + 1
+#define bci_upper_bound bci_lower_bound + 1
+#define bci_lower_upper_bound bci_upper_bound + 1
 
 /* the order of the `bci_action_*' entries must correspond */
 /* to the order of the TA_Action enumeration entries */
-#define bci_action_ip_before bci_lower_bound + 1
+#define bci_action_ip_before bci_lower_upper_bound + 1
 #define bci_action_ip_after bci_action_ip_before + 1
 #define bci_action_ip_on bci_action_ip_after + 1
 #define bci_action_ip_between bci_action_ip_on + 1
