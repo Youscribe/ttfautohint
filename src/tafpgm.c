@@ -48,6 +48,20 @@
   SZP2
 
 
+/* a convenience shorthand for scaling; see `bci_cvt_rescale' for details */
+#define DO_SCALE \
+  DUP, /* s: a a */ \
+  PUSHB_1, \
+    cvtl_scale, \
+  RCVT, \
+  MUL, /* delta * 2^10 */ \
+  PUSHB_1, \
+    cvtl_0x10000, \
+  RCVT, \
+  DIV, /* delta */ \
+  ADD /* a + delta */
+
+
 /* in the comments below, the top of the stack (`s:') */
 /* is the rightmost element; the stack is shown */
 /* after the instruction on the same line has been executed */
@@ -379,6 +393,10 @@ unsigned char FPGM(bci_loop) [] = {
  *
  *   Rescale CVT value by `cvtl_scale' (in 16.16 format).
  *
+ *   The scaling factor `cvtl_scale' isn't stored as `b/c' but as `(b-c)/c';
+ *   consequently, the calculation `a * b/c' is done as `a + delta' with
+ *   `delta = a * (b-c)/c'.  This avoids overflow.
+ *
  * sal: sal_i (CVT index)
  *
  * CVT: cvtl_scale
@@ -396,15 +414,7 @@ unsigned char FPGM(bci_cvt_rescale) [] = {
   RS,
   DUP,
   RCVT,
-  PUSHB_1,
-    cvtl_scale,
-  RCVT,
-  MUL, /* CVT * scale * 2^10 */
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  DIV, /* CVT * scale */
-
+  DO_SCALE,
   WCVTP,
 
   ENDF,
@@ -717,15 +727,7 @@ unsigned char FPGM(bci_create_segment) [] = {
     2*64,
   DIV, /* s: middle_pos */
 
-  /* now scale it */
-  PUSHB_1,
-    cvtl_scale,
-  RCVT,
-  MUL, /* middle_pos * scale * 2^10 */
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  DIV, /* middle_pos = middle_pos * scale */
+  DO_SCALE, /* middle_pos = middle_pos * scale */
 
   /* write it to temporary CVT location */
   PUSHB_2,
@@ -945,14 +947,7 @@ unsigned char FPGM(bci_scale_contour) [] = {
   DUP,
   GC_orig,
   DUP,
-  PUSHB_1,
-    cvtl_scale,
-  RCVT,
-  MUL, /* min_pos * scale * 2^10 */
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  DIV, /* min_pos_new = min_pos * scale */
+  DO_SCALE, /* min_pos_new = min_pos * scale */
   SWAP,
   SUB,
   SHPIX,
@@ -966,14 +961,7 @@ unsigned char FPGM(bci_scale_contour) [] = {
     DUP,
     GC_orig,
     DUP,
-    PUSHB_1,
-      cvtl_scale,
-    RCVT,
-    MUL, /* max_pos * scale * 2^10 */
-    PUSHB_1,
-      cvtl_0x10000,
-    RCVT,
-    DIV, /* max_pos_new = max_pos * scale */
+    DO_SCALE, /* max_pos_new = max_pos * scale */
     SWAP,
     SUB,
     SHPIX,
@@ -1071,8 +1059,8 @@ unsigned char FPGM(bci_shift_contour) [] = {
  *   also.
  *
  *   If this function is called, a point `x' in the subglyph has been scaled
- *   by `cvtl_scale' already (during the hinting of the subglyph itself), and
- *   `offset' has been applied also:
+ *   already (during the hinting of the subglyph itself), and `offset' has
+ *   been applied also:
  *
  *     x  ->  x * scale + offset         (1)
  *
@@ -1084,6 +1072,8 @@ unsigned char FPGM(bci_shift_contour) [] = {
  *   we have to shift all points of the subglyph by
  *
  *     offset * scale - offset = offset * (scale - 1)
+ *
+ *   Note that `cvtl_scale' is equal to the above `scale - 1'.
  *
  * in: offset (in FUnits)
  *     num_contours
@@ -1119,10 +1109,6 @@ unsigned char FPGM(bci_shift_subglyph) [] = {
   PUSHB_1,
     cvtl_scale,
   RCVT,
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  SUB, /* scale - 1 (in 16.16 format) */
   MUL,
   PUSHB_1,
     cvtl_0x10000,
@@ -1190,15 +1176,7 @@ unsigned char FPGM(bci_ip_outer_align_point) [] = {
   ALIGNRP, /* align `point' with `edge' */
   DUP,
   GC_orig,
-  /* now scale it */
-  PUSHB_1,
-    cvtl_scale,
-  RCVT,
-  MUL, /* point_orig_pos * scale * 2^10 */
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  DIV, /* point_orig_pos = point_orig_pos * scale */
+  DO_SCALE, /* point_orig_pos = point_orig_pos * scale */
 
   PUSHB_1,
     sal_i,
@@ -1267,15 +1245,7 @@ unsigned char FPGM(bci_ip_between_align_point) [] = {
   ALIGNRP, /* align `point' with `edge' */
   DUP,
   GC_orig,
-  /* now scale it */
-  PUSHB_1,
-    cvtl_scale,
-  RCVT,
-  MUL, /* point_orig_pos * scale * 2^10 */
-  PUSHB_1,
-    cvtl_0x10000,
-  RCVT,
-  DIV, /* point_orig_pos = point_orig_pos * scale */
+  DO_SCALE, /* point_orig_pos = point_orig_pos * scale */
 
   PUSHB_1,
     sal_i,
@@ -2997,6 +2967,10 @@ unsigned char FPGM(bci_action_serif_link1_common) [] = {
     POP,
 
   ELSE,
+    /* we have to execute `a*b/c', with b/c very near to 1: */
+    /* to avoid overflow while retaining precision, */
+    /* we transform this to `a + a * (b-c)/c' */
+
     PUSHB_1,
       2,
     CINDEX, /* s: [...] after edge before edge */
@@ -3004,33 +2978,42 @@ unsigned char FPGM(bci_action_serif_link1_common) [] = {
       2,
     CINDEX, /* s: [...] after edge before edge before */
     MD_orig_ZP2_0, /* a = edge_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
 
+    DUP,
+    PUSHB_1,
+      5,
+    CINDEX, /* s: [...] after edge before a a after */
     PUSHB_1,
       4,
-    CINDEX, /* s: [...] after edge before a*64 after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: [...] after edge before a*64 after before */
-    MD_cur, /* b = after_pos - before_pos */
-    MUL, /* s: [...] after edge before a*b */
-
-    PUSHB_1,
-      4,
-    CINDEX, /* s: [...] after edge before a*b after */
-    PUSHB_1,
-      3,
-    CINDEX, /* s: [...] after edge before a*b after before */
+    CINDEX, /* s: [...] after edge before a a after before */
     MD_orig_ZP2_0, /* c = after_orig_pos - before_orig_pos */
-    PUSHW_1,
-      0x10, /* 64*64 */
-      0x00,
-    MUL,
 
-    DIV, /* s: [...] after edge before a*b/c */
+    PUSHB_1,
+      6,
+    CINDEX, /* s: [...] after edge before a a c after */
+    PUSHB_1,
+      5,
+    CINDEX, /* s: [...] after edge before a a c after before */
+    MD_cur, /* b = after_pos - before_pos */
+
+    PUSHB_1,
+      2,
+    CINDEX, /* s: [...] after edge before a a c b c */
+    SUB, /* b-c */
+
+    PUSHB_1,
+      cvtl_0x10000,
+    RCVT,
+    MUL, /* (b-c) in 16.16 format */
+    SWAP,
+    DIV, /* s: [...] after edge before a a (b-c)/c */
+
+    MUL, /* a * (b-c)/c * 2^10 */
+    PUSHB_1,
+      cvtl_0x10000,
+    RCVT,
+    DIV, /* a * (b-c)/c */
+    ADD, /* a*b/c */
 
     SWAP,
     MDAP_noround, /* set rp0 and rp1 to `before' */

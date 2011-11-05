@@ -70,11 +70,15 @@ unsigned char PREP(align_top_b) [] = {
   NEQ,
   IF, /* s: scaled fitted */
     PUSHB_1,
+      2,
+    CINDEX,
+    SUB, /* s: scaled (fitted-scaled) */
+    PUSHB_1,
       cvtl_0x10000,
     RCVT,
-    MUL, /* fitted in 16.16 format */
+    MUL, /* (fitted-scaled) in 16.16 format */
     SWAP,
-    DIV, /* (fitted / scaled) in 16.16 format */
+    DIV, /* ((fitted-scaled) / scaled) in 16.16 format */
 
     PUSHB_1,
       cvtl_scale,
@@ -126,13 +130,6 @@ unsigned char PREP(loop_cvt_d) [] = {
       bci_cvt_rescale,
       bci_loop,
     CALL,
-
-  ELSE,
-    PUSHB_2,
-      cvtl_scale,
-      cvtl_0x10000,
-    RCVT,
-    WCVTP,
   EIF,
 
 };
