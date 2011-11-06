@@ -1,3 +1,10 @@
+New in 0.5:
+
+* Rendering on iOS is now expected to give good results.
+
+* No bad rendering at very large PPEM values.
+
+
 New in 0.4:
 
 * The bytecode has been changed to `create' twilight points.  This should

@@ -9,13 +9,20 @@ the original idea, and to Raph Levien <http://raph.levien.com> and the
 Google Web Fonts team <www.google.com/webfonts> for providing financial
 support to initiate the project.
 
+Thanks also to FontLab, Google (again) and all the other people who
+contributed to the campaign at Pledgie <http://pledgie.com/campaigns/15816>
+for continuing the financial support.
+
 
 The following people have provided help in developing and testing the
 library:
 
-James Cloos <cloos@jhcloos.com>
+Dave Arnold <darnold@adobe.com>
 Vernon Adams <vern@newtypography.co.uk>
+James Cloos <cloos@jhcloos.com>
 Greg Hitchcock <gregh@microsoft.com>
 Daniel Johnson <il.basso.buffo@gmail.com>
+David Lemon <lemon@adobe.com>
+Adam Twardoch <adam@fontlab.com>
 
 EOF
