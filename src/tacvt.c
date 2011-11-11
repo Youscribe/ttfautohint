@@ -22,34 +22,24 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
 {
   FT_Error error;
   FT_Face face = sfnt->face;
-  FT_UInt enc;
   FT_UInt idx;
-
-  static const FT_Encoding latin_encs[] =
-  {
-    FT_ENCODING_UNICODE,
-    FT_ENCODING_APPLE_ROMAN,
-    FT_ENCODING_ADOBE_STANDARD,
-    FT_ENCODING_ADOBE_LATIN_1,
-
-    FT_ENCODING_NONE /* end of list */
-  };
 
 
   error = ta_loader_init(font->loader);
   if (error)
     return error;
 
-  /* try to select a latin charmap */
-  for (enc = 0; latin_encs[enc] != FT_ENCODING_NONE; enc++)
-  {
-    error = FT_Select_Charmap(face, latin_encs[enc]);
-    if (!error)
-      break;
-  }
+  error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+  if (error)
+    return TA_Err_Missing_Unicode_CMap;
 
-  /* load latin glyph `a' to trigger all initializations */
-  idx = FT_Get_Char_Index(face, 'a');
+  /* load glyph `o' to trigger all initializations; */
+  /* XXX make this configurable for non-latin scripts */
+  /* XXX make this configurable to use a different letter */
+  idx = FT_Get_Char_Index(face, 'o');
+  if (!idx)
+    return TA_Err_Missing_Glyph;
+
   error = ta_loader_load_glyph(font->loader, face, idx,
                                font->fallback_script << 30);
 

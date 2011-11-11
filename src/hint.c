@@ -285,6 +285,14 @@ main(int argc,
                 " without permission of the legal owner.\n"
               "Use command line option `-i' to continue"
                 " if you have such a permission\n");
+    else if (error == TA_Err_Missing_Unicode_CMap)
+      fprintf(stderr,
+              "No Unicode character map.\n");
+    else if (error == TA_Err_Missing_Glyph)
+      fprintf(stderr,
+              "No glyph for the key character"
+                " to derive standard width and height.\n"
+              "For the latin script, this key character is `o' (U+006F).\n");
     else
       fprintf(stderr,
               "Error code `0x%02x' while autohinting font\n", error);

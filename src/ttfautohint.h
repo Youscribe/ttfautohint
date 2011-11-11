@@ -51,6 +51,8 @@ typedef void
 #define TA_Err_Missing_Legal_Permission 0x0F
 #define TA_Err_Invalid_Stream_Write 0x5F
 #define TA_Err_Hinter_Overflow 0xF0
+#define TA_Err_Missing_Glyph 0xF1
+#define TA_Err_Missing_Unicode_CMap 0xF2
 
 
 /*
