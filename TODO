@@ -1,11 +1,8 @@
 essential fixes
 ---------------
 
-simplify hinting bytecode by using the undocumented properties of some
-  instructions to shift the original coordinates of twilight points; this
-  should also fix the rendering problems on platforms like OS X.
-
-explicitly check for new functionality of `FT_Sfnt_Table_Info'
+explicitly check for new functionality of `FT_Sfnt_Table_Info', both at
+compile and run time.
 
 write a platform-independent GUI
   -> direct control over `actions'
@@ -21,7 +18,7 @@ handle OT features
 control `gasp' table; Adam Twardoch suggest the following:
 
   1. Calculate "gaspstem", i.e. the most common thickness of horizontal
-     stems (y-direction distances) for lowercase Latin letters.
+     stems (y direction distances) for lowercase Latin letters.
   2. If gaspstem <= 0.03 * upm, apply gasp symmetric smoothing across the
      entire range (rangeMaxPPEM 0xFFFF, value 15)
   3. Else, calculate gaspthreshold as follows:
