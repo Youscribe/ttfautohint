@@ -14,13 +14,14 @@ AC_INIT([ttfautohint],
         [0.5],
         [freetype-devel@nongnu.org])
 AM_INIT_AUTOMAKE([-Wall -Werror gnits])
-
+AC_CONFIG_MACRO_DIR([m4])
 AM_SILENT_RULES([yes])
 
 AC_PROG_CC
 AC_PROG_CPP
 
 LT_INIT
+LT_LTLIZE_LANG([C])
 
 AC_ARG_WITH(freetype-config,
             [  --with-freetype-config=PROG   Use FreeType configuration program PROG],
@@ -45,7 +46,7 @@ AC_SUBST(FREETYPE_CPPFLAGS)
 AC_SUBST(FREETYPE_LDFLAGS)
 
 
-AC_MSG_CHECKING([whether FreeType version is 2.4.5 or higher])
+AC_MSG_CHECKING([whether FreeType header files are version 2.4.5 or higher])
 old_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS=$FREETYPE_CPPFLAGS
 AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
@@ -59,7 +60,50 @@ AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 ]])],
 [AC_MSG_RESULT(yes)
  CPPFLAGS="$old_CPPFLAGS"],
-[AC_MSG_ERROR([Need FreeType library version 2.4.5 or higher])])
+[AC_MSG_ERROR([Need FreeType version 2.4.5 or higher])])
+
+
+AC_MSG_CHECKING([whether FreeType library is version 2.4.5 or higher])
+old_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS=$FREETYPE_CPPFLAGS
+old_LIBS="$LIBS"
+LIBS=$FREETYPE_LDFLAGS
+AC_LANG_PUSH([LTLIZED C])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+
+#include <stdlib.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+int
+main()
+{
+  FT_Error error;
+  FT_Library library;
+  FT_Int major, minor, patch;
+
+  error = FT_Init_FreeType(&library);
+  if (error)
+  {
+    printf("(test program reports error code %d)... ", error);
+    exit(EXIT_FAILURE);
+  }
+
+  FT_Library_Version(library, &major, &minor, &patch);
+
+  printf("(found %d.%d.%d)... ", major, minor, patch);
+
+  if (((major*1000 + minor)*1000 + patch) >= 2004005)
+    exit(EXIT_SUCCESS);
+  exit(EXIT_FAILURE);
+}
+
+]])],
+[AC_MSG_RESULT(yes)
+ CPPFLAGS="$old_CPPFLAGS"
+ LIBS="$old_LIBS"],
+[AC_MSG_ERROR([Need FreeType version 2.4.5 or higher])])
+AC_LANG_POP
 
 
 AC_CONFIG_HEADERS([config.h])
