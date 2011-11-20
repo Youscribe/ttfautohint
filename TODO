@@ -1,9 +1,6 @@
 essential fixes
 ---------------
 
-explicitly check for new functionality of `FT_Sfnt_Table_Info', both at
-compile and run time.
-
 write a platform-independent GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
