@@ -48,6 +48,7 @@ typedef void
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */
 
 #define TA_Err_Ok 0x00
+#define TA_Err_Invalid_FreeType_Version 0x0E
 #define TA_Err_Missing_Legal_Permission 0x0F
 #define TA_Err_Invalid_Stream_Write 0x5F
 #define TA_Err_Hinter_Overflow 0xF0

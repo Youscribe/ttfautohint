@@ -51,11 +51,17 @@ TA_font_init(FONT* font)
 {
   FT_Error error;
   FT_Face f;
+  FT_Int major, minor, patch;
 
 
   error = FT_Init_FreeType(&font->lib);
   if (error)
     return error;
+
+  /* assure correct FreeType version to avoid using the wrong DLL */
+  FT_Library_Version(font->lib, &major, &minor, &patch);
+  if (((major*1000 + minor)*1000 + patch) < 2004005)
+    return TA_Err_Invalid_FreeType_Version;
 
   /* get number of faces (i.e. subfonts) */
   error = FT_New_Memory_Face(font->lib, font->in_buf, font->in_len, -1, &f);

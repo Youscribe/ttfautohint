@@ -278,13 +278,17 @@ main(int argc,
 
   if (error)
   {
-    if (error == TA_Err_Missing_Legal_Permission)
+    if (error == TA_Err_Invalid_FreeType_Version)
+      fprintf(stderr,
+              "FreeType version 2.4.5 or higher is needed.\n"
+              "Perhaps using a wrong FreeType DLL?\n");
+    else if (error == TA_Err_Missing_Legal_Permission)
       fprintf(stderr,
               "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
               "This font must not be modified"
                 " without permission of the legal owner.\n"
               "Use command line option `-i' to continue"
-                " if you have such a permission\n");
+                " if you have such a permission.\n");
     else if (error == TA_Err_Missing_Unicode_CMap)
       fprintf(stderr,
               "No Unicode character map.\n");
