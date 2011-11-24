@@ -46,15 +46,8 @@ typedef void
 
 
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */
-
-#define TA_Err_Ok 0x00
-#define TA_Err_Invalid_FreeType_Version 0x0E
-#define TA_Err_Missing_Legal_Permission 0x0F
-#define TA_Err_Invalid_Stream_Write 0x5F
-#define TA_Err_Hinter_Overflow 0xF0
-#define TA_Err_Missing_Glyph 0xF1
-#define TA_Err_Missing_Unicode_CMap 0xF2
-
+/* All error values specific to ttfautohint start with `TA_Err_'. */
+#include <ttfautohint-errors.h>
 
 /*
  * Read a TrueType font, remove existing bytecode (in the SFNT tables

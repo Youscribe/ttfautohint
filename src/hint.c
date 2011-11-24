@@ -23,7 +23,7 @@
 #include <string.h>
 #include <getopt.h>
 
-#include "ttfautohint.h"
+#include <ttfautohint.h>
 
 
 typedef struct Progress_Data_ {

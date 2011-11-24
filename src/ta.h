@@ -26,7 +26,8 @@
 #include "taloader.h"
 #include "tadummy.h"
 #include "talatin.h"
-#include "ttfautohint.h"
+
+#include <ttfautohint.h>
 
 
 /* these macros convert 16bit and 32bit numbers into single bytes */
