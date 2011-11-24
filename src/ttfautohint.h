@@ -65,18 +65,21 @@ typedef void
  * depending on the fields in `options'.  The fields are comma separated;
  * whitespace within the format string is not significant, a trailing comma
  * is ignored.  Fields are parsed from left to right; if a field occurs
- * multiple times, the last field's argument wins.  Depending on the field,
- * zero or one argument is expected.
+ * multiple times, the last field's argument wins.  The same is true for
+ * fields which are mutually exclusive.  Depending on the field, zero or one
+ * argument is expected.
  *
  * Note that fields marked as `not implemented yet' are subject to change.
  *
  *   in-file                      A pointer of type `FILE*' to the data
  *                                stream of the input font, opened for
- *                                binary reading.
+ *                                binary reading.  Mutually exclusive with
+ *                                `in-buffer'.
  *
  *   in-buffer                    A pointer of type `const char*' to a
  *                                buffer which contains the input font.
- *                                Needs `in-buffer-len'.
+ *                                Needs `in-buffer-len'.  Mutually exclusive
+ *                                with `in-file'.
  *
  *   in-buffer-len                A value of type `size_t', giving the
  *                                length of the input buffer.  Needs
@@ -84,12 +87,14 @@ typedef void
  *
  *   out-file                     A pointer of type `FILE*' to the data
  *                                stream of the output font, opened for
- *                                binary writing.
+ *                                binary writing.  Mutually exclusive with
+ *                                `out-buffer'.
  *
  *   out-buffer                   A pointer of type `char**' to a buffer
  *                                which contains the output font.  Needs
- *                                `out-buffer-len'.  Deallocate the memory
- *                                with `free'.
+ *                                `out-buffer-len'.  Mutually exclusive with
+ *                                `out-file'.  Deallocate the memory with
+ *                                `free'.
  *
  *   out-buffer-len               A pointer of type `size_t*' to a value
  *                                giving the length of the output buffer.
