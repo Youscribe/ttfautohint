@@ -100,8 +100,7 @@ typedef void
  *                                progress reports.  This function gets
  *                                called after a single glyph has been
  *                                processed.  If this field is not set, no
- *                                progress callback function is used.  Not
- *                                implemented yet.
+ *                                progress callback function is used.
  *
  *   progress-callback-data       A pointer of type `void*' to user data
  *                                which is passed to the progress callback
