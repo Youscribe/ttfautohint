@@ -145,7 +145,9 @@ main(int argc,
 
   FILE *in;
   FILE *out;
+
   TA_Error error;
+  const unsigned char* error_string;
 
   Progress_Data progress_data = {-1, 1, 0};
   TA_Progress_Func progress_func = NULL;
@@ -269,10 +271,12 @@ main(int argc,
 
   error = TTF_autohint("in-file, out-file,"
                        "hinting-range-min, hinting-range-max,"
+                       "error-string,"
                        "progress-callback, progress-callback-data,"
                        "ignore-permissions, fallback-script",
                        in, out,
                        hinting_range_min, hinting_range_max,
+                       &error_string,
                        progress_func, &progress_data,
                        ignore_permissions, latin_fallback);
 
@@ -299,7 +303,8 @@ main(int argc,
               "For the latin script, this key character is `o' (U+006F).\n");
     else
       fprintf(stderr,
-              "Error code `0x%02x' while autohinting font\n", error);
+              "Error code `0x%02x' while autohinting font:\n"
+              "  %s\n", error, error_string);
     exit(EXIT_FAILURE);
   }
 

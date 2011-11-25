@@ -23,6 +23,45 @@
 #include "ta.h"
 
 
+/* error message strings; */
+/* we concatenate FreeType and ttfautohint messages into one structure */
+
+typedef const struct TA_error_ {
+  int err_code;
+  const char* err_msg;
+} TA_error;
+
+TA_error TA_Errors[] =
+
+#undef __FTERRORS_H__
+#define FT_ERRORDEF(e, v, s) { e, s },
+#define FT_ERROR_START_LIST {
+#define FT_ERROR_END_LIST /* empty */
+#include FT_ERRORS_H
+
+#undef __TTFAUTOHINT_ERRORS_H__
+#define TA_ERRORDEF(e, v, s) { e, s },
+#define TA_ERROR_START_LIST /* empty */
+#define TA_ERROR_END_LIST { 0, NULL } };
+#include <ttfautohint-errors.h>
+
+
+static const char*
+TA_get_error_message(FT_Error error)
+{
+  TA_error *e = TA_Errors;
+
+  while (e->err_code || e->err_msg)
+  {
+    if (e->err_code == error)
+      return e->err_msg;
+    e++;
+  }
+
+  return NULL;
+}
+
+
 static FT_Error
 TA_font_file_read(FONT* font,
                   FILE* in_file)
@@ -1445,6 +1484,8 @@ TTF_autohint(const char* options,
   char** out_bufp = NULL;
   size_t* out_lenp = NULL;
 
+  const unsigned char** error_stringp = NULL;
+
   FT_Long hinting_range_min = -1;
   FT_Long hinting_range_max = -1;
 
@@ -1458,7 +1499,10 @@ TTF_autohint(const char* options,
 
 
   if (!options || !*options)
-    return FT_Err_Invalid_Argument;
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
 
   /* XXX */
   va_start(ap, options);
@@ -1522,6 +1566,8 @@ TTF_autohint(const char* options,
       out_file = NULL;
       out_lenp = va_arg(ap, size_t*);
     }
+    else if (COMPARE("error-string"))
+      error_stringp = va_arg(ap, const unsigned char**);
     else if (COMPARE("hinting-range-min"))
       hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-max"))
@@ -1552,23 +1598,38 @@ TTF_autohint(const char* options,
 
   if (!(in_file
         || (in_buf && in_len)))
-    return FT_Err_Invalid_Argument;
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
 
   if (!(out_file
         || (out_bufp && out_lenp)))
-    return FT_Err_Invalid_Argument;
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
 
   font = (FONT*)calloc(1, sizeof (FONT));
   if (!font)
-    return FT_Err_Out_Of_Memory;
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Err1;
+  }
 
   if (hinting_range_min >= 0 && hinting_range_min < 2)
-    return FT_Err_Invalid_Argument;
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
   if (hinting_range_min < 0)
     hinting_range_min = 8;
 
   if (hinting_range_max >= 0 && hinting_range_max < hinting_range_min)
-    return FT_Err_Invalid_Argument;
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
   if (hinting_range_max < 0)
     hinting_range_max = 1000;
 
@@ -1594,7 +1655,10 @@ TTF_autohint(const char* options,
   {
     /* a valid TTF can never be that small */
     if (in_len < 100)
-      return FT_Err_Invalid_Argument;
+    {
+      error = FT_Err_Invalid_Argument;
+      goto Err1;
+    }
     font->in_buf = (FT_Byte*)in_buf;
     font->in_len = in_len;
   }
@@ -1705,6 +1769,10 @@ TTF_autohint(const char* options,
 
 Err:
   TA_font_unload(font, in_buf, out_bufp);
+
+Err1:
+  if (error_stringp)
+    *error_stringp = (const unsigned char*)TA_get_error_message(error);
 
   return error;
 }

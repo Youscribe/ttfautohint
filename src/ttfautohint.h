@@ -104,6 +104,11 @@ typedef void
  *                                which is passed to the progress callback
  *                                function.
  *
+ *   error-string                 A pointer of type `unsigned char**' to a
+ *                                string (in UTF-8 encoding) which verbally
+ *                                describes the error code.  You must not
+ *                                change the returned value.
+ *
  *   hinting-range-min            An integer (which must be larger than or
  *                                equal to 2) giving the lowest ppem value
  *                                used for autohinting.  If this field is
