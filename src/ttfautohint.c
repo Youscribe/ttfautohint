@@ -1042,6 +1042,8 @@ TA_sfnt_build_TTF_header(SFNT* sfnt,
       head_buf[9] = 0x00;
       head_buf[10] = 0x00;
       head_buf[11] = 0x00;
+
+      table->checksum = TA_table_compute_checksum(table->buf, table->len);
     }
 
     head_checksum += table->checksum;
