@@ -70,8 +70,6 @@ try to reduce size of hints by handling strong points separately
 
 add a config and/or command file for batch handling
 
-make creation of DSIG table optional
-
 
 later enhancements
 ------------------

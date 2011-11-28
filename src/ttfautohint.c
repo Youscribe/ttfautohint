@@ -174,12 +174,17 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     else if (tag == TTAG_fpgm
              || tag == TTAG_prep
              || tag == TTAG_cvt
-             || tag == TTAG_DSIG
              || tag == TTAG_hdmx
              || tag == TTAG_VDMX
              || tag == TTAG_LTSH
              || tag == TTAG_gasp)
       continue;
+
+    else if (tag == TTAG_DSIG)
+    {
+      font->have_DSIG = 1;
+      continue;
+    }
 
     /* make the allocated buffer length a multiple of 4 */
     buf_len = (len + 3) & ~3;
@@ -1107,25 +1112,28 @@ TA_font_build_TTF(FONT* font)
   FT_Error error;
 
 
-  /* add a dummy `DSIG' table */
+  /* replace an existing `DSIG' table with a dummy */
 
-  error = TA_sfnt_add_table_info(sfnt);
-  if (error)
-    return error;
-
-  error = TA_table_build_DSIG(&DSIG_buf);
-  if (error)
-    return error;
-
-  /* in case of success, `DSIG_buf' gets linked */
-  /* and is eventually freed in `TA_font_unload' */
-  error = TA_font_add_table(font,
-                            &sfnt->table_infos[sfnt->num_table_infos - 1],
-                            TTAG_DSIG, DSIG_LEN, DSIG_buf);
-  if (error)
+  if (font->have_DSIG)
   {
-    free(DSIG_buf);
-    return error;
+    error = TA_sfnt_add_table_info(sfnt);
+    if (error)
+      return error;
+
+    error = TA_table_build_DSIG(&DSIG_buf);
+    if (error)
+      return error;
+
+    /* in case of success, `DSIG_buf' gets linked */
+    /* and is eventually freed in `TA_font_unload' */
+    error = TA_font_add_table(font,
+                              &sfnt->table_infos[sfnt->num_table_infos - 1],
+                              TTAG_DSIG, DSIG_LEN, DSIG_buf);
+    if (error)
+    {
+      free(DSIG_buf);
+      return error;
+    }
   }
 
   TA_sfnt_sort_table_info(sfnt, font);
@@ -1211,7 +1219,7 @@ TA_font_build_TTC_header(FONT* font,
 
   /* TTC header version */
   *(p++) = 0x00;
-  *(p++) = 0x02;
+  *(p++) = font->have_DSIG ? 0x02 : 0x01;
   *(p++) = 0x00;
   *(p++) = 0x00;
 
@@ -1246,25 +1254,28 @@ TA_font_build_TTC_header(FONT* font,
   /* the first SFNT table immediately follows the subfont TTF headers */
   TA_font_compute_table_offsets(font, TTF_offset);
 
-  /* DSIG tag */
-  *(p++) = 'D';
-  *(p++) = 'S';
-  *(p++) = 'I';
-  *(p++) = 'G';
+  if (font->have_DSIG)
+  {
+    /* DSIG tag */
+    *(p++) = 'D';
+    *(p++) = 'S';
+    *(p++) = 'I';
+    *(p++) = 'G';
 
-  /* DSIG length */
-  *(p++) = 0x00;
-  *(p++) = 0x00;
-  *(p++) = 0x00;
-  *(p++) = 0x08;
+    /* DSIG length */
+    *(p++) = 0x00;
+    *(p++) = 0x00;
+    *(p++) = 0x00;
+    *(p++) = 0x08;
 
-  /* DSIG offset; in a TTC this is always the last SFNT table */
-  DSIG_offset = tables[num_tables - 1].offset;
+    /* DSIG offset; in a TTC this is always the last SFNT table */
+    DSIG_offset = tables[num_tables - 1].offset;
 
-  *(p++) = BYTE1(DSIG_offset);
-  *(p++) = BYTE2(DSIG_offset);
-  *(p++) = BYTE3(DSIG_offset);
-  *(p++) = BYTE4(DSIG_offset);
+    *(p++) = BYTE1(DSIG_offset);
+    *(p++) = BYTE2(DSIG_offset);
+    *(p++) = BYTE3(DSIG_offset);
+    *(p++) = BYTE4(DSIG_offset);
+  }
 
   *header_buf = buf;
   *header_len = len;
@@ -1297,19 +1308,22 @@ TA_font_build_TTC(FONT* font)
   FT_Error error;
 
 
-  /* add a dummy `DSIG' table */
+  /* replace an existing `DSIG' table with a dummy */
 
-  error = TA_table_build_DSIG(&DSIG_buf);
-  if (error)
-    return error;
-
-  /* in case of success, `DSIG_buf' gets linked */
-  /* and is eventually freed in `TA_font_unload' */
-  error = TA_font_add_table(font, &dummy, TTAG_DSIG, DSIG_LEN, DSIG_buf);
-  if (error)
+  if (font->have_DSIG)
   {
-    free(DSIG_buf);
-    return error;
+    error = TA_table_build_DSIG(&DSIG_buf);
+    if (error)
+      return error;
+
+    /* in case of success, `DSIG_buf' gets linked */
+    /* and is eventually freed in `TA_font_unload' */
+    error = TA_font_add_table(font, &dummy, TTAG_DSIG, DSIG_LEN, DSIG_buf);
+    if (error)
+    {
+      free(DSIG_buf);
+      return error;
+    }
   }
 
   /* this also computes the SFNT table offsets */

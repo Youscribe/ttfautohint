@@ -158,6 +158,8 @@ typedef struct FONT_ {
   SFNT_Table* tables;
   FT_ULong num_tables;
 
+  FT_Bool have_DSIG;
+
   TA_LoaderRec loader[1]; /* the interface to the autohinter */
 
   /* configuration options */
