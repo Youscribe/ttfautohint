@@ -56,8 +56,6 @@ better handling of `incomplete' fonts (this is, fonts which lack the minimum
 minor improvements
 ------------------
 
-correctly set `modified' field in `head'
-
 correctly set `lowestRecPPEM' field in `head'
 
 set dropout mode et al.

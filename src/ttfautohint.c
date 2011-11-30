@@ -19,8 +19,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "ta.h"
+
+/* we need an unsigned 64bit data type */
+#if HAVE_STDINT_H
+#  include <stdint.h>
+#endif
+
+#if defined UINT64_MAX || defined uint64_t
+typedef uint64_t TA_ULongLong;
+#else
+#  error "No unsigned 64bit wide data type found."
+#endif
+
+
 
 
 /* error message strings; */
@@ -51,6 +65,7 @@ TA_get_error_message(FT_Error error)
 {
   TA_error *e = TA_Errors;
 
+
   while (e->err_code || e->err_msg)
   {
     if (e->err_code == error)
@@ -59,6 +74,21 @@ TA_get_error_message(FT_Error error)
   }
 
   return NULL;
+}
+
+
+static void
+TA_get_current_time(FT_ULong *high,
+                    FT_ULong *low)
+{
+  /* there have been 24107 days between January 1st, 1904 (the epoch of */
+  /* OpenType), and January 1st, 1970 (the epoch of the `time' function) */
+  TA_ULongLong seconds_to_1970 = 24107 * 24 * 60 * 60;
+  TA_ULongLong seconds_to_today = seconds_to_1970 + time(NULL);
+
+
+  *high = (FT_ULong)(seconds_to_today >> 32);
+  *low = (FT_ULong)seconds_to_today;
 }
 
 
@@ -1037,6 +1067,10 @@ TA_sfnt_build_TTF_header(SFNT* sfnt,
 
     if (table->tag == TTAG_head)
     {
+      FT_ULong date_high;
+      FT_ULong date_low;
+
+
       /* we always reach this IF clause since FreeType would */
       /* have aborted already if the `head' table were missing */
 
@@ -1047,6 +1081,19 @@ TA_sfnt_build_TTF_header(SFNT* sfnt,
       head_buf[9] = 0x00;
       head_buf[10] = 0x00;
       head_buf[11] = 0x00;
+
+      /* update modification time */
+      TA_get_current_time(&date_high, &date_low);
+
+      head_buf[28] = BYTE1(date_high);
+      head_buf[29] = BYTE2(date_high);
+      head_buf[30] = BYTE3(date_high);
+      head_buf[31] = BYTE4(date_high);
+
+      head_buf[32] = BYTE1(date_low);
+      head_buf[33] = BYTE2(date_low);
+      head_buf[34] = BYTE3(date_low);
+      head_buf[35] = BYTE4(date_low);
 
       table->checksum = TA_table_compute_checksum(table->buf, table->len);
     }
