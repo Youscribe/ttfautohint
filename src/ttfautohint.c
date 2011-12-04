@@ -35,8 +35,6 @@ typedef uint64_t TA_ULongLong;
 #endif
 
 
-
-
 /* error message strings; */
 /* we concatenate FreeType and ttfautohint messages into one structure */
 
@@ -1749,7 +1747,7 @@ TTF_autohint(const char* options,
     if (error)
       goto Err;
 
-    /* check permission  */
+    /* check permission */
     if (sfnt->OS2_idx != MISSING)
     {
       SFNT_Table* OS2_table = &font->tables[sfnt->OS2_idx];
