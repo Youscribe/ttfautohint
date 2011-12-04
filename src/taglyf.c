@@ -446,5 +446,4 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
   return TA_Err_Ok;
 }
 
-
 /* end of taglyf.c */
