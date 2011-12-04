@@ -428,6 +428,11 @@
 
 
 FT_Error
+TA_sfnt_build_glyph_instructions(SFNT* sfnt,
+                                 FONT* font,
+                                 FT_Long idx);
+
+FT_Error
 TA_sfnt_build_cvt_table(SFNT* sfnt,
                         FONT* font);
 
@@ -436,11 +441,17 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
                          FONT* font);
 
 FT_Error
-TA_sfnt_build_prep_table(SFNT* sfnt,
+TA_sfnt_build_glyf_hints(SFNT* sfnt,
+                         FONT* font);
+FT_Error
+TA_sfnt_split_glyf_table(SFNT* sfnt,
+                         FONT* font);
+FT_Error
+TA_sfnt_build_glyf_table(SFNT* sfnt,
                          FONT* font);
 
 FT_Error
-TA_sfnt_build_glyf_hints(SFNT* sfnt,
+TA_sfnt_build_prep_table(SFNT* sfnt,
                          FONT* font);
 
 #endif /* __TABYTECODE_H__ */

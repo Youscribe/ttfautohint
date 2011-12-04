@@ -1457,7 +1457,7 @@ TA_free_recorder(Recorder *recorder)
 }
 
 
-static FT_Error
+FT_Error
 TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                  FONT* font,
                                  FT_Long idx)
@@ -1688,28 +1688,5 @@ Err:
   return error;
 }
 
-
-FT_Error
-TA_sfnt_build_glyf_hints(SFNT* sfnt,
-                         FONT* font)
-{
-  FT_Face face = sfnt->face;
-  FT_Long idx;
-  FT_Error error;
-
-
-  for (idx = 0; idx < face->num_glyphs; idx++)
-  {
-    error = TA_sfnt_build_glyph_instructions(sfnt, font, idx);
-    if (error)
-      return error;
-    if (font->progress)
-      font->progress(idx, face->num_glyphs,
-                     sfnt - font->sfnts, font->num_sfnts,
-                     font->progress_data);
-  }
-
-  return FT_Err_Ok;
-}
 
 /* end of tabytecode.c */
