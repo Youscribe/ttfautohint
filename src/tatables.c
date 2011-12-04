@@ -149,4 +149,26 @@ TA_sfnt_sort_table_info(SFNT* sfnt,
   }
 }
 
+
+void
+TA_font_compute_table_offsets(FONT* font,
+                              FT_ULong start)
+{
+  FT_ULong i;
+  FT_ULong offset = start;
+
+
+  for (i = 0; i < font->num_tables; i++)
+  {
+    SFNT_Table* table = &font->tables[i];
+
+
+    table->offset = offset;
+
+    /* table offsets must be multiples of 4; */
+    /* this also fits the actual buffer lengths */
+    offset += (table->len + 3) & ~3;
+  }
+}
+
 /* end of tatables.c */

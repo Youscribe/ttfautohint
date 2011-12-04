@@ -287,28 +287,6 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
 }
 
 
-static void
-TA_font_compute_table_offsets(FONT* font,
-                              FT_ULong start)
-{
-  FT_ULong i;
-  FT_ULong offset = start;
-
-
-  for (i = 0; i < font->num_tables; i++)
-  {
-    SFNT_Table* table = &font->tables[i];
-
-
-    table->offset = offset;
-
-    /* table offsets must be multiples of 4; */
-    /* this also fits the actual buffer lengths */
-    offset += (table->len + 3) & ~3;
-  }
-}
-
-
 /* If `do_complete' is 0, only return `header_len'. */
 
 static FT_Error

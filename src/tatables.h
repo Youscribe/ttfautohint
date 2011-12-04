@@ -37,6 +37,10 @@ void
 TA_sfnt_sort_table_info(SFNT* sfnt,
                         FONT* font);
 
+void
+TA_font_compute_table_offsets(FONT* font,
+                              FT_ULong start);
+
 #endif /* __TATABLES_H__ */
 
 /* end of tatables.h */
