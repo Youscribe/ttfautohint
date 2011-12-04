@@ -444,6 +444,10 @@ TA_sfnt_build_fpgm_table(SFNT* sfnt,
                          FONT* font);
 
 FT_Error
+TA_sfnt_build_gasp_table(SFNT* sfnt,
+                         FONT* font);
+
+FT_Error
 TA_sfnt_build_glyf_hints(SFNT* sfnt,
                          FONT* font);
 FT_Error
