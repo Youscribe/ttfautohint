@@ -437,6 +437,9 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
                         FONT* font);
 
 FT_Error
+TA_table_build_DSIG(FT_Byte** DSIG);
+
+FT_Error
 TA_sfnt_build_fpgm_table(SFNT* sfnt,
                          FONT* font);
 
