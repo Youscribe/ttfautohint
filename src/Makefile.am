@@ -26,6 +26,7 @@ libttfautohint_a_SOURCES = ta.h \
                            talatin.c talatin.h \
                            taloader.c taloader.h \
                            taloca.c \
+                           tamaxp.c \
                            taprep.c \
                            tasort.c tasort.h \
                            tatables.c tatables.h \
