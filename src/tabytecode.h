@@ -451,6 +451,10 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
                          FONT* font);
 
 FT_Error
+TA_sfnt_build_loca_table(SFNT* sfnt,
+                         FONT* font);
+
+FT_Error
 TA_sfnt_build_prep_table(SFNT* sfnt,
                          FONT* font);
 
