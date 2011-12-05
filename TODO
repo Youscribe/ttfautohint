@@ -9,6 +9,9 @@ write a platform-independent GUI
 important improvements
 ----------------------
 
+improve handling of GDI ClearType by snapping to the pixel grid (this is,
+integer coordinates of horizontal segments)
+
 handle OT features
   -> use HarfBuzz?
 
