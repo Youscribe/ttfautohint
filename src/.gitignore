@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 ttfautohint
+ttfautohint.1
 *.o
 *.a
 .deps/

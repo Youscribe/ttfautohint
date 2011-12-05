@@ -43,11 +43,11 @@ ttfautohint_LDADD = libttfautohint.a \
 
 dist_man_MANS = ttfautohint.1
 
-ttfautohint.1: hint.c $(top_srcdir)/configure.ac
+ttfautohint.1: $(top_srcdir)/src/hint.c $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
-	help2man --output=ttfautohint.1 \
-	         --no-info \
-	         --name="add new auto-generated hints to a TrueType font" \
-	         ./ttfautohint$(EXEEXT)
+	$(HELP2MAN) --output=$@ \
+	            --no-info \
+	            --name="add new auto-generated hints to a TrueType font" \
+	            ./ttfautohint$(EXEEXT)
 
 ## end of Makefile.am
