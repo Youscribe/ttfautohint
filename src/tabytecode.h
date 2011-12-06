@@ -426,49 +426,6 @@
 #define CVT_BLUE_SHOOTS_OFFSET(font) \
           CVT_BLUE_REFS_OFFSET(font) + CVT_BLUES_SIZE(font)
 
-
-FT_Error
-TA_sfnt_build_glyph_instructions(SFNT* sfnt,
-                                 FONT* font,
-                                 FT_Long idx);
-
-FT_Error
-TA_sfnt_build_cvt_table(SFNT* sfnt,
-                        FONT* font);
-
-FT_Error
-TA_table_build_DSIG(FT_Byte** DSIG);
-
-FT_Error
-TA_sfnt_build_fpgm_table(SFNT* sfnt,
-                         FONT* font);
-
-FT_Error
-TA_sfnt_build_gasp_table(SFNT* sfnt,
-                         FONT* font);
-
-FT_Error
-TA_sfnt_build_glyf_hints(SFNT* sfnt,
-                         FONT* font);
-FT_Error
-TA_sfnt_split_glyf_table(SFNT* sfnt,
-                         FONT* font);
-FT_Error
-TA_sfnt_build_glyf_table(SFNT* sfnt,
-                         FONT* font);
-
-FT_Error
-TA_sfnt_build_loca_table(SFNT* sfnt,
-                         FONT* font);
-
-FT_Error
-TA_sfnt_update_maxp_table(SFNT* sfnt,
-                          FONT* font);
-
-FT_Error
-TA_sfnt_build_prep_table(SFNT* sfnt,
-                         FONT* font);
-
 #endif /* __TABYTECODE_H__ */
 
 /* end of tabytecode.h */
