@@ -12,8 +12,8 @@
  * with the ttfautohint library.
  */
 
+
 #include "ta.h"
-#include "tabytecode.h"
 
 
 /* we build a dummy `DSIG' table only */

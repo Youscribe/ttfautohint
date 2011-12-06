@@ -14,7 +14,6 @@
 
 
 #include "ta.h"
-#include "tabytecode.h"
 
 
 #undef MISSING

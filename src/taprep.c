@@ -13,7 +13,7 @@
  */
 
 
-#include "tabytecode.h"
+#include "ta.h"
 
 
 #define PREP(snippet_name) prep_ ## snippet_name
