@@ -16,8 +16,6 @@
 #ifndef __TABYTECODE_H__
 #define __TABYTECODE_H__
 
-#include "ta.h"
-
 
 /* symbolic names for bytecode instruction codes */
 
