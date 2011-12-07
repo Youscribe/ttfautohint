@@ -95,12 +95,16 @@ TTF_autohint(const char* options,
     /* the `COMPARE' macro uses `len' and `start' */
 
     /* handle option */
-    if (COMPARE("in-file"))
-    {
-      in_file = va_arg(ap, FILE*);
-      in_buf = NULL;
-      in_len = 0;
-    }
+    if (COMPARE("error-string"))
+      error_stringp = va_arg(ap, const unsigned char**);
+    else if (COMPARE("fallback-script"))
+      fallback_script = va_arg(ap, FT_UInt);
+    else if (COMPARE("hinting-range-max"))
+      hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("hinting-range-min"))
+      hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("ignore-permissions"))
+      ignore_permissions = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("in-buffer"))
     {
       in_file = NULL;
@@ -111,11 +115,11 @@ TTF_autohint(const char* options,
       in_file = NULL;
       in_len = va_arg(ap, size_t);
     }
-    else if (COMPARE("out-file"))
+    else if (COMPARE("in-file"))
     {
-      out_file = va_arg(ap, FILE*);
-      out_bufp = NULL;
-      out_lenp = NULL;
+      in_file = va_arg(ap, FILE*);
+      in_buf = NULL;
+      in_len = 0;
     }
     else if (COMPARE("out-buffer"))
     {
@@ -127,20 +131,16 @@ TTF_autohint(const char* options,
       out_file = NULL;
       out_lenp = va_arg(ap, size_t*);
     }
-    else if (COMPARE("error-string"))
-      error_stringp = va_arg(ap, const unsigned char**);
-    else if (COMPARE("hinting-range-min"))
-      hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
-    else if (COMPARE("hinting-range-max"))
-      hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("out-file"))
+    {
+      out_file = va_arg(ap, FILE*);
+      out_bufp = NULL;
+      out_lenp = NULL;
+    }
     else if (COMPARE("progress-callback"))
       progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
       progress_data = va_arg(ap, void*);
-    else if (COMPARE("ignore-permissions"))
-      ignore_permissions = (FT_Bool)va_arg(ap, FT_Int);
-    else if (COMPARE("fallback-script"))
-      fallback_script = va_arg(ap, FT_UInt);
 
     /*
       pre-hinting
