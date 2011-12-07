@@ -180,6 +180,13 @@ typedef struct FONT_ {
 
 
 FT_Error
+TA_font_file_read(FONT* font,
+                  FILE* in_file);
+FT_Error
+TA_font_file_write(FONT* font,
+                   FILE* out_file);
+
+FT_Error
 TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                  FONT* font,
                                  FT_Long idx);
