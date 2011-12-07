@@ -206,6 +206,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                  FT_Long idx);
 
 FT_Error
+TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
+                               FONT* font);
+
+FT_Error
 TA_sfnt_build_cvt_table(SFNT* sfnt,
                         FONT* font);
 
