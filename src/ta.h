@@ -187,6 +187,13 @@ TA_get_current_time(FT_ULong *high,
                     FT_ULong *low);
 
 FT_Error
+TA_font_init(FONT* font);
+void
+TA_font_unload(FONT* font,
+               const char *in_buf,
+               char** out_bufp);
+
+FT_Error
 TA_font_file_read(FONT* font,
                   FILE* in_file);
 FT_Error
