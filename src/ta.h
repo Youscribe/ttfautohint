@@ -255,6 +255,9 @@ TA_sfnt_build_TTF_header(SFNT* sfnt,
 FT_Error
 TA_font_build_TTF(FONT* font);
 
+FT_Error
+TA_font_build_TTC(FONT* font);
+
 #endif /* __TA_H__ */
 
 /* end of ta.h */
