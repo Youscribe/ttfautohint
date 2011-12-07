@@ -246,6 +246,15 @@ FT_Error
 TA_sfnt_build_prep_table(SFNT* sfnt,
                          FONT* font);
 
+FT_Error
+TA_sfnt_build_TTF_header(SFNT* sfnt,
+                         FONT* font,
+                         FT_Byte** header_buf,
+                         FT_ULong* header_len,
+                         FT_Int do_complete);
+FT_Error
+TA_font_build_TTF(FONT* font);
+
 #endif /* __TA_H__ */
 
 /* end of ta.h */
