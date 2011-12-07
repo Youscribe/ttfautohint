@@ -35,46 +35,6 @@ typedef uint64_t TA_ULongLong;
 #endif
 
 
-/* error message strings; */
-/* we concatenate FreeType and ttfautohint messages into one structure */
-
-typedef const struct TA_error_ {
-  int err_code;
-  const char* err_msg;
-} TA_error;
-
-TA_error TA_Errors[] =
-
-#undef __FTERRORS_H__
-#define FT_ERRORDEF(e, v, s) { e, s },
-#define FT_ERROR_START_LIST {
-#define FT_ERROR_END_LIST /* empty */
-#include FT_ERRORS_H
-
-#undef __TTFAUTOHINT_ERRORS_H__
-#define TA_ERRORDEF(e, v, s) { e, s },
-#define TA_ERROR_START_LIST /* empty */
-#define TA_ERROR_END_LIST { 0, NULL } };
-#include <ttfautohint-errors.h>
-
-
-static const char*
-TA_get_error_message(FT_Error error)
-{
-  TA_error *e = TA_Errors;
-
-
-  while (e->err_code || e->err_msg)
-  {
-    if (e->err_code == error)
-      return e->err_msg;
-    e++;
-  }
-
-  return NULL;
-}
-
-
 static void
 TA_get_current_time(FT_ULong *high,
                     FT_ULong *low)

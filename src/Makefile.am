@@ -19,6 +19,7 @@ libttfautohint_a_SOURCES = ta.h \
                            tacvt.c \
                            tadsig.c \
                            tadummy.c tadummy.h \
+                           taerror.c \
                            tafile.c \
                            tafpgm.c \
                            tagasp.c \

@@ -179,6 +179,9 @@ typedef struct FONT_ {
 #include "tabytecode.h"
 
 
+const char*
+TA_get_error_message(FT_Error error);
+
 FT_Error
 TA_font_file_read(FONT* font,
                   FILE* in_file);
