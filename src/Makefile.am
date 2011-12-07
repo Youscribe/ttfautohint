@@ -34,6 +34,7 @@ libttfautohint_a_SOURCES = ta.h \
                            taprep.c \
                            tasort.c tasort.h \
                            tatables.c tatables.h \
+                           tatime.c \
                            tatypes.h \
                            ttfautohint.c ttfautohint.h ttfautohint-errors.h
 

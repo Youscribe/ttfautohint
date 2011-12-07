@@ -182,6 +182,10 @@ typedef struct FONT_ {
 const char*
 TA_get_error_message(FT_Error error);
 
+void
+TA_get_current_time(FT_ULong *high,
+                    FT_ULong *low);
+
 FT_Error
 TA_font_file_read(FONT* font,
                   FILE* in_file);
