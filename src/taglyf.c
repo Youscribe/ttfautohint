@@ -323,17 +323,11 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* is more or less invalid. */
 
       if (num_contours < 0)
-      {
         error = TA_glyph_parse_composite(glyph, buf, len);
-        if (error)
-          return error;
-      }
       else
-      {
         error = TA_glyph_parse_simple(glyph, buf, num_contours, len);
-        if (error)
-          return error;
-      }
+      if (error)
+        return error;
     }
   }
 
