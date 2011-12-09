@@ -89,10 +89,10 @@
 /* a single glyph */
 typedef struct GLYPH_
 {
-  FT_ULong len1; /* number of bytes before instructions location */
-  FT_ULong len2; /* number of bytes after instructions location; */
+  FT_ULong len1; /* number of bytes before instruction related data */
+  FT_ULong len2; /* number of bytes after instruction related data; */
                  /* if zero, this indicates a composite glyph */
-  FT_Byte* buf; /* extracted glyph data */
+  FT_Byte* buf; /* extracted glyph data (without instruction related data) */
   FT_ULong flags_offset; /* offset to last flag in a composite glyph */
 
   FT_ULong ins_len; /* number of new instructions */
