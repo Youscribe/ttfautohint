@@ -79,6 +79,7 @@
 #define WE_HAVE_INSTR 0x0100
 
 /* flags in simple glyph records */
+#define ON_CURVE 0x01
 #define X_SHORT_VECTOR 0x02
 #define Y_SHORT_VECTOR 0x04
 #define REPEAT 0x08
@@ -232,6 +233,9 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
                          FONT* font);
 FT_Error
 TA_sfnt_build_glyf_table(SFNT* sfnt,
+                         FONT* font);
+FT_Error
+TA_sfnt_create_glyf_data(SFNT* sfnt,
                          FONT* font);
 
 FT_Error

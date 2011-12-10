@@ -54,6 +54,7 @@ TTF_autohint(const char* options,
   void* progress_data;
 
   FT_Bool ignore_permissions = 0;
+  FT_Bool pre_hinting = 0;
   FT_UInt fallback_script = 0;
 
   const char *op;
@@ -137,13 +138,14 @@ TTF_autohint(const char* options,
       out_bufp = NULL;
       out_lenp = NULL;
     }
+    else if (COMPARE("pre-hinting"))
+      pre_hinting = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("progress-callback"))
       progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
       progress_data = va_arg(ap, void*);
 
     /*
-      pre-hinting
       x-height-snapping-exceptions
      */
 
@@ -201,6 +203,7 @@ TTF_autohint(const char* options,
   font->progress_data = progress_data;
 
   font->ignore_permissions = ignore_permissions;
+  font->pre_hinting = pre_hinting;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
 
@@ -243,7 +246,10 @@ TTF_autohint(const char* options,
     if (error)
       goto Err;
 
-    error = TA_sfnt_split_glyf_table(sfnt, font);
+    if (font->pre_hinting)
+      error = TA_sfnt_create_glyf_data(sfnt, font);
+    else
+      error = TA_sfnt_split_glyf_table(sfnt, font);
     if (error)
       goto Err;
 

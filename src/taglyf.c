@@ -440,4 +440,286 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
   return TA_Err_Ok;
 }
 
+
+static FT_Error
+TA_create_glyph_data(FT_Outline* outline,
+                     GLYPH* glyph)
+{
+  FT_Error error = TA_Err_Ok;
+
+  FT_Pos xmin, ymin;
+  FT_Pos xmax, ymax;
+
+  FT_Byte header[10];
+  FT_Byte* flags = NULL;
+  FT_Byte* flagsp;
+  FT_Byte oldf, f;
+  FT_Byte* x = NULL;
+  FT_Byte* xp;
+  FT_Byte* y = NULL;
+  FT_Byte* yp;
+
+  FT_Pos lastx, lasty;
+
+  FT_Short i;
+  FT_Byte* p;
+
+
+  if (!outline->n_contours)
+    return TA_Err_Ok; /* empty glyph */
+
+  /* in case of success, all non-local allocated arrays are */
+  /* linked and eventually freed in `TA_font_unload' */
+
+  glyph->buf = NULL;
+
+  /* we use `calloc' since we rely on the array */
+  /* being initialized to zero; */
+  /* additionally, we need one more byte for a test after the loop */
+  flags = (FT_Byte*)calloc(1, outline->n_points + 1);
+  if (!flags)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Exit;
+  }
+
+  /* we have either one-byte or two-byte elements */
+  x = (FT_Byte*)malloc(2 * outline->n_points);
+  if (!x)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Exit;
+  }
+
+  y = (FT_Byte*)malloc(2 * outline->n_points);
+  if (!y)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Exit;
+  }
+
+  flagsp = flags;
+  xp = x;
+  yp = y;
+  xmin = xmax = (outline->points[0].x + 32) >> 6;
+  ymin = ymax = (outline->points[0].y + 32) >> 6;
+  lastx = 0;
+  lasty = 0;
+  oldf = 0x80; /* start with an impossible value */
+
+  /* convert the FreeType representation of the glyph's outline */
+  /* into the representation format of the `glyf' table */
+  for (i = 0; i < outline->n_points; i++)
+  {
+    FT_Pos xcur = (outline->points[i].x + 32) >> 6;
+    FT_Pos ycur = (outline->points[i].y + 32) >> 6;
+
+    FT_Pos xdelta = xcur - lastx;
+    FT_Pos ydelta = ycur - lasty;
+
+
+    /* we are only interested in bit 0 of the `tags' array */
+    f = outline->tags[i] & ON_CURVE;
+
+    /* x value */
+
+    if (xdelta == 0)
+      f |= SAME_X;
+    else
+    {
+      if (xdelta < 256 && xdelta > -256)
+      {
+        f |= X_SHORT_VECTOR;
+
+        if (xdelta < 0)
+          xdelta = -xdelta;
+        else
+          f |= SAME_X;
+
+        *(xp++) = (FT_Byte)xdelta;
+      }
+      else
+      {
+        *(xp++) = HIGH(xdelta);
+        *(xp++) = LOW(xdelta);
+      }
+    }
+
+    /* y value */
+
+    if (ydelta == 0)
+      f |= SAME_Y;
+    else
+    {
+      if (ydelta < 256 && ydelta > -256)
+      {
+        f |= Y_SHORT_VECTOR;
+
+        if (ydelta < 0)
+          ydelta = -ydelta;
+        else
+          f |= SAME_Y;
+
+        *(yp++) = (FT_Byte)ydelta;
+      }
+      else
+      {
+        *(yp++) = HIGH(ydelta);
+        *(yp++) = LOW(ydelta);
+      }
+    }
+
+    if (f == oldf)
+    {
+      /* set repeat flag */
+      *(flagsp - 1) |= REPEAT;
+
+      if (*flagsp == 255)
+      {
+        /* we can only handle 256 repititions at once, */
+        /* so use a new counter */
+        flagsp++;
+        *(flagsp++) = f;
+      }
+      else
+        *flagsp += 1; /* increase repitition counter */
+    }
+    else
+    {
+      if (*flagsp)
+        flagsp++; /* skip repitition counter */
+      *(flagsp++) = f;
+      oldf = f;
+    }
+
+    if (xcur > xmax)
+      xmax = xcur;
+    if (ycur > ymax)
+      ymax = ycur;
+    if (xcur < xmin)
+      xmin = xcur;
+    if (ycur < ymin)
+      ymin = ycur;
+
+    lastx = xcur;
+    lasty = ycur;
+  }
+
+  /* if the last byte was a repitition counter, */
+  /* we must increase by one to get the correct array size */
+  if (*flagsp)
+    flagsp++;
+
+  header[0] = HIGH(outline->n_contours);
+  header[1] = LOW(outline->n_contours);
+  header[2] = HIGH(xmin);
+  header[3] = LOW(xmin);
+  header[4] = HIGH(ymin);
+  header[5] = LOW(ymin);
+  header[6] = HIGH(xmax);
+  header[7] = LOW(xmax);
+  header[8] = HIGH(ymax);
+  header[9] = LOW(ymax);
+
+  /* concatenate all arrays and fill needed GLYPH structure elements */
+
+  glyph->len1 = 10 + 2 * outline->n_contours;
+  glyph->len2 = (flagsp - flags) + (xp - x) + (yp - y);
+
+  glyph->buf = (FT_Byte*)malloc(glyph->len1 + glyph->len2);
+  if (!glyph->buf)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Exit;
+  }
+
+  p = glyph->buf;
+  memcpy(p, header, 10);
+  p += 10;
+
+  glyph->ins_len = 0;
+  glyph->ins_buf = NULL;
+
+  for (i = 0; i < outline->n_contours; i++)
+  {
+    *(p++) = HIGH(outline->contours[i]);
+    *(p++) = LOW(outline->contours[i]);
+  }
+
+  memcpy(p, flags, flagsp - flags);
+  p += flagsp - flags;
+  memcpy(p, x, xp - x);
+  p += xp - x;
+  memcpy(p, y, yp - y);
+
+Exit:
+  free(flags);
+  free(x);
+  free(y);
+
+  return error;
+}
+
+
+/* We hint each glyph at EM size and construct a new `glyf' table. */
+/* Some fonts need this; in particular, */
+/* there are CJK fonts which use hints to scale and position subglyphs. */
+/* As a consequence, there are no longer composite glyphs. */
+
+FT_Error
+TA_sfnt_create_glyf_data(SFNT* sfnt,
+                         FONT* font)
+{
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  FT_Face face = sfnt->face;
+  FT_Error error;
+
+  glyf_Data* data;
+
+  FT_UShort i;
+
+
+  /* in case of success, all allocated arrays are */
+  /* linked and eventually freed in `TA_font_unload' */
+
+  /* nothing to do if table has already been created */
+  if (glyf_table->data)
+    return TA_Err_Ok;
+
+  data = (glyf_Data*)calloc(1, sizeof (glyf_Data));
+  if (!data)
+    return FT_Err_Out_Of_Memory;
+
+  glyf_table->data = data;
+
+  data->num_glyphs = face->num_glyphs;
+  data->glyphs = (GLYPH*)calloc(1, data->num_glyphs * sizeof (GLYPH));
+  if (!data->glyphs)
+    return FT_Err_Out_Of_Memory;
+
+  /* XXX: Make size configurable */
+  /* we use the EM size */
+  /* so that the resulting coordinates can be used without transformation */
+  error = FT_Set_Char_Size(face, face->units_per_EM * 64, 0, 72, 0);
+  if (error)
+    return error;
+
+  /* loop over all glyphs in font face */
+  for (i = 0; i < data->num_glyphs; i++)
+  {
+    GLYPH* glyph = &data->glyphs[i];
+
+
+    error = FT_Load_Glyph(face, i, FT_LOAD_NO_BITMAP | FT_LOAD_NO_AUTOHINT);
+    if (error)
+      return error;
+
+    error = TA_create_glyph_data(&face->glyph->outline, glyph);
+    if (error)
+      return error;
+  }
+
+  return TA_Err_Ok;
+}
+
 /* end of taglyf.c */

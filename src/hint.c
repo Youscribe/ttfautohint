@@ -158,6 +158,7 @@ main(int argc,
   int have_hinting_range_max = 0;
 
   int ignore_permissions = 0;
+  int pre_hinting = 0;
   int latin_fallback = 0;
 
 
@@ -208,7 +209,7 @@ main(int argc,
       break;
 
     case 'p':
-      fprintf(stderr, "Option `-p' not implemented yet\n");
+      pre_hinting = 1;
       break;
 
     case 'v':
@@ -273,12 +274,12 @@ main(int argc,
                        "hinting-range-min, hinting-range-max,"
                        "error-string,"
                        "progress-callback, progress-callback-data,"
-                       "ignore-permissions, fallback-script",
+                       "ignore-permissions, pre-hinting, fallback-script",
                        in, out,
                        hinting_range_min, hinting_range_max,
                        &error_string,
                        progress_func, &progress_data,
-                       ignore_permissions, latin_fallback);
+                       ignore_permissions, pre_hinting, latin_fallback);
 
   if (error)
   {
