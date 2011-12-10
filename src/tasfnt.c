@@ -37,7 +37,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   if (!sfnt->table_infos)
     return FT_Err_Out_Of_Memory;
 
-  /* collect SFNT tables and search for `glyf' and `loca' table */
+  /* collect SFNT tables and trace some of them */
   sfnt->glyf_idx = MISSING;
   sfnt->loca_idx = MISSING;
   sfnt->head_idx = MISSING;
