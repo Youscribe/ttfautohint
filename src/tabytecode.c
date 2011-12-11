@@ -1473,6 +1473,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
+  /* `idx' is never negative */
   GLYPH* glyph = &data->glyphs[idx];
 
   TA_GlyphHints hints;
@@ -1484,9 +1485,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   FT_UInt size;
 
-
-  if (idx < 0)
-    return FT_Err_Invalid_Argument;
 
   /* computing the segments is resolution independent, */
   /* thus the pixel size in this call is arbitrary */
