@@ -275,6 +275,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   FT_Int start, end;
   FT_UInt num_stack_elements;
 
+
   num_args = 2 * num_contours + 2;
 
   /* collect all arguments temporarily in an array (in reverse order) */
@@ -299,6 +300,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   {
     FT_Int max = start;
     FT_Int min = start;
+
 
     end = glyph->outline.contours[p];
 
