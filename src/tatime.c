@@ -19,7 +19,8 @@
 
 /* we need an unsigned 64bit data type */
 
-/* without the following line, `stdint.h' doesn't define uint64_t for C++ */
+/* make `stdint.h' define `uintXX_t' for C++ */
+#undef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
 
 #if HAVE_STDINT_H
