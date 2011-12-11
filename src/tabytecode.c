@@ -1483,8 +1483,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   Recorder recorder;
 
+  FT_Int32 load_flags;
   FT_UInt size;
 
+
+  load_flags = font->fallback_script << 30;
+  if (!font->pre_hinting)
+    load_flags |= FT_LOAD_NO_RECURSE;
 
   /* computing the segments is resolution independent, */
   /* thus the pixel size in this call is arbitrary */
@@ -1493,9 +1498,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     return error;
 
   ta_loader_register_hints_recorder(font->loader, NULL, NULL);
-  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx,
-                               FT_LOAD_NO_RECURSE
-                                 | (font->fallback_script << 30));
+  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, load_flags);
   if (error)
     return error;
 
@@ -1585,8 +1588,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     /* calling `ta_loader_load_glyph' uses the */
     /* `TA_hints_recorder' function as a callback, */
     /* modifying `hints_record' */
-    error = ta_loader_load_glyph(font->loader, face, idx,
-                                 font->fallback_script << 30);
+    error = ta_loader_load_glyph(font->loader, face, idx, load_flags);
     if (error)
       goto Err;
 
