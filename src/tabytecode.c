@@ -416,7 +416,7 @@ TA_font_build_subglyph_shifter(FONT* font,
       goto End;
 
     /* note that calling `FT_Load_Glyph' without FT_LOAD_NO_RECURSE */
-    /* ensures that composites are resolved into simple glyphs */
+    /* ensures that composites are not resolved into simple glyphs */
 
     if (num_contours > 0xFF
         || curr_contour > 0xFF)
