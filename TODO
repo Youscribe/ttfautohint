@@ -71,6 +71,18 @@ try to reduce size of hints by handling strong points separately
 
 add a config and/or command file for batch handling
 
+warn against overwrite of output file?
+
+improve rendering of composite glyphs
+  1. scan font to mark all glyphs used as composite elements
+  2. for glyphs found in 1.: use CVS register to pass nest level to
+     bytecode; if > 0, don't apply it
+  3. don't pass FT_LOAD_NO_RECURSE to autohinter
+    
+reduce output size of option -p:
+  1. compare outline rendered at EM value with unhinted outline
+  2. pre-hint only if 1. differs more than given threshold (default 0.5%?)
+
 
 later enhancements
 ------------------
