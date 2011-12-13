@@ -74,10 +74,20 @@ add a config and/or command file for batch handling
 warn against overwrite of output file?
 
 improve rendering of composite glyphs
-  1. scan font to mark all glyphs used as composite elements
-  2. for glyphs found in 1.: use CVS register to pass nest level to
+
+  1. scan font to mark all glyphs used as composite elements and collect its
+     nesting depths
+  2. for glyphs found in 1.: use CVS register to pass nesting level to
      bytecode; if > 0, don't apply it
   3. don't pass FT_LOAD_NO_RECURSE to autohinter
+
+  more on issue 2:
+
+  a. prepend a composite element (with a single point) to all composite
+     glyphs so that we can apply bytecoode to increase the nesting level; it
+     gets decreased in the composite's bytecode instructions
+  b. for glyphs found in 1.: adjust all AnchorFormat2 tables in the GPOS
+     table to fit the changed point indices
     
 reduce output size of option -p:
   1. compare outline rendered at EM value with unhinted outline
