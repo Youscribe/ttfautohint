@@ -135,6 +135,7 @@ typedef struct SFNT_ {
   FT_ULong head_idx;
   FT_ULong maxp_idx;
   FT_ULong OS2_idx;
+  FT_ULong GPOS_idx;
 
   /* values necessary to update the `maxp' table */
   FT_UShort max_storage;
