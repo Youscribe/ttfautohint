@@ -666,18 +666,18 @@ TA_create_glyph_data(FT_Outline* outline,
 
       if (*flagsp == 255)
       {
-        /* we can only handle 256 repititions at once, */
+        /* we can only handle 256 repetitions at once, */
         /* so use a new counter */
         flagsp++;
         *(flagsp++) = f;
       }
       else
-        *flagsp += 1; /* increase repitition counter */
+        *flagsp += 1; /* increase repetition counter */
     }
     else
     {
       if (*flagsp)
-        flagsp++; /* skip repitition counter */
+        flagsp++; /* skip repetition counter */
       *(flagsp++) = f;
       oldf = f;
     }
@@ -695,7 +695,7 @@ TA_create_glyph_data(FT_Outline* outline,
     lasty = ycur;
   }
 
-  /* if the last byte was a repitition counter, */
+  /* if the last byte was a repetition counter, */
   /* we must increase by one to get the correct array size */
   if (*flagsp)
     flagsp++;
