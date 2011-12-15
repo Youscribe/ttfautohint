@@ -309,6 +309,9 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
+  fclose(in);
+  fclose(out);
+
   exit(EXIT_SUCCESS);
 }
 
