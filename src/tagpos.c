@@ -30,7 +30,7 @@
 /* Since subglyphs must contain at least one point, */
 /* we have to adjust all AnchorPoints in GPOS AnchorTables accordingly. */
 /* Each composite nesting level adds one subglyph, */
-/* thus the offset to apply is simply the nesting depth. */
+/* thus the offset to apply is simply the glyph's nesting depth. */
 
 static FT_Error
 TA_update_anchor(FT_Byte* p,
@@ -372,14 +372,12 @@ TA_update_GPOS_table(SFNT* sfnt,
   FT_Byte* p;
 
 
-
   p = buf;
 
   if (GPOS_table->processed)
     return TA_Err_Ok;
 
   p += 8; /* skip Version, ScriptList, and FeatureList */
-
   OFFSET(LookupList, buf, p);
 
   p = LookupList;
