@@ -48,6 +48,8 @@ TA_glyph_parse_composite(GLYPH* glyph,
   FT_ULong flags_offset; /* after the loop, this is the offset */
                          /* to the last element in the flags array */
   FT_UShort flags;
+  FT_UShort component;
+  FT_UShort* components_new;
 
   FT_Byte* p;
   FT_Byte* endp;
@@ -70,8 +72,23 @@ TA_glyph_parse_composite(GLYPH* glyph,
     flags = *(p++) << 8;
     flags += *(p++);
 
-    /* skip glyph component index */
-    p += 2;
+    /* add component to list */
+    component = *(p++) << 8;
+    component += *(p++);
+
+    glyph->num_components++;
+    components_new = (FT_UShort*)realloc(glyph->components,
+                                         glyph->num_components
+                                         * sizeof (FT_UShort));
+    if (!components_new)
+    {
+      glyph->num_components--;
+      return FT_Err_Out_Of_Memory;
+    }
+    else
+      glyph->components = components_new;
+
+    glyph->components[glyph->num_components - 1] = component;
 
     /* skip scaling and offset arguments */
     if (flags & ARGS_ARE_WORDS)
@@ -216,6 +233,74 @@ TA_glyph_parse_simple(GLYPH* glyph,
 }
 
 
+static FT_Error
+TA_iterate_composite_glyph(glyf_Data* data,
+                           FT_UShort* components,
+                           FT_UShort num_components,
+                           FT_UShort level,
+                           FT_UShort* depth)
+{
+  FT_UShort i;
+
+
+  if (level > *depth)
+    *depth = level;
+
+  for (i = 0; i < num_components; i++)
+  {
+    FT_UShort component = components[i];
+    FT_Error error;
+
+
+    if (component >= data->num_glyphs)
+      return FT_Err_Invalid_Table;
+
+    error = TA_iterate_composite_glyph(data,
+                                       data->glyphs[component].components,
+                                       data->glyphs[component].num_components,
+                                       level + 1,
+                                       depth);
+    if (error)
+      return error;
+  }
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_compute_composite_depths(glyf_Data* data)
+{
+  FT_UShort i;
+
+
+  for (i = 0; i < data->num_glyphs; i++)
+  {
+    GLYPH* glyph = &data->glyphs[i];
+
+
+    if (glyph->num_components)
+    {
+      FT_UShort depth = 0;
+      FT_Error error;
+
+
+      error = TA_iterate_composite_glyph(data,
+                                         glyph->components,
+                                         glyph->num_components,
+                                         0,
+                                         &depth);
+      if (error)
+        return error;
+
+      glyph->depth = depth;
+    }
+  }
+
+  return TA_Err_Ok;
+}
+
+
 FT_Error
 TA_sfnt_split_glyf_table(SFNT* sfnt,
                          FONT* font)
@@ -232,6 +317,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
   FT_Byte* p;
   FT_UShort i;
+
+  FT_Error error;
 
 
   /* in case of success, all allocated arrays are */
@@ -305,7 +392,6 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     {
       FT_Byte* buf;
       FT_Short num_contours;
-      FT_Error error;
 
 
       /* check header size */
@@ -330,6 +416,10 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
         return error;
     }
   }
+
+  error = TA_compute_composite_depths(data);
+  if (error)
+    return error;
 
   return TA_Err_Ok;
 }

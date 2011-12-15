@@ -98,6 +98,10 @@ typedef struct GLYPH_
 
   FT_ULong ins_len; /* number of new instructions */
   FT_Byte* ins_buf; /* new instruction data */
+
+  FT_UShort num_components;
+  FT_UShort* components; /* the subglyph indices of a composite glyph */
+  FT_UShort depth; /* the number of the composite's nesting levels */
 } GLYPH;
 
 /* a representation of the data in the `glyf' table */
