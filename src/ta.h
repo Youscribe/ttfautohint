@@ -62,6 +62,7 @@
 #define MAXP_MAX_INSTRUCTION_DEFS_OFFSET 22
 #define MAXP_MAX_STACK_ELEMENTS_OFFSET 24
 #define MAXP_MAX_INSTRUCTIONS_OFFSET 26
+#define MAXP_MAX_COMPONENTS_OFFSET 28
 
 #define MAXP_LEN 32
 
@@ -146,6 +147,8 @@ typedef struct SFNT_ {
   FT_UShort max_stack_elements;
   FT_UShort max_twilight_points;
   FT_UShort max_instructions;
+
+  FT_Bool have_composites;
 } SFNT;
 
 /* our font object */

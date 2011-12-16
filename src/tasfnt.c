@@ -120,7 +120,17 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     else if (tag == TTAG_loca)
       sfnt->loca_idx = j;
     else if (tag == TTAG_maxp)
+    {
+      FT_UShort  max_components;
+
+
       sfnt->maxp_idx = j;
+
+      max_components = buf[MAXP_MAX_COMPONENTS_OFFSET] << 8;
+      max_components += buf[MAXP_MAX_COMPONENTS_OFFSET + 1];
+
+      sfnt->have_composites = max_components > 0 ? 1 : 0;
+    }
     else if (tag == TTAG_OS2)
       sfnt->OS2_idx = j;
     else if (tag == TTAG_GPOS)
