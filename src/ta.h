@@ -138,6 +138,7 @@ typedef struct SFNT_ {
   FT_ULong glyf_idx;
   FT_ULong loca_idx;
   FT_ULong head_idx;
+  FT_ULong hmtx_idx;
   FT_ULong maxp_idx;
   FT_ULong OS2_idx;
   FT_ULong GPOS_idx;
@@ -244,6 +245,10 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 FT_Error
 TA_sfnt_create_glyf_data(SFNT* sfnt,
                          FONT* font);
+
+FT_Error
+TA_sfnt_update_hmtx_table(SFNT* sfnt,
+                          FONT* font);
 
 FT_Error
 TA_sfnt_build_loca_table(SFNT* sfnt,

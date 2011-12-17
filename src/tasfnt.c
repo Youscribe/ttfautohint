@@ -41,6 +41,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->glyf_idx = MISSING;
   sfnt->loca_idx = MISSING;
   sfnt->head_idx = MISSING;
+  sfnt->hmtx_idx = MISSING;
   sfnt->maxp_idx = MISSING;
   sfnt->OS2_idx = MISSING;
   sfnt->GPOS_idx = MISSING;
@@ -117,6 +118,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       sfnt->head_idx = j;
     else if (tag == TTAG_glyf)
       sfnt->glyf_idx = j;
+    else if (tag == TTAG_hmtx)
+      sfnt->hmtx_idx = j;
     else if (tag == TTAG_loca)
       sfnt->loca_idx = j;
     else if (tag == TTAG_maxp)

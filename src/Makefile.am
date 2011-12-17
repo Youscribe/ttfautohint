@@ -29,6 +29,7 @@ libttfautohint_a_SOURCES = ta.h \
                            taglyf.c \
                            tagpos.c \
                            tahints.c tahints.h \
+                           tahmtx.c \
                            talatin.c talatin.h \
                            taloader.c taloader.h \
                            taloca.c \
