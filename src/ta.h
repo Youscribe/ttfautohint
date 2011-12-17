@@ -147,8 +147,7 @@ typedef struct SFNT_ {
   FT_UShort max_stack_elements;
   FT_UShort max_twilight_points;
   FT_UShort max_instructions;
-
-  FT_Bool have_composites;
+  FT_UShort max_components;
 } SFNT;
 
 /* our font object */

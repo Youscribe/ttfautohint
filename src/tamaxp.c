@@ -44,6 +44,9 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   buf[MAXP_MAX_STACK_ELEMENTS_OFFSET + 1] = LOW(sfnt->max_stack_elements);
   buf[MAXP_MAX_INSTRUCTIONS_OFFSET] = HIGH(sfnt->max_instructions);
   buf[MAXP_MAX_INSTRUCTIONS_OFFSET + 1] = LOW(sfnt->max_instructions);
+  buf[MAXP_MAX_COMPONENTS_OFFSET] = HIGH(sfnt->max_components);
+  buf[MAXP_MAX_COMPONENTS_OFFSET + 1] = LOW(sfnt->max_components);
+
 
   maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
                                                    maxp_table->len);
