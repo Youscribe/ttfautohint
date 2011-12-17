@@ -37,7 +37,7 @@ TA_sfnt_update_hmtx_table(SFNT* sfnt,
   hmtx_table->len += 2;
   /* make the allocated buffer length a multiple of 4 */
   buf_len = (hmtx_table->len + 3) & ~3;
-  buf_new = (FT_Byte*)realloc(hmtx_table->buf, hmtx_table->len);
+  buf_new = (FT_Byte*)realloc(hmtx_table->buf, buf_len);
   if (!buf_new)
   {
     hmtx_table->len -= 2;
