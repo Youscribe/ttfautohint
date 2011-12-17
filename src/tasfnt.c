@@ -43,6 +43,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->head_idx = MISSING;
   sfnt->hmtx_idx = MISSING;
   sfnt->maxp_idx = MISSING;
+  sfnt->post_idx = MISSING;
   sfnt->OS2_idx = MISSING;
   sfnt->GPOS_idx = MISSING;
 
@@ -129,6 +130,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       sfnt->max_components = buf[MAXP_MAX_COMPONENTS_OFFSET] << 8;
       sfnt->max_components += buf[MAXP_MAX_COMPONENTS_OFFSET + 1];
     }
+    else if (tag == TTAG_post)
+      sfnt->post_idx = j;
     else if (tag == TTAG_OS2)
       sfnt->OS2_idx = j;
     else if (tag == TTAG_GPOS)

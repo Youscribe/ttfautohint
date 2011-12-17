@@ -140,6 +140,7 @@ typedef struct SFNT_ {
   FT_ULong head_idx;
   FT_ULong hmtx_idx;
   FT_ULong maxp_idx;
+  FT_ULong post_idx;
   FT_ULong OS2_idx;
   FT_ULong GPOS_idx;
 
@@ -256,6 +257,10 @@ TA_sfnt_build_loca_table(SFNT* sfnt,
 
 FT_Error
 TA_sfnt_update_maxp_table(SFNT* sfnt,
+                          FONT* font);
+
+FT_Error
+TA_sfnt_update_post_table(SFNT* sfnt,
                           FONT* font);
 
 FT_Error
