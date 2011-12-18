@@ -102,7 +102,10 @@ typedef struct GLYPH_
 
   FT_UShort num_components;
   FT_UShort* components; /* the subglyph indices of a composite glyph */
-  FT_UShort depth; /* the number of the composite's nesting levels */
+
+  FT_UShort num_endpoints;
+  FT_UShort* endpoints; /* the endpoints of all composite elements */
+                        /* (after walking recursively over all subglyphs) */
 } GLYPH;
 
 /* a representation of the data in the `glyf' table */

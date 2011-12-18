@@ -237,17 +237,15 @@ static FT_Error
 TA_iterate_composite_glyph(glyf_Data* data,
                            FT_UShort* components,
                            FT_UShort num_components,
-                           FT_UShort level,
-                           FT_UShort* depth)
+                           FT_UShort** endpoints,
+                           FT_UShort* num_endpoints)
 {
   FT_UShort i;
 
 
-  if (level > *depth)
-    *depth = level;
-
   for (i = 0; i < num_components; i++)
   {
+    GLYPH* glyph;
     FT_UShort component = components[i];
     FT_Error error;
 
@@ -255,13 +253,48 @@ TA_iterate_composite_glyph(glyf_Data* data,
     if (component >= data->num_glyphs)
       return FT_Err_Invalid_Table;
 
-    error = TA_iterate_composite_glyph(data,
-                                       data->glyphs[component].components,
-                                       data->glyphs[component].num_components,
-                                       level + 1,
-                                       depth);
-    if (error)
-      return error;
+    glyph = &data->glyphs[component];
+
+    if (glyph->num_components)
+    {
+      error = TA_iterate_composite_glyph(data,
+                                         glyph->components,
+                                         glyph->num_components,
+                                         endpoints,
+                                         num_endpoints);
+      if (error)
+        return error;
+    }
+    else
+    {
+      FT_UShort num_contours;
+      FT_UShort endpoint;
+      FT_UShort* endpoints_new;
+
+
+      /* collect end points of simple glyphs */
+
+      num_contours = glyph->buf[0] << 8;
+      num_contours += glyph->buf[1];
+      endpoint = glyph->buf[10 + (num_contours - 1) * 2] << 8;
+      endpoint += glyph->buf[10 + (num_contours - 1) * 2 + 1];
+
+      (*num_endpoints)++;
+      endpoints_new = (FT_UShort*)realloc(*endpoints,
+                                          *num_endpoints
+                                          * sizeof (FT_UShort));
+      if (!endpoints_new)
+      {
+        (*num_endpoints)--;
+        return FT_Err_Out_Of_Memory;
+      }
+      else
+        *endpoints = endpoints_new;
+
+      (*endpoints)[*num_endpoints - 1] = endpoint;
+      if (*num_endpoints > 1)
+        (*endpoints)[*num_endpoints - 1] += (*endpoints)[*num_endpoints - 2] + 1;
+    }
   }
 
   return TA_Err_Ok;
@@ -269,7 +302,7 @@ TA_iterate_composite_glyph(glyf_Data* data,
 
 
 static FT_Error
-TA_compute_composite_depths(glyf_Data* data)
+TA_compute_composite_endpoints(glyf_Data* data)
 {
   FT_UShort i;
 
@@ -281,19 +314,16 @@ TA_compute_composite_depths(glyf_Data* data)
 
     if (glyph->num_components)
     {
-      FT_UShort depth = 0;
       FT_Error error;
 
 
       error = TA_iterate_composite_glyph(data,
                                          glyph->components,
                                          glyph->num_components,
-                                         0,
-                                         &depth);
+                                         &glyph->endpoints,
+                                         &glyph->num_endpoints);
       if (error)
         return error;
-
-      glyph->depth = depth;
     }
   }
 
@@ -417,7 +447,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     }
   }
 
-  error = TA_compute_composite_depths(data);
+  error = TA_compute_composite_endpoints(data);
   if (error)
     return error;
 

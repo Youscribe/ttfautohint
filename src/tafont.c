@@ -84,6 +84,7 @@ TA_font_unload(FONT* font,
             free(data->glyphs[j].buf);
             free(data->glyphs[j].ins_buf);
             free(data->glyphs[j].components);
+            free(data->glyphs[j].endpoints);
           }
           free(data->glyphs);
           free(data);
