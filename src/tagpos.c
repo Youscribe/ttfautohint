@@ -38,6 +38,7 @@
 static FT_Error
 TA_update_anchor(FT_Byte* p,
                  FT_Byte* cov,
+                 FT_UShort cov_idx,
                  SFNT* sfnt,
                  FONT* font)
 {
@@ -88,7 +89,9 @@ TA_handle_cursive_lookup(FT_Byte* Lookup,
     FT_Byte* CursivePosFormat1;
     FT_Byte* Coverage;
     FT_UShort EntryExitCount;
+
     FT_Byte* q;
+    FT_UShort i;
 
 
     OFFSET(CursivePosFormat1, Lookup, p);
@@ -99,7 +102,7 @@ TA_handle_cursive_lookup(FT_Byte* Lookup,
     VALUE(EntryExitCount, q);
 
     /* loop over q */
-    for (; EntryExitCount > 0; EntryExitCount--)
+    for (i = 0; i < EntryExitCount; i++)
     {
       FT_Byte* EntryAnchor;
       FT_Byte* ExitAnchor;
@@ -107,12 +110,12 @@ TA_handle_cursive_lookup(FT_Byte* Lookup,
 
 
       OFFSET(EntryAnchor, CursivePosFormat1, q);
-      error = TA_update_anchor(EntryAnchor, Coverage, sfnt, font);
+      error = TA_update_anchor(EntryAnchor, Coverage, i, sfnt, font);
       if (error)
         return error;
 
       OFFSET(ExitAnchor, CursivePosFormat1, q);
-      error = TA_update_anchor(ExitAnchor, Coverage, sfnt, font);
+      error = TA_update_anchor(ExitAnchor, Coverage, i, sfnt, font);
       if (error)
         return error;
     }
@@ -145,7 +148,9 @@ TA_handle_markbase_lookup(FT_Byte* Lookup,
     FT_Byte* MarkArray;
     FT_UShort BaseCount;
     FT_Byte* BaseArray;
+
     FT_Byte* q;
+    FT_UShort i;
 
 
     OFFSET(MarkBasePosFormat1, Lookup, p);
@@ -162,7 +167,7 @@ TA_handle_markbase_lookup(FT_Byte* Lookup,
     VALUE(MarkCount, q);
 
     /* loop over q */
-    for (; MarkCount > 0; MarkCount--)
+    for (i = 0; i < MarkCount; i++)
     {
       FT_Byte* MarkAnchor;
       FT_Error error;
@@ -170,7 +175,7 @@ TA_handle_markbase_lookup(FT_Byte* Lookup,
 
       q += 2; /* skip Class */
       OFFSET(MarkAnchor, MarkArray, q);
-      error = TA_update_anchor(MarkAnchor, MarkCoverage, sfnt, font);
+      error = TA_update_anchor(MarkAnchor, MarkCoverage, i, sfnt, font);
       if (error)
         return error;
     }
@@ -179,7 +184,7 @@ TA_handle_markbase_lookup(FT_Byte* Lookup,
     VALUE(BaseCount, q);
 
     /* loop over q */
-    for (; BaseCount > 0; BaseCount--)
+    for (i = 0; i < BaseCount; i++)
     {
       FT_UShort cc = ClassCount;
 
@@ -191,7 +196,7 @@ TA_handle_markbase_lookup(FT_Byte* Lookup,
 
 
         OFFSET(BaseAnchor, BaseArray, q);
-        error = TA_update_anchor(BaseAnchor, BaseCoverage, sfnt, font);
+        error = TA_update_anchor(BaseAnchor, BaseCoverage, i, sfnt, font);
         if (error)
           return error;
       }
@@ -225,7 +230,9 @@ TA_handle_marklig_lookup(FT_Byte* Lookup,
     FT_Byte* MarkArray;
     FT_UShort LigatureCount;
     FT_Byte* LigatureArray;
+
     FT_Byte* q;
+    FT_UShort i;
 
 
     OFFSET(MarkLigPosFormat1, Lookup, p);
@@ -242,7 +249,7 @@ TA_handle_marklig_lookup(FT_Byte* Lookup,
     VALUE(MarkCount, q);
 
     /* loop over q */
-    for (; MarkCount > 0; MarkCount--)
+    for (i = 0; i < MarkCount; i++)
     {
       FT_Byte* MarkAnchor;
       FT_Error error;
@@ -250,7 +257,7 @@ TA_handle_marklig_lookup(FT_Byte* Lookup,
 
       q += 2; /* skip Class */
       OFFSET(MarkAnchor, MarkArray, q);
-      error = TA_update_anchor(MarkAnchor, MarkCoverage, sfnt, font);
+      error = TA_update_anchor(MarkAnchor, MarkCoverage, i, sfnt, font);
       if (error)
         return error;
     }
@@ -259,7 +266,7 @@ TA_handle_marklig_lookup(FT_Byte* Lookup,
     VALUE(LigatureCount, q);
 
     /* loop over q */
-    for (; LigatureCount > 0; LigatureCount--)
+    for (i = 0; i < LigatureCount; i++)
     {
       FT_Byte* LigatureAttach;
       FT_UShort ComponentCount;
@@ -284,7 +291,7 @@ TA_handle_marklig_lookup(FT_Byte* Lookup,
 
 
           OFFSET(LigatureAnchor, LigatureAttach, r);
-          error = TA_update_anchor(LigatureAnchor, LigatureCoverage,
+          error = TA_update_anchor(LigatureAnchor, LigatureCoverage, i,
                                    sfnt, font);
           if (error)
             return error;
@@ -320,7 +327,9 @@ TA_handle_markmark_lookup(FT_Byte* Lookup,
     FT_Byte* Mark1Array;
     FT_UShort Mark2Count;
     FT_Byte* Mark2Array;
+
     FT_Byte* q;
+    FT_UShort i;
 
 
     OFFSET(MarkMarkPosFormat1, Lookup, p);
@@ -337,7 +346,7 @@ TA_handle_markmark_lookup(FT_Byte* Lookup,
     VALUE(Mark1Count, q);
 
     /* loop over q */
-    for (; Mark1Count > 0; Mark1Count--)
+    for (i = 0; i < Mark1Count; i++)
     {
       FT_Byte* Mark1Anchor;
       FT_Error error;
@@ -345,7 +354,7 @@ TA_handle_markmark_lookup(FT_Byte* Lookup,
 
       q += 2; /* skip Class */
       OFFSET(Mark1Anchor, Mark1Array, q);
-      error = TA_update_anchor(Mark1Anchor, Mark1Coverage, sfnt, font);
+      error = TA_update_anchor(Mark1Anchor, Mark1Coverage, i, sfnt, font);
       if (error)
         return error;
     }
@@ -354,7 +363,7 @@ TA_handle_markmark_lookup(FT_Byte* Lookup,
     VALUE(Mark2Count, q);
 
     /* loop over q */
-    for (; Mark2Count > 0; Mark2Count--)
+    for (i = 0; i < Mark2Count; i++)
     {
       FT_UShort cc = ClassCount;
 
@@ -366,7 +375,7 @@ TA_handle_markmark_lookup(FT_Byte* Lookup,
 
 
         OFFSET(Mark2Anchor, Mark2Array, q);
-        error = TA_update_anchor(Mark2Anchor, Mark2Coverage, sfnt, font);
+        error = TA_update_anchor(Mark2Anchor, Mark2Coverage, i, sfnt, font);
         if (error)
           return error;
       }
