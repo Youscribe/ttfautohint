@@ -157,7 +157,7 @@ TA_read_coverage_table(FT_Byte* p,
 /* it is straightforward to do that: */
 /* Assuming that anchor point x is in the interval */
 /* endpoints[n] < x <= endpoints[n + 1], */
-/* the new point index is x + n. */
+/* the new point index is x + n + 1. */
 
 static FT_Error
 TA_update_anchor(FT_Byte* p,
@@ -197,8 +197,8 @@ TA_update_anchor(FT_Byte* p,
       if (AnchorPoint < glyph->endpoints[i])
         break;
 
-    *(p - 2) = HIGH(AnchorPoint + i);
-    *(p - 1) = LOW(AnchorPoint + i);
+    *(p - 2) = HIGH(AnchorPoint + i + 1);
+    *(p - 1) = LOW(AnchorPoint + i + 1);
   }
 
   return TA_Err_Ok;
