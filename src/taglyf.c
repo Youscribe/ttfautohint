@@ -238,7 +238,8 @@ TA_iterate_composite_glyph(glyf_Data* data,
                            FT_UShort* components,
                            FT_UShort num_components,
                            FT_UShort** endpoints,
-                           FT_UShort* num_endpoints)
+                           FT_UShort* num_endpoints,
+                           FT_UShort* num_composite_contours)
 {
   FT_UShort i;
 
@@ -261,7 +262,8 @@ TA_iterate_composite_glyph(glyf_Data* data,
                                          glyph->components,
                                          glyph->num_components,
                                          endpoints,
-                                         num_endpoints);
+                                         num_endpoints,
+                                         num_composite_contours);
       if (error)
         return error;
     }
@@ -293,7 +295,10 @@ TA_iterate_composite_glyph(glyf_Data* data,
 
       (*endpoints)[*num_endpoints - 1] = endpoint;
       if (*num_endpoints > 1)
-        (*endpoints)[*num_endpoints - 1] += (*endpoints)[*num_endpoints - 2] + 1;
+        (*endpoints)[*num_endpoints - 1]
+          += (*endpoints)[*num_endpoints - 2] + 1;
+
+      *num_composite_contours += num_contours;
     }
   }
 
@@ -302,8 +307,12 @@ TA_iterate_composite_glyph(glyf_Data* data,
 
 
 static FT_Error
-TA_compute_composite_endpoints(glyf_Data* data)
+TA_sfnt_compute_composite_endpoints(SFNT* sfnt,
+                                    FONT* font)
 {
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
   FT_UShort i;
 
 
@@ -315,15 +324,24 @@ TA_compute_composite_endpoints(glyf_Data* data)
     if (glyph->num_components)
     {
       FT_Error error;
+      FT_UShort num_composite_contours = 0;
 
 
       error = TA_iterate_composite_glyph(data,
                                          glyph->components,
                                          glyph->num_components,
                                          &glyph->endpoints,
-                                         &glyph->num_endpoints);
+                                         &glyph->num_endpoints,
+                                         &num_composite_contours);
       if (error)
         return error;
+
+      if (glyph->endpoints[glyph->num_endpoints - 1] + 1
+            > sfnt->max_composite_points)
+        sfnt->max_composite_points =
+          glyph->endpoints[glyph->num_endpoints - 1] + 1;
+      if (num_composite_contours > sfnt->max_composite_contours)
+        sfnt->max_composite_contours = num_composite_contours;
     }
   }
 
@@ -447,9 +465,12 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     }
   }
 
-  error = TA_compute_composite_endpoints(data);
-  if (error)
-    return error;
+  if (sfnt->max_components)
+  {
+    error = TA_sfnt_compute_composite_endpoints(sfnt, font);
+    if (error)
+      return error;
+  }
 
   return TA_Err_Ok;
 }

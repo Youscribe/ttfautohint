@@ -21,6 +21,8 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
                           FONT* font)
 {
   SFNT_Table* maxp_table = &font->tables[sfnt->maxp_idx];
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
   FT_Byte* buf = maxp_table->buf;
 
 
@@ -29,6 +31,16 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
 
   if (maxp_table->len != MAXP_LEN)
     return FT_Err_Invalid_Table;
+
+  if (sfnt->max_components)
+  {
+    buf[MAXP_NUM_GLYPHS] = HIGH(data->num_glyphs);
+    buf[MAXP_NUM_GLYPHS + 1] = LOW(data->num_glyphs);
+    buf[MAXP_MAX_COMPOSITE_POINTS] = HIGH(sfnt->max_composite_points);
+    buf[MAXP_MAX_COMPOSITE_POINTS + 1] = LOW(sfnt->max_composite_points);
+    buf[MAXP_MAX_COMPOSITE_CONTOURS] = HIGH(sfnt->max_composite_contours);
+    buf[MAXP_MAX_COMPOSITE_CONTOURS + 1] = LOW(sfnt->max_composite_contours);
+  }
 
   buf[MAXP_MAX_ZONES_OFFSET] = 0;
   buf[MAXP_MAX_ZONES_OFFSET + 1] = 2;

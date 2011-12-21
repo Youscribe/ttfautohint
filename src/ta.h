@@ -55,6 +55,9 @@
 #define LOCA_FORMAT_OFFSET 51
 
 /* various offsets within the `maxp' table */
+#define MAXP_NUM_GLYPHS 4
+#define MAXP_MAX_COMPOSITE_POINTS 10
+#define MAXP_MAX_COMPOSITE_CONTOURS 12
 #define MAXP_MAX_ZONES_OFFSET 14
 #define MAXP_MAX_TWILIGHT_POINTS_OFFSET 16
 #define MAXP_MAX_STORAGE_OFFSET 18
@@ -148,6 +151,8 @@ typedef struct SFNT_ {
   FT_ULong GPOS_idx;
 
   /* values necessary to update the `maxp' table */
+  FT_UShort max_composite_points;
+  FT_UShort max_composite_contours;
   FT_UShort max_storage;
   FT_UShort max_stack_elements;
   FT_UShort max_twilight_points;
