@@ -239,8 +239,10 @@ TA_iterate_composite_glyph(glyf_Data* data,
                            FT_UShort num_components,
                            FT_UShort** endpoints,
                            FT_UShort* num_endpoints,
-                           FT_UShort* num_composite_contours)
+                           FT_UShort* num_composite_contours,
+                           FT_UShort* num_composite_points)
 {
+  FT_UShort* endpoints_new;
   FT_UShort i;
 
 
@@ -263,7 +265,8 @@ TA_iterate_composite_glyph(glyf_Data* data,
                                          glyph->num_components,
                                          endpoints,
                                          num_endpoints,
-                                         num_composite_contours);
+                                         num_composite_contours,
+                                         num_composite_points);
       if (error)
         return error;
     }
@@ -271,36 +274,33 @@ TA_iterate_composite_glyph(glyf_Data* data,
     {
       FT_UShort num_contours;
       FT_UShort endpoint;
-      FT_UShort* endpoints_new;
 
-
-      /* collect end points of simple glyphs */
 
       num_contours = glyph->buf[0] << 8;
       num_contours += glyph->buf[1];
       endpoint = glyph->buf[10 + (num_contours - 1) * 2] << 8;
       endpoint += glyph->buf[10 + (num_contours - 1) * 2 + 1];
 
-      (*num_endpoints)++;
-      endpoints_new = (FT_UShort*)realloc(*endpoints,
-                                          *num_endpoints
-                                          * sizeof (FT_UShort));
-      if (!endpoints_new)
-      {
-        (*num_endpoints)--;
-        return FT_Err_Out_Of_Memory;
-      }
-      else
-        *endpoints = endpoints_new;
-
-      (*endpoints)[*num_endpoints - 1] = endpoint;
-      if (*num_endpoints > 1)
-        (*endpoints)[*num_endpoints - 1]
-          += (*endpoints)[*num_endpoints - 2] + 1;
-
       *num_composite_contours += num_contours;
+      *num_composite_points += endpoint + 1;
     }
   }
+
+  /* save current state */
+
+  (*num_endpoints)++;
+  endpoints_new = (FT_UShort*)realloc(*endpoints,
+                                      *num_endpoints
+                                      * sizeof (FT_UShort));
+  if (!endpoints_new)
+  {
+    (*num_endpoints)--;
+    return FT_Err_Out_Of_Memory;
+  }
+  else
+    *endpoints = endpoints_new;
+
+  (*endpoints)[*num_endpoints - 1] = *num_composite_points - 1;
 
   return TA_Err_Ok;
 }
@@ -325,6 +325,7 @@ TA_sfnt_compute_composite_endpoints(SFNT* sfnt,
     {
       FT_Error error;
       FT_UShort num_composite_contours = 0;
+      FT_UShort num_composite_points = 0;
 
 
       error = TA_iterate_composite_glyph(data,
@@ -332,14 +333,13 @@ TA_sfnt_compute_composite_endpoints(SFNT* sfnt,
                                          glyph->num_components,
                                          &glyph->endpoints,
                                          &glyph->num_endpoints,
-                                         &num_composite_contours);
+                                         &num_composite_contours,
+                                         &num_composite_points);
       if (error)
         return error;
 
-      if (glyph->endpoints[glyph->num_endpoints - 1] + 1
-            > sfnt->max_composite_points)
-        sfnt->max_composite_points =
-          glyph->endpoints[glyph->num_endpoints - 1] + 1;
+      if (num_composite_points > sfnt->max_composite_points)
+        sfnt->max_composite_points = num_composite_points;
       if (num_composite_contours > sfnt->max_composite_contours)
         sfnt->max_composite_contours = num_composite_contours;
     }
