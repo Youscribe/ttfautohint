@@ -194,7 +194,7 @@ TA_update_anchor(FT_Byte* p,
 
     /* search point offset */
     for (i = 0; i < glyph->num_endpoints; i++)
-      if (AnchorPoint < glyph->endpoints[i])
+      if (AnchorPoint <= glyph->endpoints[i])
         break;
 
     *(p - 2) = HIGH(AnchorPoint + i + 1);
