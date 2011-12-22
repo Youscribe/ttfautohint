@@ -111,8 +111,8 @@ TA_sfnt_update_post_table(SFNT* sfnt,
     p += num_glyphs * 2;
     p_new += num_glyphs * 2;
 
-    *p_new = HIGH(max_name_idx + 1); /* new entry */
-    *(p_new + 1) = LOW(max_name_idx + 1);
+    *p_new = HIGH(max_name_idx + 1 + 257); /* new entry */
+    *(p_new + 1) = LOW(max_name_idx + 1 + 257);
     p_new += 2;
 
     memcpy(p_new, p, buf + buf_len - p); /* names */
