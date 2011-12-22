@@ -700,6 +700,10 @@ TA_sfnt_update_GPOS_table(SFNT* sfnt,
       return error;
   }
 
+  GPOS_table->checksum = TA_table_compute_checksum(GPOS_table->buf,
+                                                   GPOS_table->len);
+  GPOS_table->processed = 1;
+
   return TA_Err_Ok;
 }
 
