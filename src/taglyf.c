@@ -246,6 +246,22 @@ TA_iterate_composite_glyph(glyf_Data* data,
   FT_UShort i;
 
 
+  /* save current state */
+
+  (*num_endpoints)++;
+  endpoints_new = (FT_UShort*)realloc(*endpoints,
+                                      *num_endpoints
+                                      * sizeof (FT_UShort));
+  if (!endpoints_new)
+  {
+    (*num_endpoints)--;
+    return FT_Err_Out_Of_Memory;
+  }
+  else
+    *endpoints = endpoints_new;
+
+  (*endpoints)[*num_endpoints - 1] = *num_composite_points;
+
   for (i = 0; i < num_components; i++)
   {
     GLYPH* glyph;
@@ -286,25 +302,11 @@ TA_iterate_composite_glyph(glyf_Data* data,
     }
   }
 
-  /* save current state */
-
-  (*num_endpoints)++;
-  endpoints_new = (FT_UShort*)realloc(*endpoints,
-                                      *num_endpoints
-                                      * sizeof (FT_UShort));
-  if (!endpoints_new)
-  {
-    (*num_endpoints)--;
-    return FT_Err_Out_Of_Memory;
-  }
-  else
-    *endpoints = endpoints_new;
-
-  (*endpoints)[*num_endpoints - 1] = *num_composite_points - 1;
-
   return TA_Err_Ok;
 }
 
+
+/* this function actually stores `endpoint + 1' values */
 
 static FT_Error
 TA_sfnt_compute_composite_endpoints(SFNT* sfnt,

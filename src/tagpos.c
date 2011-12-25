@@ -153,11 +153,12 @@ TA_read_coverage_table(FT_Byte* p,
 /* We add a subglyph for each composite glyph. */
 /* Since subglyphs must contain at least one point, */
 /* we have to adjust all AnchorPoints in GPOS AnchorTables accordingly. */
-/* Using the `endpoints' array of the `GLYPH' structure, */
+/* Using the `endpoints' array of the `GLYPH' structure */
+/* (which actually stores `endpoint + 1' values), */
 /* it is straightforward to do that: */
 /* Assuming that anchor point x is in the interval */
-/* endpoints[n] < x <= endpoints[n + 1], */
-/* the new point index is x + n + 1. */
+/* endpoints[n] <= x < endpoints[n + 1], */
+/* the new point index is x + n. */
 
 static FT_Error
 TA_update_anchor(FT_Byte* p,
@@ -194,11 +195,11 @@ TA_update_anchor(FT_Byte* p,
 
     /* search point offset */
     for (i = 0; i < glyph->num_endpoints; i++)
-      if (AnchorPoint <= glyph->endpoints[i])
+      if (AnchorPoint < glyph->endpoints[i])
         break;
 
-    *(p - 2) = HIGH(AnchorPoint + i + 1);
-    *(p - 1) = LOW(AnchorPoint + i + 1);
+    *(p - 2) = HIGH(AnchorPoint + i);
+    *(p - 1) = LOW(AnchorPoint + i);
   }
 
   return TA_Err_Ok;
