@@ -311,6 +311,18 @@ TTF_autohint(const char* options,
     error = TA_sfnt_update_maxp_table(sfnt, font);
     if (error)
       goto Err;
+    if (sfnt->max_components) /* we add one glyph for composites */
+    {
+      error = TA_sfnt_update_hmtx_table(sfnt, font);
+      if (error)
+        goto Err;
+      error = TA_sfnt_update_post_table(sfnt, font);
+      if (error)
+        goto Err;
+      error = TA_sfnt_update_GPOS_table(sfnt, font);
+      if (error)
+        goto Err;
+    }
   }
 
   if (font->num_sfnts == 1)

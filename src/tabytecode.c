@@ -47,6 +47,7 @@ typedef struct Hints_Record_ {
 
 typedef struct Recorder_ {
   FONT* font;
+  GLYPH* glyph; /* the current glyph */
   Hints_Record hints_record;
 
   /* see explanations in `TA_sfnt_build_glyph_segments' */
@@ -61,6 +62,35 @@ typedef struct Recorder_ {
   FT_UInt num_strong_points;
   FT_UInt num_segments;
 } Recorder;
+
+
+/* We add a subglyph for each composite glyph. */
+/* Since subglyphs must contain at least one point, */
+/* we have to adjust all point indices accordingly. */
+/* Using the `endpoints' array of the `GLYPH' structure */
+/* (which actually stores `endpoint + 1' values), */
+/* it is straightforward to do that: */
+/* Assuming that point with index x is in the interval */
+/* endpoints[n] <= x < endpoints[n + 1], */
+/* the new point index is x + n. */
+
+static FT_UInt
+TA_adjust_point_index(Recorder* recorder,
+                      FT_UInt idx)
+{
+  GLYPH* glyph = recorder->glyph;
+  FT_UShort i;
+
+
+  if (!glyph->num_components)
+    return idx; /* not a composite glyph */
+
+  for (i = 0; i < glyph->num_endpoints; i++)
+    if (idx < glyph->endpoints[i])
+      break;
+
+  return idx + i;
+}
 
 
 /* we store the segments in the storage area; */
@@ -133,7 +163,10 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   if (num_segments > 0xFF)
     need_words = 1;
 
-  *(arg--) = bci_create_segments;
+  if (recorder->glyph->num_components)
+    *(arg--) = bci_create_segments_composite;
+  else
+    *(arg--) = bci_create_segments;
   *(arg--) = num_segments;
 
   for (seg = segments; seg < seg_limit; seg++)
@@ -142,8 +175,8 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     FT_UInt last = seg->last - points;
 
 
-    *(arg--) = first;
-    *(arg--) = last;
+    *(arg--) = TA_adjust_point_index(recorder, first);
+    *(arg--) = TA_adjust_point_index(recorder, last);
 
     /* we push the last and first contour point */
     /* as a third and fourth argument in wrap-around segments */
@@ -156,14 +189,15 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
         if (first <= end)
         {
-          *(arg--) = end;
+          *(arg--) = TA_adjust_point_index(recorder, end);
           if (end > 0xFF)
             need_words = 1;
 
           if (n == 0)
-            *(arg--) = 0;
+            *(arg--) = TA_adjust_point_index(recorder, 0);
           else
-            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
+            *(arg--) = TA_adjust_point_index(recorder,
+                         (FT_UInt)outline.contours[n - 1] + 1);
           break;
         }
       }
@@ -188,14 +222,15 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
         if (first <= (FT_UInt)outline.contours[n])
         {
           if (n == 0)
-            *(arg--) = 0;
+            *(arg--) = TA_adjust_point_index(recorder, 0);
           else
-            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
+            *(arg--) = TA_adjust_point_index(recorder,
+                         (FT_UInt)outline.contours[n - 1] + 1);
           break;
         }
       }
 
-      *(arg--) = last;
+      *(arg--) = TA_adjust_point_index(recorder, last);
     }
   }
   /* with most fonts it is very rare */
@@ -258,6 +293,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
 static FT_Byte*
 TA_sfnt_build_glyph_scaler(SFNT* sfnt,
+                           Recorder* recorder,
                            FT_Byte* bufp)
 {
   FT_GlyphSlot glyph = sfnt->face->glyph;
@@ -290,7 +326,10 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   if (num_args > 0xFF)
     need_words = 1;
 
-  *(arg--) = bci_scale_glyph;
+  if (recorder->glyph->num_components)
+    *(arg--) = bci_scale_composite_glyph;
+  else
+    *(arg--) = bci_scale_glyph;
   *(arg--) = num_contours;
 
   start = 0;
@@ -312,8 +351,8 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
         max = q;
     }
 
-    *(arg--) = min;
-    *(arg--) = max;
+    *(arg--) = TA_adjust_point_index(recorder, min);
+    *(arg--) = TA_adjust_point_index(recorder, max);
 
     start = end + 1;
   }
@@ -416,7 +455,7 @@ TA_font_build_subglyph_shifter(FONT* font,
       goto End;
 
     /* note that calling `FT_Load_Glyph' without FT_LOAD_NO_RECURSE */
-    /* ensures that composites are not resolved into simple glyphs */
+    /* ensures that composite subglyphs are represented as simple glyphs */
 
     if (num_contours > 0xFF
         || curr_contour > 0xFF)
@@ -535,8 +574,11 @@ TA_build_point_hints(Recorder* recorder,
     ip_limit = ip + i;
     for (; ip < ip_limit; ip++)
     {
-      *(p++) = HIGH(*ip);
-      *(p++) = LOW(*ip);
+      FT_UInt point = TA_adjust_point_index(recorder, *ip);
+
+
+      *(p++) = HIGH(point);
+      *(p++) = LOW(point);
     }
   }
 
@@ -570,8 +612,11 @@ TA_build_point_hints(Recorder* recorder,
     ip_limit = ip + i;
     for (; ip < ip_limit; ip++)
     {
-      *(p++) = HIGH(*ip);
-      *(p++) = LOW(*ip);
+      FT_UInt point = TA_adjust_point_index(recorder, *ip);
+
+
+      *(p++) = HIGH(point);
+      *(p++) = LOW(point);
     }
   }
 
@@ -624,8 +669,11 @@ TA_build_point_hints(Recorder* recorder,
       iq_limit = iq + j;
       for (; iq < iq_limit; iq++)
       {
-        *(p++) = HIGH(*iq);
-        *(p++) = LOW(*iq);
+        FT_UInt point = TA_adjust_point_index(recorder, *iq);
+
+
+        *(p++) = HIGH(point);
+        *(p++) = LOW(point);
       }
     }
   }
@@ -690,8 +738,11 @@ TA_build_point_hints(Recorder* recorder,
         ir_limit = ir + k;
         for (; ir < ir_limit; ir++)
         {
-          *(p++) = HIGH(*ir);
-          *(p++) = LOW(*ir);
+          FT_UInt point = TA_adjust_point_index(recorder, *ir);
+
+
+          *(p++) = HIGH(point);
+          *(p++) = LOW(point);
         }
       }
     }
@@ -1351,6 +1402,7 @@ static FT_Error
 TA_init_recorder(Recorder *recorder,
                  FT_UInt wrap_around_size,
                  FONT* font,
+                 GLYPH* glyph,
                  TA_GlyphHints hints)
 {
   TA_AxisHints axis = &hints->axis[TA_DIMENSION_VERT];
@@ -1362,6 +1414,7 @@ TA_init_recorder(Recorder *recorder,
 
 
   recorder->font = font;
+  recorder->glyph = glyph;
   recorder->num_segments = axis->num_segments;
 
   recorder->ip_before_points = NULL;
@@ -1489,7 +1542,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   load_flags = font->fallback_script << 30;
   if (!font->pre_hinting)
-    load_flags |= FT_LOAD_NO_RECURSE;
+    load_flags |= FT_LOAD_NO_SCALE;
 
   /* computing the segments is resolution independent, */
   /* thus the pixel size in this call is arbitrary */
@@ -1539,7 +1592,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* only scale the glyph if the dummy hinter has been used */
   if (font->loader->metrics->clazz == &ta_dummy_script_class)
   {
-    bufp = TA_sfnt_build_glyph_scaler(sfnt, ins_buf);
+    /* since `TA_init_recorder' hasn't been called yet, */
+    /* we manually initialize the `glyph' field */
+    recorder.glyph = glyph;
+
+    bufp = TA_sfnt_build_glyph_scaler(sfnt, &recorder, ins_buf);
     if (!bufp)
     {
       error = FT_Err_Out_Of_Memory;
@@ -1550,7 +1607,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   }
 
   error = TA_init_recorder(&recorder, face->glyph->outline.n_contours,
-                          font, hints);
+                           font, glyph, hints);
   if (error)
     goto Err;
 
@@ -1624,7 +1681,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   {
     /* since we only have a single empty record we just scale the glyph, */
     /* overwriting the data from `TA_sfnt_build_glyph_segments' */
-    bufp = TA_sfnt_build_glyph_scaler(sfnt, ins_buf);
+    bufp = TA_sfnt_build_glyph_scaler(sfnt, &recorder, ins_buf);
     if (!bufp)
     {
       error = FT_Err_Out_Of_Memory;
