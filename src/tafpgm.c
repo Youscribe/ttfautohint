@@ -791,32 +791,109 @@ unsigned char FPGM(bci_create_segments) [] = {
     bci_create_segments,
   FDEF,
 
-  /* all our measurements are taken along the y axis */
-  SVTCA_y,
+  /* only do something if we are not a subglyph */
+  PUSHB_2,
+    0,
+    cvtl_is_subglyph,
+  RCVT,
+  EQ,
+  IF,
+    /* all our measurements are taken along the y axis */
+    SVTCA_y,
 
-  DUP,
-  ADD,
+    DUP,
+    ADD,
+    PUSHB_1,
+      1,
+    SUB, /* delta = (2*num_segments - 1) */
+
+    PUSHB_4,
+      sal_segment_offset,
+      sal_segment_offset,
+
+      sal_j,
+      0,
+    WS, /* sal_j = 0 (point offset) */
+
+    ROLL,
+    ADD, /* s: ... sal_segment_offset (sal_segment_offset + delta) */
+
+    /* `bci_create_segment_point' also increases the loop counter by 1; */
+    /* this effectively means we have a loop step of 2 */
+    PUSHB_2,
+      bci_create_segment,
+      bci_loop,
+    CALL,
+
+  ELSE,
+    CLEAR,
+  EIF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_create_segments_composite
+ *
+ *   The same as `bci_create_composite'.
+ *   It also decrements the composite component counter.
+ */
+
+unsigned char FPGM(bci_create_segments_composite) [] = {
+
+  PUSHB_1,
+    bci_create_segments_composite,
+  FDEF,
+
+  /* decrement `cvtl_is_subglyph' counter */
+  PUSHB_2,
+    cvtl_is_subglyph,
+    cvtl_is_subglyph,
+  RCVT,
   PUSHB_1,
     1,
-  SUB, /* delta = (2*num_segments - 1) */
+  SUB,
+  WCVTP,
 
-  PUSHB_4,
-    sal_segment_offset,
-    sal_segment_offset,
-
-    sal_j,
-    0,
-  WS, /* sal_j = 0 (point offset) */
-
-  ROLL,
-  ADD, /* s: ... sal_segment_offset (sal_segment_offset + delta) */
-
-  /* `bci_create_segment_point' also increases the loop counter by 1; */
-  /* this effectively means we have a loop step of 2 */
+  /* only do something if we are not a subglyph */
   PUSHB_2,
-    bci_create_segment,
-    bci_loop,
-  CALL,
+    0,
+    cvtl_is_subglyph,
+  RCVT,
+  EQ,
+  IF,
+    /* all our measurements are taken along the y axis */
+    SVTCA_y,
+
+    DUP,
+    ADD,
+    PUSHB_1,
+      1,
+    SUB, /* delta = (2*num_segments - 1) */
+
+    PUSHB_4,
+      sal_segment_offset,
+      sal_segment_offset,
+
+      sal_j,
+      0,
+    WS, /* sal_j = 0 (point offset) */
+
+    ROLL,
+    ADD, /* s: ... sal_segment_offset (sal_segment_offset + delta) */
+
+    /* `bci_create_segment_point' also increases the loop counter by 1; */
+    /* this effectively means we have a loop step of 2 */
+    PUSHB_2,
+      bci_create_segment,
+      bci_loop,
+    CALL,
+
+  ELSE,
+    CLEAR,
+  EIF,
 
   ENDF,
 
@@ -1001,20 +1078,87 @@ unsigned char FPGM(bci_scale_glyph) [] = {
     bci_scale_glyph,
   FDEF,
 
-  SVTCA_y,
+  /* only do something if we are not a subglyph */
+  PUSHB_2,
+    0,
+    cvtl_is_subglyph,
+  RCVT,
+  EQ,
+  IF,
+    /* all our measurements are taken along the y axis */
+    SVTCA_y,
 
+    PUSHB_1,
+      1,
+    SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+
+    PUSHB_1,
+      bci_scale_contour,
+    LOOPCALL,
+
+    PUSHB_1,
+      1,
+    SZP2, /* set zp2 to normal zone 1 */
+    IUP_y,
+
+  ELSE,
+    CLEAR,
+  EIF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_scale_composite_glyph
+ *
+ *   The same as `bci_scale_composite_glyph'.
+ *   It also decrements the composite component counter.
+ */
+
+unsigned char FPGM(bci_scale_composite_glyph) [] = {
+
+  PUSHB_1,
+    bci_scale_composite_glyph,
+  FDEF,
+
+  /* decrement `cvtl_is_subglyph' counter */
+  PUSHB_2,
+    cvtl_is_subglyph,
+    cvtl_is_subglyph,
+  RCVT,
   PUSHB_1,
     1,
-  SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+  SUB,
+  WCVTP,
 
-  PUSHB_1,
-    bci_scale_contour,
-  LOOPCALL,
+  /* only do something if we are not a subglyph */
+  PUSHB_2,
+    0,
+    cvtl_is_subglyph,
+  RCVT,
+  EQ,
+  IF,
+    /* all our measurements are taken along the y axis */
+    SVTCA_y,
 
-  PUSHB_1,
-    1,
-  SZP2, /* set zp2 to normal zone 1 */
-  IUP_y,
+    PUSHB_1,
+      1,
+    SZPS, /* set zp0, zp1, and zp2 to normal zone 1 */
+
+    PUSHB_1,
+      bci_scale_contour,
+    LOOPCALL,
+
+    PUSHB_1,
+      1,
+    SZP2, /* set zp2 to normal zone 1 */
+    IUP_y,
+
+  ELSE,
+    CLEAR,
+  EIF,
 
   ENDF,
 
@@ -3442,14 +3586,26 @@ unsigned char FPGM(bci_hint_glyph) [] = {
     bci_hint_glyph,
   FDEF,
 
-  PUSHB_1,
-    bci_handle_action,
-  LOOPCALL,
+  PUSHB_2,
+    0,
+    cvtl_is_subglyph,
+  RCVT,
+  EQ,
+  IF,
 
-  PUSHB_1,
-    1,
-  SZP2, /* set zp2 to normal zone 1 */
-  IUP_y,
+    /* only do something if we are not a subglyph */
+    PUSHB_1,
+      bci_handle_action,
+    LOOPCALL,
+
+    PUSHB_1,
+      1,
+    SZP2, /* set zp2 to normal zone 1 */
+    IUP_y,
+
+  ELSE,
+    CLEAR,
+  EIF,
 
   ENDF,
 
@@ -3487,11 +3643,13 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
+            + sizeof (FPGM(bci_create_segments_composite))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
 
             + sizeof (FPGM(bci_scale_contour))
             + sizeof (FPGM(bci_scale_glyph))
+            + sizeof (FPGM(bci_scale_composite_glyph))
             + sizeof (FPGM(bci_shift_contour))
             + sizeof (FPGM(bci_shift_subglyph))
 
@@ -3543,6 +3701,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
             + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
+
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
   buf = (FT_Byte*)malloc(len);
@@ -3572,11 +3731,13 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
+  COPY_FPGM(bci_create_segments_composite);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
 
   COPY_FPGM(bci_scale_contour);
   COPY_FPGM(bci_scale_glyph);
+  COPY_FPGM(bci_scale_composite_glyph);
   COPY_FPGM(bci_shift_contour);
   COPY_FPGM(bci_shift_subglyph);
 

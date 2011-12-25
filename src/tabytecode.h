@@ -319,12 +319,14 @@
 
 #define bci_create_segment bci_get_point_extrema + 1
 #define bci_create_segments bci_create_segment + 1
-#define bci_align_segment bci_create_segments + 1
+#define bci_create_segments_composite bci_create_segments + 1
+#define bci_align_segment bci_create_segments_composite + 1
 #define bci_align_segments bci_align_segment + 1
 
 #define bci_scale_contour bci_align_segments + 1
 #define bci_scale_glyph bci_scale_contour + 1
-#define bci_shift_contour bci_scale_glyph + 1
+#define bci_scale_composite_glyph bci_scale_glyph + 1
+#define bci_shift_contour bci_scale_composite_glyph + 1
 #define bci_shift_subglyph bci_shift_contour + 1
 
 #define bci_ip_outer_align_point bci_shift_subglyph + 1
@@ -392,7 +394,8 @@
 #define cvtl_scale cvtl_0x10000 + 1
 #define cvtl_funits_to_pixels cvtl_scale + 1
 #define cvtl_is_extra_light cvtl_funits_to_pixels + 1
-#define cvtl_max_runtime cvtl_is_extra_light + 1 /* must be last */
+#define cvtl_is_subglyph cvtl_is_extra_light + 1
+#define cvtl_max_runtime cvtl_is_subglyph + 1 /* must be last */
 
 /* symbolic names for compile-time CVT locations */
 /* (assigned in `cvt') */
