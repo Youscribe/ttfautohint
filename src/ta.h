@@ -104,13 +104,13 @@ typedef struct GLYPH_
   FT_Byte* ins_buf; /* new instruction data */
 
   FT_Short num_contours; /* >= 0 for simple glyphs */
-  FT_UShort endpoint; /* last point in a simple glyph */
+  FT_UShort num_points; /* number of points in a simple glyph */
 
   FT_UShort num_components;
   FT_UShort* components; /* the subglyph indices of a composite glyph */
 
-  FT_UShort num_endpoints;
-  FT_UShort* endpoints; /* the endpoints of all composite elements */
+  FT_UShort num_pointsums;
+  FT_UShort* pointsums; /* the pointsums of all composite elements */
                         /* (after walking recursively over all subglyphs) */
 } GLYPH;
 

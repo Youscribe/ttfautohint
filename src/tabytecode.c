@@ -67,11 +67,10 @@ typedef struct Recorder_ {
 /* We add a subglyph for each composite glyph. */
 /* Since subglyphs must contain at least one point, */
 /* we have to adjust all point indices accordingly. */
-/* Using the `endpoints' array of the `GLYPH' structure */
-/* (which actually stores `endpoint + 1' values), */
+/* Using the `pointsums' array of the `GLYPH' structure */
 /* it is straightforward to do that: */
 /* Assuming that point with index x is in the interval */
-/* endpoints[n] <= x < endpoints[n + 1], */
+/* pointsums[n] <= x < pointsums[n + 1], */
 /* the new point index is x + n. */
 
 static FT_UInt
@@ -85,8 +84,8 @@ TA_adjust_point_index(Recorder* recorder,
   if (!glyph->num_components)
     return idx; /* not a composite glyph */
 
-  for (i = 0; i < glyph->num_endpoints; i++)
-    if (idx < glyph->endpoints[i])
+  for (i = 0; i < glyph->num_pointsums; i++)
+    if (idx < glyph->pointsums[i])
       break;
 
   return idx + i;
