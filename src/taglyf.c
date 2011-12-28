@@ -42,20 +42,16 @@ TA_sfnt_build_glyf_hints(SFNT* sfnt,
 
 
 static FT_Error
-TA_glyph_parse_composite(GLYPH* glyph,
-                         FT_Byte* buf,
-                         FT_UShort num_glyphs,
-                         FT_ULong len)
+TA_glyph_get_components(GLYPH* glyph,
+                        FT_Byte* buf,
+                        FT_ULong len)
 {
-  FT_ULong flags_offset; /* after the loop, this is the offset */
-                         /* to the last element in the flags array */
   FT_UShort flags;
   FT_UShort component;
   FT_UShort* components_new;
 
   FT_Byte* p;
   FT_Byte* endp;
-  FT_ULong new_len;
 
 
   p = buf;
@@ -69,8 +65,6 @@ TA_glyph_parse_composite(GLYPH* glyph,
   {
     if (p + 4 > endp)
       return FT_Err_Invalid_Table;
-
-    flags_offset = p - buf;
 
     flags = *(p++) << 8;
     flags += *(p++);
@@ -92,6 +86,53 @@ TA_glyph_parse_composite(GLYPH* glyph,
       glyph->components = components_new;
 
     glyph->components[glyph->num_components - 1] = component;
+
+    /* skip scaling and offset arguments */
+    if (flags & ARGS_ARE_WORDS)
+      p += 4;
+    else
+      p += 2;
+
+    if (flags & WE_HAVE_A_SCALE)
+      p += 2;
+    else if (flags & WE_HAVE_AN_XY_SCALE)
+      p += 4;
+    else if (flags & WE_HAVE_A_2X2)
+      p += 8;
+  } while (flags & MORE_COMPONENTS);
+
+  return TA_Err_Ok;
+}
+
+
+static FT_Error
+TA_glyph_parse_composite(GLYPH* glyph,
+                         FT_Byte* buf,
+                         FT_UShort num_glyphs)
+{
+  FT_ULong flags_offset; /* after the loop, this is the offset */
+                         /* to the last element in the flags array */
+  FT_UShort flags;
+
+  FT_Byte* p;
+  FT_ULong new_len;
+
+
+  p = buf;
+
+  /* skip header */
+  p += 10;
+
+  /* walk over component records */
+  do
+  {
+    flags_offset = p - buf;
+
+    flags = *(p++) << 8;
+    flags += *(p++);
+
+    /* skip component */
+    p += 2;
 
     /* skip scaling and offset arguments */
     if (flags & ARGS_ARE_WORDS)
@@ -427,6 +468,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   if (!data->glyphs)
     return FT_Err_Out_Of_Memory;
 
+  /* first loop over `loca' and `glyf' data */
+
   p = loca_table->buf;
 
   if (loca_format)
@@ -443,7 +486,6 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     offset_next <<= 1;
   }
 
-  /* loop over `loca' and `glyf' data */
   for (i = 0; i < loop_count; i++)
   {
     GLYPH* glyph = &data->glyphs[i];
@@ -486,6 +528,67 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       buf = glyf_table->buf + offset;
       num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
 
+      if (num_contours < 0)
+      {
+        error = TA_glyph_get_components(glyph, buf, len);
+        if (error)
+          return error;
+      }
+    }
+  }
+
+  /* second loop over `loca' and `glyf' data */
+
+  p = loca_table->buf;
+
+  if (loca_format)
+  {
+    offset_next = *(p++) << 24;
+    offset_next += *(p++) << 16;
+    offset_next += *(p++) << 8;
+    offset_next += *(p++);
+  }
+  else
+  {
+    offset_next = *(p++) << 8;
+    offset_next += *(p++);
+    offset_next <<= 1;
+  }
+
+  for (i = 0; i < loop_count; i++)
+  {
+    GLYPH* glyph = &data->glyphs[i];
+    FT_ULong len;
+
+
+    offset = offset_next;
+
+    if (loca_format)
+    {
+      offset_next = *(p++) << 24;
+      offset_next += *(p++) << 16;
+      offset_next += *(p++) << 8;
+      offset_next += *(p++);
+    }
+    else
+    {
+      offset_next = *(p++) << 8;
+      offset_next += *(p++);
+      offset_next <<= 1;
+    }
+
+    len = offset_next - offset;
+    if (!len)
+      continue; /* empty glyph */
+    else
+    {
+      FT_Byte* buf;
+      FT_Short num_contours;
+
+
+      buf = glyf_table->buf + offset;
+      num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
+
       /* We must parse the rest of the glyph record to get the exact */
       /* record length.  Since the `loca' table rounds record lengths */
       /* up to multiples of 4 (or 2 for older fonts), and we must round */
@@ -494,7 +597,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* is more or less invalid. */
 
       if (num_contours < 0)
-        error = TA_glyph_parse_composite(glyph, buf, data->num_glyphs, len);
+        error = TA_glyph_parse_composite(glyph, buf, data->num_glyphs);
       else
         error = TA_glyph_parse_simple(glyph, buf, num_contours, len);
       if (error)
