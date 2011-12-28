@@ -103,6 +103,9 @@ typedef struct GLYPH_
   FT_ULong ins_len; /* number of new instructions */
   FT_Byte* ins_buf; /* new instruction data */
 
+  FT_Short num_contours; /* >= 0 for simple glyphs */
+  FT_UShort endpoint; /* last point in a simple glyph */
+
   FT_UShort num_components;
   FT_UShort* components; /* the subglyph indices of a composite glyph */
 

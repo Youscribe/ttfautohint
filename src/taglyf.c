@@ -189,7 +189,6 @@ TA_glyph_parse_composite(GLYPH* glyph,
 static FT_Error
 TA_glyph_parse_simple(GLYPH* glyph,
                       FT_Byte* buf,
-                      FT_UShort num_contours,
                       FT_ULong len)
 {
   FT_ULong ins_offset;
@@ -210,7 +209,7 @@ TA_glyph_parse_simple(GLYPH* glyph,
   p = buf;
   endp = buf + len;
 
-  ins_offset = 10 + num_contours * 2;
+  ins_offset = 10 + glyph->num_contours * 2;
 
   p += ins_offset;
 
@@ -226,10 +225,7 @@ TA_glyph_parse_simple(GLYPH* glyph,
   if (p > endp)
     return FT_Err_Invalid_Table;
 
-  /* get number of points from last outline point */
-  num_pts = buf[ins_offset - 2] << 8;
-  num_pts += buf[ins_offset - 1];
-  num_pts++;
+  num_pts = glyph->endpoint + 1;
 
   flags_start = p;
   xy_size = 0;
@@ -351,17 +347,8 @@ TA_iterate_composite_glyph(glyf_Data* data,
     }
     else
     {
-      FT_UShort num_contours;
-      FT_UShort endpoint;
-
-
-      num_contours = glyph->buf[0] << 8;
-      num_contours += glyph->buf[1];
-      endpoint = glyph->buf[10 + (num_contours - 1) * 2] << 8;
-      endpoint += glyph->buf[10 + (num_contours - 1) * 2 + 1];
-
-      *num_composite_contours += num_contours;
-      *num_composite_points += endpoint + 1;
+      *num_composite_contours += glyph->num_contours;
+      *num_composite_points += glyph->endpoint + 1;
     }
   }
 
@@ -518,23 +505,40 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     else
     {
       FT_Byte* buf;
-      FT_Short num_contours;
 
 
       /* check header size */
       if (len < 10)
         return FT_Err_Invalid_Table;
 
+      /* we need number of contours and the last point for */
+      /* `TA_sfnt_compute_composite_endpoints' */
       buf = glyf_table->buf + offset;
-      num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
+      glyph->num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
 
-      if (num_contours < 0)
+      if (glyph->num_contours < 0)
       {
         error = TA_glyph_get_components(glyph, buf, len);
         if (error)
           return error;
       }
+      else
+      {
+        FT_ULong off;
+
+
+        off = 10 + (glyph->num_contours - 1) * 2;
+        glyph->endpoint = buf[off] << 8;
+        glyph->endpoint += buf[off + 1];
+      }
     }
+  }
+
+  if (sfnt->max_components)
+  {
+    error = TA_sfnt_compute_composite_endpoints(sfnt, font);
+    if (error)
+      return error;
   }
 
   /* second loop over `loca' and `glyf' data */
@@ -583,11 +587,9 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     else
     {
       FT_Byte* buf;
-      FT_Short num_contours;
 
 
       buf = glyf_table->buf + offset;
-      num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
 
       /* We must parse the rest of the glyph record to get the exact */
       /* record length.  Since the `loca' table rounds record lengths */
@@ -596,10 +598,10 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* possible otherwise to have more than 4 bytes of padding which */
       /* is more or less invalid. */
 
-      if (num_contours < 0)
+      if (glyph->num_contours < 0)
         error = TA_glyph_parse_composite(glyph, buf, data->num_glyphs);
       else
-        error = TA_glyph_parse_simple(glyph, buf, num_contours, len);
+        error = TA_glyph_parse_simple(glyph, buf, len);
       if (error)
         return error;
     }
@@ -657,10 +659,6 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     memcpy(glyph->ins_buf, bytecode, glyph->ins_len);
 
     sfnt->max_components += 1;
-
-    error = TA_sfnt_compute_composite_endpoints(sfnt, font);
-    if (error)
-      return error;
   }
 
   return TA_Err_Ok;
