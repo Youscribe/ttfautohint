@@ -151,7 +151,6 @@ typedef struct SFNT_ {
   FT_ULong maxp_idx;
   FT_ULong post_idx;
   FT_ULong OS2_idx;
-  FT_ULong GPOS_idx;
 
   /* values necessary to update the `maxp' table */
   FT_UShort max_composite_points;
@@ -257,10 +256,6 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 FT_Error
 TA_sfnt_create_glyf_data(SFNT* sfnt,
                          FONT* font);
-
-FT_Error
-TA_sfnt_update_GPOS_table(SFNT* sfnt,
-                          FONT* font);
 
 FT_Error
 TA_sfnt_update_hmtx_table(SFNT* sfnt,

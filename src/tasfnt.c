@@ -45,7 +45,6 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
   sfnt->maxp_idx = MISSING;
   sfnt->post_idx = MISSING;
   sfnt->OS2_idx = MISSING;
-  sfnt->GPOS_idx = MISSING;
 
   for (i = 0; i < sfnt->num_table_infos; i++)
   {
@@ -134,8 +133,6 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       sfnt->post_idx = j;
     else if (tag == TTAG_OS2)
       sfnt->OS2_idx = j;
-    else if (tag == TTAG_GPOS)
-      sfnt->GPOS_idx = j;
 
     if (j == font->num_tables)
     {

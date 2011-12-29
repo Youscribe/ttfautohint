@@ -319,9 +319,6 @@ TTF_autohint(const char* options,
       error = TA_sfnt_update_post_table(sfnt, font);
       if (error)
         goto Err;
-      error = TA_sfnt_update_GPOS_table(sfnt, font);
-      if (error)
-        goto Err;
     }
   }
 
