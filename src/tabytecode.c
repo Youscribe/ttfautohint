@@ -64,34 +64,6 @@ typedef struct Recorder_ {
 } Recorder;
 
 
-/* We add a subglyph for each composite glyph. */
-/* Since subglyphs must contain at least one point, */
-/* we have to adjust all point indices accordingly. */
-/* Using the `pointsums' array of the `GLYPH' structure */
-/* it is straightforward to do that: */
-/* Assuming that point with index x is in the interval */
-/* pointsums[n] <= x < pointsums[n + 1], */
-/* the new point index is x + n. */
-
-static FT_UInt
-TA_adjust_point_index(Recorder* recorder,
-                      FT_UInt idx)
-{
-  GLYPH* glyph = recorder->glyph;
-  FT_UShort i;
-
-
-  if (!glyph->num_components)
-    return idx; /* not a composite glyph */
-
-  for (i = 0; i < glyph->num_pointsums; i++)
-    if (idx < glyph->pointsums[i])
-      break;
-
-  return idx + i;
-}
-
-
 /* we store the segments in the storage area; */
 /* each segment record consists of the first and last point */
 
@@ -174,8 +146,8 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     FT_UInt last = seg->last - points;
 
 
-    *(arg--) = TA_adjust_point_index(recorder, first);
-    *(arg--) = TA_adjust_point_index(recorder, last);
+    *(arg--) = first;
+    *(arg--) = last;
 
     /* we push the last and first contour point */
     /* as a third and fourth argument in wrap-around segments */
@@ -188,15 +160,14 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
         if (first <= end)
         {
-          *(arg--) = TA_adjust_point_index(recorder, end);
+          *(arg--) = end;
           if (end > 0xFF)
             need_words = 1;
 
           if (n == 0)
-            *(arg--) = TA_adjust_point_index(recorder, 0);
+            *(arg--) = 0;
           else
-            *(arg--) = TA_adjust_point_index(recorder,
-                         (FT_UInt)outline.contours[n - 1] + 1);
+            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
           break;
         }
       }
@@ -221,15 +192,14 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
         if (first <= (FT_UInt)outline.contours[n])
         {
           if (n == 0)
-            *(arg--) = TA_adjust_point_index(recorder, 0);
+            *(arg--) = 0;
           else
-            *(arg--) = TA_adjust_point_index(recorder,
-                         (FT_UInt)outline.contours[n - 1] + 1);
+            *(arg--) = (FT_UInt)outline.contours[n - 1] + 1;
           break;
         }
       }
 
-      *(arg--) = TA_adjust_point_index(recorder, last);
+      *(arg--) = last;
     }
   }
   /* with most fonts it is very rare */
@@ -350,8 +320,8 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
         max = q;
     }
 
-    *(arg--) = TA_adjust_point_index(recorder, min);
-    *(arg--) = TA_adjust_point_index(recorder, max);
+    *(arg--) = min;
+    *(arg--) = max;
 
     start = end + 1;
   }
@@ -573,11 +543,8 @@ TA_build_point_hints(Recorder* recorder,
     ip_limit = ip + i;
     for (; ip < ip_limit; ip++)
     {
-      FT_UInt point = TA_adjust_point_index(recorder, *ip);
-
-
-      *(p++) = HIGH(point);
-      *(p++) = LOW(point);
+      *(p++) = HIGH(*ip);
+      *(p++) = LOW(*ip);
     }
   }
 
@@ -611,11 +578,8 @@ TA_build_point_hints(Recorder* recorder,
     ip_limit = ip + i;
     for (; ip < ip_limit; ip++)
     {
-      FT_UInt point = TA_adjust_point_index(recorder, *ip);
-
-
-      *(p++) = HIGH(point);
-      *(p++) = LOW(point);
+      *(p++) = HIGH(*ip);
+      *(p++) = LOW(*ip);
     }
   }
 
@@ -668,11 +632,8 @@ TA_build_point_hints(Recorder* recorder,
       iq_limit = iq + j;
       for (; iq < iq_limit; iq++)
       {
-        FT_UInt point = TA_adjust_point_index(recorder, *iq);
-
-
-        *(p++) = HIGH(point);
-        *(p++) = LOW(point);
+        *(p++) = HIGH(*iq);
+        *(p++) = LOW(*iq);
       }
     }
   }
@@ -737,11 +698,8 @@ TA_build_point_hints(Recorder* recorder,
         ir_limit = ir + k;
         for (; ir < ir_limit; ir++)
         {
-          FT_UInt point = TA_adjust_point_index(recorder, *ir);
-
-
-          *(p++) = HIGH(point);
-          *(p++) = LOW(point);
+          *(p++) = HIGH(*ir);
+          *(p++) = LOW(*ir);
         }
       }
     }
