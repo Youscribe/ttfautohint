@@ -515,6 +515,35 @@ unsigned char FPGM(bci_blue_round_b) [] = {
 
 
 /*
+ * bci_decrement_component_counter
+ *
+ *   An auxiliary function for composite glyphs.
+ *
+ * CVT: cvtl_is_subglyph
+ */
+
+unsigned char FPGM(bci_decrement_component_counter) [] = {
+
+  PUSHB_1,
+    bci_decrement_component_counter,
+  FDEF,
+
+  /* decrement `cvtl_is_subglyph' counter */
+  PUSHB_2,
+    cvtl_is_subglyph,
+    cvtl_is_subglyph,
+  RCVT,
+  PUSHB_1,
+    1,
+  SUB,
+  WCVTP,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_get_point_extrema
  *
  *   An auxiliary function for `bci_create_segment'.
@@ -783,6 +812,8 @@ unsigned char FPGM(bci_create_segment) [] = {
  *
  * sal: sal_i (start of current segment)
  *      sal_j (current twilight point)
+ *
+ * CVT: cvtl_is_subglyph
  */
 
 unsigned char FPGM(bci_create_segments) [] = {
@@ -839,6 +870,10 @@ unsigned char FPGM(bci_create_segments) [] = {
  *
  *   The same as `bci_create_composite'.
  *   It also decrements the composite component counter.
+ *
+ * uses: bci_decrement_composite_counter
+ *
+ * CVT: cvtl_is_subglyph
  */
 
 unsigned char FPGM(bci_create_segments_composite) [] = {
@@ -847,15 +882,9 @@ unsigned char FPGM(bci_create_segments_composite) [] = {
     bci_create_segments_composite,
   FDEF,
 
-  /* decrement `cvtl_is_subglyph' counter */
-  PUSHB_2,
-    cvtl_is_subglyph,
-    cvtl_is_subglyph,
-  RCVT,
   PUSHB_1,
-    1,
-  SUB,
-  WCVTP,
+    bci_decrement_component_counter,
+  CALL,
 
   /* only do something if we are not a subglyph */
   PUSHB_2,
@@ -1070,6 +1099,8 @@ unsigned char FPGM(bci_scale_contour) [] = {
  *       max_point_N
  *
  * uses: bci_scale_contour
+ *
+ * CVT: cvtl_is_subglyph
  */
 
 unsigned char FPGM(bci_scale_glyph) [] = {
@@ -1115,6 +1146,10 @@ unsigned char FPGM(bci_scale_glyph) [] = {
  *
  *   The same as `bci_scale_composite_glyph'.
  *   It also decrements the composite component counter.
+ *
+ * uses: bci_decrement_component_counter
+ *
+ * CVT: cvtl_is_subglyph
  */
 
 unsigned char FPGM(bci_scale_composite_glyph) [] = {
@@ -1123,15 +1158,9 @@ unsigned char FPGM(bci_scale_composite_glyph) [] = {
     bci_scale_composite_glyph,
   FDEF,
 
-  /* decrement `cvtl_is_subglyph' counter */
-  PUSHB_2,
-    cvtl_is_subglyph,
-    cvtl_is_subglyph,
-  RCVT,
   PUSHB_1,
-    1,
-  SUB,
-  WCVTP,
+    bci_decrement_component_counter,
+  CALL,
 
   /* only do something if we are not a subglyph */
   PUSHB_2,
@@ -3578,6 +3607,8 @@ unsigned char FPGM(bci_handle_action) [] = {
  *       bci_action_serif_link2_lower_bound
  *       bci_action_serif_link2_upper_bound
  *       bci_action_serif_link2_lower_upper_bound
+ *
+ * CVT: cvtl_is_subglyph
  */
 
 unsigned char FPGM(bci_hint_glyph) [] = {
@@ -3592,7 +3623,6 @@ unsigned char FPGM(bci_hint_glyph) [] = {
   RCVT,
   EQ,
   IF,
-
     /* only do something if we are not a subglyph */
     PUSHB_1,
       bci_handle_action,
@@ -3639,6 +3669,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_blue_round_a))
             + 1
             + sizeof (FPGM(bci_blue_round_b))
+            + sizeof (FPGM(bci_decrement_component_counter))
             + sizeof (FPGM(bci_get_point_extrema))
 
             + sizeof (FPGM(bci_create_segment))
@@ -3727,6 +3758,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_blue_round_a);
   *(buf_p++) = (unsigned char)CVT_BLUES_SIZE(font);
   COPY_FPGM(bci_blue_round_b);
+  COPY_FPGM(bci_decrement_component_counter);
   COPY_FPGM(bci_get_point_extrema);
 
   COPY_FPGM(bci_create_segment);

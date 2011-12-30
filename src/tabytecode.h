@@ -315,7 +315,8 @@
 #define bci_loop bci_compute_stem_width + 1
 #define bci_cvt_rescale bci_loop + 1
 #define bci_blue_round bci_cvt_rescale + 1
-#define bci_get_point_extrema bci_blue_round + 1
+#define bci_decrement_component_counter bci_blue_round + 1
+#define bci_get_point_extrema bci_decrement_component_counter + 1
 
 #define bci_create_segment bci_get_point_extrema + 1
 #define bci_create_segments bci_create_segment + 1
