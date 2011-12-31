@@ -128,6 +128,8 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
 
       sfnt->max_components = buf[MAXP_MAX_COMPONENTS_OFFSET] << 8;
       sfnt->max_components += buf[MAXP_MAX_COMPONENTS_OFFSET + 1];
+      sfnt->max_depth = buf[MAXP_MAX_DEPTH_OFFSET] << 8;
+      sfnt->max_depth += buf[MAXP_MAX_DEPTH_OFFSET + 1];
     }
     else if (tag == TTAG_post)
       sfnt->post_idx = j;

@@ -53,6 +53,8 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
     buf[MAXP_NUM_GLYPHS + 1] = LOW(data->num_glyphs);
     buf[MAXP_MAX_COMPONENTS_OFFSET] = HIGH(sfnt->max_components);
     buf[MAXP_MAX_COMPONENTS_OFFSET + 1] = LOW(sfnt->max_components);
+    buf[MAXP_MAX_DEPTH_OFFSET] = HIGH(sfnt->max_depth);
+    buf[MAXP_MAX_DEPTH_OFFSET + 1] = LOW(sfnt->max_depth);
   }
 
   maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
