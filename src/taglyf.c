@@ -304,6 +304,9 @@ TA_iterate_composite_glyph(glyf_Data* data,
 
   /* save current state */
 
+  if (*num_pointsums == 0xFFFF)
+    return FT_Err_Invalid_Table;
+
   (*num_pointsums)++;
   pointsums_new = (FT_UShort*)realloc(*pointsums,
                                       *num_pointsums
@@ -344,6 +347,11 @@ TA_iterate_composite_glyph(glyf_Data* data,
     }
     else
     {
+      /* no need for checking overflow of the number of contours */
+      /* since the number of points is always larger or equal */
+      if (*num_composite_points > 0xFFFF - glyph->num_points)
+        return FT_Err_Invalid_Table;
+
       *num_composite_contours += glyph->num_contours;
       *num_composite_points += glyph->num_points;
     }
