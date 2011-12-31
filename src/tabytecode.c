@@ -134,10 +134,10 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   if (num_segments > 0xFF)
     need_words = 1;
 
-  if (recorder->glyph->num_components)
-    *(arg--) = bci_create_segments_composite;
-  else
+  if (recorder->glyph->len2)
     *(arg--) = bci_create_segments;
+  else
+    *(arg--) = bci_create_segments_composite;
   *(arg--) = num_segments;
 
   for (seg = segments; seg < seg_limit; seg++)
@@ -295,10 +295,10 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   if (num_args > 0xFF)
     need_words = 1;
 
-  if (recorder->glyph->num_components)
-    *(arg--) = bci_scale_composite_glyph;
-  else
+  if (recorder->glyph->len2)
     *(arg--) = bci_scale_glyph;
+  else
+    *(arg--) = bci_scale_composite_glyph;
   *(arg--) = num_contours;
 
   start = 0;
@@ -1512,9 +1512,40 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (error)
     return error;
 
-  /* do nothing if we have an empty glyph */
   if (!face->glyph->outline.n_contours)
-    return FT_Err_Ok;
+  {
+    if (glyph->buf)
+    {
+      /* we have no contours but a composite glyph; */
+      /* compensate the bytecode of the prepended component */
+      FT_Byte bytecode[] =
+      {
+
+        PUSHB_1,
+          bci_decrement_component_counter,
+        CALL,
+
+      };
+
+
+      ins_len = sizeof (bytecode);
+      ins_buf = (FT_Byte*)malloc(ins_len);
+      if (!ins_buf)
+        return FT_Err_Out_Of_Memory;
+
+      memcpy(ins_buf, bytecode, sizeof (bytecode));
+
+      if (ins_len > sfnt->max_instructions)
+        sfnt->max_instructions = ins_len;
+
+      glyph->ins_buf = ins_buf;
+      glyph->ins_len = ins_len;
+
+      return FT_Err_Ok;
+    }
+    else
+      return FT_Err_Ok; /* empty glyph, nothing to do */
+  }
 
   hints = &font->loader->hints;
 

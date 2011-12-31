@@ -42,16 +42,18 @@ TA_sfnt_build_glyf_hints(SFNT* sfnt,
 
 
 static FT_Error
-TA_glyph_get_components(GLYPH* glyph,
-                        FT_Byte* buf,
-                        FT_ULong len)
+TA_glyph_parse_composite(GLYPH* glyph,
+                         FT_Byte* buf,
+                         FT_ULong len,
+                         FT_UShort num_glyphs)
 {
+  FT_ULong flags_offset; /* after the loop, this is the offset */
+                         /* to the last element in the flags array */
   FT_UShort flags;
-  FT_UShort component;
-  FT_UShort* components_new;
 
   FT_Byte* p;
   FT_Byte* endp;
+  FT_ULong new_len;
 
 
   p = buf;
@@ -66,66 +68,6 @@ TA_glyph_get_components(GLYPH* glyph,
     if (p + 4 > endp)
       return FT_Err_Invalid_Table;
 
-    flags = *(p++) << 8;
-    flags += *(p++);
-
-    /* add component to list */
-    component = *(p++) << 8;
-    component += *(p++);
-
-    glyph->num_components++;
-    components_new = (FT_UShort*)realloc(glyph->components,
-                                         glyph->num_components
-                                         * sizeof (FT_UShort));
-    if (!components_new)
-    {
-      glyph->num_components--;
-      return FT_Err_Out_Of_Memory;
-    }
-    else
-      glyph->components = components_new;
-
-    glyph->components[glyph->num_components - 1] = component;
-
-    /* skip scaling and offset arguments */
-    if (flags & ARGS_ARE_WORDS)
-      p += 4;
-    else
-      p += 2;
-
-    if (flags & WE_HAVE_A_SCALE)
-      p += 2;
-    else if (flags & WE_HAVE_AN_XY_SCALE)
-      p += 4;
-    else if (flags & WE_HAVE_A_2X2)
-      p += 8;
-  } while (flags & MORE_COMPONENTS);
-
-  return TA_Err_Ok;
-}
-
-
-static FT_Error
-TA_glyph_parse_composite(GLYPH* glyph,
-                         FT_Byte* buf,
-                         FT_UShort num_glyphs)
-{
-  FT_ULong flags_offset; /* after the loop, this is the offset */
-                         /* to the last element in the flags array */
-  FT_UShort flags;
-
-  FT_Byte* p;
-  FT_ULong new_len;
-
-
-  p = buf;
-
-  /* skip header */
-  p += 10;
-
-  /* walk over component records */
-  do
-  {
     flags_offset = p - buf;
 
     flags = *(p++) << 8;
@@ -140,8 +82,6 @@ TA_glyph_parse_composite(GLYPH* glyph,
     else
       p += 2;
 
-    /* XXX adjust point indices for !ARGS_ARE_XY_VALUES */
-
     if (flags & WE_HAVE_A_SCALE)
       p += 2;
     else if (flags & WE_HAVE_AN_XY_SCALE)
@@ -151,9 +91,7 @@ TA_glyph_parse_composite(GLYPH* glyph,
   } while (flags & MORE_COMPONENTS);
 
   /* we prepend a composite glyph component to call some bytecode */
-  /* which eventually becomes the last glyph in the `glyf' table; */
-  /* for convenience, however, it is not added to the `components' array */
-  /* (doing so simplifies the conversion of point indices later on) */
+  /* which eventually becomes the last glyph in the `glyf' table */
 
   /* adjust glyph record length (6 bytes for the additional component) */
   new_len = p - buf + 6;
@@ -189,12 +127,14 @@ TA_glyph_parse_composite(GLYPH* glyph,
 static FT_Error
 TA_glyph_parse_simple(GLYPH* glyph,
                       FT_Byte* buf,
+                      FT_UShort num_contours,
                       FT_ULong len)
 {
   FT_ULong ins_offset;
   FT_Byte* flags_start;
 
   FT_UShort num_ins;
+  FT_UShort num_pts;
 
   FT_ULong flags_size; /* size of the flags array */
   FT_ULong xy_size; /* size of x and y coordinate arrays together */
@@ -208,7 +148,7 @@ TA_glyph_parse_simple(GLYPH* glyph,
   p = buf;
   endp = buf + len;
 
-  ins_offset = 10 + glyph->num_contours * 2;
+  ins_offset = 10 + num_contours * 2;
 
   p += ins_offset;
 
@@ -224,11 +164,16 @@ TA_glyph_parse_simple(GLYPH* glyph,
   if (p > endp)
     return FT_Err_Invalid_Table;
 
+  /* get number of points from last outline point */
+  num_pts = buf[ins_offset - 2] << 8;
+  num_pts += buf[ins_offset - 1];
+  num_pts++;
+
   flags_start = p;
   xy_size = 0;
   i = 0;
 
-  while (i < glyph->num_points)
+  while (i < num_pts)
   {
     FT_Byte flags;
     FT_Byte x_short;
@@ -258,7 +203,7 @@ TA_glyph_parse_simple(GLYPH* glyph,
 
       count += *(p++);
 
-      if (i + count > glyph->num_points)
+      if (i + count > num_pts)
         return FT_Err_Invalid_Table;
     }
 
@@ -291,71 +236,79 @@ TA_glyph_parse_simple(GLYPH* glyph,
 
 static FT_Error
 TA_iterate_composite_glyph(glyf_Data* data,
-                           FT_UShort* components,
-                           FT_UShort num_components,
-                           FT_UShort** pointsums,
-                           FT_UShort* num_pointsums,
-                           FT_UShort* num_composite_contours,
-                           FT_UShort* num_composite_points)
+                           GLYPH* glyph,
+                           FT_UShort* num_components)
 {
-  FT_UShort* pointsums_new;
-  FT_UShort i;
+  FT_Byte* p;
+  FT_UShort flags;
 
 
-  /* save current state */
+  /* we add an artificial component to all composites */
+  if (*num_components == 0xFFFF)
+    return FT_Err_Invalid_Table;
+  (*num_components)++;
 
-  (*num_pointsums)++;
-  pointsums_new = (FT_UShort*)realloc(*pointsums,
-                                      *num_pointsums
-                                      * sizeof (FT_UShort));
-  if (!pointsums_new)
-  {
-    (*num_pointsums)--;
-    return FT_Err_Out_Of_Memory;
-  }
-  else
-    *pointsums = pointsums_new;
+  p = glyph->buf;
 
-  (*pointsums)[*num_pointsums - 1] = *num_composite_points;
+  /* skip header */
+  p += 10;
 
-  for (i = 0; i < num_components; i++)
+  /* walk over component records */
+  do
   {
     GLYPH* glyph;
-    FT_UShort component = components[i];
-    FT_Error error;
+    FT_UShort component;
 
 
+    flags = *(p++) << 8;
+    flags += *(p++);
+
+    component = *(p++) << 8;
+    component += *(p++);
     if (component >= data->num_glyphs)
       return FT_Err_Invalid_Table;
 
     glyph = &data->glyphs[component];
 
-    if (glyph->num_components)
+    if (glyph->buf && !glyph->len2)
     {
+      FT_Error error;
+
+
       error = TA_iterate_composite_glyph(data,
-                                         glyph->components,
-                                         glyph->num_components,
-                                         pointsums,
-                                         num_pointsums,
-                                         num_composite_contours,
-                                         num_composite_points);
+                                         &data->glyphs[component],
+                                         num_components);
       if (error)
         return error;
     }
     else
     {
-      *num_composite_contours += glyph->num_contours;
-      *num_composite_points += glyph->num_points;
+      if (*num_components == 0xFFFF)
+        return FT_Err_Invalid_Table;
+      (*num_components)++; /* simple or empty glyph */
     }
-  }
+
+    /* skip scaling and offset arguments */
+    if (flags & ARGS_ARE_WORDS)
+      p += 4;
+    else
+      p += 2;
+
+    if (flags & WE_HAVE_A_SCALE)
+      p += 2;
+    else if (flags & WE_HAVE_AN_XY_SCALE)
+      p += 4;
+    else if (flags & WE_HAVE_A_2X2)
+      p += 8;
+  } while (flags & MORE_COMPONENTS);
 
   return TA_Err_Ok;
 }
 
 
 static FT_Error
-TA_sfnt_compute_composite_pointsums(SFNT* sfnt,
-                                    FONT* font)
+TA_sfnt_compute_max_components(SFNT* sfnt,
+                               FONT* font)
 {
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
@@ -368,34 +321,21 @@ TA_sfnt_compute_composite_pointsums(SFNT* sfnt,
     GLYPH* glyph = &data->glyphs[i];
 
 
-    if (glyph->num_components)
+    if (glyph->buf && !glyph->len2)
     {
       FT_Error error;
-      FT_UShort num_composite_contours = 0;
-      FT_UShort num_composite_points = 0;
+      FT_UShort num_components;
 
 
+      num_components = 0;
       error = TA_iterate_composite_glyph(data,
-                                         glyph->components,
-                                         glyph->num_components,
-                                         &glyph->pointsums,
-                                         &glyph->num_pointsums,
-                                         &num_composite_contours,
-                                         &num_composite_points);
+                                         glyph,
+                                         &num_components);
       if (error)
         return error;
 
-      /* update maximum values, */
-      /* including the subglyphs not in `components' array */
-      /* (each of them has a single point in a single contour) */
-      if (num_composite_points + glyph->num_pointsums
-          > sfnt->max_composite_points)
-        sfnt->max_composite_points = num_composite_points
-                                     + glyph->num_pointsums;
-      if (num_composite_contours + glyph->num_pointsums
-          > sfnt->max_composite_contours)
-        sfnt->max_composite_contours = num_composite_contours
-                                       + glyph->num_pointsums;
+      if (num_components > sfnt->max_components)
+        sfnt->max_components = num_components;
     }
   }
 
@@ -443,6 +383,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
                                  : loca_table->len / 2;
   loop_count = data->num_glyphs - 1;
 
+  data->empty_glyph_idx = -1;
+
   /* allocate one more glyph slot if we have composite glyphs */
   if (!sfnt->max_components)
     data->num_glyphs -= 1;
@@ -450,7 +392,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   if (!data->glyphs)
     return FT_Err_Out_Of_Memory;
 
-  /* first loop over `loca' and `glyf' data */
+  /* loop over `loca' and `glyf' data */
 
   p = loca_table->buf;
 
@@ -496,96 +438,23 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
     len = offset_next - offset;
     if (!len)
-      continue; /* empty glyph */
+    {
+      if (data->empty_glyph_idx == -1)
+        data->empty_glyph_idx = i;
+      continue;
+    }
     else
     {
       FT_Byte* buf;
+      FT_Short num_contours;
 
 
       /* check header size */
       if (len < 10)
         return FT_Err_Invalid_Table;
 
-      /* we need the number of contours and points for */
-      /* `TA_sfnt_compute_composite_pointsums' */
       buf = glyf_table->buf + offset;
-      glyph->num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
-
-      if (glyph->num_contours < 0)
-      {
-        error = TA_glyph_get_components(glyph, buf, len);
-        if (error)
-          return error;
-      }
-      else
-      {
-        FT_ULong off;
-
-
-        /* use the last contour's end point to compute number of points */
-        off = 10 + (glyph->num_contours - 1) * 2;
-        glyph->num_points = buf[off] << 8;
-        glyph->num_points += buf[off + 1] + 1;
-      }
-    }
-  }
-
-  if (sfnt->max_components)
-  {
-    error = TA_sfnt_compute_composite_pointsums(sfnt, font);
-    if (error)
-      return error;
-  }
-
-  /* second loop over `loca' and `glyf' data */
-
-  p = loca_table->buf;
-
-  if (loca_format)
-  {
-    offset_next = *(p++) << 24;
-    offset_next += *(p++) << 16;
-    offset_next += *(p++) << 8;
-    offset_next += *(p++);
-  }
-  else
-  {
-    offset_next = *(p++) << 8;
-    offset_next += *(p++);
-    offset_next <<= 1;
-  }
-
-  for (i = 0; i < loop_count; i++)
-  {
-    GLYPH* glyph = &data->glyphs[i];
-    FT_ULong len;
-
-
-    offset = offset_next;
-
-    if (loca_format)
-    {
-      offset_next = *(p++) << 24;
-      offset_next += *(p++) << 16;
-      offset_next += *(p++) << 8;
-      offset_next += *(p++);
-    }
-    else
-    {
-      offset_next = *(p++) << 8;
-      offset_next += *(p++);
-      offset_next <<= 1;
-    }
-
-    len = offset_next - offset;
-    if (!len)
-      continue; /* empty glyph */
-    else
-    {
-      FT_Byte* buf;
-
-
-      buf = glyf_table->buf + offset;
+      num_contours = (FT_Short)((buf[0] << 8) + buf[1]);
 
       /* We must parse the rest of the glyph record to get the exact */
       /* record length.  Since the `loca' table rounds record lengths */
@@ -594,14 +463,16 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* possible otherwise to have more than 4 bytes of padding which */
       /* is more or less invalid. */
 
-      if (glyph->num_contours < 0)
-        error = TA_glyph_parse_composite(glyph, buf, data->num_glyphs);
+      if (num_contours < 0)
+        error = TA_glyph_parse_composite(glyph, buf, len, data->num_glyphs);
       else
-        error = TA_glyph_parse_simple(glyph, buf, len);
+        error = TA_glyph_parse_simple(glyph, buf, num_contours, len);
       if (error)
         return error;
     }
   }
+
+  /* XXX add empty glyph if necessary */
 
   if (sfnt->max_components)
   {
@@ -622,16 +493,19 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
 
     };
 
-    glyph->len1 = 12;
-    glyph->len2 = 1;
-    glyph->buf = (FT_Byte*)malloc(glyph->len1 + glyph->len2);
+
+    /* to avoid adding a contour, */
+    /* we use a composite glyph which simply references an empty glyph */
+    glyph->len1 = 16;
+    /* glyph->len2 = 0; */
+    glyph->buf = (FT_Byte*)malloc(glyph->len1);
     if (!glyph->buf)
       return FT_Err_Out_Of_Memory;
 
     buf = glyph->buf;
 
-    buf[0] = 0x00; /* one contour */
-    buf[1] = 0x01;
+    buf[0] = 0xFF; /* composite glyph */
+    buf[1] = 0xFF;
     buf[2] = 0x00; /* no dimensions */
     buf[3] = 0x00;
     buf[4] = 0x00;
@@ -640,10 +514,14 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     buf[7] = 0x00;
     buf[8] = 0x00;
     buf[9] = 0x00;
-    buf[10] = 0x00; /* one contour end point */
-    buf[11] = 0x00;
+    buf[10] = 0x00; /* flags */
+    buf[11] = ARGS_ARE_XY_VALUES;
+    buf[12] = HIGH(data->empty_glyph_idx); /* the component index */
+    buf[13] = LOW(data->empty_glyph_idx);
+    buf[14] = 0x00; /* no offsets */
+    buf[15] = 0x00;
 
-    buf[12] = ON_CURVE | SAME_X | SAME_Y; /* the flags for a point at 0,0 */
+    glyph->flags_offset = 10;
 
     /* add bytecode also; */
     /* this works because the loop in `TA_sfnt_build_glyf_hints' */
@@ -654,7 +532,11 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       return FT_Err_Out_Of_Memory;
     memcpy(glyph->ins_buf, bytecode, glyph->ins_len);
 
-    sfnt->max_components += 1;
+    error = TA_sfnt_compute_max_components(sfnt, font);
+    if (error)
+      return error;
+
+    sfnt->max_depth += 1;
   }
 
   return TA_Err_Ok;

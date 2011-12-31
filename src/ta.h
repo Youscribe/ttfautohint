@@ -96,21 +96,12 @@ typedef struct GLYPH_
   FT_ULong len1; /* number of bytes before instruction related data */
   FT_ULong len2; /* number of bytes after instruction related data; */
                  /* if zero, this indicates a composite glyph */
-  FT_Byte* buf; /* extracted glyph data (without instruction related data) */
+  FT_Byte* buf; /* glyph data (without instruction related data); */
+                /* if zero, this indicates a glyph without contours */
   FT_ULong flags_offset; /* offset to last flag in a composite glyph */
 
   FT_ULong ins_len; /* number of new instructions */
   FT_Byte* ins_buf; /* new instruction data */
-
-  FT_Short num_contours; /* >= 0 for simple glyphs */
-  FT_UShort num_points; /* number of points in a simple glyph */
-
-  FT_UShort num_components;
-  FT_UShort* components; /* the subglyph indices of a composite glyph */
-
-  FT_UShort num_pointsums;
-  FT_UShort* pointsums; /* the pointsums of all composite elements */
-                        /* (after walking recursively over all subglyphs) */
 } GLYPH;
 
 /* a representation of the data in the `glyf' table */
@@ -118,6 +109,7 @@ typedef struct glyf_Data_
 {
   FT_UShort num_glyphs;
   GLYPH* glyphs;
+  FT_Long empty_glyph_idx; /* we use -1 to indicate `no empty glyph' */
 } glyf_Data;
 
 /* an SFNT table */
@@ -152,8 +144,6 @@ typedef struct SFNT_ {
   FT_ULong OS2_idx;
 
   /* values necessary to update the `maxp' table */
-  FT_UShort max_composite_points;
-  FT_UShort max_composite_contours;
   FT_UShort max_storage;
   FT_UShort max_stack_elements;
   FT_UShort max_twilight_points;
