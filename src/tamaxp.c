@@ -32,16 +32,6 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   if (maxp_table->len != MAXP_LEN)
     return FT_Err_Invalid_Table;
 
-  if (sfnt->max_components)
-  {
-    buf[MAXP_NUM_GLYPHS] = HIGH(data->num_glyphs);
-    buf[MAXP_NUM_GLYPHS + 1] = LOW(data->num_glyphs);
-    buf[MAXP_MAX_COMPOSITE_POINTS] = HIGH(sfnt->max_composite_points);
-    buf[MAXP_MAX_COMPOSITE_POINTS + 1] = LOW(sfnt->max_composite_points);
-    buf[MAXP_MAX_COMPOSITE_CONTOURS] = HIGH(sfnt->max_composite_contours);
-    buf[MAXP_MAX_COMPOSITE_CONTOURS + 1] = LOW(sfnt->max_composite_contours);
-  }
-
   buf[MAXP_MAX_ZONES_OFFSET] = 0;
   buf[MAXP_MAX_ZONES_OFFSET + 1] = 2;
   buf[MAXP_MAX_TWILIGHT_POINTS_OFFSET] = HIGH(sfnt->max_twilight_points);
@@ -56,9 +46,14 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   buf[MAXP_MAX_STACK_ELEMENTS_OFFSET + 1] = LOW(sfnt->max_stack_elements);
   buf[MAXP_MAX_INSTRUCTIONS_OFFSET] = HIGH(sfnt->max_instructions);
   buf[MAXP_MAX_INSTRUCTIONS_OFFSET + 1] = LOW(sfnt->max_instructions);
-  buf[MAXP_MAX_COMPONENTS_OFFSET] = HIGH(sfnt->max_components);
-  buf[MAXP_MAX_COMPONENTS_OFFSET + 1] = LOW(sfnt->max_components);
 
+  if (sfnt->max_components)
+  {
+    buf[MAXP_NUM_GLYPHS] = HIGH(data->num_glyphs);
+    buf[MAXP_NUM_GLYPHS + 1] = LOW(data->num_glyphs);
+    buf[MAXP_MAX_COMPONENTS_OFFSET] = HIGH(sfnt->max_components);
+    buf[MAXP_MAX_COMPONENTS_OFFSET + 1] = LOW(sfnt->max_components);
+  }
 
   maxp_table->checksum = TA_table_compute_checksum(maxp_table->buf,
                                                    maxp_table->len);

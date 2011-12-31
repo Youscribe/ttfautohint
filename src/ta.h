@@ -56,8 +56,6 @@
 
 /* various offsets within the `maxp' table */
 #define MAXP_NUM_GLYPHS 4
-#define MAXP_MAX_COMPOSITE_POINTS 10
-#define MAXP_MAX_COMPOSITE_CONTOURS 12
 #define MAXP_MAX_ZONES_OFFSET 14
 #define MAXP_MAX_TWILIGHT_POINTS_OFFSET 16
 #define MAXP_MAX_STORAGE_OFFSET 18
