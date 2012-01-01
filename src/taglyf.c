@@ -123,7 +123,7 @@ TA_glyph_parse_composite(GLYPH* glyph,
   /* (including space for the new component */
   /* and possible argument size changes for shifted point indices) */
   /* and reallocate it later to its real size */
-  glyph->buf = (FT_Byte*)malloc(len + 6 + glyph->num_components * 2);
+  glyph->buf = (FT_Byte*)malloc(len + 8 + glyph->num_components * 2);
   if (!glyph->buf)
     return FT_Err_Out_Of_Memory;
 
@@ -142,12 +142,54 @@ TA_glyph_parse_composite(GLYPH* glyph,
   /* (doing so simplifies the conversion of point indices later on) */
   if (glyph->num_composite_contours)
   {
-    *(q++) = 0x00;
-    *(q++) = ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
-    *(q++) = HIGH(num_glyphs - 1);
-    *(q++) = LOW(num_glyphs - 1);
-    *(q++) = 0x00;
-    *(q++) = 0x00;
+    FT_Short x_min;
+    FT_Short x_max;
+    FT_Short y_min;
+    FT_Short y_max;
+    FT_Short x_offset;
+    FT_Short y_offset;
+
+
+    /* the composite glyph's bounding box */
+    x_min = (FT_Short)((buf[2] << 8) + buf[3]);
+    y_min = (FT_Short)((buf[4] << 8) + buf[5]);
+    x_max = (FT_Short)((buf[6] << 8) + buf[7]);
+    y_max = (FT_Short)((buf[8] << 8) + buf[9]);
+
+    /* use ARGS_ARE_WORDS only if necessary; */
+    /* note that the offset value of the component doesn't matter */
+    /* as long as it stays within the bounding box */
+    if (x_min <= 0 && x_max >= 0)
+      x_offset = 0;
+    else
+      x_offset = x_min;
+
+    if (y_min <= 0 && y_max >= 0)
+      y_offset = 0;
+    else
+      y_offset = y_min;
+
+    if (x_offset >= 0 && x_offset <= 0xFF
+        && y_offset >= 0 && y_offset <= 0xFF)
+    {
+      *(q++) = 0x00;
+      *(q++) = ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
+      *(q++) = HIGH(num_glyphs - 1);
+      *(q++) = LOW(num_glyphs - 1);
+      *(q++) = x_offset;
+      *(q++) = y_offset;
+    }
+    else
+    {
+      *(q++) = 0x00;
+      *(q++) = ARGS_ARE_WORDS | ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
+      *(q++) = HIGH(num_glyphs - 1);
+      *(q++) = LOW(num_glyphs - 1);
+      *(q++) = HIGH(x_offset);
+      *(q++) = LOW(x_offset);
+      *(q++) = HIGH(y_offset);
+      *(q++) = LOW(y_offset);
+    }
   }
 
   /* walk over component records */
