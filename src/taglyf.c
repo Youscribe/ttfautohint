@@ -108,6 +108,7 @@ TA_glyph_get_components(GLYPH* glyph,
 static FT_Error
 TA_glyph_parse_composite(GLYPH* glyph,
                          FT_Byte* buf,
+                         FT_ULong len,
                          FT_UShort num_glyphs)
 {
   FT_ULong flags_offset; /* after the loop, this is the offset */
@@ -115,71 +116,143 @@ TA_glyph_parse_composite(GLYPH* glyph,
   FT_UShort flags;
 
   FT_Byte* p;
-  FT_ULong new_len;
+  FT_Byte* q;
 
+
+  /* we allocate too large a buffer */
+  /* (including space for the new component */
+  /* and possible argument size changes for shifted point indices) */
+  /* and reallocate it later to its real size */
+  glyph->buf = (FT_Byte*)malloc(len + 6 + glyph->num_components * 2);
+  if (!glyph->buf)
+    return FT_Err_Out_Of_Memory;
 
   p = buf;
+  q = glyph->buf;
 
-  /* skip header */
+  /* copy header */
+  memcpy(q, p, 10);
   p += 10;
+  q += 10;
 
-  /* walk over component records */
-  do
-  {
-    flags_offset = p - buf;
-
-    flags = *(p++) << 8;
-    flags += *(p++);
-
-    /* skip component */
-    p += 2;
-
-    /* skip scaling and offset arguments */
-    if (flags & ARGS_ARE_WORDS)
-      p += 4;
-    else
-      p += 2;
-
-    /* XXX adjust point indices for !ARGS_ARE_XY_VALUES */
-
-    if (flags & WE_HAVE_A_SCALE)
-      p += 2;
-    else if (flags & WE_HAVE_AN_XY_SCALE)
-      p += 4;
-    else if (flags & WE_HAVE_A_2X2)
-      p += 8;
-  } while (flags & MORE_COMPONENTS);
-
+  /* if the composite glyph contains one or more contours, */
   /* we prepend a composite glyph component to call some bytecode */
   /* which eventually becomes the last glyph in the `glyf' table; */
   /* for convenience, however, it is not added to the `components' array */
   /* (doing so simplifies the conversion of point indices later on) */
+  if (glyph->num_composite_contours)
+  {
+    *(q++) = 0x00;
+    *(q++) = ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
+    *(q++) = HIGH(num_glyphs - 1);
+    *(q++) = LOW(num_glyphs - 1);
+    *(q++) = 0x00;
+    *(q++) = 0x00;
+  }
 
-  /* adjust glyph record length (6 bytes for the additional component) */
-  new_len = p - buf + 6;
+  /* walk over component records */
+  do
+  {
+    flags_offset = q - glyph->buf;
 
-  glyph->flags_offset = flags_offset + 6;
+    *(q++) = *p;
+    flags = *(p++) << 8;
+    *(q++) = *p;
+    flags += *(p++);
 
-  glyph->len1 = new_len;
+    /* copy component */
+    *(q++) = *(p++);
+    *(q++) = *(p++);
+
+    if (flags & ARGS_ARE_XY_VALUES)
+    {
+      /* copy offsets */
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+
+      if (flags & ARGS_ARE_WORDS)
+      {
+        *(q++) = *(p++);
+        *(q++) = *(p++);
+      }
+    }
+    else
+    {
+      /* handle point numbers */
+      FT_UShort arg1;
+      FT_UShort arg2;
+      FT_UShort i;
+
+
+      if (flags & ARGS_ARE_WORDS)
+      {
+        arg1 = *(p++) >> 8;
+        arg1 += *(p++);
+        arg2 = *(p++) >> 8;
+        arg2 += *(p++);
+      }
+      else
+      {
+        arg1 = *(p++);
+        arg2 = *(p++);
+      }
+
+      /* adjust point numbers */
+      /* (see `TA_adjust_point_index' in `tabytecode.c' for more) */
+      for (i = 0; i < glyph->num_pointsums; i++)
+        if (arg1 < glyph->pointsums[i])
+          break;
+      arg1 += i;
+
+      for (i = 0; i < glyph->num_pointsums; i++)
+        if (arg2 < glyph->pointsums[i])
+          break;
+      arg2 += i;
+
+      if (arg1 <= 0xFF && arg2 <= 0xFF)
+      {
+        glyph->buf[flags_offset + 1] &= ~ARGS_ARE_WORDS;
+
+        *(q++) = arg1;
+        *(q++) = arg2;
+      }
+      else
+      {
+        glyph->buf[flags_offset + 1] |= ARGS_ARE_WORDS;
+
+        *(q++) = HIGH(arg1);
+        *(q++) = LOW(arg1);
+        *(q++) = HIGH(arg2);
+        *(q++) = LOW(arg2);
+      }
+    }
+
+    /* copy scaling arguments */
+    if (flags & (WE_HAVE_A_SCALE | WE_HAVE_AN_XY_SCALE | WE_HAVE_A_2X2))
+    {
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+    }
+    if (flags & (WE_HAVE_AN_XY_SCALE | WE_HAVE_A_2X2))
+    {
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+    }
+    if (flags & WE_HAVE_A_2X2)
+    {
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+      *(q++) = *(p++);
+    }
+  } while (flags & MORE_COMPONENTS);
+
+  glyph->len1 = q - glyph->buf;
   /* glyph->len2 = 0; */
-  glyph->buf = (FT_Byte*)malloc(new_len);
-  if (!glyph->buf)
-    return FT_Err_Out_Of_Memory;
+  glyph->flags_offset = flags_offset;
+  glyph->buf = (FT_Byte*)realloc(glyph->buf, glyph->len1);
 
-  /* copy record without instructions (if any) */
-  /* and construct additional component */
-
-  memcpy(glyph->buf, buf, 10); /* header */
-
-  glyph->buf[10] = 0x00; /* additional component */
-  glyph->buf[11] = ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
-  glyph->buf[12] = HIGH(num_glyphs - 1);
-  glyph->buf[13] = LOW(num_glyphs - 1);
-  glyph->buf[14] = 0x00;
-  glyph->buf[15] = 0x00;
-
-  memcpy(glyph->buf + 16, buf + 10, new_len - 6 - 10); /* the rest */
-
+  /* we discard instructions (if any) */
   glyph->buf[glyph->flags_offset] &= ~(WE_HAVE_INSTR >> 8);
 
   return TA_Err_Ok;
@@ -393,6 +466,8 @@ TA_sfnt_compute_composite_pointsums(SFNT* sfnt,
       if (error)
         return error;
 
+      glyph->num_composite_contours = num_composite_contours;
+
       /* update maximum values, */
       /* including the subglyphs not in `components' array */
       /* (each of them has a single point in a single contour) */
@@ -603,7 +678,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* is more or less invalid. */
 
       if (glyph->num_contours < 0)
-        error = TA_glyph_parse_composite(glyph, buf, data->num_glyphs);
+        error = TA_glyph_parse_composite(glyph, buf, len, data->num_glyphs);
       else
         error = TA_glyph_parse_simple(glyph, buf, len);
       if (error)

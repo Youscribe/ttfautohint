@@ -112,6 +112,8 @@ typedef struct GLYPH_
   FT_UShort num_pointsums;
   FT_UShort* pointsums; /* the pointsums of all composite elements */
                         /* (after walking recursively over all subglyphs) */
+
+  FT_UShort num_composite_contours; /* after recursion */
 } GLYPH;
 
 /* a representation of the data in the `glyf' table */
