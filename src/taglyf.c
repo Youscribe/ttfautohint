@@ -161,16 +161,20 @@ TA_glyph_parse_composite(GLYPH* glyph,
     /* as long as it stays within the bounding box */
     if (x_min <= 0 && x_max >= 0)
       x_offset = 0;
+    else if (x_max < 0)
+      x_offset = x_max;
     else
       x_offset = x_min;
 
     if (y_min <= 0 && y_max >= 0)
       y_offset = 0;
+    else if (y_max < 0)
+      y_offset = y_max;
     else
       y_offset = y_min;
 
-    if (x_offset >= 0 && x_offset <= 0xFF
-        && y_offset >= 0 && y_offset <= 0xFF)
+    if (x_offset >= -128 && x_offset <= 127
+        && y_offset >= -128 && y_offset <= 127)
     {
       *(q++) = 0x00;
       *(q++) = ARGS_ARE_XY_VALUES | MORE_COMPONENTS;
