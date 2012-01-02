@@ -183,6 +183,27 @@ unsigned char PREP(set_dropout_mode) [] = {
 
 };
 
+unsigned char PREP(reset_component_counter) [] = {
+
+  /* In case an application tries to render `.ttfautohint' */
+  /* (which it should never do), */
+  /* hinting of all glyphs rendered afterwards is disabled */
+  /* because the `cvtl_is_subglyph' counter gets incremented, */
+  /* but there is no counterpart to decrement it. */
+  /* Font inspection tools like the FreeType demo programs */
+  /* are an exception to that rule, however, */
+  /* since they can directly access a font by glyph indices. */
+  /* The following guard alleviates the problem a bit: */
+  /* Any change of the graphics state */
+  /* (for example, rendering at a different size or with a different mode) */
+  /* resets the counter to zero. */
+  PUSHB_2,
+    cvtl_is_subglyph,
+    0,
+  WCVTP,
+
+};
+
 
 #define COPY_PREP(snippet_name) \
           memcpy(buf_p, prep_ ## snippet_name, \
@@ -240,6 +261,7 @@ TA_table_build_prep(FT_Byte** prep,
                + sizeof (PREP(round_blues_b));
 
   buf_len += sizeof (PREP(set_dropout_mode));
+  buf_len += sizeof (PREP(reset_component_counter));
 
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
@@ -293,6 +315,7 @@ TA_table_build_prep(FT_Byte** prep,
   }
 
   COPY_PREP(set_dropout_mode);
+  COPY_PREP(reset_component_counter);
 
   *prep = buf;
   *prep_len = buf_len;
