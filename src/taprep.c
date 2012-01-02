@@ -19,7 +19,7 @@
 #define PREP(snippet_name) prep_ ## snippet_name
 
 /* we often need 0x10000 which can't be pushed directly onto the stack, */
-/* thus we provide it in the CVS as `cvtl_0x10000'; */
+/* thus we provide it in the CVT as `cvtl_0x10000'; */
 /* at the same time, we store it in CVT index `cvtl_funits_to_pixels' also */
 /* as a scaled value to have a conversion factor from FUnits to pixels */
 
@@ -171,6 +171,18 @@ unsigned char PREP(round_blues_b) [] = {
 
 };
 
+unsigned char PREP(set_dropout_mode) [] = {
+
+  PUSHW_1,
+    0x01, /* 0x01FF, activate dropout handling unconditionally */
+    0xFF,
+  SCANCTRL,
+  PUSHB_1,
+    4, /* smart dropout include stubs */
+  SCANTYPE,
+
+};
+
 
 #define COPY_PREP(snippet_name) \
           memcpy(buf_p, prep_ ## snippet_name, \
@@ -227,6 +239,8 @@ TA_table_build_prep(FT_Byte** prep,
                + 2
                + sizeof (PREP(round_blues_b));
 
+  buf_len += sizeof (PREP(set_dropout_mode));
+
   /* buffer length must be a multiple of four */
   len = (buf_len + 3) & ~3;
   buf = (FT_Byte*)malloc(len);
@@ -277,6 +291,8 @@ TA_table_build_prep(FT_Byte** prep,
                                  + CVT_BLUES_SIZE(font) - 1);
     COPY_PREP(round_blues_b);
   }
+
+  COPY_PREP(set_dropout_mode);
 
   *prep = buf;
   *prep_len = buf_len;

@@ -34,8 +34,6 @@ control `gasp' table; Adam Twardoch suggest the following:
 
 disable hinting at large ppem values (> ~2000) to avoid numeric overflows
 
-control dropout mode
-
 control activation threshold of blue zone widths
 
 control the width of blue zones
@@ -61,7 +59,7 @@ minor improvements
 
 correctly set `lowestRecPPEM' field in `head'
 
-set dropout mode et al.
+control dropout mode
 
 apply hinting in x direction also?
   -> warper: shifting with and without scaling
