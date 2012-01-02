@@ -1,0 +1,12 @@
+# Run the `update-copyright' script from `gnulib'.
+
+UPDATE_COPYRIGHT=~/git/gnulib/build-aux/update-copyright
+
+git ls-files \
+| grep -vFf no-copyright \
+| UPDATE_COPYRIGHT_HOLDER="by Werner Lemberg" \
+  UPDATE_COPYRIGHT_USE_INTERVALS=1 \
+  UPDATE_COPYRIGHT_MAX_LINE_LENGTH=78 \
+  xargs $UPDATE_COPYRIGHT
+
+# EOF

@@ -1,0 +1,28 @@
+# Files which don't get a copyright, or which are taken from elsewhere.
+#
+# Don't put empty lines into this file!
+#
+.gitignore
+m4/.gitignore
+src/.gitignore
+#
+m4/ltlize_lang.m4
+FTL.TXT
+GPLv2.TXT
+INSTALL
+#
+autogen.sh
+Makefile.am
+#
+AUTHORS
+COPYING
+ChangeLog
+INSTALL.git
+NEWS
+THANKS
+TODO
+pledgies
+no-copyright
+update-copyright
+#
+# EOF
