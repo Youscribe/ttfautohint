@@ -311,7 +311,9 @@ TTF_autohint(const char* options,
     error = TA_sfnt_update_maxp_table(sfnt, font);
     if (error)
       goto Err;
-    if (sfnt->max_components) /* we add one glyph for composites */
+
+    /* we add one glyph for composites */
+    if (sfnt->max_components && !font->pre_hinting)
     {
       error = TA_sfnt_update_hmtx_table(sfnt, font);
       if (error)
