@@ -18,6 +18,10 @@
 
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* Error type. */
 
@@ -178,6 +182,10 @@ typedef void
 TA_Error
 TTF_autohint(const char* options,
              ...);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __TTFAUTOHINT_H__ */
 
