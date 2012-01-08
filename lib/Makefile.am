@@ -11,7 +11,6 @@
 # with the ttfautohint library.
 
 AM_CPPFLAGS = $(FREETYPE_CPPFLAGS)
-AM_LDFLAGS = $(FREETYPE_LDFLAGS)
 
 noinst_LIBRARIES = libttfautohint.a
 libttfautohint_a_SOURCES = ta.h \
@@ -44,20 +43,5 @@ libttfautohint_a_SOURCES = ta.h \
                            tattf.c \
                            tatypes.h \
                            ttfautohint.c ttfautohint.h ttfautohint-errors.h
-
-bin_PROGRAMS = ttfautohint
-ttfautohint_SOURCES = hint.c \
-                      ttfautohint.h
-ttfautohint_LDADD = libttfautohint.a \
-                    $(FREETYPE_LDFLAGS)
-
-dist_man_MANS = ttfautohint.1
-
-ttfautohint.1: $(top_srcdir)/lib/hint.c $(top_srcdir)/configure.ac
-	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
-	$(HELP2MAN) --output=$@ \
-	            --no-info \
-	            --name="add new auto-generated hints to a TrueType font" \
-	            ./ttfautohint$(EXEEXT)
 
 ## end of Makefile.am

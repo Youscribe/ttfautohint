@@ -119,7 +119,8 @@ fi
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 lib/Makefile])
+                 lib/Makefile
+                 frontend/Makefile])
 AC_OUTPUT
 
 # end of configure.ac
