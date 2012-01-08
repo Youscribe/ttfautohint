@@ -4,7 +4,7 @@
 #
 .gitignore
 m4/.gitignore
-src/.gitignore
+lib/.gitignore
 #
 m4/ltlize_lang.m4
 FTL.TXT

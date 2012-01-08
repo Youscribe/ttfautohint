@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src
+SUBDIRS = lib
 EXTRA_DIST = autogen.sh \
              FTL.TXT \
              GPLv2.TXT \

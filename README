@@ -11,7 +11,7 @@ autohinting module.  The idea is to provide the excellent quality of the
 autohinter on platforms which don't use FreeType.
 
 The library has a single API function, `TTF_autohint'; see
-`src/ttfautohint.h' for a detailed description.  Note that the library
+`lib/ttfautohint.h' for a detailed description.  Note that the library
 itself won't get installed currently.
 
 A simple command-line interface to the library is the demo program

@@ -53,7 +53,7 @@ ttfautohint_LDADD = libttfautohint.a \
 
 dist_man_MANS = ttfautohint.1
 
-ttfautohint.1: $(top_srcdir)/src/hint.c $(top_srcdir)/configure.ac
+ttfautohint.1: $(top_srcdir)/lib/hint.c $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
 	$(HELP2MAN) --output=$@ \
 	            --no-info \
