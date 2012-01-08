@@ -1,19 +1,17 @@
-/* hint.c */
+// hint.cpp
 
-/*
- * Copyright (C) 2011-2012 by Werner Lemberg.
- *
- * This file is part of the ttfautohint library, and may only be used,
- * modified, and distributed under the terms given in `COPYING'.  By
- * continuing to use, modify, or distribute this file you indicate that you
- * have read `COPYING' and understand and accept it fully.
- *
- * The file `COPYING' mentioned in the previous paragraph is distributed
- * with the ttfautohint library.
- */
+// Copyright (C) 2011-2012 by Werner Lemberg.
+//
+// This file is part of the ttfautohint library, and may only be used,
+// modified, and distributed under the terms given in `COPYING'.  By
+// continuing to use, modify, or distribute this file you indicate that you
+// have read `COPYING' and understand and accept it fully.
+//
+// The file `COPYING' mentioned in the previous paragraph is distributed
+// with the ttfautohint library.
 
 
-/* This test program is a wrapper for `TTF_autohint'. */
+// This test program is a wrapper for `TTF_autohint'.
 
 #include <config.h>
 
@@ -59,7 +57,7 @@ progress(long curr_idx,
     data->begin = 0;
   }
 
-  /* print progress approx. all 10% */
+  // print progress approx. all 10%
   curr_percent = curr_idx * 100 / num_glyphs;
   curr_diff = curr_percent - data->last_percent;
   if (curr_diff >= 10)
@@ -315,4 +313,4 @@ main(int argc,
   exit(EXIT_SUCCESS);
 }
 
-/* end of hint.c */
+// end of hint.cpp
