@@ -1,12 +1,17 @@
 ## Makefile.am
 
-ACLOCAL_AMFLAGS = -I m4
+# due to a limitation of `autoreconf',
+# all -I directives currently must be set on a single line
+ACLOCAL_AMFLAGS = -I gnulib/m4 -I m4
 
-SUBDIRS = lib frontend
+SUBDIRS = gnulib/src \
+          lib \
+          frontend
 EXTRA_DIST = autogen.sh \
              FTL.TXT \
              GPLv2.TXT \
              README \
-             TODO
+             TODO \
+             gnulib/m4/gnulib-cache.m4
 
 ## end of Makefile.am

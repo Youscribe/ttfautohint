@@ -13,13 +13,18 @@
 AC_INIT([ttfautohint],
         [0.6.1],
         [freetype-devel@nongnu.org])
+AC_CONFIG_AUX_DIR([gnulib])
 AM_INIT_AUTOMAKE([-Wall -Werror gnits])
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIR([gnulib/m4
+                     m4])
 AM_SILENT_RULES([yes])
 
 AC_PROG_CPP
 AC_PROG_CC
 AC_PROG_CXX
+
+gl_EARLY
+gl_INIT
 
 AC_TYPE_UINT64_T
 
@@ -120,6 +125,7 @@ fi
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
+                 gnulib/src/Makefile
                  lib/Makefile
                  frontend/Makefile])
 AC_OUTPUT

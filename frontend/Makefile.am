@@ -11,8 +11,12 @@
 # with the ttfautohint library.
 
 AM_CPPFLAGS = -I$(top_srcdir)/lib \
+              -I$(top_builddir)/gnulib/src \
+              -I$(top_srcdir)/gnulib/src \
               $(FREETYPE_CPPFLAGS)
 AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
+             $(top_builddir)/gnulib/src/libgnu.la \
+             $(LTLIBINTL) \
              $(FREETYPE_LDFLAGS)
 
 bin_PROGRAMS = ttfautohint

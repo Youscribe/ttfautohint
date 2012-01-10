@@ -7,17 +7,19 @@ required when building from a release:
 
   autoconf (2.68)
   automake (1.11.1)
-  libtool (2.4)
+  git (1.5.5)
   help2man (1.40.1)
+  libtool (2.4.2)
 
 The version numbers in parentheses are known to work.  Newer versions should
 work also.
 
 Say
 
-  ./autogen.sh
+  ./bootstrap
 
-to build the `configure' script and to add necessary auxiliary files, then
-you can proceed with the instructions given in the `INSTALL' file.
+to clone the `gnulib' repository (which gets installed as a git submodule),
+to build the `configure' script, and to set up necessary auxiliary files.
+Then you can proceed with the instructions given in the `INSTALL' file.
 
 EOF
