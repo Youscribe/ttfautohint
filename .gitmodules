@@ -1,3 +1,0 @@
-[submodule ".gnudir"]
-	path = .gnudir
-	url = git://git.sv.gnu.org/gnulib.git
