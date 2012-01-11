@@ -23,7 +23,8 @@
 /* at the same time, we store it in CVT index `cvtl_funits_to_pixels' also */
 /* as a scaled value to have a conversion factor from FUnits to pixels */
 
-unsigned char PREP(store_0x10000) [] = {
+unsigned char PREP(store_0x10000) [] =
+{
 
   PUSHW_2,
     0x08, /* 0x800 */
@@ -46,7 +47,8 @@ unsigned char PREP(store_0x10000) [] = {
 
 };
 
-unsigned char PREP(align_top_a) [] = {
+unsigned char PREP(align_top_a) [] =
+{
 
   /* optimize the alignment of the top of small letters to the pixel grid */
 
@@ -56,7 +58,8 @@ unsigned char PREP(align_top_a) [] = {
 
 /*  %c, index of alignment blue zone */
 
-unsigned char PREP(align_top_b) [] = {
+unsigned char PREP(align_top_b) [] =
+{
 
   RCVT,
   DUP,
@@ -87,7 +90,8 @@ unsigned char PREP(align_top_b) [] = {
 
 };
 
-unsigned char PREP(loop_cvt_a) [] = {
+unsigned char PREP(loop_cvt_a) [] =
+{
 
     /* loop over vertical CVT entries */
     PUSHB_4,
@@ -97,7 +101,8 @@ unsigned char PREP(loop_cvt_a) [] = {
 /*    %c, first vertical index */
 /*    %c, last vertical index */
 
-unsigned char PREP(loop_cvt_b) [] = {
+unsigned char PREP(loop_cvt_b) [] =
+{
 
       bci_cvt_rescale,
       bci_loop,
@@ -111,7 +116,8 @@ unsigned char PREP(loop_cvt_b) [] = {
 /*    %c, first blue ref index */
 /*    %c, last blue ref index */
 
-unsigned char PREP(loop_cvt_c) [] = {
+unsigned char PREP(loop_cvt_c) [] =
+{
 
       bci_cvt_rescale,
       bci_loop,
@@ -125,7 +131,8 @@ unsigned char PREP(loop_cvt_c) [] = {
 /*    %c, first blue shoot index */
 /*    %c, last blue shoot index */
 
-unsigned char PREP(loop_cvt_d) [] = {
+unsigned char PREP(loop_cvt_d) [] =
+{
 
       bci_cvt_rescale,
       bci_loop,
@@ -134,7 +141,8 @@ unsigned char PREP(loop_cvt_d) [] = {
 
 };
 
-unsigned char PREP(compute_extra_light_a) [] = {
+unsigned char PREP(compute_extra_light_a) [] =
+{
 
   /* compute (vertical) `extra_light' flag */
   PUSHB_3,
@@ -145,7 +153,8 @@ unsigned char PREP(compute_extra_light_a) [] = {
 
 /*  %c, index of vertical standard_width */
 
-unsigned char PREP(compute_extra_light_b) [] = {
+unsigned char PREP(compute_extra_light_b) [] =
+{
 
   RCVT,
   GT, /* standard_width < 40 */
@@ -153,7 +162,8 @@ unsigned char PREP(compute_extra_light_b) [] = {
 
 };
 
-unsigned char PREP(round_blues_a) [] = {
+unsigned char PREP(round_blues_a) [] =
+{
 
   /* use discrete values for blue zone widths */
   PUSHB_4,
@@ -163,7 +173,8 @@ unsigned char PREP(round_blues_a) [] = {
 /*  %c, first blue ref index */
 /*  %c, last blue ref index */
 
-unsigned char PREP(round_blues_b) [] = {
+unsigned char PREP(round_blues_b) [] =
+{
 
     bci_blue_round,
     bci_loop,
@@ -171,7 +182,8 @@ unsigned char PREP(round_blues_b) [] = {
 
 };
 
-unsigned char PREP(set_dropout_mode) [] = {
+unsigned char PREP(set_dropout_mode) [] =
+{
 
   PUSHW_1,
     0x01, /* 0x01FF, activate dropout handling unconditionally */
@@ -183,7 +195,8 @@ unsigned char PREP(set_dropout_mode) [] = {
 
 };
 
-unsigned char PREP(reset_component_counter) [] = {
+unsigned char PREP(reset_component_counter) [] =
+{
 
   /* In case an application tries to render `.ttfautohint' */
   /* (which it should never do), */

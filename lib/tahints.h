@@ -313,7 +313,8 @@ typedef struct TA_AxisHintsRec_
 } TA_AxisHintsRec, *TA_AxisHints;
 
 
-typedef enum TA_Action_ {
+typedef enum TA_Action_
+{
   /* point actions */
   ta_ip_before,
   ta_ip_after,

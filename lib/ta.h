@@ -124,7 +124,8 @@ typedef struct glyf_Data_
 } glyf_Data;
 
 /* an SFNT table */
-typedef struct SFNT_Table_ {
+typedef struct SFNT_Table_
+{
   FT_ULong tag;
   FT_ULong len;
   FT_Byte* buf; /* the table data */
@@ -139,7 +140,8 @@ typedef struct SFNT_Table_ {
 typedef FT_ULong SFNT_Table_Info;
 
 /* this structure is used to model a TTF or a subfont within a TTC */
-typedef struct SFNT_ {
+typedef struct SFNT_
+{
   FT_Face face;
 
   SFNT_Table_Info* table_infos;
@@ -166,7 +168,8 @@ typedef struct SFNT_ {
 } SFNT;
 
 /* our font object */
-typedef struct FONT_ {
+typedef struct FONT_
+{
   FT_Library lib;
 
   FT_Byte* in_buf;

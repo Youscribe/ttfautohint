@@ -24,7 +24,8 @@
 #include <ttfautohint.h>
 
 
-typedef struct Progress_Data_ {
+typedef struct Progress_Data_
+{
   long last_sfnt;
   int begin;
   int last_percent;
@@ -162,7 +163,8 @@ main(int argc,
 
   while (1)
   {
-    static struct option long_options[] = {
+    static struct option long_options[] =
+    {
       {"help", no_argument, 0, 'h'},
       {"hinting-range-max", required_argument, 0, 'r'},
       {"hinting-range-min", required_argument, 0, 'l'},

@@ -19,7 +19,8 @@
 /* error message strings; */
 /* we concatenate FreeType and ttfautohint messages into one structure */
 
-typedef const struct TA_error_ {
+typedef const struct TA_error_
+{
   int err_code;
   const char* err_msg;
 } TA_error;

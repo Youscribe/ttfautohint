@@ -738,7 +738,8 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     GLYPH* glyph = &data->glyphs[data->num_glyphs - 1];
     FT_Byte* buf;
 
-    FT_Byte bytecode[] = {
+    FT_Byte bytecode[] =
+    {
 
       /* increment `cvtl_is_subglyph' counter */
       PUSHB_3,

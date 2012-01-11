@@ -38,14 +38,16 @@ void* _ta_debug_hints;
 #endif
 
 
-typedef struct Hints_Record_ {
+typedef struct Hints_Record_
+{
   FT_UInt size;
   FT_UInt num_actions;
   FT_Byte* buf;
   FT_UInt buf_len;
 } Hints_Record;
 
-typedef struct Recorder_ {
+typedef struct Recorder_
+{
   FONT* font;
   GLYPH* glyph; /* the current glyph */
   Hints_Record hints_record;
