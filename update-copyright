@@ -1,6 +1,9 @@
-# Run the `update-copyright' script from `gnulib'.
+# Run the `update-copyright' script.
+#
+# Do this after calling `bootstrap' (which checks out the `.gnulib'
+# submodule)
 
-UPDATE_COPYRIGHT=~/git/gnulib/build-aux/update-copyright
+UPDATE_COPYRIGHT=./.gnulib/build-aux/update-copyright
 
 git ls-files \
 | grep -vFf no-copyright \

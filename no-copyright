@@ -11,7 +11,7 @@ FTL.TXT
 GPLv2.TXT
 INSTALL
 #
-autogen.sh
+bootstrap
 Makefile.am
 #
 AUTHORS

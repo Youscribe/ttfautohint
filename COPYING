@@ -22,12 +22,19 @@ any of your projects or products.
  - The GNU General Public License version 2, found in `GPLv2.TXT' (any later
    version can be used also), for programs which already use the GPL.
 
-Here is a list of files which are distributed with the source bundle of the
-ttfautohint library but which aren't part of it due to a different license
-(GPL only).
+The following files are distributed with the source bundle of the
+ttfautohint library to configure and build the library with GNU tools, but
+which aren't part of it due to a different license (GPL only).
 
-  . m4/ltlize_lang.m4
+  bootstrap
+  bootstrap.conf
+  m4/ltlize_lang.m4
 
-      Auxiliary file for building the ttfautohint library with libtool.
+All files of the following directories are distributed with the source
+bundle of the ttfautohint library to configure and build the library with
+GNU tools, but which aren't part of it due to a different license (GPL
+only).
+
+  gnulib
 
 EOF
