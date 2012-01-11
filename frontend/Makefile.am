@@ -20,11 +20,11 @@ AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
              $(FREETYPE_LDFLAGS)
 
 bin_PROGRAMS = ttfautohint
-ttfautohint_SOURCES = hint.cpp
+ttfautohint_SOURCES = main.cpp
 
 dist_man_MANS = ttfautohint.1
 
-ttfautohint.1: $(top_srcdir)/frontend/hint.cpp $(top_srcdir)/configure.ac
+ttfautohint.1: $(top_srcdir)/frontend/main.cpp $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
 	$(HELP2MAN) --output=$@ \
 	            --no-info \

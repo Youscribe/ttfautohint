@@ -1,4 +1,4 @@
-// hint.cpp
+// main.cpp
 
 // Copyright (C) 2011-2012 by Werner Lemberg.
 //
@@ -11,7 +11,7 @@
 // with the ttfautohint library.
 
 
-// This test program is a wrapper for `TTF_autohint'.
+// This program is a wrapper for `TTF_autohint'.
 
 #include <config.h>
 
@@ -57,7 +57,7 @@ progress(long curr_idx,
     data->begin = 0;
   }
 
-  // print progress approx. all 10%
+  // print progress approx. every 10%
   curr_percent = curr_idx * 100 / num_glyphs;
   curr_diff = curr_percent - data->last_percent;
   if (curr_diff >= 10)
@@ -313,4 +313,4 @@ main(int argc,
   exit(EXIT_SUCCESS);
 }
 
-// end of hint.cpp
+// end of main.cpp
