@@ -26,6 +26,7 @@
 #include <string>
 
 #include <QApplication>
+#include "maingui.h"
 
 #include <ttfautohint.h>
 
@@ -468,15 +469,15 @@ main(int argc,
     for (int i = 0; i < new_argc; i++)
       new_argv[i] = const_cast<char*>(new_arg_string[i].data());
 
-//    Q_INIT_RESOURCE(application);
-
     QApplication app(new_argc, new_argv);
-    app.setApplicationName("TTF autohint");
+    app.setApplicationName("TTFautohint");
     app.setApplicationVersion(VERSION);
+    app.setOrganizationName("FreeType");
+    app.setOrganizationDomain("freetype.org");
 
-//    Main_GUI gui(hinting_range_min, hinting_range_max,
-//                 ignore_permissions, pre_hinting, latin_fallback);
-//    gui.show();
+    Main_GUI gui(hinting_range_min, hinting_range_max,
+                 ignore_permissions, pre_hinting, latin_fallback);
+    gui.show();
 
     return app.exec();
   }

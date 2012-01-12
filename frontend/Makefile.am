@@ -1,4 +1,4 @@
-## Makefile.am
+# Makefile.am
 
 # Copyright (C) 2011 by Werner Lemberg.
 #
@@ -9,6 +9,14 @@
 #
 # The file `COPYING' mentioned in the previous paragraph is distributed
 # with the ttfautohint library.
+
+SUFFIXES = .moc.cpp .h
+
+.h.moc.cpp:
+	$(MOC) $(QT_CPPFLAGS) $(EXTRA_CPPFLAGS) $< -o $@
+
+DISTCLEANFILES = $(BUILT_SOURCES)
+
 
 AM_CXXFLAGS = $(QT_CXXFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/lib \
@@ -24,7 +32,12 @@ AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
              $(FREETYPE_LDFLAGS)
 
 bin_PROGRAMS = ttfautohint
-ttfautohint_SOURCES = main.cpp
+ttfautohint_SOURCES = main.cpp \
+                      maingui.cpp \
+                      maingui.h \
+                      maingui.moc.cpp
+
+BUILT_SOURCES = maingui.moc.cpp
 
 dist_man_MANS = ttfautohint.1
 
@@ -36,4 +49,4 @@ ttfautohint.1: $(top_srcdir)/frontend/main.cpp $(top_srcdir)/configure.ac
 	            --help-option=--help-all \
 	            ./ttfautohint$(EXEEXT)
 
-## end of Makefile.am
+# end of Makefile.am

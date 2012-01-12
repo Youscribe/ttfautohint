@@ -1,7 +1,7 @@
+/.deps/
 /Makefile
 /Makefile.in
 /ttfautohint
 /ttfautohint.1
+*.moc.cpp
 *.o
-*.a
-/.deps/
