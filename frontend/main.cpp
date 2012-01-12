@@ -455,34 +455,36 @@ main(int argc,
                 "  %s\n", error, error_string);
       exit(EXIT_FAILURE);
     }
-    else
-    {
-      int new_argc = new_arg_string.size();
-      char** new_argv = new char*[new_argc];
-
-
-      // construct new argc and argv variables from collected data
-      for (int i = 0; i < new_argc; i++)
-        new_argv[i] = const_cast<char*>(new_arg_string[i].data());
-
-//      Q_INIT_RESOURCE(application);
-
-      QApplication app(new_argc, new_argv);
-      app.setApplicationName("TTF autohint");
-      app.setApplicationVersion(VERSION);
-
-//      MainWindow mainWin(hinting_range_min, hinting_range_max,
-//                         ignore_permissions, pre_hinting, latin_fallback);
-//      mainwin.show();
-
-      return app.exec();
-    }
 
     fclose(in);
     fclose(out);
+
+    exit(EXIT_SUCCESS);
+  }
+  else
+  {
+    int new_argc = new_arg_string.size();
+    char** new_argv = new char*[new_argc];
+
+
+    // construct new argc and argv variables from collected data
+    for (int i = 0; i < new_argc; i++)
+      new_argv[i] = const_cast<char*>(new_arg_string[i].data());
+
+//    Q_INIT_RESOURCE(application);
+
+    QApplication app(new_argc, new_argv);
+    app.setApplicationName("TTF autohint");
+    app.setApplicationVersion(VERSION);
+
+//    Main_GUI gui(hinting_range_min, hinting_range_max,
+//                 ignore_permissions, pre_hinting, latin_fallback);
+//    gui.show();
+
+    return app.exec();
   }
 
-  exit(EXIT_SUCCESS);
+  return 0; // never reached
 }
 
 // end of main.cpp
