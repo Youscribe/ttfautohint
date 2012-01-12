@@ -22,7 +22,14 @@
 #include <getopt.h>
 #include <limits.h>
 
+#include <vector>
+#include <string>
+
+#include <QApplication>
+
 #include <ttfautohint.h>
+
+using namespace std;
 
 
 typedef struct Progress_Data_
@@ -211,7 +218,7 @@ main(int argc,
   FILE *in;
   FILE *out;
 
-  TA_Error error;
+  TA_Error error = TA_Err_Ok;
   const unsigned char* error_string;
 
   Progress_Data progress_data = {-1, 1, 0};
@@ -228,10 +235,15 @@ main(int argc,
 
   int tty = 0;
 
+  vector<string> new_arg_string;
+
 
   // make GNU, Qt, and X11 command line options look the same;
   // we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar',
   // and short options specific to ttfautohint
+
+  // set up a new argument string
+  new_arg_string.push_back(argv[0]);
 
   while (1)
   {
@@ -344,7 +356,18 @@ main(int argc,
       break;
 
     case PASS_THROUGH:
-      break;
+      {
+        // append argument with proper syntax for Qt
+        string arg;
+
+
+        arg += '-';
+        arg += long_options[option_index].name;
+        new_arg_string.push_back(arg);
+        if (optarg)
+          new_arg_string.push_back(optarg);
+        break;
+      }
 
     default:
       exit(EXIT_FAILURE);
@@ -369,70 +392,95 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
-  if (argc - optind != 2)
-    show_help(argv[0], 0, 1);
-
-  in = fopen(argv[optind], "rb");
-  if (!in)
+  if (tty)
   {
-    fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                    "\n"
-                    "  %s\n",
-                    argv[optind], strerror(errno));
-    exit(EXIT_FAILURE);
-  }
+    if (argc - optind != 2)
+      show_help(argv[0], 0, 1);
 
-  out = fopen(argv[optind + 1], "wb");
-  if (!out)
-  {
-    fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                    "\n"
-                    "  %s\n",
-                    argv[optind + 1], strerror(errno));
-    exit(EXIT_FAILURE);
-  }
+    in = fopen(argv[optind], "rb");
+    if (!in)
+    {
+      fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                      "\n"
+                      "  %s\n",
+                      argv[optind], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
 
-  error = TTF_autohint("in-file, out-file,"
-                       "hinting-range-min, hinting-range-max,"
-                       "error-string,"
-                       "progress-callback, progress-callback-data,"
-                       "ignore-permissions, pre-hinting, fallback-script",
-                       in, out,
-                       hinting_range_min, hinting_range_max,
-                       &error_string,
-                       progress_func, &progress_data,
-                       ignore_permissions, pre_hinting, latin_fallback);
+    out = fopen(argv[optind + 1], "wb");
+    if (!out)
+    {
+      fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                      "\n"
+                      "  %s\n",
+                      argv[optind + 1], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
 
-  if (error)
-  {
-    if (error == TA_Err_Invalid_FreeType_Version)
-      fprintf(stderr,
-              "FreeType version 2.4.5 or higher is needed.\n"
-              "Perhaps using a wrong FreeType DLL?\n");
-    else if (error == TA_Err_Missing_Legal_Permission)
-      fprintf(stderr,
-              "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
-              "This font must not be modified"
-                " without permission of the legal owner.\n"
-              "Use command line option `-i' to continue"
-                " if you have such a permission.\n");
-    else if (error == TA_Err_Missing_Unicode_CMap)
-      fprintf(stderr,
-              "No Unicode character map.\n");
-    else if (error == TA_Err_Missing_Glyph)
-      fprintf(stderr,
-              "No glyph for the key character"
+    error = TTF_autohint("in-file, out-file,"
+                         "hinting-range-min, hinting-range-max,"
+                         "error-string,"
+                         "progress-callback, progress-callback-data,"
+                         "ignore-permissions, pre-hinting, fallback-script",
+                         in, out,
+                         hinting_range_min, hinting_range_max,
+                         &error_string,
+                         progress_func, &progress_data,
+                         ignore_permissions, pre_hinting, latin_fallback);
+
+    if (error)
+    {
+      if (error == TA_Err_Invalid_FreeType_Version)
+        fprintf(stderr,
+                "FreeType version 2.4.5 or higher is needed.\n"
+                "Perhaps using a wrong FreeType DLL?\n");
+      else if (error == TA_Err_Missing_Legal_Permission)
+        fprintf(stderr,
+                "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
+                "This font must not be modified"
+                  " without permission of the legal owner.\n"
+                "Use command line option `-i' to continue"
+                  " if you have such a permission.\n");
+      else if (error == TA_Err_Missing_Unicode_CMap)
+        fprintf(stderr,
+                "No Unicode character map.\n");
+      else if (error == TA_Err_Missing_Glyph)
+        fprintf(stderr,
+                "No glyph for the key character"
                 " to derive standard width and height.\n"
-              "For the latin script, this key character is `o' (U+006F).\n");
+                "For the latin script, this key character is `o' (U+006F).\n");
+      else
+        fprintf(stderr,
+                "Error code `0x%02x' while autohinting font:\n"
+                "  %s\n", error, error_string);
+      exit(EXIT_FAILURE);
+    }
     else
-      fprintf(stderr,
-              "Error code `0x%02x' while autohinting font:\n"
-              "  %s\n", error, error_string);
-    exit(EXIT_FAILURE);
-  }
+    {
+      int new_argc = new_arg_string.size();
+      char** new_argv = new char*[new_argc];
 
-  fclose(in);
-  fclose(out);
+
+      // construct new argc and argv variables from collected data
+      for (int i = 0; i < new_argc; i++)
+        new_argv[i] = const_cast<char*>(new_arg_string[i].data());
+
+//      Q_INIT_RESOURCE(application);
+
+      QApplication app(new_argc, new_argv);
+      app.setApplicationName("TTF autohint");
+      app.setApplicationVersion(VERSION);
+
+//      MainWindow mainWin(hinting_range_min, hinting_range_max,
+//                         ignore_permissions, pre_hinting, latin_fallback);
+//      mainwin.show();
+
+      return app.exec();
+    }
+
+    fclose(in);
+    fclose(out);
+  }
 
   exit(EXIT_SUCCESS);
 }
