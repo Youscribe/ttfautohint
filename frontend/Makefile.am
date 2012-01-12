@@ -10,12 +10,16 @@
 # The file `COPYING' mentioned in the previous paragraph is distributed
 # with the ttfautohint library.
 
+AM_CXXFLAGS = $(QT_CXXFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/lib \
               -I$(top_builddir)/gnulib/src \
               -I$(top_srcdir)/gnulib/src \
+              $(QT_CPPFLAGS) \
               $(FREETYPE_CPPFLAGS)
 AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
              $(top_builddir)/gnulib/src/libgnu.la \
+             $(QT_LDFLAGS) \
+             $(QT_LIBS) \
              $(LTLIBINTL) \
              $(FREETYPE_LDFLAGS)
 
