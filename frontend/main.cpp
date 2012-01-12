@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <string.h>
 #include <getopt.h>
+#include <limits.h>
 
 #include <ttfautohint.h>
 
@@ -74,34 +75,96 @@ progress(long curr_idx,
 
 static void
 show_help(char* program_name,
+          int all,
           int is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
 
 
   fprintf(handle,
-"Usage: %s [OPTION] IN-FILE OUT-FILE\n"
+"Usage: %s [OPTION]... IN-FILE OUT-FILE\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
 "This program is a simple front-end to the `ttfautohint' library.\n"
 "\n",
           program_name);
+
+  fprintf(handle,
+"Long options can be given with one or two dashes,\n"
+"and with and without equal sign between option and argument.\n"
+"This means that the following forms are acceptable:\n"
+"`-foo=bar', `--foo=bar', `-foo bar', `--foo bar'.\n"
+"\n");
+
   fprintf(handle,
 "Options:\n"
 "  -f, --latin-fallback       set fallback script to latin\n"
 "  -h, --help                 display this help and exit\n"
+"      --help-all             show Qt and X11 specific options also\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum ppem value for generating hints\n"
 "  -p, --pre-hinting          apply original hints before generating hints\n");
   fprintf(handle,
 "  -r, --hinting-range-max=N  the maximum ppem value for generating hints\n"
+"  -t, --tty                  don't start a GUI\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
 "  -x, --x-height-snapping-exceptions=STRING\n"
 "                             specify a comma-separated list of x-height\n"
 "                             snapping exceptions ranges and single values\n"
 "\n");
+
+  if (all)
+  {
+    fprintf(handle,
+"Qt Options:\n"
+"      --graphicssystem=SYSTEM\n"
+"                             select a different graphics system backend\n"
+"                             instead of the default one\n"
+"                             (possible values: `raster', `opengl'\n"
+"      --reverse              set layout direction to right-to-left\n");
+    fprintf(handle,
+"      --session=ID           restore the application for the given ID\n"
+"      --style=STYLE          set application GUI style\n"
+"                             (possible values: motif, windows, platinum)\n"
+"      --stylesheet=SHEET     apply the given Qt stylesheet\n"
+"                             to the application widgets\n"
+"\n");
+
+    fprintf(handle,
+"X11 options:\n"
+"      --background=COLOR     set the default background color\n"
+"                             and an application palette\n"
+"                             (light and dark shades are calculated)\n"
+"      --bg=COLOR             same as --background\n"
+"      --btn=COLOR            set the default button color\n"
+"      --button=COLOR         same as --btn\n"
+"      --cmap                 use a private color map on an 8-bit display\n"
+"      --display=NAME         use the given X-server display\n");
+    fprintf(handle,
+"      --fg=COLOR             set the default foreground color\n"
+"      --fn=FONTNAME          set the application font\n"
+"      --font=FONTNAME        same as --fn\n"
+"      --foreground=COLOR     same as --fg\n"
+"      --geometry=GEOMETRY    set the client geometry of first window\n"
+"      --im=SERVER            set the X Input Method (XIM) server\n"
+"      --inputstyle=STYLE     set X Input Method input style\n"
+"                             (possible values: onthespot, overthespot,\n"
+"                             offthespot, root)\n");
+    fprintf(handle,
+"      --name=NAME            set the application name\n"
+"      --ncols=COUNT          limit the number of colors allocated\n"
+"                             in the color cube on an 8-bit display,\n"
+"                             if the application is using the\n"
+"                             QApplication::ManyColor color specification\n"
+"      --title=TITLE          set the application title (caption)\n"
+"      --visual=VISUAL        force the application\n"
+"                             to use the given visual on an 8-bit display\n"
+"                             (only possible value: TrueColor)\n"
+"\n");
+  }
+
   fprintf(handle,
 "The program accepts both TTF and TTC files as input.\n"
 "The `gasp' table of OUT-FILE enables grayscale hinting for all sizes.\n"
@@ -160,27 +223,72 @@ main(int argc,
   int pre_hinting = 0;
   int latin_fallback = 0;
 
+  int tty = 0;
+
+
+  /* make GNU, Qt, and X11 command line options look the same; */
+  /* we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar', */
+  /* and short options specific to ttfautohint */
 
   while (1)
   {
+    /* use pseudo short options for long-only options */
+    enum
+    {
+      PASS_THROUGH = CHAR_MAX + 1,
+      HELP_ALL_OPTION
+    };
+
     static struct option long_options[] =
     {
-      {"help", no_argument, 0, 'h'},
-      {"hinting-range-max", required_argument, 0, 'r'},
-      {"hinting-range-min", required_argument, 0, 'l'},
-      {"ignore-permissions", no_argument, 0, 'i'},
-      {"latin-fallback", no_argument, 0, 'f'},
-      {"pre-hinting", no_argument, 0, 'p'},
-      {"verbose", no_argument, 0, 'v'},
-      {"version", no_argument, 0, 'V'},
-      {"x-height-snapping-exceptions", required_argument, 0, 'x'},
-      {0, 0, 0, 0}
+      {"help", no_argument, NULL, 'h'},
+      {"help-all", no_argument, NULL, HELP_ALL_OPTION},
+
+      /* ttfautohint options */
+      {"hinting-range-max", required_argument, NULL, 'r'},
+      {"hinting-range-min", required_argument, NULL, 'l'},
+      {"ignore-permissions", no_argument, NULL, 'i'},
+      {"latin-fallback", no_argument, NULL, 'f'},
+      {"pre-hinting", no_argument, NULL, 'p'},
+      {"tty", no_argument, NULL, 't'},
+      {"verbose", no_argument, NULL, 'v'},
+      {"version", no_argument, NULL, 'V'},
+      {"x-height-snapping-exceptions", required_argument, NULL, 'x'},
+
+      /* Qt options */
+      {"graphicssystem", required_argument, NULL, PASS_THROUGH},
+      {"reverse", no_argument, NULL, PASS_THROUGH},
+      {"session", required_argument, NULL, PASS_THROUGH},
+      {"style", required_argument, NULL, PASS_THROUGH},
+      {"stylesheet", required_argument, NULL, PASS_THROUGH},
+
+      /* X11 options */
+      {"background", required_argument, NULL, PASS_THROUGH},
+      {"bg", required_argument, NULL, PASS_THROUGH},
+      {"btn", required_argument, NULL, PASS_THROUGH},
+      {"button", required_argument, NULL, PASS_THROUGH},
+      {"cmap", no_argument, NULL, PASS_THROUGH},
+      {"display", required_argument, NULL, PASS_THROUGH},
+      {"fg", required_argument, NULL, PASS_THROUGH},
+      {"fn", required_argument, NULL, PASS_THROUGH},
+      {"font", required_argument, NULL, PASS_THROUGH},
+      {"foreground", required_argument, NULL, PASS_THROUGH},
+      {"geometry", required_argument, NULL, PASS_THROUGH},
+      {"im", required_argument, NULL, PASS_THROUGH},
+      {"inputstyle", required_argument, NULL, PASS_THROUGH},
+      {"name", required_argument, NULL, PASS_THROUGH},
+      {"ncols", required_argument, NULL, PASS_THROUGH},
+      {"title", required_argument, NULL, PASS_THROUGH},
+      {"visual", required_argument, NULL, PASS_THROUGH},
+
+      {NULL, 0, NULL, 0}
     };
 
     int option_index = 0;
 
 
-    c = getopt_long(argc, argv, "fhil:r:pVvx:", long_options, &option_index);
+    c = getopt_long_only(argc, argv, "fhil:r:ptVvx:",
+                         long_options, &option_index);
     if (c == -1)
       break;
 
@@ -191,7 +299,7 @@ main(int argc,
       break;
 
     case 'h':
-      show_help(argv[0], 0);
+      show_help(argv[0], 0, 0);
       break;
 
     case 'i':
@@ -212,6 +320,10 @@ main(int argc,
       pre_hinting = 1;
       break;
 
+    case 't':
+      tty = 1;
+      break;
+
     case 'v':
       progress_func = progress;
       break;
@@ -222,6 +334,13 @@ main(int argc,
 
     case 'x':
       fprintf(stderr, "Option `-x' not implemented yet\n");
+      break;
+
+    case HELP_ALL_OPTION:
+      show_help(argv[0], 1, 0);
+      break;
+
+    case PASS_THROUGH:
       break;
 
     default:
@@ -248,7 +367,7 @@ main(int argc,
   }
 
   if (argc - optind != 2)
-    show_help(argv[0], 1);
+    show_help(argv[0], 0, 1);
 
   in = fopen(argv[optind], "rb");
   if (!in)

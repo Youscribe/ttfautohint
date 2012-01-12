@@ -29,6 +29,7 @@ ttfautohint.1: $(top_srcdir)/frontend/main.cpp $(top_srcdir)/configure.ac
 	$(HELP2MAN) --output=$@ \
 	            --no-info \
 	            --name="add new auto-generated hints to a TrueType font" \
+	            --help-option=--help-all \
 	            ./ttfautohint$(EXEEXT)
 
 ## end of Makefile.am
