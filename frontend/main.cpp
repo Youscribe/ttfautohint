@@ -35,7 +35,7 @@ using namespace std;
 typedef struct Progress_Data_
 {
   long last_sfnt;
-  int begin;
+  bool begin;
   int last_percent;
 } Progress_Data;
 
@@ -56,14 +56,14 @@ progress(long curr_idx,
   {
     fprintf(stderr, "subfont %ld of %ld\n", curr_sfnt + 1, num_sfnts);
     data->last_sfnt = curr_sfnt;
-    data->begin = 1;
+    data->begin = true;
   }
 
   if (data->begin)
   {
     fprintf(stderr, "  %ld glyphs\n"
                     "   ", num_glyphs);
-    data->begin = 0;
+    data->begin = false;
   }
 
   // print progress approx. every 10%
@@ -82,8 +82,8 @@ progress(long curr_idx,
 
 static void
 show_help(char* program_name,
-          int all,
-          int is_error)
+          bool all,
+          bool is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
 
@@ -196,14 +196,11 @@ static void
 show_version(void)
 {
   fprintf(stdout,
-
 "ttfautohint version " VERSION "\n"
 "Copyright (C) 2011-2012 Werner Lemberg <wl@gnu.org>.\n"
 "License: FreeType License (FTL) or GNU GPLv2.\n"
 "This is free software: you are free to change and redistribute it.\n"
-"There is NO WARRANTY, to the extent permitted by law.\n"
-
-  );
+"There is NO WARRANTY, to the extent permitted by law.\n");
 
   exit(EXIT_SUCCESS);
 }
@@ -226,14 +223,14 @@ main(int argc,
 
   int hinting_range_min = 0;
   int hinting_range_max = 0;
-  int have_hinting_range_min = 0;
-  int have_hinting_range_max = 0;
+  bool have_hinting_range_min = false;
+  bool have_hinting_range_max = false;
 
-  int ignore_permissions = 0;
-  int pre_hinting = 0;
-  int latin_fallback = 0;
+  bool ignore_permissions = false;
+  bool pre_hinting = false;
+  int latin_fallback = 0; // leave it as int; this probably gets extended
 
-  int tty = 0;
+  bool tty = false;
 
   vector<string> new_arg_string;
 
@@ -314,29 +311,29 @@ main(int argc,
       break;
 
     case 'h':
-      show_help(argv[0], 0, 0);
+      show_help(argv[0], false, false);
       break;
 
     case 'i':
-      ignore_permissions = 1;
+      ignore_permissions = true;
       break;
 
     case 'l':
       hinting_range_min = atoi(optarg);
-      have_hinting_range_min = 1;
+      have_hinting_range_min = true;
       break;
 
     case 'r':
       hinting_range_max = atoi(optarg);
-      have_hinting_range_max = 1;
+      have_hinting_range_max = true;
       break;
 
     case 'p':
-      pre_hinting = 1;
+      pre_hinting = true;
       break;
 
     case 't':
-      tty = 1;
+      tty = true;
       break;
 
     case 'v':
@@ -352,7 +349,7 @@ main(int argc,
       break;
 
     case HELP_ALL_OPTION:
-      show_help(argv[0], 1, 0);
+      show_help(argv[0], true, false);
       break;
 
     case PASS_THROUGH:
@@ -395,7 +392,7 @@ main(int argc,
   if (tty)
   {
     if (argc - optind != 2)
-      show_help(argv[0], 0, 1);
+      show_help(argv[0], false, true);
 
     in = fopen(argv[optind], "rb");
     if (!in)
