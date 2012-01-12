@@ -26,7 +26,7 @@ class Main_GUI
   Q_OBJECT
 
 public:
-  Main_GUI(int, int, int, int, int);
+  Main_GUI(int, int, bool, bool, int);
 
 protected:
   void closeEvent(QCloseEvent *event);
@@ -46,7 +46,6 @@ private:
   void readSettings();
   void writeSettings();
   void setCurrentFile(const QString &fileName);
-  QPlainTextEdit *textEdit;
 
   QMenu *helpMenu;
   QAction *exitAct;

@@ -17,8 +17,8 @@
 
 Main_GUI::Main_GUI(int range_min,
                    int range_max,
-                   int ignore,
-                   int pre,
+                   bool ignore,
+                   bool pre,
                    int fallback)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
