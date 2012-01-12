@@ -82,13 +82,14 @@ show_help(char* program_name,
 
 
   fprintf(handle,
-"Usage: %s [OPTION]... IN-FILE OUT-FILE\n"
+"Usage: %s --tty [OPTION]... IN-FILE OUT-FILE\n"
+"  or:  %s [OPTION]...\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
 "This program is a simple front-end to the `ttfautohint' library.\n"
 "\n",
-          program_name);
+          program_name, program_name);
 
   fprintf(handle,
 "Long options can be given with one or two dashes,\n"
@@ -122,7 +123,7 @@ show_help(char* program_name,
 "      --graphicssystem=SYSTEM\n"
 "                             select a different graphics system backend\n"
 "                             instead of the default one\n"
-"                             (possible values: `raster', `opengl'\n"
+"                             (possible values: `raster', `opengl')\n"
 "      --reverse              set layout direction to right-to-left\n");
     fprintf(handle,
 "      --session=ID           restore the application for the given ID\n"
@@ -167,10 +168,12 @@ show_help(char* program_name,
 
   fprintf(handle,
 "The program accepts both TTF and TTC files as input.\n"
-"The `gasp' table of OUT-FILE enables grayscale hinting for all sizes.\n"
+"The `gasp' table of the output file enables grayscale hinting for all sizes.\n"
 "Use option -i only if you have a legal permission to modify the font.\n"
 "If option -f is not set, glyphs not in the latin range stay unhinted.\n"
 "The used ppem value for option -p is FUnits per em, normally 2048.\n"
+"\n"
+"If run in GUI mode, options not related to Qt or X11 set default values.\n"
 "\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
 "FreeType home page: <http://www.freetype.org>\n");
