@@ -226,13 +226,13 @@ main(int argc,
   int tty = 0;
 
 
-  /* make GNU, Qt, and X11 command line options look the same; */
-  /* we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar', */
-  /* and short options specific to ttfautohint */
+  // make GNU, Qt, and X11 command line options look the same;
+  // we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar',
+  // and short options specific to ttfautohint
 
   while (1)
   {
-    /* use pseudo short options for long-only options */
+    // use pseudo short options for long-only options
     enum
     {
       PASS_THROUGH = CHAR_MAX + 1,
@@ -244,7 +244,7 @@ main(int argc,
       {"help", no_argument, NULL, 'h'},
       {"help-all", no_argument, NULL, HELP_ALL_OPTION},
 
-      /* ttfautohint options */
+      // ttfautohint options
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
       {"ignore-permissions", no_argument, NULL, 'i'},
@@ -255,14 +255,14 @@ main(int argc,
       {"version", no_argument, NULL, 'V'},
       {"x-height-snapping-exceptions", required_argument, NULL, 'x'},
 
-      /* Qt options */
+      // Qt options
       {"graphicssystem", required_argument, NULL, PASS_THROUGH},
       {"reverse", no_argument, NULL, PASS_THROUGH},
       {"session", required_argument, NULL, PASS_THROUGH},
       {"style", required_argument, NULL, PASS_THROUGH},
       {"stylesheet", required_argument, NULL, PASS_THROUGH},
 
-      /* X11 options */
+      // X11 options
       {"background", required_argument, NULL, PASS_THROUGH},
       {"bg", required_argument, NULL, PASS_THROUGH},
       {"btn", required_argument, NULL, PASS_THROUGH},
