@@ -49,9 +49,6 @@ progress(long curr_idx,
          void *user)
 {
   Progress_Data* data = (Progress_Data*)user;
-  int curr_percent;
-  int curr_diff;
-
 
   if (num_sfnts > 1 && curr_sfnt != data->last_sfnt)
   {
@@ -68,8 +65,9 @@ progress(long curr_idx,
   }
 
   // print progress approx. every 10%
-  curr_percent = curr_idx * 100 / num_glyphs;
-  curr_diff = curr_percent - data->last_percent;
+  int curr_percent = curr_idx * 100 / num_glyphs;
+  int curr_diff = curr_percent - data->last_percent;
+
   if (curr_diff >= 10)
   {
     fprintf(stderr, " %d%%", curr_percent);
@@ -87,7 +85,6 @@ show_help(char* program_name,
           bool is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
-
 
   fprintf(handle,
 "Usage: %s --tty [OPTION]... IN-FILE OUT-FILE\n"
@@ -194,7 +191,7 @@ show_help(char* program_name,
 
 
 static void
-show_version(void)
+show_version()
 {
   fprintf(stdout,
 "ttfautohint version " VERSION "\n"
@@ -211,17 +208,6 @@ int
 main(int argc,
      char** argv)
 {
-  int c;
-
-  FILE *in;
-  FILE *out;
-
-  TA_Error error = TA_Err_Ok;
-  const unsigned char* error_string;
-
-  Progress_Data progress_data = {-1, 1, 0};
-  TA_Progress_Func progress_func = NULL;
-
   int hinting_range_min = 0;
   int hinting_range_max = 0;
   bool have_hinting_range_min = false;
@@ -231,16 +217,16 @@ main(int argc,
   bool pre_hinting = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
 
+  TA_Progress_Func progress_func = NULL;
+
   bool tty = false;
-
-  vector<string> new_arg_string;
-
 
   // make GNU, Qt, and X11 command line options look the same;
   // we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar',
   // and short options specific to ttfautohint
 
   // set up a new argument string
+  vector<string> new_arg_string;
   new_arg_string.push_back(argv[0]);
 
   while (1)
@@ -297,11 +283,9 @@ main(int argc,
       {NULL, 0, NULL, 0}
     };
 
-    int option_index = 0;
-
-
-    c = getopt_long_only(argc, argv, "fhil:r:ptVvx:",
-                         long_options, &option_index);
+    int option_index;
+    int c = getopt_long_only(argc, argv, "fhil:r:ptVvx:",
+                             long_options, &option_index);
     if (c == -1)
       break;
 
@@ -357,10 +341,9 @@ main(int argc,
       {
         // append argument with proper syntax for Qt
         string arg;
-
-
         arg += '-';
         arg += long_options[option_index].name;
+
         new_arg_string.push_back(arg);
         if (optarg)
           new_arg_string.push_back(optarg);
@@ -392,10 +375,11 @@ main(int argc,
 
   if (tty)
   {
+    // on the console we need in and out file arguments
     if (argc - optind != 2)
       show_help(argv[0], false, true);
 
-    in = fopen(argv[optind], "rb");
+    FILE* in = fopen(argv[optind], "rb");
     if (!in)
     {
       fprintf(stderr, "The following error occurred while opening font `%s':\n"
@@ -405,7 +389,7 @@ main(int argc,
       exit(EXIT_FAILURE);
     }
 
-    out = fopen(argv[optind + 1], "wb");
+    FILE* out = fopen(argv[optind + 1], "wb");
     if (!out)
     {
       fprintf(stderr, "The following error occurred while opening font `%s':\n"
@@ -415,16 +399,20 @@ main(int argc,
       exit(EXIT_FAILURE);
     }
 
-    error = TTF_autohint("in-file, out-file,"
-                         "hinting-range-min, hinting-range-max,"
-                         "error-string,"
-                         "progress-callback, progress-callback-data,"
-                         "ignore-permissions, pre-hinting, fallback-script",
-                         in, out,
-                         hinting_range_min, hinting_range_max,
-                         &error_string,
-                         progress_func, &progress_data,
-                         ignore_permissions, pre_hinting, latin_fallback);
+    const unsigned char* error_string;
+    Progress_Data progress_data = {-1, 1, 0};
+
+    TA_Error error =
+      TTF_autohint("in-file, out-file,"
+                   "hinting-range-min, hinting-range-max,"
+                   "error-string,"
+                   "progress-callback, progress-callback-data,"
+                   "ignore-permissions, pre-hinting, fallback-script",
+                   in, out,
+                   hinting_range_min, hinting_range_max,
+                   &error_string,
+                   progress_func, &progress_data,
+                   ignore_permissions, pre_hinting, latin_fallback);
 
     if (error)
     {
@@ -463,7 +451,6 @@ main(int argc,
   {
     int new_argc = new_arg_string.size();
     char** new_argv = new char*[new_argc];
-
 
     // construct new argc and argv variables from collected data
     for (int i = 0; i < new_argc; i++)
