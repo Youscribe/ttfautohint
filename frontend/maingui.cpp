@@ -26,18 +26,18 @@ Main_GUI::Main_GUI(int range_min,
   pre_hinting(pre),
   latin_fallback(fallback)
 {
-  createActions();
-  createMenus();
+  create_actions();
+  create_menus();
 
-  readSettings();
+  read_settings();
 
   setUnifiedTitleAndToolBarOnMac(true);
 }
 
 
-void Main_GUI::closeEvent(QCloseEvent *event)
+void Main_GUI::close_event(QCloseEvent *event)
 {
-  writeSettings();
+  write_settings();
   event->accept();
 }
 
@@ -51,29 +51,29 @@ void Main_GUI::about()
 }
 
 
-void Main_GUI::createActions()
+void Main_GUI::create_actions()
 {
-  exitAct = new QAction(tr("E&xit"), this);
-  exitAct->setShortcuts(QKeySequence::Quit);
-  connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+  exit_act = new QAction(tr("E&xit"), this);
+  exit_act->setShortcuts(QKeySequence::Quit);
+  connect(exit_act, SIGNAL(triggered()), this, SLOT(close()));
 
-  aboutAct = new QAction(tr("&About"), this);
-  connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+  about_act = new QAction(tr("&About"), this);
+  connect(about_act, SIGNAL(triggered()), this, SLOT(about()));
 
-  aboutQtAct = new QAction(tr("About &Qt"), this);
-  connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+  about_Qt_act = new QAction(tr("About &Qt"), this);
+  connect(about_Qt_act, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 }
 
 
-void Main_GUI::createMenus()
+void Main_GUI::create_menus()
 {
-  helpMenu = menuBar()->addMenu(tr("&Help"));
-  helpMenu->addAction(aboutAct);
-  helpMenu->addAction(aboutQtAct);
+  help_menu = menuBar()->addMenu(tr("&Help"));
+  help_menu->addAction(about_act);
+  help_menu->addAction(about_Qt_act);
 }
 
 
-void Main_GUI::readSettings()
+void Main_GUI::read_settings()
 {
   QSettings settings;
 //  QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
@@ -83,7 +83,7 @@ void Main_GUI::readSettings()
 }
 
 
-void Main_GUI::writeSettings()
+void Main_GUI::write_settings()
 {
   QSettings settings;
 //  settings.setValue("pos", pos());

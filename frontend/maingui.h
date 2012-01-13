@@ -29,7 +29,7 @@ public:
   Main_GUI(int, int, bool, bool, int);
 
 protected:
-  void closeEvent(QCloseEvent *event);
+  void close_event(QCloseEvent *event);
 
 private slots:
   void about();
@@ -41,16 +41,15 @@ private:
   int pre_hinting;
   int latin_fallback;
 
-  void createActions();
-  void createMenus();
-  void readSettings();
-  void writeSettings();
-  void setCurrentFile(const QString &fileName);
+  void create_actions();
+  void create_menus();
+  void read_settings();
+  void write_settings();
 
-  QMenu *helpMenu;
-  QAction *exitAct;
-  QAction *aboutAct;
-  QAction *aboutQtAct;
+  QMenu *help_menu;
+  QAction *exit_act;
+  QAction *about_act;
+  QAction *about_Qt_act;
 };
 
 #endif /* __MAINGUI_H__ */
