@@ -46,7 +46,7 @@ progress(long curr_idx,
          long num_glyphs,
          long curr_sfnt,
          long num_sfnts,
-         void *user)
+         void* user)
 {
   Progress_Data* data = (Progress_Data*)user;
 

@@ -51,7 +51,7 @@ TA_font_init(FONT* font)
 
 void
 TA_font_unload(FONT* font,
-               const char *in_buf,
+               const char* in_buf,
                char** out_bufp)
 {
   /* in case of error it is expected that unallocated pointers */

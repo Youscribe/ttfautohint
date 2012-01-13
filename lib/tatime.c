@@ -35,8 +35,8 @@ typedef uint64_t TA_ULongLong;
 
 
 void
-TA_get_current_time(FT_ULong *high,
-                    FT_ULong *low)
+TA_get_current_time(FT_ULong* high,
+                    FT_ULong* low)
 {
   /* there have been 24107 days between January 1st, 1904 (the epoch of */
   /* OpenType), and January 1st, 1970 (the epoch of the `time' function) */

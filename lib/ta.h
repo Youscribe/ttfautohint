@@ -190,7 +190,7 @@ typedef struct FONT_
 
   /* configuration options */
   TA_Progress_Func progress;
-  void *progress_data;
+  void* progress_data;
   FT_UInt hinting_range_min;
   FT_UInt hinting_range_max;
   FT_Bool pre_hinting;
@@ -209,14 +209,14 @@ const char*
 TA_get_error_message(FT_Error error);
 
 void
-TA_get_current_time(FT_ULong *high,
-                    FT_ULong *low);
+TA_get_current_time(FT_ULong* high,
+                    FT_ULong* low);
 
 FT_Error
 TA_font_init(FONT* font);
 void
 TA_font_unload(FONT* font,
-               const char *in_buf,
+               const char* in_buf,
                char** out_bufp);
 
 FT_Error

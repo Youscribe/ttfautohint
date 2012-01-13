@@ -1400,7 +1400,7 @@ TA_hints_recorder(TA_Action action,
 
 
 static FT_Error
-TA_init_recorder(Recorder *recorder,
+TA_init_recorder(Recorder* recorder,
                  FT_UInt wrap_around_size,
                  FONT* font,
                  GLYPH* glyph,
@@ -1501,7 +1501,7 @@ TA_rewind_recorder(Recorder* recorder,
 
 
 static void
-TA_free_recorder(Recorder *recorder)
+TA_free_recorder(Recorder* recorder)
 {
   free(recorder->wrap_around_segments);
 
@@ -1631,7 +1631,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* can be inserted later on */
   ta_loader_register_hints_recorder(font->loader,
                                     TA_hints_recorder,
-                                    (void *)&recorder);
+                                    (void*)&recorder);
 
   for (size = font->hinting_range_min;
        size <= font->hinting_range_max;

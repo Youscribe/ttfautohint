@@ -678,7 +678,7 @@ TA_sfnt_update_GPOS_table(SFNT* sfnt,
   {
     FT_Byte* Lookup;
     FT_UShort LookupType;
-    FT_Byte *q;
+    FT_Byte* q;
     FT_Error error = TA_Err_Ok;
 
 

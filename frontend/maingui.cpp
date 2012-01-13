@@ -35,7 +35,7 @@ Main_GUI::Main_GUI(int range_min,
 }
 
 
-void Main_GUI::close_event(QCloseEvent *event)
+void Main_GUI::close_event(QCloseEvent* event)
 {
   write_settings();
   event->accept();

@@ -46,7 +46,7 @@ typedef void
                     long num_glyphs,
                     long curr_sfnt,
                     long num_sfnts,
-                    void *progress_data);
+                    void* progress_data);
 
 
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */

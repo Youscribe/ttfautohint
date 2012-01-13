@@ -64,7 +64,7 @@ ta_loader_load_glyph(TA_Loader loader,
 void
 ta_loader_register_hints_recorder(TA_Loader loader,
                                   TA_Hints_Recorder hints_recorder,
-                                  void *user);
+                                  void* user);
 
 #endif /* __TALOADER_H__ */
 

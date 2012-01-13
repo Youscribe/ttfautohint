@@ -57,7 +57,7 @@ TTF_autohint(const char* options,
   FT_Bool pre_hinting = 0;
   FT_UInt fallback_script = 0;
 
-  const char *op;
+  const char* op;
 
 
   if (!options || !*options)

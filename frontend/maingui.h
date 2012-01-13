@@ -29,7 +29,7 @@ public:
   Main_GUI(int, int, bool, bool, int);
 
 protected:
-  void close_event(QCloseEvent *event);
+  void close_event(QCloseEvent*);
 
 private slots:
   void about();
@@ -46,10 +46,10 @@ private:
   void read_settings();
   void write_settings();
 
-  QMenu *help_menu;
-  QAction *exit_act;
-  QAction *about_act;
-  QAction *about_Qt_act;
+  QMenu* help_menu;
+  QAction* exit_act;
+  QAction* about_act;
+  QAction* about_Qt_act;
 };
 
 #endif /* __MAINGUI_H__ */

@@ -43,7 +43,7 @@ TA_error TA_Errors[] =
 const char*
 TA_get_error_message(FT_Error error)
 {
-  TA_error *e = TA_Errors;
+  TA_error* e = TA_Errors;
 
 
   while (e->err_code || e->err_msg)

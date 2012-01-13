@@ -200,7 +200,7 @@ typedef struct TA_Script_UniRangeRec_
 #define TA_UNIRANGE_REC(a, b) \
           { (FT_UInt32)(a), (FT_UInt32)(b) }
 
-typedef const TA_Script_UniRangeRec *TA_Script_UniRange;
+typedef const TA_Script_UniRangeRec* TA_Script_UniRange;
 
 typedef struct TA_ScriptClassRec_
 {

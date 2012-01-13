@@ -387,7 +387,7 @@ typedef struct TA_GlyphHintsRec_
   FT_Pos xmax_delta;
 
   TA_Hints_Recorder recorder;
-  void *user;
+  void* user;
 } TA_GlyphHintsRec;
 
 
