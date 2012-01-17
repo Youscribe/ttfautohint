@@ -36,14 +36,16 @@ Main_GUI::Main_GUI(int range_min,
 }
 
 
-void Main_GUI::close_event(QCloseEvent* event)
+void
+Main_GUI::close_event(QCloseEvent* event)
 {
   write_settings();
   event->accept();
 }
 
 
-void Main_GUI::about()
+void
+Main_GUI::about()
 {
   QMessageBox::about(this,
                      tr("About TTFautohint"),
@@ -52,7 +54,8 @@ void Main_GUI::about()
 }
 
 
-void Main_GUI::create_layout()
+void
+Main_GUI::create_layout()
 {
   // file stuff
   QLabel* input_label = new QLabel(tr("Input File:"));
@@ -147,7 +150,8 @@ void Main_GUI::create_layout()
 }
 
 
-void Main_GUI::create_actions()
+void
+Main_GUI::create_actions()
 {
   exit_act = new QAction(tr("E&xit"), this);
   exit_act->setShortcuts(QKeySequence::Quit);
@@ -161,7 +165,8 @@ void Main_GUI::create_actions()
 }
 
 
-void Main_GUI::create_menus()
+void
+Main_GUI::create_menus()
 {
   help_menu = menuBar()->addMenu(tr("&Help"));
   help_menu->addAction(about_act);
@@ -169,7 +174,8 @@ void Main_GUI::create_menus()
 }
 
 
-void Main_GUI::read_settings()
+void
+Main_GUI::read_settings()
 {
   QSettings settings;
 //  QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
@@ -179,7 +185,8 @@ void Main_GUI::read_settings()
 }
 
 
-void Main_GUI::write_settings()
+void
+Main_GUI::write_settings()
 {
   QSettings settings;
 //  settings.setValue("pos", pos());
