@@ -38,6 +38,9 @@ protected:
 
 private slots:
   void about();
+  void browse_input();
+  void browse_output();
+  void run();
 
 private:
   int hinting_range_min;
@@ -47,6 +50,7 @@ private:
   int latin_fallback;
 
   void create_layout();
+  void create_connections();
   void create_actions();
   void create_menus();
   void read_settings();
@@ -68,7 +72,6 @@ private:
   QCheckBox* pre_box;
   QCheckBox* ignore_box;
 
-  QPushButton* cancel_button;
   QPushButton* run_button;
 
   QAction* exit_act;

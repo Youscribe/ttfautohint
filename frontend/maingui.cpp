@@ -27,6 +27,7 @@ Main_GUI::Main_GUI(int range_min,
   latin_fallback(fallback)
 {
   create_layout();
+  create_connections();
   create_actions();
   create_menus();
 
@@ -51,6 +52,24 @@ Main_GUI::about()
                      tr("About TTFautohint"),
                      tr("<b>TTFautohint</b> adds new auto-generated hints"
                         " to a TrueType font or TrueType collection."));
+}
+
+
+void
+Main_GUI::browse_input()
+{
+}
+
+
+void
+Main_GUI::browse_output()
+{
+}
+
+
+void
+Main_GUI::run()
+{
 }
 
 
@@ -116,12 +135,10 @@ Main_GUI::create_layout()
   flags_layout->addStretch(2);
 
   // running
-  cancel_button = new QPushButton(tr("Cancel"));
   run_button = new QPushButton(tr("Run"));
+  run_button->setEnabled(false);
 
   QHBoxLayout* running_layout = new QHBoxLayout;
-  running_layout->addStretch(1);
-  running_layout->addWidget(cancel_button);
   running_layout->addStretch(1);
   running_layout->addWidget(run_button);
   running_layout->addStretch(1);
@@ -143,10 +160,16 @@ Main_GUI::create_layout()
   main_widget->setLayout(gui_layout);
   setCentralWidget(main_widget);
   setWindowTitle("TTFautohint");
+}
 
-  // connections
+
+void
+Main_GUI::create_connections()
+{
   connect(input_button, SIGNAL(clicked()), this, SLOT(browse_input()));
   connect(output_button, SIGNAL(clicked()), this, SLOT(browse_output()));
+
+  connect(run_button, SIGNAL(clicked()), this, SLOT(run()));
 }
 
 
