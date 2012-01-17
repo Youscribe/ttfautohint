@@ -17,8 +17,13 @@
 #include <QMainWindow>
 
 class QAction;
+class QLabel;
 class QMenu;
-class QPlainTextEdit;
+class QLineEdit;
+class QPushButton;
+class QSpinBox;
+class QComboBox;
+class QCheckBox;
 
 class Main_GUI
 : public QMainWindow
@@ -41,12 +46,31 @@ private:
   int pre_hinting;
   int latin_fallback;
 
+  void create_layout();
   void create_actions();
   void create_menus();
   void read_settings();
   void write_settings();
 
   QMenu* help_menu;
+
+  QLineEdit* input_line;
+  QPushButton* input_button;
+
+  QLineEdit* output_line;
+  QPushButton* output_button;
+
+  QSpinBox* min_box;
+  QSpinBox* max_box;
+
+  QComboBox* fallback_box;
+
+  QCheckBox* pre_box;
+  QCheckBox* ignore_box;
+
+  QPushButton* cancel_button;
+  QPushButton* run_button;
+
   QAction* exit_act;
   QAction* about_act;
   QAction* about_Qt_act;

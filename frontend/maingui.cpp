@@ -26,6 +26,7 @@ Main_GUI::Main_GUI(int range_min,
   pre_hinting(pre),
   latin_fallback(fallback)
 {
+  create_layout();
   create_actions();
   create_menus();
 
@@ -48,6 +49,101 @@ void Main_GUI::about()
                      tr("About TTFautohint"),
                      tr("<b>TTFautohint</b> adds new auto-generated hints"
                         " to a TrueType font or TrueType collection."));
+}
+
+
+void Main_GUI::create_layout()
+{
+  // file stuff
+  QLabel* input_label = new QLabel(tr("Input File:"));
+  input_line = new QLineEdit;
+  input_button = new QPushButton(tr("Browse..."));
+
+  QLabel* output_label = new QLabel(tr("Output File:"));
+  output_line = new QLineEdit;
+  output_button = new QPushButton(tr("Browse..."));
+
+  QGridLayout* file_layout = new QGridLayout;
+  file_layout->addWidget(input_label, 0, 0);
+  file_layout->addWidget(input_line, 0, 1);
+  file_layout->addWidget(input_button, 0, 2);
+  file_layout->addWidget(output_label, 1, 0);
+  file_layout->addWidget(output_line, 1, 1);
+  file_layout->addWidget(output_button, 1, 2);
+
+  // minmax controls
+  QLabel* min_label = new QLabel(tr("Minimum:"));
+  min_box = new QSpinBox;
+  min_box->setRange(2, 10000);
+  min_box->setValue(hinting_range_min);
+
+  QLabel* max_label = new QLabel(tr("Maximum:"));
+  max_box = new QSpinBox;
+  max_box->setRange(2, 10000);
+  max_box->setValue(hinting_range_max);
+
+  QGridLayout* minmax_layout = new QGridLayout;
+  minmax_layout->addWidget(min_label, 0, 0);
+  minmax_layout->addWidget(min_box, 0, 1);
+  minmax_layout->addWidget(max_label, 1, 0);
+  minmax_layout->addWidget(max_box, 1, 1);
+
+  // hinting and fallback controls
+  QLabel* hinting_label = new QLabel(tr("Hinting Range") + " ");
+  QLabel* fallback_label = new QLabel(tr("Fallback Script:"));
+  fallback_box = new QComboBox;
+  fallback_box->insertItem(0, tr("Latin"));
+
+  QHBoxLayout* hint_fallback_layout = new QHBoxLayout;
+  hint_fallback_layout->addWidget(hinting_label);
+  hint_fallback_layout->addLayout(minmax_layout);
+  hint_fallback_layout->addStretch(1);
+  hint_fallback_layout->addWidget(fallback_label);
+  hint_fallback_layout->addWidget(fallback_box);
+  hint_fallback_layout->addStretch(2);
+
+  // flags
+  pre_box = new QCheckBox(tr("Pre-hinting"), this);
+  ignore_box = new QCheckBox(tr("Ignore Permissions"), this);
+
+  QHBoxLayout* flags_layout = new QHBoxLayout;
+  flags_layout->addWidget(pre_box);
+  flags_layout->addStretch(1);
+  flags_layout->addWidget(ignore_box);
+  flags_layout->addStretch(2);
+
+  // running
+  cancel_button = new QPushButton(tr("Cancel"));
+  run_button = new QPushButton(tr("Run"));
+
+  QHBoxLayout* running_layout = new QHBoxLayout;
+  running_layout->addStretch(1);
+  running_layout->addWidget(cancel_button);
+  running_layout->addStretch(1);
+  running_layout->addWidget(run_button);
+  running_layout->addStretch(1);
+
+  // the whole gui
+  QVBoxLayout* gui_layout = new QVBoxLayout;
+  gui_layout->addSpacing(10); // XXX urgh, pixels...
+  gui_layout->addLayout(file_layout);
+  gui_layout->addSpacing(20); // XXX urgh, pixels...
+  gui_layout->addLayout(hint_fallback_layout);
+  gui_layout->addSpacing(20); // XXX urgh, pixels...
+  gui_layout->addLayout(flags_layout);
+  gui_layout->addSpacing(20); // XXX urgh, pixels...
+  gui_layout->addLayout(running_layout);
+  gui_layout->addSpacing(10); // XXX urgh, pixels...
+
+  // create dummy widget to register layout
+  QWidget* main_widget = new QWidget;
+  main_widget->setLayout(gui_layout);
+  setCentralWidget(main_widget);
+  setWindowTitle("TTFautohint");
+
+  // connections
+  connect(input_button, SIGNAL(clicked()), this, SLOT(browse_input()));
+  connect(output_button, SIGNAL(clicked()), this, SLOT(browse_output()));
 }
 
 
