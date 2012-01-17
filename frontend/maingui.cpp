@@ -84,6 +84,26 @@ Main_GUI::browse_output()
 
 
 void
+Main_GUI::check_min()
+{
+  int min = min_box->value();
+  int max = max_box->value();
+  if (min > max)
+    max_box->setValue(min);
+}
+
+
+void
+Main_GUI::check_max()
+{
+  int min = min_box->value();
+  int max = max_box->value();
+  if (max < min)
+    min_box->setValue(max);
+}
+
+
+void
 Main_GUI::check_run()
 {
   if (input_line->text().isEmpty() || output_line->text().isEmpty())
@@ -201,6 +221,11 @@ Main_GUI::create_connections()
           SLOT(check_run()));
   connect(output_line, SIGNAL(textChanged(QString)), this,
           SLOT(check_run()));
+
+  connect(min_box, SIGNAL(valueChanged(int)), this,
+          SLOT(check_min()));
+  connect(max_box, SIGNAL(valueChanged(int)), this,
+          SLOT(check_max()));
 
   connect(run_button, SIGNAL(clicked()), this,
           SLOT(run()));
