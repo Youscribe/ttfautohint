@@ -58,12 +58,38 @@ Main_GUI::about()
 void
 Main_GUI::browse_input()
 {
+  // XXX remember last directory
+  QString file = QFileDialog::getOpenFileName(
+                   this,
+                   tr("Open Input File"),
+                   QDir::toNativeSeparators(QDir::homePath()),
+                   "");
+  if (!file.isEmpty())
+    input_line->setText(file);
 }
 
 
 void
 Main_GUI::browse_output()
 {
+  // XXX remember last directory
+  QString file = QFileDialog::getOpenFileName(
+                   this,
+                   tr("Open Output File"),
+                   QDir::toNativeSeparators(QDir::homePath()),
+                   "");
+  if (!file.isEmpty())
+    output_line->setText(file);
+}
+
+
+void
+Main_GUI::check_run()
+{
+  if (input_line->text().isEmpty() || output_line->text().isEmpty())
+    run_button->setEnabled(false);
+  else
+    run_button->setEnabled(true);
 }
 
 
@@ -166,10 +192,18 @@ Main_GUI::create_layout()
 void
 Main_GUI::create_connections()
 {
-  connect(input_button, SIGNAL(clicked()), this, SLOT(browse_input()));
-  connect(output_button, SIGNAL(clicked()), this, SLOT(browse_output()));
+  connect(input_button, SIGNAL(clicked()), this,
+          SLOT(browse_input()));
+  connect(output_button, SIGNAL(clicked()), this,
+          SLOT(browse_output()));
 
-  connect(run_button, SIGNAL(clicked()), this, SLOT(run()));
+  connect(input_line, SIGNAL(textChanged(QString)), this,
+          SLOT(check_run()));
+  connect(output_line, SIGNAL(textChanged(QString)), this,
+          SLOT(check_run()));
+
+  connect(run_button, SIGNAL(clicked()), this,
+          SLOT(run()));
 }
 
 

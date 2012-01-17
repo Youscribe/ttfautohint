@@ -40,6 +40,7 @@ private slots:
   void about();
   void browse_input();
   void browse_output();
+  void check_run();
   void run();
 
 private:
