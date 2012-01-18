@@ -36,7 +36,7 @@ public:
   Main_GUI(int, int, bool, bool, int);
 
 protected:
-  void close_event(QCloseEvent*);
+  void closeEvent(QCloseEvent*);
 
 private slots:
   void about();
@@ -66,6 +66,7 @@ private:
   int open_files(QFile& in_file, const QString& in_name, FILE** in,
                  QFile& out_file, const QString& out_name, FILE** out);
 
+  QMenu* file_menu;
   QMenu* help_menu;
 
   QLineEdit* input_line;

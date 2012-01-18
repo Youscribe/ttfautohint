@@ -48,8 +48,10 @@ Main_GUI::Main_GUI(int range_min,
 }
 
 
+// overloading
+
 void
-Main_GUI::close_event(QCloseEvent* event)
+Main_GUI::closeEvent(QCloseEvent* event)
 {
   write_settings();
   event->accept();
@@ -399,6 +401,9 @@ Main_GUI::create_actions()
 void
 Main_GUI::create_menus()
 {
+  file_menu = menuBar()->addMenu(tr("&File"));
+  file_menu->addAction(exit_act);
+
   help_menu = menuBar()->addMenu(tr("&Help"));
   help_menu->addAction(about_act);
   help_menu->addAction(about_Qt_act);
