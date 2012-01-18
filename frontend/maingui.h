@@ -24,6 +24,8 @@ class QPushButton;
 class QSpinBox;
 class QComboBox;
 class QCheckBox;
+class QLocale;
+class QFile;
 
 class Main_GUI
 : public QMainWindow
@@ -59,6 +61,11 @@ private:
   void read_settings();
   void write_settings();
 
+  int check_filenames(const QFile&, const QString&,
+                      const QFile&, const QString&);
+  int open_files(QFile& in_file, const QString& in_name, FILE** in,
+                 QFile& out_file, const QString& out_name, FILE** out);
+
   QMenu* help_menu;
 
   QLineEdit* input_line;
@@ -80,6 +87,8 @@ private:
   QAction* exit_act;
   QAction* about_act;
   QAction* about_Qt_act;
+
+  QLocale* locale;
 };
 
 #endif /* __MAINGUI_H__ */

@@ -11,9 +11,14 @@
 // with the ttfautohint library.
 
 
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+
 #include <QtGui>
 
 #include "maingui.h"
+
 
 Main_GUI::Main_GUI(int range_min,
                    int range_max,
@@ -34,6 +39,12 @@ Main_GUI::Main_GUI(int range_min,
   read_settings();
 
   setUnifiedTitleAndToolBarOnMac(true);
+
+  // XXX register translations somewhere and loop over them
+  if (QLocale::system().name() == "en_US")
+    locale = new QLocale;
+  else
+    locale = new QLocale(QLocale::C);
 }
 
 
@@ -113,9 +124,147 @@ Main_GUI::check_run()
 }
 
 
+int
+Main_GUI::check_filenames(const QFile& in_file,
+                          const QString& in_name,
+                          const QFile& out_file,
+                          const QString& out_name)
+{
+  if (!in_file.exists())
+  {
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The file ")
+        + locale->quoteString(in_name)
+        + tr(" cannot be found."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  if (in_name == out_name)
+  {
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("Input and output file names must be different."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  if (out_file.exists())
+  {
+    int ret = QMessageBox::warning(
+                this,
+                "TTFautohint",
+                tr("The file ")
+                  + locale->quoteString(out_name)
+                  + tr(" already exists.\n")
+                  + tr("Overwrite?"),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No);
+    if (ret == QMessageBox::No)
+      return 0;
+  }
+
+  return 1;
+}
+
+
+int
+Main_GUI::open_files(QFile& in_file,
+                     const QString& in_name,
+                     FILE** in,
+                     QFile& out_file,
+                     const QString& out_name,
+                     FILE** out)
+{
+  if (!in_file.open(QIODevice::ReadOnly))
+  {
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The following error occurred while opening input font ")
+        + locale->quoteString(in_name)
+        + tr(":\n")
+        + in_file.errorString(),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  if (!out_file.open(QIODevice::WriteOnly))
+  {
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The following error occurred while opening output font ")
+        + locale->quoteString(in_name)
+        + tr(":\n")
+        + out_file.errorString(),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  const int buf_len = 1024;
+  char buf[buf_len];
+
+  *in = fdopen(in_file.handle(), "rb");
+  if (!*in)
+  {
+    strerror_r(errno, buf, buf_len);
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The following error occurred while opening input font ")
+        + locale->quoteString(in_name)
+        + tr(":\n")
+        + QString::fromLocal8Bit(buf),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  *out = fdopen(out_file.handle(), "rb");
+  if (!*out)
+  {
+    strerror_r(errno, buf, buf_len);
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The following error occurred while opening output font ")
+        + locale->quoteString(out_name)
+        + tr(":\n")
+        + QString::fromLocal8Bit(buf),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+    return 0;
+  }
+
+  return 1;
+}
+
+
 void
 Main_GUI::run()
 {
+  QFile in_file(QDir::fromNativeSeparators(input_line->text()));
+  QString in_name = QDir::toNativeSeparators(in_file.fileName());
+
+  QFile out_file(QDir::fromNativeSeparators(output_line->text()));
+  QString out_name = QDir::toNativeSeparators(out_file.fileName());
+
+  if (!check_filenames(in_file, in_name, out_file, out_name))
+    return;
+
+  // we need C file descriptors
+  FILE* in;
+  FILE* out;
+  if (!open_files(in_file, in_name, &in, out_file, out_name, &out))
+    return;
 }
 
 

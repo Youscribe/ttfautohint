@@ -29,6 +29,7 @@ AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
              $(QT_LDFLAGS) \
              $(QT_LIBS) \
              $(LTLIBINTL) \
+             $(LTLIBTHREAD) \
              $(FREETYPE_LDFLAGS)
 
 bin_PROGRAMS = ttfautohint
