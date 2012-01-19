@@ -274,13 +274,29 @@ void
 Main_GUI::create_layout()
 {
   // file stuff
-  QLabel* input_label = new QLabel(tr("Input File:"));
+  QCompleter* in_completer = new QCompleter(this);
+  QFileSystemModel* in_model = new QFileSystemModel(in_completer);
+  // XXX remember last directory
+  in_model->setRootPath(QDir::homePath());
+  in_completer->setModel(in_model);
+
+  QCompleter* out_completer = new QCompleter(this);
+  QFileSystemModel* out_model = new QFileSystemModel(out_completer);
+  // XXX remember last directory
+  out_model->setRootPath(QDir::homePath());
+  out_completer->setModel(out_model);
+
+  QLabel* input_label = new QLabel(tr("&Input File:"));
   input_line = new QLineEdit;
   input_button = new QPushButton(tr("Browse..."));
+  input_label->setBuddy(input_line);
+  input_line->setCompleter(in_completer);
 
-  QLabel* output_label = new QLabel(tr("Output File:"));
+  QLabel* output_label = new QLabel(tr("&Output File:"));
   output_line = new QLineEdit;
   output_button = new QPushButton(tr("Browse..."));
+  output_label->setBuddy(output_line);
+  output_line->setCompleter(out_completer);
 
   QGridLayout* file_layout = new QGridLayout;
   file_layout->addWidget(input_label, 0, 0);
@@ -291,13 +307,15 @@ Main_GUI::create_layout()
   file_layout->addWidget(output_button, 1, 2);
 
   // minmax controls
-  QLabel* min_label = new QLabel(tr("Minimum:"));
+  QLabel* min_label = new QLabel(tr("Mi&nimum:"));
   min_box = new QSpinBox;
+  min_label->setBuddy(min_box);
   min_box->setRange(2, 10000);
   min_box->setValue(hinting_range_min);
 
-  QLabel* max_label = new QLabel(tr("Maximum:"));
+  QLabel* max_label = new QLabel(tr("Ma&ximum:"));
   max_box = new QSpinBox;
+  max_label->setBuddy(max_box);
   max_box->setRange(2, 10000);
   max_box->setValue(hinting_range_max);
 
@@ -309,8 +327,9 @@ Main_GUI::create_layout()
 
   // hinting and fallback controls
   QLabel* hinting_label = new QLabel(tr("Hinting Range") + " ");
-  QLabel* fallback_label = new QLabel(tr("Fallback Script:"));
+  QLabel* fallback_label = new QLabel(tr("F&allback Script:"));
   fallback_box = new QComboBox;
+  fallback_label->setBuddy(fallback_box);
   fallback_box->insertItem(0, tr("Latin"));
 
   QHBoxLayout* hint_fallback_layout = new QHBoxLayout;
@@ -322,8 +341,8 @@ Main_GUI::create_layout()
   hint_fallback_layout->addStretch(2);
 
   // flags
-  pre_box = new QCheckBox(tr("Pre-hinting"), this);
-  ignore_box = new QCheckBox(tr("Ignore Permissions"), this);
+  pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
+  ignore_box = new QCheckBox(tr("I&gnore Permissions"), this);
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
@@ -332,7 +351,7 @@ Main_GUI::create_layout()
   flags_layout->addStretch(2);
 
   // running
-  run_button = new QPushButton(tr("Run"));
+  run_button = new QPushButton(tr("&Run"));
   run_button->setEnabled(false);
 
   QHBoxLayout* running_layout = new QHBoxLayout;
