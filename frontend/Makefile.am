@@ -24,13 +24,13 @@ AM_CPPFLAGS = -I$(top_srcdir)/lib \
               -I$(top_srcdir)/gnulib/src \
               $(QT_CPPFLAGS) \
               $(FREETYPE_CPPFLAGS)
-AM_LDFLAGS = $(top_builddir)/lib/libttfautohint.a \
-             $(top_builddir)/gnulib/src/libgnu.la \
-             $(QT_LDFLAGS) \
-             $(QT_LIBS) \
-             $(LTLIBINTL) \
-             $(LTLIBTHREAD) \
-             $(FREETYPE_LDFLAGS)
+AM_LDFLAGS = $(QT_LDFLAGS)
+LDADD = $(top_builddir)/lib/libttfautohint.a \
+        $(top_builddir)/gnulib/src/libgnu.la \
+        $(QT_LIBS) \
+        $(LTLIBINTL) \
+        $(LTLIBTHREAD) \
+        $(FREETYPE_LDFLAGS)
 
 bin_PROGRAMS = ttfautohint
 ttfautohint_SOURCES = main.cpp \

@@ -51,10 +51,10 @@ else
 fi
 
 FREETYPE_CPPFLAGS="`$ft_config --cflags`"
-FREETYPE_LDFLAGS="`$ft_config --libtool`"
+FREETYPE_LIBS="`$ft_config --libtool`"
 
 AC_SUBST(FREETYPE_CPPFLAGS)
-AC_SUBST(FREETYPE_LDFLAGS)
+AC_SUBST(FREETYPE_LIBS)
 
 
 AC_MSG_CHECKING([whether FreeType header files are version 2.4.5 or higher])
@@ -78,7 +78,7 @@ AC_MSG_CHECKING([whether FreeType library is version 2.4.5 or higher])
 old_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS=$FREETYPE_CPPFLAGS
 old_LIBS="$LIBS"
-LIBS=$FREETYPE_LDFLAGS
+LIBS=$FREETYPE_LIBS
 AC_LANG_PUSH([LTLIZED C])
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 
