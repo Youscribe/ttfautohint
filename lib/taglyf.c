@@ -32,9 +32,16 @@ TA_sfnt_build_glyf_hints(SFNT* sfnt,
     if (error)
       return error;
     if (font->progress)
-      font->progress(idx, face->num_glyphs,
-                     sfnt - font->sfnts, font->num_sfnts,
-                     font->progress_data);
+    {
+      FT_Int ret;
+
+
+      ret = font->progress(idx, face->num_glyphs,
+                           sfnt - font->sfnts, font->num_sfnts,
+                           font->progress_data);
+      if (ret)
+        return TA_Err_Canceled;
+    }
   }
 
   return FT_Err_Ok;

@@ -38,10 +38,14 @@ typedef int TA_Error;
  * and `num_sfnts' the total number of subfonts.  Currently, the ttfautohint
  * library only hints glyphs from the `glyf' table used in subfont 0.
  *
+ * If the return value is non-zero, `TTF_autohint' aborts with
+ * `TA_Err_Canceled'.  Use this for a `Cancel' button or similar features in
+ * interactive use.
+ *
  * `progress_data' is a void pointer to user supplied data.
  */
 
-typedef void
+typedef int
 (*TA_Progress_Func)(long curr_idx,
                     long num_glyphs,
                     long curr_sfnt,

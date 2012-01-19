@@ -59,6 +59,8 @@ TA_ERRORDEF_(Missing_Glyph,            0xF1, \
              "missing key character glyph")
 TA_ERRORDEF_(Missing_Unicode_CMap,     0xF2, \
              "missing Unicode character map")
+TA_ERRORDEF_(Canceled,                 0xF3, \
+             "execution canceled")
 
 #ifdef TA_ERROR_END_LIST
   TA_ERROR_END_LIST

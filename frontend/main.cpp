@@ -41,7 +41,7 @@ typedef struct Progress_Data_
 } Progress_Data;
 
 
-void
+int
 progress(long curr_idx,
          long num_glyphs,
          long curr_sfnt,
@@ -76,6 +76,8 @@ progress(long curr_idx,
 
   if (curr_idx + 1 == num_glyphs)
     fprintf(stderr, "\n");
+
+  return 0;
 }
 
 
