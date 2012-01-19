@@ -230,7 +230,7 @@ Main_GUI::open_files(QFile& in_file,
     return 0;
   }
 
-  *out = fdopen(out_file.handle(), "rb");
+  *out = fdopen(out_file.handle(), "wb");
   if (!*out)
   {
     strerror_r(errno, buf, buf_len);
