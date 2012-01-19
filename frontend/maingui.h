@@ -44,6 +44,8 @@ private slots:
   void browse_output();
   void check_min();
   void check_max();
+  void absolute_input();
+  void absolute_output();
   void check_run();
   void run();
 

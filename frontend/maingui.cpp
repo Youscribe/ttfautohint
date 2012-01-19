@@ -126,6 +126,28 @@ Main_GUI::check_run()
 }
 
 
+void
+Main_GUI::absolute_input()
+{
+  if (QDir::isRelativePath(input_line->text()))
+  {
+    QDir cur_path(QDir::currentPath() + "/" + input_line->text());
+    input_line->setText(cur_path.absolutePath());
+  }
+}
+
+
+void
+Main_GUI::absolute_output()
+{
+  if (QDir::isRelativePath(output_line->text()))
+  {
+    QDir cur_path(QDir::currentPath() + "/" + output_line->text());
+    output_line->setText(cur_path.absolutePath());
+  }
+}
+
+
 int
 Main_GUI::check_filenames(const QFile& in_file,
                           const QString& in_name,
@@ -274,29 +296,22 @@ void
 Main_GUI::create_layout()
 {
   // file stuff
-  QCompleter* in_completer = new QCompleter(this);
-  QFileSystemModel* in_model = new QFileSystemModel(in_completer);
-  // XXX remember last directory
-  in_model->setRootPath(QDir::homePath());
-  in_completer->setModel(in_model);
-
-  QCompleter* out_completer = new QCompleter(this);
-  QFileSystemModel* out_model = new QFileSystemModel(out_completer);
-  // XXX remember last directory
-  out_model->setRootPath(QDir::homePath());
-  out_completer->setModel(out_model);
+  QCompleter* completer = new QCompleter(this);
+  QFileSystemModel* model = new QFileSystemModel(completer);
+  model->setRootPath(QDir::rootPath());
+  completer->setModel(model);
 
   QLabel* input_label = new QLabel(tr("&Input File:"));
   input_line = new QLineEdit;
   input_button = new QPushButton(tr("Browse..."));
   input_label->setBuddy(input_line);
-  input_line->setCompleter(in_completer);
+  input_line->setCompleter(completer);
 
   QLabel* output_label = new QLabel(tr("&Output File:"));
   output_line = new QLineEdit;
   output_button = new QPushButton(tr("Browse..."));
   output_label->setBuddy(output_line);
-  output_line->setCompleter(out_completer);
+  output_line->setCompleter(completer);
 
   QGridLayout* file_layout = new QGridLayout;
   file_layout->addWidget(input_label, 0, 0);
@@ -391,6 +406,11 @@ Main_GUI::create_connections()
           SLOT(check_run()));
   connect(output_line, SIGNAL(textChanged(QString)), this,
           SLOT(check_run()));
+
+  connect(input_line, SIGNAL(editingFinished()), this,
+          SLOT(absolute_input()));
+  connect(output_line, SIGNAL(editingFinished()), this,
+          SLOT(absolute_output()));
 
   connect(min_box, SIGNAL(valueChanged(int)), this,
           SLOT(check_min()));
