@@ -277,6 +277,8 @@ Main_GUI::open_files(QFile& in_file,
 }
 
 
+extern "C" {
+
 struct GUI_Progress_Data
 {
   long last_sfnt;
@@ -339,6 +341,7 @@ gui_progress(long curr_idx,
   return 0;
 }
 
+} // extern "C"
 
 void
 Main_GUI::run()
@@ -362,6 +365,7 @@ Main_GUI::run()
 
   QProgressDialog dialog;
   dialog.setCancelButtonText(tr("Cancel"));
+  dialog.setMinimumDuration(1000);
   dialog.setWindowModality(Qt::WindowModal);
 
   GUI_Progress_Data gui_progress_data = {-1, true, &dialog};
