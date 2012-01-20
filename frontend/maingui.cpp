@@ -498,7 +498,8 @@ Main_GUI::create_layout()
   QLabel* fallback_label = new QLabel(tr("F&allback Script:"));
   fallback_box = new QComboBox;
   fallback_label->setBuddy(fallback_box);
-  fallback_box->insertItem(0, tr("Latin"));
+  fallback_box->insertItem(0, tr("None"));
+  fallback_box->insertItem(1, tr("Latin"));
 
   QHBoxLayout* hint_fallback_layout = new QHBoxLayout;
   hint_fallback_layout->addWidget(hinting_label);
