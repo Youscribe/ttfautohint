@@ -129,7 +129,8 @@ Main_GUI::check_run()
 void
 Main_GUI::absolute_input()
 {
-  if (QDir::isRelativePath(input_line->text()))
+  if (!input_line->text().isEmpty()
+      && QDir::isRelativePath(input_line->text()))
   {
     QDir cur_path(QDir::currentPath() + "/" + input_line->text());
     input_line->setText(cur_path.absolutePath());
@@ -140,7 +141,8 @@ Main_GUI::absolute_input()
 void
 Main_GUI::absolute_output()
 {
-  if (QDir::isRelativePath(output_line->text()))
+  if (!output_line->text().isEmpty()
+      && QDir::isRelativePath(output_line->text()))
   {
     QDir cur_path(QDir::currentPath() + "/" + output_line->text());
     output_line->setText(cur_path.absolutePath());
