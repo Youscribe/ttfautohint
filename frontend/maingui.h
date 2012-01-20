@@ -60,6 +60,7 @@ private:
   void create_connections();
   void create_actions();
   void create_menus();
+  void create_status_bar();
   void read_settings();
   void write_settings();
 

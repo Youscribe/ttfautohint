@@ -37,6 +37,7 @@ Main_GUI::Main_GUI(int range_min,
   create_connections();
   create_actions();
   create_menus();
+  create_status_bar();
 
   read_settings();
 
@@ -342,6 +343,8 @@ gui_progress(long curr_idx,
 void
 Main_GUI::run()
 {
+  statusBar()->clearMessage();
+
   QFile in_file(QDir::fromNativeSeparators(input_line->text()));
   QString in_name = QDir::toNativeSeparators(in_file.fileName());
 
@@ -433,6 +436,8 @@ Main_GUI::run()
 
     out_file.remove();
   }
+  else
+    statusBar()->showMessage(tr("Auto-hinting finished."));
 }
 
 
@@ -590,6 +595,13 @@ Main_GUI::create_menus()
   help_menu = menuBar()->addMenu(tr("&Help"));
   help_menu->addAction(about_act);
   help_menu->addAction(about_Qt_act);
+}
+
+
+void
+Main_GUI::create_status_bar()
+{
+  statusBar()->showMessage("");
 }
 
 
