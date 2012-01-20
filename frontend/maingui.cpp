@@ -19,6 +19,8 @@
 
 #include "maingui.h"
 
+#include <ttfautohint.h>
+
 
 Main_GUI::Main_GUI(int range_min,
                    int range_max,
@@ -274,6 +276,69 @@ Main_GUI::open_files(QFile& in_file,
 }
 
 
+struct GUI_Progress_Data
+{
+  long last_sfnt;
+  bool begin;
+  QProgressDialog* dialog;
+};
+
+
+int
+gui_progress(long curr_idx,
+             long num_glyphs,
+             long curr_sfnt,
+             long num_sfnts,
+             void* user)
+{
+  GUI_Progress_Data* data = (GUI_Progress_Data*)user;
+
+  if (num_sfnts > 1 && curr_sfnt != data->last_sfnt)
+  {
+    data->dialog->setLabelText(QCoreApplication::translate(
+                                 "GuiProgress",
+                                 "Auto-hinting subfont %1 of %2"
+                                 " with %3 glyphs...")
+                               .arg(curr_sfnt + 1)
+                               .arg(num_sfnts)
+                               .arg(num_glyphs));
+
+    if (curr_sfnt + 1 == num_sfnts)
+    {
+      data->dialog->setAutoReset(true);
+      data->dialog->setAutoClose(true);
+    }
+    else
+    {
+      data->dialog->setAutoReset(false);
+      data->dialog->setAutoClose(false);
+    }
+
+    data->last_sfnt = curr_sfnt;
+    data->begin = true;
+  }
+
+  if (data->begin)
+  {
+    if (num_sfnts == 1)
+      data->dialog->setLabelText(QCoreApplication::translate(
+                                   "GuiProgress",
+                                   "Auto-hinting %1 glyphs...")
+                                 .arg(num_glyphs));
+    data->dialog->setMaximum(num_glyphs - 1);
+
+    data->begin = false;
+  }
+
+  data->dialog->setValue(curr_idx);
+
+  if (data->dialog->wasCanceled())
+    return 1;
+
+  return 0;
+}
+
+
 void
 Main_GUI::run()
 {
@@ -291,6 +356,83 @@ Main_GUI::run()
   FILE* out;
   if (!open_files(in_file, in_name, &in, out_file, out_name, &out))
     return;
+
+  QProgressDialog dialog;
+  dialog.setCancelButtonText(tr("Cancel"));
+  dialog.setWindowModality(Qt::WindowModal);
+
+  GUI_Progress_Data gui_progress_data = {-1, true, &dialog};
+  const unsigned char* error_string;
+
+  TA_Error error =
+    TTF_autohint("in-file, out-file,"
+                 "hinting-range-min, hinting-range-max,"
+                 "error-string,"
+                 "progress-callback, progress-callback-data,"
+                 "ignore-permissions, pre-hinting,"
+                 "fallback-script",
+                 in, out,
+                 min_box->value(), max_box->value(),
+                 &error_string,
+                 gui_progress, &gui_progress_data,
+                 ignore_box->isChecked(), pre_box->isChecked(),
+                 fallback_box->currentIndex());
+
+  if (error)
+  {
+    if (error == TA_Err_Canceled)
+      ;
+    else if (error == TA_Err_Invalid_FreeType_Version)
+      QMessageBox::critical(
+        this,
+        "TTFautohint",
+        tr("FreeType version 2.4.5 or higher is needed.\n"
+           "Are you perhaps using a wrong FreeType DLL?"),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    else if (error == TA_Err_Missing_Legal_Permission)
+      QMessageBox::warning(
+        this,
+        "TTFautohint",
+        tr("Bit 1 in the %1 field of the %2 table is set:\n"
+           " This font must not be modified"
+           " without permission of the legal owner.\n"
+           "Set the %3 checkbox if you have such a permission,"
+           " then retry.")
+           .arg(locale->quoteString("fsType"))
+           .arg(locale->quoteString("OS/2"))
+           .arg(locale->quoteString("Ignore Permissions")),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    else if (error == TA_Err_Missing_Unicode_CMap)
+      QMessageBox::warning(
+        this,
+        "TTFautohint",
+        tr("No Unicode character map."),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    else if (error == TA_Err_Missing_Glyph)
+      QMessageBox::warning(
+        this,
+        "TTFautohint",
+        tr("No glyph for the key character"
+           " to derive standard width and height.\n"
+           "For the latin script, this key character is %1 (U+006F).")
+           .arg(locale->quoteString("o")),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    else
+      QMessageBox::warning(
+        this,
+        "TTFautohint",
+        tr("Error code 0x%1 while autohinting font:\n")
+           .arg(error, 2, 16, QLatin1Char('0'))
+          + QString::fromLocal8Bit((const char*)error_string),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+
+    out_file.remove();
+  }
 }
 
 
