@@ -457,12 +457,14 @@ Main_GUI::create_layout()
   QLabel* min_label = new QLabel(tr("Mi&nimum:"));
   min_box = new QSpinBox;
   min_label->setBuddy(min_box);
+  min_box->setKeyboardTracking(false);
   min_box->setRange(2, 10000);
   min_box->setValue(hinting_range_min);
 
   QLabel* max_label = new QLabel(tr("Ma&ximum:"));
   max_box = new QSpinBox;
   max_label->setBuddy(max_box);
+  max_box->setKeyboardTracking(false);
   max_box->setRange(2, 10000);
   max_box->setValue(hinting_range_max);
 
