@@ -78,7 +78,7 @@ Main_GUI::browse_input()
   QString file = QFileDialog::getOpenFileName(
                    this,
                    tr("Open Input File"),
-                   QDir::toNativeSeparators(QDir::homePath()),
+                   QDir::homePath(),
                    "");
   if (!file.isEmpty())
     input_line->setText(file);
@@ -92,7 +92,7 @@ Main_GUI::browse_output()
   QString file = QFileDialog::getOpenFileName(
                    this,
                    tr("Open Output File"),
-                   QDir::toNativeSeparators(QDir::homePath()),
+                   QDir::homePath(),
                    "");
   if (!file.isEmpty())
     output_line->setText(file);
@@ -132,11 +132,12 @@ Main_GUI::check_run()
 void
 Main_GUI::absolute_input()
 {
-  if (!input_line->text().isEmpty()
-      && QDir::isRelativePath(input_line->text()))
+  QString input_name = QDir::fromNativeSeparators(input_line->text());
+  if (!input_name.isEmpty()
+      && QDir::isRelativePath(input_name))
   {
-    QDir cur_path(QDir::currentPath() + "/" + input_line->text());
-    input_line->setText(cur_path.absolutePath());
+    QDir cur_path(QDir::currentPath() + "/" + input_name);
+    input_line->setText(QDir::toNativeSeparators(cur_path.absolutePath()));
   }
 }
 
@@ -144,35 +145,33 @@ Main_GUI::absolute_input()
 void
 Main_GUI::absolute_output()
 {
-  if (!output_line->text().isEmpty()
-      && QDir::isRelativePath(output_line->text()))
+  QString output_name = QDir::fromNativeSeparators(output_line->text());
+  if (!output_name.isEmpty()
+      && QDir::isRelativePath(output_name))
   {
-    QDir cur_path(QDir::currentPath() + "/" + output_line->text());
-    output_line->setText(cur_path.absolutePath());
+    QDir cur_path(QDir::currentPath() + "/" + output_name);
+    output_line->setText(QDir::toNativeSeparators(cur_path.absolutePath()));
   }
 }
 
 
 int
-Main_GUI::check_filenames(const QFile& in_file,
-                          const QString& in_name,
-                          const QFile& out_file,
-                          const QString& out_name)
+Main_GUI::check_filenames(const QString& input_name,
+                          const QString& output_name)
 {
-  if (!in_file.exists())
+  if (!QFile::exists(input_name))
   {
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The file ")
-        + locale->quoteString(in_name)
-        + tr(" cannot be found."),
+      tr("The file %1 cannot be found.")
+         .arg(locale->quoteString(input_name)),
       QMessageBox::Ok,
       QMessageBox::Ok);
     return 0;
   }
 
-  if (in_name == out_name)
+  if (input_name == output_name)
   {
     QMessageBox::warning(
       this,
@@ -183,15 +182,14 @@ Main_GUI::check_filenames(const QFile& in_file,
     return 0;
   }
 
-  if (out_file.exists())
+  if (QFile::exists(output_name))
   {
     int ret = QMessageBox::warning(
                 this,
                 "TTFautohint",
-                tr("The file ")
-                  + locale->quoteString(out_name)
-                  + tr(" already exists.\n")
-                  + tr("Overwrite?"),
+                tr("The file %1 already exists.\n"
+                   "Overwrite?")
+                   .arg(locale->quoteString(output_name)),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::No);
     if (ret == QMessageBox::No)
@@ -203,70 +201,38 @@ Main_GUI::check_filenames(const QFile& in_file,
 
 
 int
-Main_GUI::open_files(QFile& in_file,
-                     const QString& in_name,
+Main_GUI::open_files(const QString& input_name,
                      FILE** in,
-                     QFile& out_file,
-                     const QString& out_name,
+                     const QString& output_name,
                      FILE** out)
 {
-  if (!in_file.open(QIODevice::ReadOnly))
-  {
-    QMessageBox::warning(
-      this,
-      "TTFautohint",
-      tr("The following error occurred while opening input font ")
-        + locale->quoteString(in_name)
-        + tr(":\n")
-        + in_file.errorString(),
-      QMessageBox::Ok,
-      QMessageBox::Ok);
-    return 0;
-  }
-
-  if (!out_file.open(QIODevice::WriteOnly))
-  {
-    QMessageBox::warning(
-      this,
-      "TTFautohint",
-      tr("The following error occurred while opening output font ")
-        + locale->quoteString(in_name)
-        + tr(":\n")
-        + out_file.errorString(),
-      QMessageBox::Ok,
-      QMessageBox::Ok);
-    return 0;
-  }
-
   const int buf_len = 1024;
   char buf[buf_len];
 
-  *in = fdopen(in_file.handle(), "rb");
+  *in = fopen(qPrintable(input_name), "rb");
   if (!*in)
   {
     strerror_r(errno, buf, buf_len);
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The following error occurred while opening input font ")
-        + locale->quoteString(in_name)
-        + tr(":\n")
+      tr("The following error occurred while opening input file %s:\n")
+         .arg(locale->quoteString(QDir::toNativeSeparators(input_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
       QMessageBox::Ok);
     return 0;
   }
 
-  *out = fdopen(out_file.handle(), "wb");
+  *out = fopen(qPrintable(output_name), "wb");
   if (!*out)
   {
     strerror_r(errno, buf, buf_len);
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The following error occurred while opening output font ")
-        + locale->quoteString(out_name)
-        + tr(":\n")
+      tr("The following error occurred while opening output file %s:\n")
+         .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
       QMessageBox::Ok);
@@ -348,19 +314,15 @@ Main_GUI::run()
 {
   statusBar()->clearMessage();
 
-  QFile in_file(QDir::fromNativeSeparators(input_line->text()));
-  QString in_name = QDir::toNativeSeparators(in_file.fileName());
-
-  QFile out_file(QDir::fromNativeSeparators(output_line->text()));
-  QString out_name = QDir::toNativeSeparators(out_file.fileName());
-
-  if (!check_filenames(in_file, in_name, out_file, out_name))
+  QString input_name = QDir::fromNativeSeparators(input_line->text());
+  QString output_name = QDir::fromNativeSeparators(output_line->text());
+  if (!check_filenames(input_name, output_name))
     return;
 
-  // we need C file descriptors
-  FILE* in;
-  FILE* out;
-  if (!open_files(in_file, in_name, &in, out_file, out_name, &out))
+  // we need C file descriptors for communication with TTF_autohint
+  FILE* input;
+  FILE* output;
+  if (!open_files(input_name, &input, output_name, &output))
     return;
 
   QProgressDialog dialog;
@@ -378,12 +340,15 @@ Main_GUI::run()
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions, pre-hinting,"
                  "fallback-script",
-                 in, out,
+                 input, output,
                  min_box->value(), max_box->value(),
                  &error_string,
                  gui_progress, &gui_progress_data,
                  ignore_box->isChecked(), pre_box->isChecked(),
                  fallback_box->currentIndex());
+
+  fclose(input);
+  fclose(output);
 
   if (error)
   {
@@ -438,7 +403,21 @@ Main_GUI::run()
         QMessageBox::Ok,
         QMessageBox::Ok);
 
-    out_file.remove();
+    if (!remove(qPrintable(output_name)))
+    {
+      const int buf_len = 1024;
+      char buf[buf_len];
+
+      strerror_r(errno, buf, buf_len);
+      QMessageBox::warning(
+        this,
+        "TTFautohint",
+        tr("The following error occurred while removing output file %s:\n")
+           .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
+          + QString::fromLocal8Bit(buf),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    }
   }
   else
     statusBar()->showMessage(tr("Auto-hinting finished."));

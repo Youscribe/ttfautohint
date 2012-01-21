@@ -64,10 +64,8 @@ private:
   void read_settings();
   void write_settings();
 
-  int check_filenames(const QFile&, const QString&,
-                      const QFile&, const QString&);
-  int open_files(QFile& in_file, const QString& in_name, FILE** in,
-                 QFile& out_file, const QString& out_name, FILE** out);
+  int check_filenames(const QString&, const QString&);
+  int open_files(const QString&, FILE**, const QString&, FILE**);
 
   QMenu* file_menu;
   QMenu* help_menu;
