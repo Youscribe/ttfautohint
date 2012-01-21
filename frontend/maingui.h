@@ -16,6 +16,8 @@
 
 #include <QMainWindow>
 
+#include <ttfautohint.h>
+
 class QAction;
 class QLabel;
 class QMenu;
@@ -66,6 +68,7 @@ private:
 
   int check_filenames(const QString&, const QString&);
   int open_files(const QString&, FILE**, const QString&, FILE**);
+  void handle_error(TA_Error, const unsigned char*, QString);
 
   QMenu* file_menu;
   QMenu* help_menu;

@@ -309,6 +309,81 @@ gui_progress(long curr_idx,
 
 } // extern "C"
 
+
+void
+Main_GUI::handle_error(TA_Error error,
+                       const unsigned char* error_string,
+                       QString output_name)
+{
+  if (error == TA_Err_Canceled)
+     ;
+  else if (error == TA_Err_Invalid_FreeType_Version)
+    QMessageBox::critical(
+      this,
+      "TTFautohint",
+      tr("FreeType version 2.4.5 or higher is needed.\n"
+         "Are you perhaps using a wrong FreeType DLL?"),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+  else if (error == TA_Err_Missing_Legal_Permission)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("Bit 1 in the %1 field of the %2 table is set:\n"
+         " This font must not be modified"
+         " without permission of the legal owner.\n"
+         "Set the %3 checkbox if you have such a permission,"
+         " then retry.")
+         .arg(locale->quoteString("fsType"))
+         .arg(locale->quoteString("OS/2"))
+         .arg(locale->quoteString("Ignore Permissions")),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+  else if (error == TA_Err_Missing_Unicode_CMap)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("No Unicode character map."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+  else if (error == TA_Err_Missing_Glyph)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("No glyph for the key character"
+         " to derive standard width and height.\n"
+         "For the latin script, this key character is %1 (U+006F).")
+         .arg(locale->quoteString("o")),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+  else
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("Error code 0x%1 while autohinting font:\n")
+         .arg(error, 2, 16, QLatin1Char('0'))
+        + QString::fromLocal8Bit((const char*)error_string),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+
+  if (!remove(qPrintable(output_name)))
+  {
+    const int buf_len = 1024;
+    char buf[buf_len];
+
+    strerror_r(errno, buf, buf_len);
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("The following error occurred while removing output file %s:\n")
+         .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
+        + QString::fromLocal8Bit(buf),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
+  }
+}
+
+
 void
 Main_GUI::run()
 {
@@ -351,74 +426,7 @@ Main_GUI::run()
   fclose(output);
 
   if (error)
-  {
-    if (error == TA_Err_Canceled)
-      ;
-    else if (error == TA_Err_Invalid_FreeType_Version)
-      QMessageBox::critical(
-        this,
-        "TTFautohint",
-        tr("FreeType version 2.4.5 or higher is needed.\n"
-           "Are you perhaps using a wrong FreeType DLL?"),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-    else if (error == TA_Err_Missing_Legal_Permission)
-      QMessageBox::warning(
-        this,
-        "TTFautohint",
-        tr("Bit 1 in the %1 field of the %2 table is set:\n"
-           " This font must not be modified"
-           " without permission of the legal owner.\n"
-           "Set the %3 checkbox if you have such a permission,"
-           " then retry.")
-           .arg(locale->quoteString("fsType"))
-           .arg(locale->quoteString("OS/2"))
-           .arg(locale->quoteString("Ignore Permissions")),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-    else if (error == TA_Err_Missing_Unicode_CMap)
-      QMessageBox::warning(
-        this,
-        "TTFautohint",
-        tr("No Unicode character map."),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-    else if (error == TA_Err_Missing_Glyph)
-      QMessageBox::warning(
-        this,
-        "TTFautohint",
-        tr("No glyph for the key character"
-           " to derive standard width and height.\n"
-           "For the latin script, this key character is %1 (U+006F).")
-           .arg(locale->quoteString("o")),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-    else
-      QMessageBox::warning(
-        this,
-        "TTFautohint",
-        tr("Error code 0x%1 while autohinting font:\n")
-           .arg(error, 2, 16, QLatin1Char('0'))
-          + QString::fromLocal8Bit((const char*)error_string),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-
-    if (!remove(qPrintable(output_name)))
-    {
-      const int buf_len = 1024;
-      char buf[buf_len];
-
-      strerror_r(errno, buf, buf_len);
-      QMessageBox::warning(
-        this,
-        "TTFautohint",
-        tr("The following error occurred while removing output file %s:\n")
-           .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
-          + QString::fromLocal8Bit(buf),
-        QMessageBox::Ok,
-        QMessageBox::Ok);
-    }
-  }
+    handle_error(error, error_string, output_name);
   else
     statusBar()->showMessage(tr("Auto-hinting finished."));
 }
