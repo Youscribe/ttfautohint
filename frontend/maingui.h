@@ -68,7 +68,7 @@ private:
 
   int check_filenames(const QString&, const QString&);
   int open_files(const QString&, FILE**, const QString&, FILE**);
-  void handle_error(TA_Error, const unsigned char*, QString);
+  int handle_error(TA_Error, const unsigned char*, QString);
 
   QMenu* file_menu;
   QMenu* help_menu;
@@ -85,7 +85,6 @@ private:
   QComboBox* fallback_box;
 
   QCheckBox* pre_box;
-  QCheckBox* ignore_box;
 
   QPushButton* run_button;
 

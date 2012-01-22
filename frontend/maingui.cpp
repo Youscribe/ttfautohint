@@ -310,11 +310,15 @@ gui_progress(long curr_idx,
 } // extern "C"
 
 
-void
+// return value 1 indicates a retry
+
+int
 Main_GUI::handle_error(TA_Error error,
                        const unsigned char* error_string,
                        QString output_name)
 {
+  int ret = 0;
+
   if (error == TA_Err_Canceled)
      ;
   else if (error == TA_Err_Invalid_FreeType_Version)
@@ -326,19 +330,24 @@ Main_GUI::handle_error(TA_Error error,
       QMessageBox::Ok,
       QMessageBox::Ok);
   else if (error == TA_Err_Missing_Legal_Permission)
-    QMessageBox::warning(
-      this,
-      "TTFautohint",
-      tr("Bit 1 in the %1 field of the %2 table is set:\n"
-         " This font must not be modified"
-         " without permission of the legal owner.\n"
-         "Set the %3 checkbox if you have such a permission,"
-         " then retry.")
-         .arg(locale->quoteString("fsType"))
-         .arg(locale->quoteString("OS/2"))
-         .arg(locale->quoteString("Ignore Permissions")),
-      QMessageBox::Ok,
-      QMessageBox::Ok);
+  {
+    int yesno = QMessageBox::warning(
+                  this,
+                  "TTFautohint",
+                  tr("Bit 1 in the %1 field of the %2 table is set:"
+                     " This font must not be modified"
+                     " without permission of the legal owner.\n"
+                     "Do you have such a permission?")
+                     .arg(locale->quoteString("fsType"))
+                     .arg(locale->quoteString("OS/2")),
+                  QMessageBox::Yes | QMessageBox::No,
+                  QMessageBox::No);
+    if (yesno == QMessageBox::Yes)
+    {
+      ignore_permissions = true;
+      ret = 1;
+    }
+  }
   else if (error == TA_Err_Missing_Unicode_CMap)
     QMessageBox::warning(
       this,
@@ -366,7 +375,7 @@ Main_GUI::handle_error(TA_Error error,
       QMessageBox::Ok,
       QMessageBox::Ok);
 
-  if (!remove(qPrintable(output_name)))
+  if (QFile::exists(output_name) && remove(qPrintable(output_name)))
   {
     const int buf_len = 1024;
     char buf[buf_len];
@@ -381,6 +390,8 @@ Main_GUI::handle_error(TA_Error error,
       QMessageBox::Ok,
       QMessageBox::Ok);
   }
+
+  return ret;
 }
 
 
@@ -397,6 +408,8 @@ Main_GUI::run()
   // we need C file descriptors for communication with TTF_autohint
   FILE* input;
   FILE* output;
+
+again:
   if (!open_files(input_name, &input, output_name, &output))
     return;
 
@@ -419,14 +432,17 @@ Main_GUI::run()
                  min_box->value(), max_box->value(),
                  &error_string,
                  gui_progress, &gui_progress_data,
-                 ignore_box->isChecked(), pre_box->isChecked(),
+                 ignore_permissions, pre_box->isChecked(),
                  fallback_box->currentIndex());
 
   fclose(input);
   fclose(output);
 
   if (error)
-    handle_error(error, error_string, output_name);
+  {
+    if (handle_error(error, error_string, output_name))
+      goto again;
+  }
   else
     statusBar()->showMessage(tr("Auto-hinting finished."));
 }
@@ -500,13 +516,9 @@ Main_GUI::create_layout()
 
   // flags
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
-  ignore_box = new QCheckBox(tr("I&gnore Permissions"), this);
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
-  flags_layout->addStretch(1);
-  flags_layout->addWidget(ignore_box);
-  flags_layout->addStretch(2);
 
   // running
   run_button = new QPushButton(tr("&Run"));
