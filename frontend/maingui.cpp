@@ -216,7 +216,7 @@ Main_GUI::open_files(const QString& input_name,
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The following error occurred while opening input file %s:\n")
+      tr("The following error occurred while opening input file %1:\n")
          .arg(locale->quoteString(QDir::toNativeSeparators(input_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
@@ -231,7 +231,7 @@ Main_GUI::open_files(const QString& input_name,
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The following error occurred while opening output file %s:\n")
+      tr("The following error occurred while opening output file %1:\n")
          .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
@@ -375,7 +375,7 @@ Main_GUI::handle_error(TA_Error error,
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("The following error occurred while removing output file %s:\n")
+      tr("The following error occurred while removing output file %1:\n")
          .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
