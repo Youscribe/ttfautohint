@@ -461,12 +461,19 @@ Main_GUI::create_layout()
   input_line = new QLineEdit;
   input_button = new QPushButton(tr("Browse..."));
   input_label->setBuddy(input_line);
+  // enforce rich text to get nice word wrapping
+  input_label->setToolTip(
+    tr("<b></b>The input file, either a TrueType font (TTF),"
+       " TrueType collection (TTC), or a TrueType-based OpenType font."));
   input_line->setCompleter(completer);
 
   QLabel* output_label = new QLabel(tr("&Output File:"));
   output_line = new QLineEdit;
   output_button = new QPushButton(tr("Browse..."));
   output_label->setBuddy(output_line);
+  output_label->setToolTip(
+    tr("<b></b>The output file, which will be essentially identical"
+       " to the input font but contains new, generated hints."));
   output_line->setCompleter(completer);
 
   QGridLayout* file_layout = new QGridLayout;
@@ -499,10 +506,25 @@ Main_GUI::create_layout()
   minmax_layout->addWidget(max_box, 1, 1);
 
   // hinting and fallback controls
-  QLabel* hinting_label = new QLabel(tr("Hinting Range") + " ");
+  QLabel* hinting_label = new QLabel(tr("Hint Set Range") + " ");
   QLabel* fallback_label = new QLabel(tr("F&allback Script:"));
+  // XXX Qt 4.8 bug: locale->quoteString("gasp")
+  //                 inserts wrongly encoded quote characters
+  //                 into rich text QString
+  hinting_label->setToolTip(
+    tr("The PPEM range for which <b>TTFautohint</b> computes"
+       " <i>hint sets</i>."
+       " A hint set for a given PPEM value hints this size optimally."
+       " The larger the range, the more hint sets are considered,"
+       " usually increasing the size of the bytecode.\n"
+       "Note that changing this range doesn't influence"
+       " the <i>gasp</i> table:"
+       " Hinting is enabled for all sizes."));
   fallback_box = new QComboBox;
   fallback_label->setBuddy(fallback_box);
+  fallback_label->setToolTip(
+    tr("This sets the fallback script module for glyphs"
+       " which <b>TTFautohint</b> can't map to a script automatically."));
   fallback_box->insertItem(0, tr("None"));
   fallback_box->insertItem(1, tr("Latin"));
 
@@ -516,6 +538,10 @@ Main_GUI::create_layout()
 
   // flags
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
+  pre_box->setToolTip(
+    tr("If switched on, the original bytecode of the input font"
+       " gets applied before <b>TTFautohint</b> starts processing"
+       " the outlines of the glyphs."));
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
