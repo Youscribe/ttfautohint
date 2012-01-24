@@ -11,6 +11,8 @@
 // with the ttfautohint library.
 
 
+#include <config.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -20,6 +22,18 @@
 #include "maingui.h"
 
 #include <ttfautohint.h>
+
+
+// XXX Qt 4.8 bug: locale->quoteString("foo")
+//                 inserts wrongly encoded quote characters
+//                 into rich text QString
+#if HAVE_QT_QUOTESTRING
+#  define QUOTE_STRING(x) locale->quoteString(x)
+#  define QUOTE_STRING_LITERAL(x) locale->quoteString(x)
+#else
+#  define QUOTE_STRING(x) "\"" + x + "\""
+#  define QUOTE_STRING_LITERAL(x) "\"" x "\""
+#endif
 
 
 Main_GUI::Main_GUI(int range_min,
@@ -165,7 +179,7 @@ Main_GUI::check_filenames(const QString& input_name,
       this,
       "TTFautohint",
       tr("The file %1 cannot be found.")
-         .arg(locale->quoteString(input_name)),
+         .arg(QUOTE_STRING(input_name)),
       QMessageBox::Ok,
       QMessageBox::Ok);
     return 0;
@@ -189,7 +203,7 @@ Main_GUI::check_filenames(const QString& input_name,
                 "TTFautohint",
                 tr("The file %1 already exists.\n"
                    "Overwrite?")
-                   .arg(locale->quoteString(output_name)),
+                   .arg(QUOTE_STRING(output_name)),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::No);
     if (ret == QMessageBox::No)
@@ -217,7 +231,7 @@ Main_GUI::open_files(const QString& input_name,
       this,
       "TTFautohint",
       tr("The following error occurred while opening input file %1:\n")
-         .arg(locale->quoteString(QDir::toNativeSeparators(input_name)))
+         .arg(QUOTE_STRING(QDir::toNativeSeparators(input_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
       QMessageBox::Ok);
@@ -232,7 +246,7 @@ Main_GUI::open_files(const QString& input_name,
       this,
       "TTFautohint",
       tr("The following error occurred while opening output file %1:\n")
-         .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
+         .arg(QUOTE_STRING(QDir::toNativeSeparators(output_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
       QMessageBox::Ok);
@@ -338,8 +352,8 @@ Main_GUI::handle_error(TA_Error error,
                      " This font must not be modified"
                      " without permission of the legal owner.\n"
                      "Do you have such a permission?")
-                     .arg(locale->quoteString("fsType"))
-                     .arg(locale->quoteString("OS/2")),
+                     .arg(QUOTE_STRING_LITERAL("fsType"))
+                     .arg(QUOTE_STRING_LITERAL("OS/2")),
                   QMessageBox::Yes | QMessageBox::No,
                   QMessageBox::No);
     if (yesno == QMessageBox::Yes)
@@ -362,7 +376,7 @@ Main_GUI::handle_error(TA_Error error,
       tr("No glyph for the key character"
          " to derive standard width and height.\n"
          "For the latin script, this key character is %1 (U+006F).")
-         .arg(locale->quoteString("o")),
+         .arg(QUOTE_STRING_LITERAL("o")),
       QMessageBox::Ok,
       QMessageBox::Ok);
   else
@@ -385,7 +399,7 @@ Main_GUI::handle_error(TA_Error error,
       this,
       "TTFautohint",
       tr("The following error occurred while removing output file %1:\n")
-         .arg(locale->quoteString(QDir::toNativeSeparators(output_name)))
+         .arg(QUOTE_STRING(QDir::toNativeSeparators(output_name)))
         + QString::fromLocal8Bit(buf),
       QMessageBox::Ok,
       QMessageBox::Ok);
@@ -508,9 +522,6 @@ Main_GUI::create_layout()
   // hinting and fallback controls
   QLabel* hinting_label = new QLabel(tr("Hint Set Range") + " ");
   QLabel* fallback_label = new QLabel(tr("F&allback Script:"));
-  // XXX Qt 4.8 bug: locale->quoteString("gasp")
-  //                 inserts wrongly encoded quote characters
-  //                 into rich text QString
   hinting_label->setToolTip(
     tr("The PPEM range for which <b>TTFautohint</b> computes"
        " <i>hint sets</i>."
