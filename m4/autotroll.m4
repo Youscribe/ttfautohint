@@ -45,8 +45,8 @@
 #
 # Invoking AT_WITH_QT will do the following:
 #  - Add a --with-qt option to your configure
-#  - Find qmake, moc and uic and save them in the make variables $(QMAKE),
-#    $(MOC), $(UIC).
+#  - Find qmake, moc, uic, and rcc and save them in the make variables
+#    $(QMAKE), $(MOC), $(UIC), $(RCC).
 #  - Save the path to Qt in $(QT_PATH)
 #  - Find the flags to use Qt, that is:
 #     * $(QT_DEFINES): -D's defined by qmake.
@@ -185,8 +185,8 @@ dnl Memo: AC_ARG_WITH(package, help-string, [if-given], [if-not-given])
 
   # Find rcc (Qt Resource Compiler).
   AC_ARG_VAR([RCC], [Qt Resource Compiler command])
-  AC_PATH_PROGS([RCC], [rcc], [false], [$QT_PATH:$PATH:$tmp_qt_paths])
-  if test x"$UIC" = xfalse; then
+  AC_PATH_PROGS([RCC], [rcc], [missing], [$QT_PATH:$PATH:$tmp_qt_paths])
+  if test x"$UIC" = xmissing; then
     AC_MSG_WARN([Cannot find rcc (Qt Resource Compiler) in your PATH.\
   Try using --with-qt.])
   fi
