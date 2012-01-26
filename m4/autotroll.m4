@@ -58,24 +58,24 @@
 #    non-stardard location.
 #  - Add option `--without-qt', which is equivalent to `--with-qt=no'.
 #  - If Qt support is enabled, set HAVE_QT to 1 (and to 0 otherwise).
-#  - Find qmake, moc uic, and rcc and save them in the make variables
-#    $(QMAKE), $(MOC), $(UIC), $(RCC).
-#  - Save the path to Qt in $(QT_PATH)
-#  - Find the flags to use Qt, that is:
+#  - Find the programs `qmake', `moc', `uic', and `rcc' and save them
+#    in the make variables $(QMAKE), $(MOC), $(UIC), and $(RCC).
+#  - Save the path to Qt binaries in $(QT_PATH).
+#  - Find the flags necessary to compile and link Qt, that is:
 #     * $(QT_DEFINES): -D's defined by qmake.
 #     * $(QT_CFLAGS): CFLAGS as defined by qmake (C?!)
 #     * $(QT_CXXFLAGS): CXXFLAGS as defined by qmake.
 #     * $(QT_INCPATH): -I's defined by qmake.
-#     * $(QT_CPPFLAGS): Same as $(QT_DEFINES) + $(QT_INCPATH)
+#     * $(QT_CPPFLAGS): Same as $(QT_DEFINES) + $(QT_INCPATH).
 #     * $(QT_LFLAGS): LFLAGS defined by qmake.
 #     * $(QT_LDFLAGS): Same thing as $(QT_LFLAGS).
 #     * $(QT_LIBS): LIBS defined by qmake.
 #
-# You *MUST* invoke $(MOC) and/or $(UIC) where necessary.  AutoTroll
-# provides you with Makerules to ease this; here is a sample
-# Makefile.am to use with AutoTroll which builds the code given in the
+# You *MUST* invoke $(MOC) and/or $(UIC) by yourself where necessary.
+# AutoTroll provides you with Makerules to ease this; here is a sample
+# Makefile.am to use with AutoTroll which builds the code given in
 # chapter 7 of the Qt Tutorial
-# (http://doc.trolltech.com/4.2/tutorial-t7.html)
+# (http://doc.trolltech.com/4.2/tutorial-t7.html).
 #
 # -------------------------------------------------------------------------
 # include $(top_srcdir)/build-aux/autotroll.mk
@@ -92,11 +92,11 @@
 # BUILT_SOURCES = lcdrange.moc.cpp
 # -------------------------------------------------------------------------
 #
-# Note that your MOC, UIC and QRC files *MUST* be listed manually in
-# BUILT_SOURCES.  If you name them properly (eg: .moc.cc, .qrc.cc,
-# .ui.cc -- of course you can use .cpp or .cxx or .C rather than .cc)
-# AutoTroll will build them automagically for you (using implicit
-# rules defined in autotroll.mk).
+# Note that your MOC, UIC, and RRC files *MUST* be listed explicitly
+# in BUILT_SOURCES.  If you name them properly (e.g. `.moc.cc',
+# `.qrc.cc', `.ui.cc' -- of course you can use `.cpp' or `.cxx' or
+# `.C' rather than `.cc') AutoTroll will build them automagically for
+# you, using implicit rules defined in `autotroll.mk'.
 
 m4_define([_AUTOTROLL_SERIAL],
   [m4_translit([
@@ -159,7 +159,7 @@ AC_DEFUN([AT_WITH_QT],
    echo "$as_me: this is autotroll.m4[]_AUTOTROLL_SERIAL" \
      >& AS_MESSAGE_LOG_FD
 
-   # This is a hack to get decent flow control with 'break'.
+   # This is a hack to get decent flow control with `break'.
    for _qt_ignored in once; do
 
      AC_ARG_WITH([qt],
@@ -183,7 +183,7 @@ AC_DEFUN([AT_WITH_QT],
 
      # Find Qt.
      AC_ARG_VAR([QT_PATH],
-       [Path to the Qt installation])
+       [path to Qt binaries])
      if test -d /usr/local/Trolltech; then
        # Try to find the latest version.
        tmp_qt_paths=`echo /usr/local/Trolltech/*/bin \
@@ -206,7 +206,7 @@ AC_DEFUN([AT_WITH_QT],
        [$QT_DIR:$QT_PATH:$PATH:$tmp_qt_paths])
      if test x"$QMAKE" = xmissing; then
        AX_INSTEAD_IF([$4],
-         [Cannot find qmake in your PATH.  Try using --with-qt.])
+         [Cannot find qmake.  Try --with-qt=PATH.])
        break
      fi
 
@@ -219,7 +219,7 @@ AC_DEFUN([AT_WITH_QT],
        [$QT_PATH:$PATH:$tmp_qt_paths])
      if test x"$MOC" = xmissing; then
        AX_INSTEAD_IF([$4],
-         [Cannot find moc (Meta Object Compiler) in your PATH.  Try using --with-qt.])
+         [Cannot find moc (Meta Object Compiler).  Try --with-qt=PATH.])
        break
      fi
 
@@ -232,7 +232,7 @@ AC_DEFUN([AT_WITH_QT],
        [$QT_PATH:$PATH:$tmp_qt_paths])
      if test x"$UIC" = xmissing; then
        AX_INSTEAD_IF([$4],
-         [Cannot find uic (User Interface Compiler) in your PATH.  Try using --with-qt.])
+         [Cannot find uic (User Interface Compiler).  Try --with-qt=PATH.])
        break
      fi
 
@@ -245,7 +245,7 @@ AC_DEFUN([AT_WITH_QT],
        [$QT_PATH:$PATH:$tmp_qt_paths])
      if test x"$RCC" = xmissing; then
        AC_MSG_WARN(
-         [Cannot find rcc (Qt Resource Compiler) in your PATH.  Try using --with-qt.])
+         [Cannot find rcc (Qt Resource Compiler).  Try --with-qt=PATH.])
      fi
 
      AC_MSG_CHECKING([whether host operating system is Darwin])
@@ -266,7 +266,7 @@ AC_DEFUN([AT_WITH_QT],
      fi
      if test x"$QT_PATH" = x; then
        AX_INSTEAD_IF([$4],
-         [Cannot find the path to your Qt installation.  Use --with-qt.])
+         [Cannot find your Qt installation.  Try --with-qt=PATH.])
        break
      fi
      AC_SUBST([QT_PATH])
@@ -467,7 +467,7 @@ EOF
      rm -f fixmk.pl
 
      # Try to compile a simple Qt app.
-     AC_CACHE_CHECK([whether we can build a simple Qt app],
+     AC_CACHE_CHECK([whether we can build a simple Qt application],
        [at_cv_qt_build],
        [at_cv_qt_build=ko
         : ${MAKE=make}
@@ -558,28 +558,32 @@ EOF
      # Find the DEFINES of Qt (should have been named CPPFLAGS).
      AC_CACHE_CHECK([for the DEFINES to use with Qt],
        [at_cv_env_QT_DEFINES],
-       [at_cv_env_QT_DEFINES=`sed "/^DEFINES@<:@^A-Z=@:>@*=/!d;$qt_sed_filter" $at_mfile`])
+       [at_cv_env_QT_DEFINES=`sed "/^DEFINES@<:@^A-Z=@:>@*=/!d;
+                                   $qt_sed_filter" $at_mfile`])
      AC_SUBST([QT_DEFINES],
        [$at_cv_env_QT_DEFINES])
 
      # Find the CFLAGS of Qt.  (We can use Qt in C?!)
      AC_CACHE_CHECK([for the CFLAGS to use with Qt],
        [at_cv_env_QT_CFLAGS],
-       [at_cv_env_QT_CFLAGS=`sed "/^CFLAGS@<:@^A-Z=@:>@*=/!d;$qt_sed_filter" $at_mfile`])
+       [at_cv_env_QT_CFLAGS=`sed "/^CFLAGS@<:@^A-Z=@:>@*=/!d;
+                                  $qt_sed_filter" $at_mfile`])
      AC_SUBST([QT_CFLAGS],
        [$at_cv_env_QT_CFLAGS])
 
      # Find the CXXFLAGS of Qt.
      AC_CACHE_CHECK([for the CXXFLAGS to use with Qt],
        [at_cv_env_QT_CXXFLAGS],
-       [at_cv_env_QT_CXXFLAGS=`sed "/^CXXFLAGS@<:@^A-Z=@:>@*=/!d;$qt_sed_filter" $at_mfile`])
+       [at_cv_env_QT_CXXFLAGS=`sed "/^CXXFLAGS@<:@^A-Z=@:>@*=/!d;
+                                    $qt_sed_filter" $at_mfile`])
      AC_SUBST([QT_CXXFLAGS],
        [$at_cv_env_QT_CXXFLAGS])
 
      # Find the INCPATH of Qt.
      AC_CACHE_CHECK([for the INCPATH to use with Qt],
        [at_cv_env_QT_INCPATH],
-       [at_cv_env_QT_INCPATH=`sed "/^INCPATH@<:@^A-Z=@:>@*=/!d;$qt_sed_filter" $at_mfile`])
+       [at_cv_env_QT_INCPATH=`sed "/^INCPATH@<:@^A-Z=@:>@*=/!d;
+                                   $qt_sed_filter" $at_mfile`])
      AC_SUBST([QT_INCPATH],
        [$at_cv_env_QT_INCPATH])
 
@@ -589,7 +593,8 @@ EOF
      # Find the LFLAGS of Qt (Should have been named LDFLAGS).
      AC_CACHE_CHECK([for the LDFLAGS to use with Qt],
        [at_cv_env_QT_LDFLAGS],
-       [at_cv_env_QT_LDFLAGS=`sed "/^LFLAGS@<:@^A-Z=@:>@*=/!d;$qt_sed_filter" $at_mfile`])
+       [at_cv_env_QT_LDFLAGS=`sed "/^LFLAGS@<:@^A-Z=@:>@*=/!d;
+                                   $qt_sed_filter" $at_mfile`])
      AC_SUBST([QT_LFLAGS],
        [$at_cv_env_QT_LDFLAGS])
      AC_SUBST([QT_LDFLAGS],
@@ -598,14 +603,16 @@ EOF
      # Find the LIBS of Qt.
      AC_CACHE_CHECK([for the LIBS to use with Qt],
       [at_cv_env_QT_LIBS],
-      [at_cv_env_QT_LIBS=`sed "/^LIBS@<:@^A-Z@:>@*=/!d;$qt_sed_filter" $at_mfile`
+      [at_cv_env_QT_LIBS=`sed "/^LIBS@<:@^A-Z@:>@*=/!d;
+                               $qt_sed_filter" $at_mfile`
        if test x$at_darwin = xyes; then
          # Fix QT_LIBS: as of today Libtool (GNU Libtool 1.5.23a)
          # doesn't handle -F properly.  The "bug" has been fixed on 22
          # October 2006 by Peter O'Gorman but we provide backward
          # compatibility here.
          at_cv_env_QT_LIBS=`echo "$at_cv_env_QT_LIBS" \
-                            | sed 's/^-F/-Wl,-F/;s/ -F/ -Wl,-F/g'`
+                            | sed 's/^-F/-Wl,-F/;
+                                   s/ -F/ -Wl,-F/g'`
        fi])
      AC_SUBST([QT_LIBS],
        [$at_cv_env_QT_LIBS])
@@ -637,7 +644,7 @@ EOF
 AC_DEFUN([AT_REQUIRE_QT_VERSION],
   [AC_PREREQ([2.60])
 
-   # this is a hack to get decent flow control with 'break'
+   # this is a hack to get decent flow control with `break'
    for _qt_ignored in once; do
 
      if test $HAVE_QT = 0; then
@@ -679,8 +686,8 @@ AC_DEFUN([AT_REQUIRE_QT_VERSION],
 
 # _AT_TWEAK_PRO_FILE(QT_VAR, VALUE)
 # ---------------------------------
-# @internal.  Tweak the variable QT_VAR in the .pro.  VALUE is an
-# IFS-separated list of value and each value is rewritten as follows:
+# @internal.  Tweak the variable QT_VAR in the .pro file.  VALUE is an
+# IFS-separated list of value, and each value is rewritten as follows:
 #
 #   +value  => QT_VAR += value
 #   -value  => QT_VAR -= value
