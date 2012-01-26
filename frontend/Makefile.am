@@ -30,7 +30,7 @@ LDADD = $(top_builddir)/lib/libttfautohint.a \
         $(QT_LIBS) \
         $(LTLIBINTL) \
         $(LTLIBTHREAD) \
-        $(FREETYPE_LDFLAGS)
+        $(FREETYPE_LIBS)
 
 bin_PROGRAMS = ttfautohint
 ttfautohint_SOURCES = main.cpp \
