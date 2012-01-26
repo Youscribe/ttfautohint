@@ -57,7 +57,7 @@
 #    directory which contains the Qt binaries in case you have a
 #    non-stardard location.
 #  - Add option `--without-qt', which is equivalent to `--with-qt=no'.
-#  - If Qt support is enabled, set HAVE_QT to 1 (and to 0 otherwise).
+#  - If Qt support is enabled, define C preprocessor macro HAVE_QT.
 #  - Find the programs `qmake', `moc', `uic', and `rcc' and save them
 #    in the make variables $(QMAKE), $(MOC), $(UIC), and $(RCC).
 #  - Save the path to Qt binaries in $(QT_PATH).
@@ -169,10 +169,10 @@ AC_DEFUN([AT_WITH_QT],
           use PATH and some default directories to find Qt binaries]))
 
      if test x"$with_qt" = x"no"; then
-       HAVE_QT=0
        break
      else
-       HAVE_QT=1
+       AC_DEFINE([HAVE_QT],[1],
+         [Define if the Qt framework is available.])
      fi
 
      if test x"$with_qt" = x"yes"; then
@@ -623,8 +623,6 @@ EOF
      $5
 
    done  # end hack (useless FOR to be able to use break)
-
-   AC_SUBST(HAVE_QT)
   ])
 
 
@@ -647,7 +645,7 @@ AC_DEFUN([AT_REQUIRE_QT_VERSION],
    # this is a hack to get decent flow control with `break'
    for _qt_ignored in once; do
 
-     if test $HAVE_QT = 0; then
+     if test x"$with_qt" = x"no"; then
        break
      fi
 
