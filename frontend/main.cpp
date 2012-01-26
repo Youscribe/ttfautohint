@@ -25,8 +25,10 @@
 #include <vector>
 #include <string>
 
-#include <QApplication>
-#include "maingui.h"
+#if HAVE_QT
+#  include <QApplication>
+#  include "maingui.h"
+#endif
 
 #include <ttfautohint.h>
 
@@ -182,6 +184,8 @@ show_help(char* program_name,
 "\n"
 "If run in GUI mode, options not related to Qt or X11 set default values.\n"
 "\n"
+"If GUI support is disabled at compile time, option --tty is the default.\n"
+"\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
 "FreeType home page: <http://www.freetype.org>\n");
 
@@ -196,7 +200,10 @@ static void
 show_version()
 {
   fprintf(stdout,
-"ttfautohint version " VERSION "\n"
+"ttfautohint " VERSION
+#if !HAVE_QT
+" (no GUI)\n"
+#endif
 "Copyright (C) 2011-2012 Werner Lemberg <wl@gnu.org>.\n"
 "License: FreeType License (FTL) or GNU GPLv2.\n"
 "This is free software: you are free to change and redistribute it.\n"
@@ -221,7 +228,11 @@ main(int argc,
 
   TA_Progress_Func progress_func = NULL;
 
+#if HAVE_QT
   bool tty = false;
+#else
+  bool tty = true;
+#endif
 
   // make GNU, Qt, and X11 command line options look the same;
   // we allow `--foo=bar', `--foo bar', `-foo=bar', `-foo bar',
@@ -449,6 +460,8 @@ main(int argc,
 
     exit(EXIT_SUCCESS);
   }
+
+#if HAVE_QT
   else
   {
     int new_argc = new_arg_string.size();
@@ -470,6 +483,7 @@ main(int argc,
 
     return app.exec();
   }
+#endif
 
   return 0; // never reached
 }

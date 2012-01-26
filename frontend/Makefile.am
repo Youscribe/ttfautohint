@@ -17,28 +17,31 @@ SUFFIXES = .moc.cpp .h
 
 DISTCLEANFILES = $(BUILT_SOURCES)
 
-
-AM_CXXFLAGS = $(QT_CXXFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/lib \
               -I$(top_builddir)/gnulib/src \
               -I$(top_srcdir)/gnulib/src \
-              $(QT_CPPFLAGS) \
               $(FREETYPE_CPPFLAGS)
-AM_LDFLAGS = $(QT_LDFLAGS)
 LDADD = $(top_builddir)/lib/libttfautohint.a \
         $(top_builddir)/gnulib/src/libgnu.la \
-        $(QT_LIBS) \
         $(LTLIBINTL) \
         $(LTLIBTHREAD) \
         $(FREETYPE_LIBS)
 
 bin_PROGRAMS = ttfautohint
-ttfautohint_SOURCES = main.cpp \
-                      maingui.cpp \
-                      maingui.h \
-                      maingui.moc.cpp
+ttfautohint_SOURCES = main.cpp
 
-BUILT_SOURCES = maingui.moc.cpp
+if USE_QT
+  AM_CXXFLAGS = $(QT_CXXFLAGS)
+  AM_LDFLAGS = $(QT_LDFLAGS)
+  AM_CPPFLAGS += $(QT_CPPFLAGS)
+  LDADD += $(QT_LIBS)
+
+  ttfautohint_SOURCES += maingui.cpp \
+                         maingui.h \
+                         maingui.moc.cpp
+
+  BUILT_SOURCES = maingui.moc.cpp
+endif
 
 dist_man_MANS = ttfautohint.1
 
