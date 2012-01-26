@@ -51,7 +51,13 @@
 #
 # Invoking AT_WITH_QT will do the following:
 #
-#  - Add a --with-qt option to your configure
+#  - Add option `--with-qt[=ARG]' to your configure script.  Possible
+#    values for ARG are `yes' (which is the default) and `no' to
+#    enable and disable Qt support, respectively, or a path to the
+#    directory which contains the Qt binaries in case you have a
+#    non-stardard location.
+#  - Add option `--without-qt', which is equivalent to `--with-qt=no'.
+#  - If Qt support is enabled, set HAVE_QT to 1 (and to 0 otherwise).
 #  - Find qmake, moc uic, and rcc and save them in the make variables
 #    $(QMAKE), $(MOC), $(UIC), $(RCC).
 #  - Save the path to Qt in $(QT_PATH)
@@ -94,7 +100,7 @@
 
 m4_define([_AUTOTROLL_SERIAL],
   [m4_translit([
-# serial 6
+# serial 7
 ], [#
 ], [])])
 
@@ -153,13 +159,27 @@ AC_DEFUN([AT_WITH_QT],
    echo "$as_me: this is autotroll.m4[]_AUTOTROLL_SERIAL" \
      >& AS_MESSAGE_LOG_FD
 
-   AC_ARG_WITH([qt],
-     [AS_HELP_STRING([--with-qt],
-       [Path to Qt @<:@Look in PATH and /usr/local/Trolltech@:>@])],
-     [QT_PATH=$withval])
-
    # This is a hack to get decent flow control with 'break'.
    for _qt_ignored in once; do
+
+     AC_ARG_WITH([qt],
+       AS_HELP_STRING([--with-qt@<:@=ARG@:>@],
+         [Qt support.  ARG can be `yes' (the default), `no',
+          or a path to Qt binaries; if `yes' or empty,
+          use PATH and some default directories to find Qt binaries]))
+
+     if test x"$with_qt" = x"no"; then
+       HAVE_QT=0
+       break
+     else
+       HAVE_QT=1
+     fi
+
+     if test x"$with_qt" = x"yes"; then
+       QT_PATH=
+     else
+       QT_PATH=$with_qt
+     fi
 
      # Find Qt.
      AC_ARG_VAR([QT_PATH],
@@ -596,6 +616,8 @@ EOF
      $5
 
    done  # end hack (useless FOR to be able to use break)
+
+   AC_SUBST(HAVE_QT)
   ])
 
 
@@ -603,6 +625,9 @@ EOF
 # ---------------------------------------------------------------
 # Check (using qmake) that Qt's version "matches" QT_version.  Must be
 # run *after* AT_WITH_QT.  Requires autoconf 2.60.
+#
+# This macro is ignored if Qt support has been disabled (using
+# `--with-qt=no' or `--without-qt').
 #
 # RUN-IF-FAILED is arbitrary code to execute if Qt cannot be found or
 # if any problem happens.  If this argument is omitted, then
@@ -614,6 +639,10 @@ AC_DEFUN([AT_REQUIRE_QT_VERSION],
 
    # this is a hack to get decent flow control with 'break'
    for _qt_ignored in once; do
+
+     if test $HAVE_QT = 0; then
+       break
+     fi
 
      if test x"$QMAKE" = x; then
        AX_INSTEAD_IF([$2],
