@@ -80,8 +80,20 @@ Main_GUI::about()
 {
   QMessageBox::about(this,
                      tr("About TTFautohint"),
-                     tr("<b>TTFautohint</b> adds new auto-generated hints"
-                        " to a TrueType font or TrueType collection."));
+                     tr("<p>This is <b>TTFautohint</b> version %1<br>"
+                        " Copyright %2 2011-2012<br>"
+                        " by Werner Lemberg <tt>&lt;wl@gnu.org&gt;</tt></p>"
+                        ""
+                        "<p><b>TTFautohint</b> adds new auto-generated hints"
+                        " to a TrueType font or TrueType collection.</p>"
+                        ""
+                        "<p>License:"
+                        " <a href='http://www.freetype.org/FTL.TXT'>FreeType"
+                        " License (FTL)</a> or"
+                        " <a href='http://www.freetype.org/GPL.TXT'>GNU"
+                        " GPLv2</a></p>")
+                        .arg(VERSION)
+                        .arg(QChar(0xA9)));
 }
 
 
