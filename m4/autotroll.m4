@@ -200,7 +200,7 @@ AC_DEFUN([AT_WITH_QT],
      # Find qmake.
      AC_ARG_VAR([QMAKE],
        [Qt Makefile generator command])
-     AC_PATH_PROGS([QMAKE],
+     AC_PATH_TOOL([QMAKE],
        [qmake qmake-qt4 qmake-qt3],
        [missing],
        [$QT_DIR:$QT_PATH:$PATH:$tmp_qt_paths])
@@ -213,7 +213,7 @@ AC_DEFUN([AT_WITH_QT],
      # Find moc (Meta Object Compiler).
      AC_ARG_VAR([MOC],
        [Qt Meta Object Compiler command])
-     AC_PATH_PROGS([MOC],
+     AC_PATH_TOOL([MOC],
        [moc moc-qt4 moc-qt3],
        [missing],
        [$QT_PATH:$PATH:$tmp_qt_paths])
@@ -226,7 +226,7 @@ AC_DEFUN([AT_WITH_QT],
      # Find uic (User Interface Compiler).
      AC_ARG_VAR([UIC],
        [Qt User Interface Compiler command])
-     AC_PATH_PROGS([UIC],
+     AC_PATH_TOOL([UIC],
        [uic uic-qt4 uic-qt3 uic3],
        [missing],
        [$QT_PATH:$PATH:$tmp_qt_paths])
@@ -239,7 +239,7 @@ AC_DEFUN([AT_WITH_QT],
      # Find rcc (Qt Resource Compiler).
      AC_ARG_VAR([RCC],
        [Qt Resource Compiler command])
-     AC_PATH_PROGS([RCC],
+     AC_PATH_TOOL([RCC],
        [rcc],
        [missing],
        [$QT_PATH:$PATH:$tmp_qt_paths])
