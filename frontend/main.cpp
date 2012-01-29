@@ -202,8 +202,9 @@ show_version()
   fprintf(stdout,
 "ttfautohint " VERSION
 #if !HAVE_QT
-" (no GUI)\n"
+" (no GUI)"
 #endif
+"\n"
 "Copyright (C) 2011-2012 Werner Lemberg <wl@gnu.org>.\n"
 "License: FreeType License (FTL) or GNU GPLv2.\n"
 "This is free software: you are free to change and redistribute it.\n"
