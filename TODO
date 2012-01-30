@@ -39,13 +39,18 @@ control activation threshold of blue zone widths
 control the width of blue zones
 
 handle normal and bold fonts differently; cf. Infinality patches
+  Maybe an option `never shrink the glyphs vertically'?  This should help
+  avoid filling of bowls (like in `e') for bold shapes.
 
 control the minimum stem width
 
 try to `embolden' fonts at small sizes to avoid drop-outs; cf. Infinality
   patches
 
-implement `x-height-snapping-exceptions' and `pre-hinting'
+implement `x-height-snapping-exceptions'
+  cf. the `never shrink the glyph vertically' idea above
+
+improve `pre-hinting' by making the used PPEM value configurable
 
 allow hinting of single glyphs, using a config file which holds the global
   settings
