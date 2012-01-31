@@ -100,5 +100,7 @@ testing with Windows font checker
 man page for ttfautohint library
 install library
 
+add GNU copyright exception so that created fonts don't inherit the GPL
+
 
 EOF
