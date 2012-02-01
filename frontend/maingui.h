@@ -16,6 +16,7 @@
 
 #include <QMainWindow>
 
+#include <stdio.h>
 #include <ttfautohint.h>
 
 class QAction;
