@@ -192,7 +192,7 @@ Main_GUI::check_filenames(const QString& input_name,
       this,
       "TTFautohint",
       tr("The file %1 cannot be found.")
-         .arg(QUOTE_STRING(input_name)),
+         .arg(QUOTE_STRING(QDir::toNativeSeparators(input_name))),
       QMessageBox::Ok,
       QMessageBox::Ok);
     return 0;
@@ -216,7 +216,7 @@ Main_GUI::check_filenames(const QString& input_name,
                 "TTFautohint",
                 tr("The file %1 already exists.\n"
                    "Overwrite?")
-                   .arg(QUOTE_STRING(output_name)),
+                   .arg(QUOTE_STRING(QDir::toNativeSeparators(output_name))),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::No);
     if (ret == QMessageBox::No)
