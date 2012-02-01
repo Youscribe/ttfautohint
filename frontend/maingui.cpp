@@ -107,7 +107,7 @@ Main_GUI::browse_input()
                    QDir::homePath(),
                    "");
   if (!file.isEmpty())
-    input_line->setText(file);
+    input_line->setText(QDir::toNativeSeparators(file));
 }
 
 
@@ -115,13 +115,14 @@ void
 Main_GUI::browse_output()
 {
   // XXX remember last directory
-  QString file = QFileDialog::getOpenFileName(
+  QString file = QFileDialog::getSaveFileName(
                    this,
                    tr("Open Output File"),
                    QDir::homePath(),
                    "");
+
   if (!file.isEmpty())
-    output_line->setText(file);
+    output_line->setText(QDir::toNativeSeparators(file));
 }
 
 
@@ -568,6 +569,7 @@ Main_GUI::create_layout()
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
+  flags_layout->addStretch(1);
 
   // running
   run_button = new QPushButton(tr("&Run"));
