@@ -22,4 +22,46 @@ to clone the `gnulib' repository (which gets installed as a git submodule),
 to build the `configure' script, and to set up necessary auxiliary files.
 Then you can proceed with the instructions given in the `INSTALL' file.
 
+Some additional remarks for compilation within the MinGW environment.
+
+  o Since MSYS, the shell of MinGW, uses LF as line endings, `git checkout'
+    should not convert files to CRLF.  Before checking out the FreeType and
+    ttfautohint repositories, you should issue the command
+
+      git config --global core.autocrlf input
+
+    to avoid any line ending conversion.
+
+  o At the time of this writing (January 2012), compilation of FreeType with
+    gcc bundles 4.6.1-2 or 4.6.2-1 fail.  Instead, you should use version
+    4.5.2-1.  Unfortunately, mingw-get is not able yet to download and
+    install a particular version; it always installs the newest one.  Some
+    manual work is necessary to overcome this restriction, as described by
+    Keith Marshall (in
+    http://sourceforge.net/mailarchive/message.php?msg_id=28753845):
+
+      > So what's the trick to access a specific release in a meta data
+      > file?
+
+      At present, the only way is to manually edit the XML manifest file,
+      (it is $MINGW_GET_ROOT/var/lib/mingw-get/data/mingw32-gcc4.xml), to
+      remove all of the <release ... /> references for any versions which
+      are newer, (i.e.  have a greater version number), than the particular
+      one you want to install.
+
+      If you would also like to preserve such changes, so that they will not
+      be reverted by a subsequent 'mingw-get update', then you may wish to
+      change the issue attribute, in the <software-distribution ...  /> tag,
+      from issue="2011122200" to something like issue="ZZZZZZZZZZ".
+
+  o To compile a stand-alone version of ttfautohint, first compile a static
+    version of Qt.  I've successfully followed these instructions:
+
+      http://www.formortals.com/build-qt-static-small-microsoft-intel-gcc-compiler/
+
+    Now configure and compile ttfautohint using
+
+      configure --with-qt=DIR
+      make LDFLAGS=-all-static
+
 EOF
