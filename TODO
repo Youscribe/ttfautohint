@@ -102,5 +102,7 @@ install library
 
 add GNU copyright exception so that created fonts don't inherit the GPL
 
+add notice to font that it has been processed by ttfautohint
+
 
 EOF
