@@ -31,9 +31,15 @@ AC_TYPE_UINT64_T
 AT_WITH_QT
 AT_REQUIRE_QT_VERSION([4.7])
 
-AS_VERSION_COMPARE([$QT_VERSION], [4.8], [], [],
-  [AC_DEFINE([HAVE_QT_QUOTESTRING], [1],
-     [Define if Qt function QLocale::quoteString is available.])])
+if test x"$with_qt" != x"no"; then
+  AC_MSG_CHECKING([for QLocale::quoteString])
+  AS_VERSION_COMPARE([$QT_VERSION], [4.8],
+    [AC_MSG_RESULT(no)],
+    [AC_MSG_RESULT(no)],
+    [AC_MSG_RESULT(yes)
+     AC_DEFINE([HAVE_QT_QUOTESTRING], [1],
+       [Define if Qt function QLocale::quoteString is available.])])
+fi
 
 AM_CONDITIONAL([USE_QT], [test x"$with_qt" != x"no"])
 
