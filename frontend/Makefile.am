@@ -41,6 +41,10 @@ if USE_QT
                          maingui.moc.cpp
 
   BUILT_SOURCES = maingui.moc.cpp
+
+if Q_OS_WIN32
+  dist_bin_SCRIPTS = ttfautohint.com
+endif
 endif
 
 dist_man_MANS = ttfautohint.1

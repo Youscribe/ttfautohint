@@ -35,6 +35,41 @@
 using namespace std;
 
 
+#ifdef Q_OS_WIN32
+
+// This function is based on code from the `dualsubsystem' package
+// (http://code.google.com/p/dualsubsystem).
+//
+// Windows disables output to a console for normal applications
+// (using the `windows' subsystem),
+// or explicitly starts a console (using the `console' subsystem).
+// We want neither the former nor the latter.
+// Instead, we communicate with the auxiliary `ttfautohint.com' program.
+
+bool init_dualmode()
+{
+  bool ret = false;
+
+  char stdout_pipe[256];
+  char stdin_pipe[256];
+  char stderr_pipe[256];
+
+  // construct named pipes
+  sprintf(stdout_pipe, "\\\\.\\pipe\\%dcout", GetCurrentProcessId());
+  sprintf(stdin_pipe, "\\\\.\\pipe\\%dcin", GetCurrentProcessId());
+  sprintf(stderr_pipe, "\\\\.\\pipe\\%dcerr", GetCurrentProcessId());
+
+  // attach named pipes to stdin/stdout/stderr
+  ret = freopen(stdout_pipe, "a", stdout) != NULL
+        && freopen(stdin_pipe, "r", stdin) != NULL
+        && freopen(stderr_pipe, "a", stderr) != NULL;
+
+  return ret;
+}
+
+#endif /* Q_OS_WIN32 */
+
+
 typedef struct Progress_Data_
 {
   long last_sfnt;
@@ -218,6 +253,10 @@ int
 main(int argc,
      char** argv)
 {
+#ifdef Q_OS_WIN32
+  init_dualmode();
+#endif
+
   int hinting_range_min = 0;
   int hinting_range_max = 0;
   bool have_hinting_range_min = false;
