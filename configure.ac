@@ -39,27 +39,9 @@ if test x"$with_qt" != x"no"; then
     [AC_MSG_RESULT(yes)
      AC_DEFINE([HAVE_QT_QUOTESTRING], [1],
        [Define if Qt function QLocale::quoteString is available.])])
-
-  AC_MSG_CHECKING([whether Q_OS_WIN32 is defined])
-  old_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$QT_CPPFLAGS"
-  AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
-
-#include <QtGlobal>
-
-#if !defined Q_OS_WIN32
-#error Q_OS_WIN32 not defined.
-#endif
-
-  ]])],
-    [AC_MSG_RESULT(yes)
-     q_os_win32=1],
-    [AC_MSG_RESULT(no)])
-  CPPFLAGS="$old_CPPFLAGS"
 fi
 
 AM_CONDITIONAL([USE_QT], [test x"$with_qt" != x"no"])
-AM_CONDITIONAL([Q_OS_WIN32], [test x"$q_os_win32" != x])
 
 LT_INIT
 LT_LTLIZE_LANG([C])

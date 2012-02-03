@@ -23,13 +23,12 @@ any of your projects or products.
    version can be used also), for programs which already use the GPL.
 
 The following files are distributed with the source bundle of the
-ttfautohint library, but aren't part of it due to a different license.
+ttfautohint library to configure and build the library with GNU tools, but
+which aren't part of it due to a different license (GPL only).
 
-  bootstrap (GPL, used for configuration)
-  bootstrap.conf (GPL, used for configuration)
-  m4/ltlize_lang.m4 (GPL, used for configuration)
-  frontend/ttfautohint.com (MIT License, installed on Windows as a
-                            standard stream redirector)
+  bootstrap
+  bootstrap.conf
+  m4/ltlize_lang.m4
 
 All files of the following directories are distributed with the source
 bundle of the ttfautohint library to configure and build the library with

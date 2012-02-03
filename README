@@ -14,8 +14,8 @@ The library has a single API function, `TTF_autohint'; see
 `lib/ttfautohint.h' for a detailed description.  Note that the library
 itself won't get installed currently.
 
-A simple interface to the library is the demo program `ttfautohint'; after
-compilation and installation, say
+A simple command-line interface to the library is the demo program
+`ttfautohint'; after compilation and installation, say
 
   ttfautohint --help
 
