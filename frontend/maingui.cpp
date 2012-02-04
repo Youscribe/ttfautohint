@@ -526,6 +526,9 @@ Main_GUI::create_layout()
   max_box->setRange(2, 10000);
   max_box->setValue(hinting_range_max);
 
+  check_min();
+  check_max();
+
   QGridLayout* minmax_layout = new QGridLayout;
   minmax_layout->addWidget(min_label, 0, 0);
   minmax_layout->addWidget(min_box, 0, 1);
