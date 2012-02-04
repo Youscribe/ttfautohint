@@ -13,6 +13,14 @@
 
 // This program is a wrapper for `TTF_autohint'.
 
+#ifdef BUILD_GUI
+#  ifndef _WIN32
+#    define CONSOLE_OUTPUT
+#  endif
+#else
+#  define CONSOLE_OUTPUT
+#endif
+
 #include <config.h>
 
 #include <stdio.h>
@@ -25,7 +33,7 @@
 #include <vector>
 #include <string>
 
-#if HAVE_QT
+#if BUILD_GUI
 #  include <QApplication>
 #  include "maingui.h"
 #endif
@@ -35,6 +43,7 @@
 using namespace std;
 
 
+#ifndef BUILD_GUI
 typedef struct Progress_Data_
 {
   long last_sfnt;
@@ -81,6 +90,7 @@ progress(long curr_idx,
 
   return 0;
 }
+#endif /* !BUILD_GUI */
 
 
 static void
@@ -91,12 +101,12 @@ show_help(char* program_name,
   FILE* handle = is_error ? stderr : stdout;
 
   fprintf(handle,
-"Usage: %s --tty [OPTION]... IN-FILE OUT-FILE\n"
-"  or:  %s [OPTION]...\n"
+"Usage: %s [OPTION]... IN-FILE OUT-FILE\n"
+"  or:  %sGUI [OPTION]...\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
-"This program is a simple front-end to the `ttfautohint' library.\n"
+"These programs are simple front-ends to the `ttfautohint' library.\n"
 "\n",
           program_name, program_name);
 
@@ -184,7 +194,7 @@ show_help(char* program_name,
 "\n"
 "If run in GUI mode, options not related to Qt or X11 set default values.\n"
 "\n"
-"If GUI support is disabled at compile time, option --tty is the default.\n"
+"Note that GUI support might be disabled at compile time.\n"
 "\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
 "FreeType home page: <http://www.freetype.org>\n");
@@ -200,11 +210,7 @@ static void
 show_version()
 {
   fprintf(stdout,
-"ttfautohint " VERSION
-#if !HAVE_QT
-" (no GUI)"
-#endif
-"\n"
+"ttfautohint " VERSION "\n"
 "Copyright (C) 2011-2012 Werner Lemberg <wl@gnu.org>.\n"
 "License: FreeType License (FTL) or GNU GPLv2.\n"
 "This is free software: you are free to change and redistribute it.\n"
@@ -227,12 +233,8 @@ main(int argc,
   bool pre_hinting = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
 
+#ifndef BUILD_GUI
   TA_Progress_Func progress_func = NULL;
-
-#if HAVE_QT
-  bool tty = false;
-#else
-  bool tty = true;
 #endif
 
   // make GNU, Qt, and X11 command line options look the same;
@@ -263,7 +265,6 @@ main(int argc,
       {"ignore-permissions", no_argument, NULL, 'i'},
       {"latin-fallback", no_argument, NULL, 'f'},
       {"pre-hinting", no_argument, NULL, 'p'},
-      {"tty", no_argument, NULL, 't'},
       {"verbose", no_argument, NULL, 'v'},
       {"version", no_argument, NULL, 'V'},
       {"x-height-snapping-exceptions", required_argument, NULL, 'x'},
@@ -310,7 +311,9 @@ main(int argc,
       break;
 
     case 'h':
+#ifdef CONSOLE_OUTPUT
       show_help(argv[0], false, false);
+#endif
       break;
 
     case 'i':
@@ -331,24 +334,28 @@ main(int argc,
       pre_hinting = true;
       break;
 
-    case 't':
-      tty = true;
-      break;
-
     case 'v':
+#ifndef BUILD_GUI
       progress_func = progress;
+#endif
       break;
 
     case 'V':
+#ifdef CONSOLE_OUTPUT
       show_version();
+#endif
       break;
 
     case 'x':
+#ifdef CONSOLE_OUTPUT
       fprintf(stderr, "Option `-x' not implemented yet\n");
+#endif
       break;
 
     case HELP_ALL_OPTION:
+#ifdef CONSOLE_OUTPUT
       show_help(argv[0], true, false);
+#endif
       break;
 
     case PASS_THROUGH:
@@ -374,6 +381,8 @@ main(int argc,
   if (!have_hinting_range_max)
     hinting_range_max = 1000;
 
+#ifndef BUILD_GUI
+
   if (hinting_range_min < 2)
   {
     fprintf(stderr, "The hinting range minimum must be at least 2\n");
@@ -386,107 +395,102 @@ main(int argc,
                     hinting_range_min);
     exit(EXIT_FAILURE);
   }
+  // on the console we need in and out file arguments
+  if (argc - optind != 2)
+    show_help(argv[0], false, true);
 
-  if (tty)
+  FILE* in = fopen(argv[optind], "rb");
+  if (!in)
   {
-    // on the console we need in and out file arguments
-    if (argc - optind != 2)
-      show_help(argv[0], false, true);
-
-    FILE* in = fopen(argv[optind], "rb");
-    if (!in)
-    {
-      fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                      "\n"
-                      "  %s\n",
-                      argv[optind], strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-
-    FILE* out = fopen(argv[optind + 1], "wb");
-    if (!out)
-    {
-      fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                      "\n"
-                      "  %s\n",
-                      argv[optind + 1], strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-
-    const unsigned char* error_string;
-    Progress_Data progress_data = {-1, 1, 0};
-
-    TA_Error error =
-      TTF_autohint("in-file, out-file,"
-                   "hinting-range-min, hinting-range-max,"
-                   "error-string,"
-                   "progress-callback, progress-callback-data,"
-                   "ignore-permissions, pre-hinting, fallback-script",
-                   in, out,
-                   hinting_range_min, hinting_range_max,
-                   &error_string,
-                   progress_func, &progress_data,
-                   ignore_permissions, pre_hinting, latin_fallback);
-
-    if (error)
-    {
-      if (error == TA_Err_Invalid_FreeType_Version)
-        fprintf(stderr,
-                "FreeType version 2.4.5 or higher is needed.\n"
-                "Perhaps using a wrong FreeType DLL?\n");
-      else if (error == TA_Err_Missing_Legal_Permission)
-        fprintf(stderr,
-                "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
-                "This font must not be modified"
-                  " without permission of the legal owner.\n"
-                "Use command line option `-i' to continue"
-                  " if you have such a permission.\n");
-      else if (error == TA_Err_Missing_Unicode_CMap)
-        fprintf(stderr,
-                "No Unicode character map.\n");
-      else if (error == TA_Err_Missing_Glyph)
-        fprintf(stderr,
-                "No glyph for the key character"
-                " to derive standard width and height.\n"
-                "For the latin script, this key character is `o' (U+006F).\n");
-      else
-        fprintf(stderr,
-                "Error code `0x%02x' while autohinting font:\n"
-                "  %s\n", error, error_string);
-      exit(EXIT_FAILURE);
-    }
-
-    fclose(in);
-    fclose(out);
-
-    exit(EXIT_SUCCESS);
+    fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                    "\n"
+                    "  %s\n",
+                    argv[optind], strerror(errno));
+    exit(EXIT_FAILURE);
   }
 
-#if HAVE_QT
-  else
+  FILE* out = fopen(argv[optind + 1], "wb");
+  if (!out)
   {
-    int new_argc = new_arg_string.size();
-    char** new_argv = new char*[new_argc];
+    fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                    "\n"
+                    "  %s\n",
+                    argv[optind + 1], strerror(errno));
+    exit(EXIT_FAILURE);
+  }
 
-    // construct new argc and argv variables from collected data
-    for (int i = 0; i < new_argc; i++)
-      new_argv[i] = const_cast<char*>(new_arg_string[i].data());
+  const unsigned char* error_string;
+  Progress_Data progress_data = {-1, 1, 0};
 
-    QApplication app(new_argc, new_argv);
-    app.setApplicationName("TTFautohint");
-    app.setApplicationVersion(VERSION);
-    app.setOrganizationName("FreeType");
-    app.setOrganizationDomain("freetype.org");
-
-    Main_GUI gui(hinting_range_min, hinting_range_max,
+  TA_Error error =
+    TTF_autohint("in-file, out-file,"
+                 "hinting-range-min, hinting-range-max,"
+                 "error-string,"
+                 "progress-callback, progress-callback-data,"
+                 "ignore-permissions, pre-hinting, fallback-script",
+                 in, out,
+                 hinting_range_min, hinting_range_max,
+                 &error_string,
+                 progress_func, &progress_data,
                  ignore_permissions, pre_hinting, latin_fallback);
-    gui.show();
 
-    return app.exec();
+  if (error)
+  {
+    if (error == TA_Err_Invalid_FreeType_Version)
+      fprintf(stderr,
+              "FreeType version 2.4.5 or higher is needed.\n"
+              "Perhaps using a wrong FreeType DLL?\n");
+    else if (error == TA_Err_Missing_Legal_Permission)
+      fprintf(stderr,
+              "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"
+              "This font must not be modified"
+                " without permission of the legal owner.\n"
+              "Use command line option `-i' to continue"
+                " if you have such a permission.\n");
+    else if (error == TA_Err_Missing_Unicode_CMap)
+      fprintf(stderr,
+              "No Unicode character map.\n");
+    else if (error == TA_Err_Missing_Glyph)
+      fprintf(stderr,
+              "No glyph for the key character"
+              " to derive standard width and height.\n"
+              "For the latin script, this key character is `o' (U+006F).\n");
+    else
+      fprintf(stderr,
+              "Error code `0x%02x' while autohinting font:\n"
+              "  %s\n", error, error_string);
+    exit(EXIT_FAILURE);
   }
-#endif
+
+  fclose(in);
+  fclose(out);
+
+  exit(EXIT_SUCCESS);
 
   return 0; // never reached
+
+#else /* BUILD_GUI */
+
+  int new_argc = new_arg_string.size();
+  char** new_argv = new char*[new_argc];
+
+  // construct new argc and argv variables from collected data
+  for (int i = 0; i < new_argc; i++)
+    new_argv[i] = const_cast<char*>(new_arg_string[i].data());
+
+  QApplication app(new_argc, new_argv);
+  app.setApplicationName("TTFautohint");
+  app.setApplicationVersion(VERSION);
+  app.setOrganizationName("FreeType");
+  app.setOrganizationDomain("freetype.org");
+
+  Main_GUI gui(hinting_range_min, hinting_range_max,
+               ignore_permissions, pre_hinting, latin_fallback);
+  gui.show();
+
+  return app.exec();
+
+#endif /* BUILD_GUI */
 }
 
 // end of main.cpp

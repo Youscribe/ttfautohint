@@ -14,8 +14,8 @@ The library has a single API function, `TTF_autohint'; see
 `lib/ttfautohint.h' for a detailed description.  Note that the library
 itself won't get installed currently.
 
-A simple command-line interface to the library is the demo program
-`ttfautohint'; after compilation and installation, say
+A command-line interface to the library is the `ttfautohint' program; after
+compilation and installation, say
 
   ttfautohint --help
 
@@ -24,6 +24,10 @@ for usage information, or say
   man ttfautohint
 
 to read its manual page.
+
+A GUI interface to the library is `ttfautohintGUI'; it uses the Qt4
+framework.  The compilation of this application can be disabled with the
+`--without-qt' configuration option.
 
 -----------------------------------------------------------------------------
 

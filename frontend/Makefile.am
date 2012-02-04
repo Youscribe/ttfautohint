@@ -31,14 +31,18 @@ bin_PROGRAMS = ttfautohint
 ttfautohint_SOURCES = main.cpp
 
 if USE_QT
-  AM_CXXFLAGS = $(QT_CXXFLAGS)
-  AM_LDFLAGS = $(QT_LDFLAGS)
-  AM_CPPFLAGS += $(QT_CPPFLAGS)
-  LDADD += $(QT_LIBS)
-
-  ttfautohint_SOURCES += maingui.cpp \
-                         maingui.h \
-                         maingui.moc.cpp
+  bin_PROGRAMS += ttfautohintGUI
+  ttfautohintGUI_SOURCES = main.cpp \
+                           maingui.cpp \
+                           maingui.h \
+                           maingui.moc.cpp
+  ttfautohintGUI_CXXFLAGS = $(QT_CXXFLAGS)
+  ttfautohintGUI_LDFLAGS = $(QT_LDFLAGS)
+  ttfautohintGUI_CPPFLAGS = $(AM_CPPFLAGS) \
+                            $(QT_CPPFLAGS) \
+                            -DBUILD_GUI
+  ttfautohintGUI_LDADD = $(LDADD) \
+                         $(QT_LIBS)
 
   BUILT_SOURCES = maingui.moc.cpp
 endif
