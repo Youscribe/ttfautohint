@@ -95,21 +95,20 @@ progress(long curr_idx,
 
 #ifdef CONSOLE_OUTPUT
 static void
-show_help(char* program_name,
-          bool all,
+show_help(bool all,
           bool is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
 
   fprintf(handle,
-"Usage: %s [OPTION]... IN-FILE OUT-FILE\n"
-"  or:  %sGUI [OPTION]...\n"
+"Usage: ttfautohint [OPTION]... IN-FILE OUT-FILE\n"
+"  or:  ttfautohintGUI [OPTION]...\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
-"These programs are simple front-ends to the `ttfautohint' library.\n"
-"\n",
-          program_name, program_name);
+"These programs (for console and GUI, respectively)\n"
+"are simple front-ends to the `ttfautohint' library.\n"
+"\n");
 
   fprintf(handle,
 "Long options can be given with one or two dashes,\n"
@@ -124,16 +123,15 @@ show_help(char* program_name,
 "  -h, --help                 display this help and exit\n"
 "      --help-all             show Qt and X11 specific options also\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
-"  -l, --hinting-range-min=N  the minimum ppem value for generating hints\n"
-"  -p, --pre-hinting          apply original hints before generating hints\n");
+"  -l, --hinting-range-min=N  the minimum ppem value for hint sets\n"
+"  -p, --pre-hinting          apply original hints in advance\n");
   fprintf(handle,
-"  -r, --hinting-range-max=N  the maximum ppem value for generating hints\n"
-"  -t, --tty                  don't start a GUI\n"
+"  -r, --hinting-range-max=N  the maximum ppem value for hint sets\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
 "  -x, --x-height-snapping-exceptions=STRING\n"
-"                             specify a comma-separated list of x-height\n"
-"                             snapping exceptions ranges and single values\n"
+"                             specify a comma-separated list of\n"
+"                             x-height snapping exceptions\n"
 "\n");
 
   if (all)
@@ -187,15 +185,23 @@ show_help(char* program_name,
   }
 
   fprintf(handle,
-"The program accepts both TTF and TTC files as input.\n"
-"The `gasp' table of the output file enables grayscale hinting for all sizes.\n"
+"The programs accept both TTF and TTC files as input.\n"
 "Use option -i only if you have a legal permission to modify the font.\n"
 "If option -f is not set, glyphs not in the latin range stay unhinted.\n"
 "The used ppem value for option -p is FUnits per em, normally 2048.\n"
-"\n"
+"\n");
+  fprintf(handle,
+"A hint set contains the optimal hinting for a certain PPEM value;\n"
+"the larger the hint set range, the more hint sets get computed,\n"
+"usually increasing the output font size.  Note, however,\n"
+"that the `gasp' table of the output file enables grayscale hinting\n"
+"for all sizes.\n"
+"\n");
+  fprintf(handle,
 "If run in GUI mode, options not related to Qt or X11 set default values.\n"
+"Additionally, there is no output to the console.\n"
 "\n"
-"Note that GUI support might be disabled at compile time.\n"
+"GUI support might be disabled at compile time.\n"
 "\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
 "FreeType home page: <http://www.freetype.org>\n");
@@ -314,7 +320,7 @@ main(int argc,
 
     case 'h':
 #ifdef CONSOLE_OUTPUT
-      show_help(argv[0], false, false);
+      show_help(false, false);
 #endif
       break;
 
@@ -356,7 +362,7 @@ main(int argc,
 
     case HELP_ALL_OPTION:
 #ifdef CONSOLE_OUTPUT
-      show_help(argv[0], true, false);
+      show_help(true, false);
 #endif
       break;
 
@@ -399,7 +405,7 @@ main(int argc,
   }
   // on the console we need in and out file arguments
   if (argc - optind != 2)
-    show_help(argv[0], false, true);
+    show_help(false, true);
 
   FILE* in = fopen(argv[optind], "rb");
   if (!in)
