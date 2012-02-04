@@ -93,6 +93,7 @@ progress(long curr_idx,
 #endif /* !BUILD_GUI */
 
 
+#ifdef CONSOLE_OUTPUT
 static void
 show_help(char* program_name,
           bool all,
@@ -218,6 +219,7 @@ show_version()
 
   exit(EXIT_SUCCESS);
 }
+#endif /* CONSOLE_OUTPUT */
 
 
 int
