@@ -29,7 +29,7 @@ gl_INIT
 AC_TYPE_UINT64_T
 
 AT_WITH_QT
-AT_REQUIRE_QT_VERSION([4.7])
+AT_REQUIRE_QT_VERSION([4.6])
 
 if test x"$with_qt" != x"no"; then
   AC_MSG_CHECKING([for QLocale::quoteString])
