@@ -1,5 +1,5 @@
-ttfautohint 0.6.1
------------------
+ttfautohint 0.7
+---------------
 
 by Werner Lemberg <wl@gnu.org>
 
@@ -25,9 +25,9 @@ for usage information, or say
 
 to read its manual page.
 
-A GUI interface to the library is `ttfautohintGUI'; it uses the Qt4
-framework.  The compilation of this application can be disabled with the
-`--without-qt' configuration option.
+A GUI to the library is `ttfautohintGUI'; it uses the Qt4 framework.  The
+compilation of this application can be disabled with the `--without-qt'
+configuration option.
 
 -----------------------------------------------------------------------------
 

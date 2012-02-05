@@ -1,3 +1,8 @@
+New in 0.7:
+
+* A GUI has been added, using the Qt framework.  The binary is called
+  `ttfautohintGUI'.
+
 New in 0.6.1:
 
 * The improved handling of composite glyphs in 0.6 was buggy under certain
