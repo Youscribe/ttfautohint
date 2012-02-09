@@ -34,8 +34,8 @@ if USE_QT
   bin_PROGRAMS += ttfautohintGUI
   ttfautohintGUI_SOURCES = main.cpp \
                            maingui.cpp \
-                           maingui.h \
-                           maingui.moc.cpp
+                           maingui.h
+  nodist_ttfautohintGUI_SOURCES = maingui.moc.cpp
   ttfautohintGUI_CXXFLAGS = $(QT_CXXFLAGS)
   ttfautohintGUI_LDFLAGS = $(QT_LDFLAGS)
   ttfautohintGUI_CPPFLAGS = $(AM_CPPFLAGS) \
