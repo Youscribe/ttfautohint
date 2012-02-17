@@ -139,6 +139,14 @@ typedef int
  *                                independently of the output resolution.
  *                                Not implemented yet.
  *
+ *   increase-x-height            An integer (1 for `on' and 0 for `off',
+ *                                which is the default).  For PPEM values in
+ *                                the range 5 < PPEM < 15, round up the
+ *                                font's x height much more often than
+ *                                normally if this flag is set.  Use this if
+ *                                holes in letters like `e' get filled, for
+ *                                example.
+ *
  *   x-height-snapping-exceptions A pointer of type `const char*' to a
  *                                null-terminated string which gives a list
  *                                of comma separated ppem values or value

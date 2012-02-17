@@ -1541,7 +1541,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_UInt size;
 
 
+  /* XXX: right now, we abuse this flag to control */
+  /*      the global behaviour of the auto-hinter */
   load_flags = font->fallback_script << 30;
+  if (font->increase_x_height)
+    load_flags |= 1 << 29;
   if (!font->pre_hinting)
     load_flags |= FT_LOAD_NO_SCALE;
 

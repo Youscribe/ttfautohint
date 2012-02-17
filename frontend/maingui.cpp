@@ -40,11 +40,13 @@ Main_GUI::Main_GUI(int range_min,
                    int range_max,
                    bool ignore,
                    bool pre,
+                   bool increase,
                    int fallback)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
   ignore_permissions(ignore),
   pre_hinting(pre),
+  increase_x_height(increase),
   latin_fallback(fallback)
 {
   create_layout();
@@ -453,13 +455,15 @@ again:
                  "hinting-range-min, hinting-range-max,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
-                 "ignore-permissions, pre-hinting,"
+                 "ignore-permissions,"
+                 "pre-hinting, increase-x-height,"
                  "fallback-script",
                  input, output,
                  min_box->value(), max_box->value(),
                  &error_string,
                  gui_progress, &gui_progress_data,
-                 ignore_permissions, pre_box->isChecked(),
+                 ignore_permissions,
+                 pre_box->isChecked(), increase_box->isChecked(),
                  fallback_box->currentIndex());
 
   fclose(input);
@@ -569,10 +573,19 @@ Main_GUI::create_layout()
     tr("If switched on, the original bytecode of the input font"
        " gets applied before <b>TTFautohint</b> starts processing"
        " the outlines of the glyphs."));
+  increase_box = new QCheckBox(tr("In&crease x-height"), this);
+  increase_box->setToolTip(
+    tr("For PPEM values in the range 5&nbsp;&lt; PPEM &lt;&nbsp;15,"
+       " round up the font's x&nbsp;height much more often than normally"
+       " if switched on.\n"
+       "Use this if holes in letters like <i>e</i> get filled,"
+       " for example."));
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
   flags_layout->addStretch(1);
+  flags_layout->addWidget(increase_box);
+  flags_layout->addStretch(2);
 
   // running
   run_button = new QPushButton(tr("&Run"));

@@ -55,6 +55,7 @@ TTF_autohint(const char* options,
 
   FT_Bool ignore_permissions = 0;
   FT_Bool pre_hinting = 0;
+  FT_Bool increase_x_height = 0;
   FT_UInt fallback_script = 0;
 
   const char* op;
@@ -122,6 +123,8 @@ TTF_autohint(const char* options,
       in_buf = NULL;
       in_len = 0;
     }
+    else if (COMPARE("increase-x-height"))
+      increase_x_height = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("out-buffer"))
     {
       out_file = NULL;
@@ -204,6 +207,7 @@ TTF_autohint(const char* options,
 
   font->ignore_permissions = ignore_permissions;
   font->pre_hinting = pre_hinting;
+  font->increase_x_height = increase_x_height;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
 
