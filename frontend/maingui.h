@@ -14,6 +14,8 @@
 #ifndef __MAINGUI_H__
 #define __MAINGUI_H__
 
+#include <config.h>
+
 #include <QMainWindow>
 
 #include <stdio.h>
