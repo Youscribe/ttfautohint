@@ -310,7 +310,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fhil:r:ptVvx:",
+    int c = getopt_long_only(argc, argv, "fhil:r:ptVvxX:",
                              long_options, &option_index);
     if (c == -1)
       break;
