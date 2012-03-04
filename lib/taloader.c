@@ -474,10 +474,6 @@ Hint_Metrics:
 #endif
   }
 
-#ifdef DEBUG_HINTER
-  ta_debug_hinter = hinter;
-#endif
-
 Exit:
   return error;
 }
