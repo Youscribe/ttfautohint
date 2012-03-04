@@ -1627,7 +1627,19 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* to find hints records which get pushed onto the bytecode stack */
 
 #ifdef DEBUGGING
-  printf("glyph %ld\n", idx);
+  {
+    int num_chars, i;
+
+
+    num_chars = fprintf(stderr, "glyph %ld\n", idx);
+    for (i = 0; i < num_chars - 1; i++)
+      putc('=', stderr);
+    fprintf(stderr, "\n\n");
+
+    ta_glyph_hints_dump_edges(_ta_debug_hints);
+    ta_glyph_hints_dump_segments(_ta_debug_hints);
+    ta_glyph_hints_dump_points(_ta_debug_hints);
+  }
 #endif
 
   /* we temporarily use `ins_buf' to record the current glyph hints, */
@@ -1667,10 +1679,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     {
 #ifdef DEBUGGING
       {
-        printf("  %d:\n", size);
+        fprintf(stderr, "  %d:\n", size);
         for (p = bufp; p < recorder.hints_record.buf; p += 2)
-          printf(" %2d", *p * 256 + *(p + 1));
-        printf("\n");
+          fprintf(stderr, " %2d", *p * 256 + *(p + 1));
+        fprintf(stderr, "\n");
       }
 #endif
 

@@ -152,14 +152,6 @@ TA_table_build_cvt(FT_Byte** cvt,
     *(buf_p++) = LOW(vaxis->blues[i].shoot.org);
   }
 
-#if 0
-  TA_LOG(("--------------------------------------------------\n"));
-  TA_LOG(("glyph %d:\n", idx));
-  ta_glyph_hints_dump_edges(_ta_debug_hints);
-  ta_glyph_hints_dump_segments(_ta_debug_hints);
-  ta_glyph_hints_dump_points(_ta_debug_hints);
-#endif
-
   *cvt = buf;
   *cvt_len = buf_len;
 

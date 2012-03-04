@@ -30,13 +30,15 @@
 
 #ifdef TA_DEBUG
 
-#include <stdlib.h>
-
 #define TA_LOG(x) \
   do { \
     if (_ta_debug) \
-      printf x; \
+      _ta_message x; \
   } while (0)
+
+void
+_ta_message(const char *format,
+            ...);
 
 extern int _ta_debug;
 extern int _ta_debug_disable_horz_hints;

@@ -445,6 +445,17 @@ ta_axis_hints_new_edge(TA_AxisHints axis,
                        TA_Direction dir,
                        TA_Edge* edge);
 
+#ifdef TA_DEBUG
+void
+ta_glyph_hints_dump_points(TA_GlyphHints hints);
+
+void
+ta_glyph_hints_dump_segments(TA_GlyphHints hints);
+
+void
+ta_glyph_hints_dump_edges(TA_GlyphHints hints);
+#endif
+
 void
 ta_glyph_hints_init(TA_GlyphHints hints);
 
