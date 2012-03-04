@@ -437,9 +437,10 @@ Hint_Metrics:
     /* for mono-width fonts (like Andale, Courier, etc.) we need */
     /* to keep the original rounded advance width; ditto for */
     /* digits if all have the same advance width */
-    if (FT_IS_FIXED_WIDTH(slot->face)
-        || (ta_face_globals_is_digit(loader->globals, glyph_index)
-            && metrics->digits_have_same_width))
+    if (scaler->render_mode != FT_RENDER_MODE_LIGHT
+        && (FT_IS_FIXED_WIDTH(slot->face)
+            || (ta_face_globals_is_digit(loader->globals, glyph_index)
+                && metrics->digits_have_same_width)))
     {
       slot->metrics.horiAdvance = FT_MulFix(slot->metrics.horiAdvance,
                                             metrics->scaler.x_scale);
@@ -469,7 +470,13 @@ Hint_Metrics:
     if (error)
       goto Exit;
 
-    slot->outline = internal->loader->base.outline;
+    /* reassign all outline fields except flags to protect them */
+    slot->outline.n_contours = internal->loader->base.outline.n_contours;
+    slot->outline.n_points   = internal->loader->base.outline.n_points;
+    slot->outline.points     = internal->loader->base.outline.points;
+    slot->outline.tags       = internal->loader->base.outline.tags;
+    slot->outline.contours   = internal->loader->base.outline.contours;
+
     slot->format = FT_GLYPH_FORMAT_OUTLINE;
 #endif
   }
