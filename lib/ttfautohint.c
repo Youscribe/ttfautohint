@@ -189,7 +189,7 @@ TTF_autohint(const char* options,
     goto Err1;
   }
   if (hinting_range_min < 0)
-    hinting_range_min = 8;
+    hinting_range_min = TA_HINTING_RANGE_MIN;
 
   if (hinting_range_max >= 0 && hinting_range_max < hinting_range_min)
   {
@@ -197,7 +197,7 @@ TTF_autohint(const char* options,
     goto Err1;
   }
   if (hinting_range_max < 0)
-    hinting_range_max = 1000;
+    hinting_range_max = TA_HINTING_RANGE_MAX;
 
   font->hinting_range_min = (FT_UInt)hinting_range_min;
   font->hinting_range_max = (FT_UInt)hinting_range_max;

@@ -124,16 +124,20 @@ show_help(bool all,
 "      --help-all             show Qt and X11 specific options also\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum ppem value for hint sets\n"
-"  -p, --pre-hinting          apply original hints in advance\n");
+"                             (default: %d)\n"
+"  -p, --pre-hinting          apply original hints in advance\n",
+          TA_HINTING_RANGE_MIN);
   fprintf(handle,
 "  -r, --hinting-range-max=N  the maximum ppem value for hint sets\n"
+"                             (default: %d)\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
 "  -x, --increase-x-height    increase x height for small sizes\n"
 "  -X, --x-height-snapping-exceptions=STRING\n"
 "                             specify a comma-separated list of\n"
 "                             x-height snapping exceptions\n"
-"\n");
+"\n",
+          TA_HINTING_RANGE_MAX);
 
   if (all)
   {

@@ -23,6 +23,11 @@ extern "C" {
 #endif
 
 
+/* Some default values. */
+
+#define TA_HINTING_RANGE_MIN 8
+#define TA_HINTING_RANGE_MAX 1000
+
 /* Error type. */
 
 typedef int TA_Error;
@@ -120,13 +125,14 @@ typedef int
  *   hinting-range-min            An integer (which must be larger than or
  *                                equal to 2) giving the lowest ppem value
  *                                used for autohinting.  If this field is
- *                                not set, it defaults to value 8.
+ *                                not set, it defaults to
+ *                                TA_HINTING_RANGE_MIN.
  *
  *   hinting-range-max            An integer (which must be larger than or
  *                                equal to the value of `hinting-range-min')
  *                                giving the highest ppem value used for
  *                                autohinting.  If this field is not set, it
- *                                defaults to value 1000.
+ *                                defaults to TA_HINTING_RANGE_MAX.
  *
  *   pre-hinting                  An integer (1 for `on' and 0 for `off',
  *                                which is the default) to specify whether
@@ -137,7 +143,6 @@ typedef int
  *                                for most fonts this is 2048ppem.  Use this
  *                                if the hints move or scale subglyphs
  *                                independently of the output resolution.
- *                                Not implemented yet.
  *
  *   increase-x-height            An integer (1 for `on' and 0 for `off',
  *                                which is the default).  For PPEM values in
@@ -182,13 +187,13 @@ typedef int
  *   All other options are optional.
  *
  * o `hinting-range-min' and `hinting-range-max' specify the range for which
- *   the autohinter generates optimized hinting code.  If a ppem is smaller
- *   than the value of `hinting-range-min', hinting still takes place but
- *   the configuration created for `hinting-range-min' is used.  The
- *   analogous action is taken for `hinting-range-max'.  The font's `gasp'
- *   table is set up to always use grayscale rendering with grid-fitting for
- *   standard hinting, and symmetric grid-fitting and symmetric smoothing
- *   for horizontal subpixel hinting (ClearType).
+ *   the autohinter generates optimized hinting code.  If a PPEM value is
+ *   smaller than the value of `hinting-range-min', hinting still takes
+ *   place but the configuration created for `hinting-range-min' is used.
+ *   The analogous action is taken for `hinting-range-max'.  The font's
+ *   `gasp' table is set up to always use grayscale rendering with
+ *   grid-fitting for standard hinting, and symmetric grid-fitting and
+ *   symmetric smoothing for horizontal subpixel hinting (ClearType).
  */
 
 TA_Error
