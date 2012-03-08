@@ -38,7 +38,7 @@ class Main_GUI
   Q_OBJECT
 
 public:
-  Main_GUI(int, int, bool, bool, bool, int);
+  Main_GUI(int, int, int, bool, bool, bool, int);
 
 protected:
   void closeEvent(QCloseEvent*);
@@ -49,6 +49,8 @@ private slots:
   void browse_output();
   void check_min();
   void check_max();
+  void check_limit();
+  void check_no_limit();
   void absolute_input();
   void absolute_output();
   void check_run();
@@ -57,6 +59,7 @@ private slots:
 private:
   int hinting_range_min;
   int hinting_range_max;
+  int hinting_limit;
   int ignore_permissions;
   int pre_hinting;
   int increase_x_height;
@@ -87,6 +90,11 @@ private:
   QSpinBox* max_box;
 
   QComboBox* fallback_box;
+
+  QLabel* limit_label;
+  QSpinBox* limit_box;
+
+  QCheckBox* no_limit_box;
 
   QCheckBox* pre_box;
   QCheckBox* increase_box;

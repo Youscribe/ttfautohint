@@ -49,6 +49,7 @@ TTF_autohint(const char* options,
 
   FT_Long hinting_range_min = -1;
   FT_Long hinting_range_max = -1;
+  FT_Long hinting_limit = -1;
 
   TA_Progress_Func progress;
   void* progress_data;
@@ -101,6 +102,8 @@ TTF_autohint(const char* options,
       error_stringp = va_arg(ap, const unsigned char**);
     else if (COMPARE("fallback-script"))
       fallback_script = va_arg(ap, FT_UInt);
+    else if (COMPARE("hinting-limit"))
+      hinting_limit = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-max"))
       hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-min"))
@@ -199,8 +202,18 @@ TTF_autohint(const char* options,
   if (hinting_range_max < 0)
     hinting_range_max = TA_HINTING_RANGE_MAX;
 
+  /* value 0 is valid */
+  if (hinting_limit > 0 && hinting_limit < hinting_range_max)
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
+  if (hinting_limit < 0)
+    hinting_limit = TA_HINTING_LIMIT;
+
   font->hinting_range_min = (FT_UInt)hinting_range_min;
   font->hinting_range_max = (FT_UInt)hinting_range_max;
+  font->hinting_limit = (FT_UInt)hinting_limit;
 
   font->progress = progress;
   font->progress_data = progress_data;

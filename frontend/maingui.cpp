@@ -38,12 +38,14 @@
 
 Main_GUI::Main_GUI(int range_min,
                    int range_max,
+                   int limit,
                    bool ignore,
                    bool pre,
                    bool increase,
                    int fallback)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
+  hinting_limit(limit),
   ignore_permissions(ignore),
   pre_hinting(pre),
   increase_x_height(increase),
@@ -133,8 +135,11 @@ Main_GUI::check_min()
 {
   int min = min_box->value();
   int max = max_box->value();
+  int limit = limit_box->value();
   if (min > max)
     max_box->setValue(min);
+  if (min > limit)
+    limit_box->setValue(min);
 }
 
 
@@ -143,8 +148,40 @@ Main_GUI::check_max()
 {
   int min = min_box->value();
   int max = max_box->value();
+  int limit = limit_box->value();
   if (max < min)
     min_box->setValue(max);
+  if (max > limit)
+    limit_box->setValue(max);
+}
+
+
+void
+Main_GUI::check_limit()
+{
+  int min = min_box->value();
+  int max = max_box->value();
+  int limit = limit_box->value();
+  if (limit < max)
+    max_box->setValue(limit);
+  if (limit < min)
+    min_box->setValue(limit);
+}
+
+
+void
+Main_GUI::check_no_limit()
+{
+  if (no_limit_box->isChecked())
+  {
+    limit_label->setEnabled(false);
+    limit_box->setEnabled(false);
+  }
+  else
+  {
+    limit_label->setEnabled(true);
+    limit_box->setEnabled(true);
+  }
 }
 
 
@@ -453,6 +490,7 @@ again:
   TA_Error error =
     TTF_autohint("in-file, out-file,"
                  "hinting-range-min, hinting-range-max,"
+                 "hinting-limit,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions,"
@@ -460,6 +498,7 @@ again:
                  "fallback-script",
                  input, output,
                  min_box->value(), max_box->value(),
+                 no_limit_box->isChecked() ? 0 : limit_box->value(),
                  &error_string,
                  gui_progress, &gui_progress_data,
                  ignore_permissions,
@@ -530,9 +569,6 @@ Main_GUI::create_layout()
   max_box->setRange(2, 10000);
   max_box->setValue(hinting_range_max);
 
-  check_min();
-  check_max();
-
   QGridLayout* minmax_layout = new QGridLayout;
   minmax_layout->addWidget(min_label, 0, 0);
   minmax_layout->addWidget(min_box, 0, 1);
@@ -566,6 +602,42 @@ Main_GUI::create_layout()
   hint_fallback_layout->addWidget(fallback_label);
   hint_fallback_layout->addWidget(fallback_box);
   hint_fallback_layout->addStretch(2);
+
+  // hinting limit
+  limit_label = new QLabel(tr("Hinting &Limit:"));
+  limit_box = new QSpinBox;
+  limit_label->setBuddy(limit_box);
+  limit_label->setToolTip(
+    tr("Make <b>TTFautohint</b> add bytecode to the output font so that"
+       " sizes larger than this PPEM value are not hinted"
+       " (regardless of the values in the <i>gasp</i> table)."));
+  limit_box->setKeyboardTracking(false);
+  limit_box->setRange(2, 10000);
+  limit_box->setValue(hinting_limit ? hinting_limit : hinting_range_max);
+
+  no_limit_box = new QCheckBox(tr("No Hinting Limi&t"), this);
+  no_limit_box->setToolTip(
+    tr("If switched on, <b>TTFautohint</b> adds no hinting limit"
+       " to the bytecode."));
+
+  QHBoxLayout* limit_layout = new QHBoxLayout;
+  limit_layout->addWidget(limit_label);
+  limit_layout->addWidget(limit_box);
+  limit_layout->addStretch(1);
+  limit_layout->addWidget(no_limit_box);
+  limit_layout->addStretch(2);
+
+  // handle command line option `--hinting-limit=0'
+  if (!hinting_limit)
+  {
+    hinting_limit = max_box->value();
+    no_limit_box->setChecked(true);
+  }
+
+  check_min();
+  check_max();
+  check_limit();
+  check_no_limit();
 
   // flags
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
@@ -603,6 +675,8 @@ Main_GUI::create_layout()
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(hint_fallback_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
+  gui_layout->addLayout(limit_layout);
+  gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(flags_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(running_layout);
@@ -638,6 +712,11 @@ Main_GUI::create_connections()
           SLOT(check_min()));
   connect(max_box, SIGNAL(valueChanged(int)), this,
           SLOT(check_max()));
+
+  connect(limit_box, SIGNAL(valueChanged(int)), this,
+          SLOT(check_limit()));
+  connect(no_limit_box, SIGNAL(clicked()), this,
+          SLOT(check_no_limit()));
 
   connect(run_button, SIGNAL(clicked()), this,
           SLOT(run()));

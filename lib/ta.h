@@ -193,6 +193,7 @@ typedef struct FONT_
   void* progress_data;
   FT_UInt hinting_range_min;
   FT_UInt hinting_range_max;
+  FT_UInt hinting_limit;
   FT_Bool pre_hinting;
   FT_Bool increase_x_height;
   FT_Bool no_x_height_snapping;

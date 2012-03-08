@@ -120,15 +120,17 @@ show_help(bool all,
   fprintf(handle,
 "Options:\n"
 "  -f, --latin-fallback       set fallback script to latin\n"
+"  -G, --hinting-limit=N      switch off hinting above this PPEM value\n"
+"                             (default: %d)\n"
 "  -h, --help                 display this help and exit\n"
 "      --help-all             show Qt and X11 specific options also\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
-"  -l, --hinting-range-min=N  the minimum ppem value for hint sets\n"
+"  -l, --hinting-range-min=N  the minimum PPEM value for hint sets\n"
 "                             (default: %d)\n"
 "  -p, --pre-hinting          apply original hints in advance\n",
-          TA_HINTING_RANGE_MIN);
+          TA_HINTING_LIMIT, TA_HINTING_RANGE_MIN);
   fprintf(handle,
-"  -r, --hinting-range-max=N  the maximum ppem value for hint sets\n"
+"  -r, --hinting-range-max=N  the maximum PPEM value for hint sets\n"
 "                             (default: %d)\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
@@ -193,14 +195,14 @@ show_help(bool all,
 "The programs accept both TTF and TTC files as input.\n"
 "Use option -i only if you have a legal permission to modify the font.\n"
 "If option -f is not set, glyphs not in the latin range stay unhinted.\n"
-"The used ppem value for option -p is FUnits per em, normally 2048.\n"
+"The used PPEM value for option -p is FUnits per em, normally 2048.\n"
 "\n");
   fprintf(handle,
 "A hint set contains the optimal hinting for a certain PPEM value;\n"
 "the larger the hint set range, the more hint sets get computed,\n"
 "usually increasing the output font size.  Note, however,\n"
 "that the `gasp' table of the output file enables grayscale hinting\n"
-"for all sizes.\n"
+"for all sizes (limited by option -G which is handled in the bytecode).\n"
 "\n");
   fprintf(handle,
 "If run in GUI mode, options not related to Qt or X11 set default values.\n"
@@ -239,8 +241,10 @@ main(int argc,
 {
   int hinting_range_min = 0;
   int hinting_range_max = 0;
+  int hinting_limit = 0;
   bool have_hinting_range_min = false;
   bool have_hinting_range_max = false;
+  bool have_hinting_limit = false;
 
   bool ignore_permissions = false;
   bool pre_hinting = false;
@@ -276,6 +280,7 @@ main(int argc,
       // ttfautohint options
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
+      {"hinting-limit", required_argument, NULL, 'G'},
       {"ignore-permissions", no_argument, NULL, 'i'},
       {"latin-fallback", no_argument, NULL, 'f'},
       {"pre-hinting", no_argument, NULL, 'p'},
@@ -314,7 +319,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fhil:r:ptVvxX:",
+    int c = getopt_long_only(argc, argv, "fG:hil:r:ptVvxX:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -323,6 +328,11 @@ main(int argc,
     {
     case 'f':
       latin_fallback = 1;
+      break;
+
+    case 'G':
+      hinting_limit = atoi(optarg);
+      have_hinting_limit = true;
       break;
 
     case 'h':
@@ -396,9 +406,11 @@ main(int argc,
   }
 
   if (!have_hinting_range_min)
-    hinting_range_min = 8;
+    hinting_range_min = TA_HINTING_RANGE_MIN;
   if (!have_hinting_range_max)
-    hinting_range_max = 1000;
+    hinting_range_max = TA_HINTING_RANGE_MAX;
+  if (!have_hinting_limit)
+    hinting_limit = TA_HINTING_LIMIT;
 
 #ifndef BUILD_GUI
 
@@ -414,6 +426,14 @@ main(int argc,
                     hinting_range_min);
     exit(EXIT_FAILURE);
   }
+  if (hinting_limit != 0 && hinting_limit < hinting_range_max)
+  {
+    fprintf(stderr, "A non-zero hinting limit must not be smaller"
+                    " than the hinting range maximum (%d)\n",
+                    hinting_range_max);
+    exit(EXIT_FAILURE);
+  }
+
   // on the console we need in and out file arguments
   if (argc - optind != 2)
     show_help(false, true);
@@ -443,13 +463,13 @@ main(int argc,
 
   TA_Error error =
     TTF_autohint("in-file, out-file,"
-                 "hinting-range-min, hinting-range-max,"
+                 "hinting-range-min, hinting-range-max, hinting-limit,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions, pre-hinting, increase-x-height,"
                  "fallback-script",
                  in, out,
-                 hinting_range_min, hinting_range_max,
+                 hinting_range_min, hinting_range_max, hinting_limit,
                  &error_string,
                  progress_func, &progress_data,
                  ignore_permissions, pre_hinting, increase_x_height,
@@ -505,7 +525,7 @@ main(int argc,
   app.setOrganizationName("FreeType");
   app.setOrganizationDomain("freetype.org");
 
-  Main_GUI gui(hinting_range_min, hinting_range_max,
+  Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
                ignore_permissions, pre_hinting, increase_x_height,
                latin_fallback);
   gui.show();

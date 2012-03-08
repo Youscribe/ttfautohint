@@ -27,6 +27,7 @@ extern "C" {
 
 #define TA_HINTING_RANGE_MIN 8
 #define TA_HINTING_RANGE_MAX 1000
+#define TA_HINTING_LIMIT 1000
 
 /* Error type. */
 
@@ -123,16 +124,25 @@ typedef int
  *                                change the returned value.
  *
  *   hinting-range-min            An integer (which must be larger than or
- *                                equal to 2) giving the lowest ppem value
+ *                                equal to 2) giving the lowest PPEM value
  *                                used for autohinting.  If this field is
  *                                not set, it defaults to
  *                                TA_HINTING_RANGE_MIN.
  *
  *   hinting-range-max            An integer (which must be larger than or
  *                                equal to the value of `hinting-range-min')
- *                                giving the highest ppem value used for
+ *                                giving the highest PPEM value used for
  *                                autohinting.  If this field is not set, it
  *                                defaults to TA_HINTING_RANGE_MAX.
+ *
+ *   hinting-limit                An integer (which must be larger than or
+ *                                equal to the value of `hinting-range-max')
+ *                                which gives the largest PPEM value at
+ *                                which hinting is applied.  For larger
+ *                                values, hinting is switched off.  If this
+ *                                field is not set, it defaults to
+ *                                TA_HINTING_LIMIT.  If it is set to 0, no
+ *                                hinting limit is added to the bytecode.
  *
  *   pre-hinting                  An integer (1 for `on' and 0 for `off',
  *                                which is the default) to specify whether
@@ -154,10 +164,10 @@ typedef int
  *
  *   x-height-snapping-exceptions A pointer of type `const char*' to a
  *                                null-terminated string which gives a list
- *                                of comma separated ppem values or value
+ *                                of comma separated PPEM values or value
  *                                ranges at which no x-height snapping shall
  *                                be applied.  A value range has the form
- *                                `value1-value2', meaning `value1' <= ppem
+ *                                `value1-value2', meaning `value1' <= PPEM
  *                                <= `value2'.  Whitespace is not
  *                                significant; a trailing comma is ignored.
  *                                If the supplied argument is NULL, no
