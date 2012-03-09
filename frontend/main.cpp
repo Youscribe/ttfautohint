@@ -481,6 +481,9 @@ main(int argc,
       fprintf(stderr,
               "FreeType version 2.4.5 or higher is needed.\n"
               "Perhaps using a wrong FreeType DLL?\n");
+    else if (error == TA_Err_Already_Processed)
+      fprintf(stderr,
+              "This font has already been processed with ttfautohint.\n");
     else if (error == TA_Err_Missing_Legal_Permission)
       fprintf(stderr,
               "Bit 1 in the `fsType' field of the `OS/2' table is set:\n"

@@ -30,6 +30,10 @@
 #include <ttfautohint.h>
 
 
+#define TTFAUTOHINT_GLYPH ".ttfautohint"
+#define TTFAUTOHINT_GLYPH_FIRST_BYTE "\x0C" /* first byte is string length */
+#define TTFAUTOHINT_GLYPH_LEN 13
+
 /* these macros convert 16bit and 32bit numbers into single bytes */
 /* using the byte order needed within SFNT files */
 

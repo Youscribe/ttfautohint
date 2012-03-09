@@ -16,9 +16,6 @@
 #include "ta.h"
 
 
-#define TTFAUTOHINT_GLYPH "\x0C.ttfautohint" /* first byte is string length */
-#define TTFAUTOHINT_GLYPH_LEN 13
-
 FT_Error
 TA_sfnt_update_post_table(SFNT* sfnt,
                           FONT* font)
@@ -118,7 +115,7 @@ TA_sfnt_update_post_table(SFNT* sfnt,
     memcpy(p_new, p, buf + buf_len - p); /* names */
     p_new += buf + buf_len - p;
 
-    strncpy((char*)p_new, TTFAUTOHINT_GLYPH,
+    strncpy((char*)p_new, TTFAUTOHINT_GLYPH_FIRST_BYTE TTFAUTOHINT_GLYPH,
             TTFAUTOHINT_GLYPH_LEN); /* new entry */
 
     free(buf);

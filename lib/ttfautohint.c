@@ -252,10 +252,20 @@ TTF_autohint(const char* options,
   for (i = 0; i < font->num_sfnts; i++)
   {
     SFNT* sfnt = &font->sfnts[i];
+    FT_UInt idx;
 
 
     error = FT_New_Memory_Face(font->lib, font->in_buf, font->in_len,
                                i, &sfnt->face);
+
+    /* assure that the font hasn't been already processed by ttfautohint */
+    idx = FT_Get_Name_Index(sfnt->face, TTFAUTOHINT_GLYPH);
+    if (idx)
+    {
+      error = TA_Err_Already_Processed;
+      goto Err;
+    }
+
     if (error)
       goto Err;
 

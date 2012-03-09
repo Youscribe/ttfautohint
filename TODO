@@ -97,8 +97,6 @@ man page for ttfautohint library
 
 separate man pages for ttfautohint and ttfautohintGUI
 
-protect against calling ttfautohint twice on the same font
-
 add info about ttfautohint's calling parameters to output font
 
 install library

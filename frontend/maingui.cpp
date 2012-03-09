@@ -395,6 +395,13 @@ Main_GUI::handle_error(TA_Error error,
          "Are you perhaps using a wrong FreeType DLL?"),
       QMessageBox::Ok,
       QMessageBox::Ok);
+  else if (error == TA_Err_Already_Processed)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("This font has already been processed by ttfautohint."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
   else if (error == TA_Err_Missing_Legal_Permission)
   {
     int yesno = QMessageBox::warning(

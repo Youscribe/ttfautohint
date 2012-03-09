@@ -319,11 +319,9 @@ TA_table_build_prep(FT_Byte** prep,
   }
 
   if (font->hinting_limit)
-  {
     buf_len += sizeof (PREP(hinting_limit_a))
                + 2
                + sizeof (PREP(hinting_limit_b));
-  }
 
   buf_len += sizeof (PREP(store_0x10000));
 
