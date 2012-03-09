@@ -34,9 +34,6 @@ control `gasp' table; Adam Twardoch suggest the following:
   parameter > 0, then up to that parameter value the gasp value 7 should be
   applied, and gasp value 15 should be applied above.
 
-add option to disable hinting at given PPEM value; disable hinting
-  unconditionally (> ~2000) to avoid numeric overflows
-
 control activation threshold of blue zone widths
 
 control the width of blue zones
@@ -97,6 +94,12 @@ various
 testing with Windows and Apple font checkers
 
 man page for ttfautohint library
+
+separate man pages for ttfautohint and ttfautohintGUI
+
+protect against calling ttfautohint twice on the same font
+
+add info about ttfautohint's calling parameters to output font
 
 install library
 
