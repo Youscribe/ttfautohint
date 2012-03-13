@@ -20,14 +20,21 @@ FT_Error
 TA_sfnt_update_post_table(SFNT* sfnt,
                           FONT* font)
 {
-  SFNT_Table* post_table = &font->tables[sfnt->post_idx];
-  FT_Byte* buf = post_table->buf;
-  FT_ULong buf_len = post_table->len;
+  SFNT_Table* post_table;
+  FT_Byte* buf;
+  FT_ULong buf_len;
   FT_Byte* buf_new;
   FT_ULong buf_new_len;
 
   FT_ULong version;
 
+
+  if (sfnt->post_idx == MISSING)
+    return TA_Err_Ok;
+
+  post_table = &font->tables[sfnt->post_idx];
+  buf = post_table->buf;
+  buf_len = post_table->len;
 
   if (post_table->processed)
     return TA_Err_Ok;
