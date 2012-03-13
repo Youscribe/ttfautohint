@@ -601,6 +601,7 @@ Main_GUI::create_layout()
        " which <b>TTFautohint</b> can't map to a script automatically."));
   fallback_box->insertItem(0, tr("None"));
   fallback_box->insertItem(1, tr("Latin"));
+  fallback_box->setCurrentIndex(latin_fallback);
 
   QHBoxLayout* hint_fallback_layout = new QHBoxLayout;
   hint_fallback_layout->addWidget(hinting_label);
@@ -652,6 +653,8 @@ Main_GUI::create_layout()
     tr("If switched on, the original bytecode of the input font"
        " gets applied before <b>TTFautohint</b> starts processing"
        " the outlines of the glyphs."));
+  if (pre_hinting)
+    pre_box->setChecked(true);
   increase_box = new QCheckBox(tr("In&crease x-height"), this);
   increase_box->setToolTip(
     tr("For PPEM values in the range 5&nbsp;&lt; PPEM &lt;&nbsp;15,"
@@ -659,6 +662,8 @@ Main_GUI::create_layout()
        " if switched on.\n"
        "Use this if holes in letters like <i>e</i> get filled,"
        " for example."));
+  if (increase_x_height)
+    increase_box->setChecked(true);
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
