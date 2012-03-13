@@ -182,7 +182,8 @@ typedef int
  *                                the font's legal owner.  In case you have
  *                                such a permission you might set the
  *                                integer argument to value 1 to make
- *                                ttfautohint handle the font.
+ *                                ttfautohint handle the font.  The default
+ *                                value is 0.
  *
  *   fallback-script              An integer which specifies the default
  *                                script for glyphs not in the `latin'
@@ -200,10 +201,16 @@ typedef int
  *   the autohinter generates optimized hinting code.  If a PPEM value is
  *   smaller than the value of `hinting-range-min', hinting still takes
  *   place but the configuration created for `hinting-range-min' is used.
- *   The analogous action is taken for `hinting-range-max'.  The font's
- *   `gasp' table is set up to always use grayscale rendering with
- *   grid-fitting for standard hinting, and symmetric grid-fitting and
- *   symmetric smoothing for horizontal subpixel hinting (ClearType).
+ *   The analogous action is taken for `hinting-range-max', only limited by
+ *   the value given with `hinting-limit'.  The font's `gasp' table is set
+ *   up to always use grayscale rendering with grid-fitting for standard
+ *   hinting, and symmetric grid-fitting and symmetric smoothing for
+ *   horizontal subpixel hinting (ClearType).
+ *
+ * o ttfautohint can't process a font a second time (well, it can, if the
+ *   font doesn't contain composite glyphs).  Just think of ttfautohint as
+ *   being a compiler, a tool which also can't process its created output
+ *   again.
  */
 
 TA_Error
