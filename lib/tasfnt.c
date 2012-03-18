@@ -64,12 +64,15 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
     error = FT_Sfnt_Table_Info(sfnt->face, i, &tag, &len);
     if (error)
     {
-      /* this ignores both missing and zero-length tables */
       if (error == FT_Err_Table_Missing)
         continue;
       else
         return error;
     }
+
+    /* ignore zero-length tables */
+    else if (!len)
+      continue;
 
     /* ignore tables which we are going to create by ourselves, */
     /* or which would become invalid otherwise */
