@@ -157,6 +157,7 @@ typedef struct SFNT_
   FT_ULong head_idx;
   FT_ULong hmtx_idx;
   FT_ULong maxp_idx;
+  FT_ULong name_idx;
   FT_ULong post_idx;
   FT_ULong OS2_idx;
   FT_ULong GPOS_idx;
@@ -204,6 +205,7 @@ typedef struct FONT_
   FT_Byte* x_height_snapping_exceptions;
   FT_Bool ignore_permissions;
   FT_UInt fallback_script;
+  FT_Bool no_info;
 } FONT;
 
 
@@ -287,6 +289,10 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
 
 FT_Error
 TA_sfnt_update_post_table(SFNT* sfnt,
+                          FONT* font);
+
+FT_Error
+TA_sfnt_update_name_table(SFNT* sfnt,
                           FONT* font);
 
 FT_Error

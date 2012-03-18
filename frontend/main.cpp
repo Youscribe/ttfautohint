@@ -121,12 +121,14 @@ show_help(bool all,
 "Options:\n"
 "  -f, --latin-fallback       set fallback script to latin\n"
 "  -G, --hinting-limit=N      switch off hinting above this PPEM value\n"
-"                             (default: %d)\n"
+"                             (default: %d); value 0 means no limit\n"
 "  -h, --help                 display this help and exit\n"
 "      --help-all             show Qt and X11 specific options also\n"
 "  -i, --ignore-permissions   override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum PPEM value for hint sets\n"
 "                             (default: %d)\n"
+"  -n  --no-info              don't add ttfautohint info\n"
+"                             to the version string(s) in the `name' table\n"
 "  -p, --pre-hinting          apply original hints in advance\n",
           TA_HINTING_LIMIT, TA_HINTING_RANGE_MIN);
   fprintf(handle,
@@ -249,6 +251,7 @@ main(int argc,
   bool ignore_permissions = false;
   bool pre_hinting = false;
   bool increase_x_height = false;
+  bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
 
 #ifndef BUILD_GUI
@@ -284,6 +287,7 @@ main(int argc,
       {"ignore-permissions", no_argument, NULL, 'i'},
       {"latin-fallback", no_argument, NULL, 'f'},
       {"pre-hinting", no_argument, NULL, 'p'},
+      {"no-info", no_argument, NULL, 'n'},
       {"verbose", no_argument, NULL, 'v'},
       {"version", no_argument, NULL, 'V'},
       {"increase-x-height", no_argument, NULL, 'x'},
@@ -319,7 +323,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fG:hil:r:ptVvxX:",
+    int c = getopt_long_only(argc, argv, "fG:hil:npr:tVvxX:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -350,13 +354,17 @@ main(int argc,
       have_hinting_range_min = true;
       break;
 
-    case 'r':
-      hinting_range_max = atoi(optarg);
-      have_hinting_range_max = true;
+    case 'n':
+      no_info = true;
       break;
 
     case 'p':
       pre_hinting = true;
+      break;
+
+    case 'r':
+      hinting_range_max = atoi(optarg);
+      have_hinting_range_max = true;
       break;
 
     case 'v':
@@ -467,13 +475,13 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions, pre-hinting, increase-x-height,"
-                 "fallback-script",
+                 "no-info, fallback-script",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
                  &error_string,
                  progress_func, &progress_data,
                  ignore_permissions, pre_hinting, increase_x_height,
-                 latin_fallback);
+                 no_info, latin_fallback);
 
   if (error)
   {
@@ -530,7 +538,7 @@ main(int argc,
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
                ignore_permissions, pre_hinting, increase_x_height,
-               latin_fallback);
+               no_info, latin_fallback);
   gui.show();
 
   return app.exec();

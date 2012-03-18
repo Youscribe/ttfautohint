@@ -38,7 +38,7 @@ class Main_GUI
   Q_OBJECT
 
 public:
-  Main_GUI(int, int, int, bool, bool, bool, int);
+  Main_GUI(int, int, int, bool, bool, bool, bool, int);
 
 protected:
   void closeEvent(QCloseEvent*);
@@ -63,6 +63,7 @@ private:
   int ignore_permissions;
   int pre_hinting;
   int increase_x_height;
+  int no_info;
   int latin_fallback;
 
   void create_layout();
@@ -98,6 +99,8 @@ private:
 
   QCheckBox* pre_box;
   QCheckBox* increase_box;
+
+  QCheckBox* info_box;
 
   QPushButton* run_button;
 

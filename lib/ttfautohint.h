@@ -154,6 +154,12 @@ typedef int
  *                                if the hints move or scale subglyphs
  *                                independently of the output resolution.
  *
+ *   no-info                      If this integer is set to 1, no
+ *                                information about the parameters used to
+ *                                create the output font are added to the
+ *                                `Version' string (name ID 5) in the `name'
+ *                                table.  Default is value 0.
+ *
  *   increase-x-height            An integer (1 for `on' and 0 for `off',
  *                                which is the default).  For PPEM values in
  *                                the range 5 < PPEM < 15, round up the

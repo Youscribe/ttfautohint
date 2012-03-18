@@ -42,6 +42,7 @@ Main_GUI::Main_GUI(int range_min,
                    bool ignore,
                    bool pre,
                    bool increase,
+                   bool no,
                    int fallback)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
@@ -49,6 +50,7 @@ Main_GUI::Main_GUI(int range_min,
   ignore_permissions(ignore),
   pre_hinting(pre),
   increase_x_height(increase),
+  no_info(no),
   latin_fallback(fallback)
 {
   create_layout();
@@ -502,7 +504,7 @@ again:
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions,"
                  "pre-hinting, increase-x-height,"
-                 "fallback-script",
+                 "no-info, fallback-script",
                  input, output,
                  min_box->value(), max_box->value(),
                  no_limit_box->isChecked() ? 0 : limit_box->value(),
@@ -510,7 +512,7 @@ again:
                  gui_progress, &gui_progress_data,
                  ignore_permissions,
                  pre_box->isChecked(), increase_box->isChecked(),
-                 fallback_box->currentIndex());
+                 !info_box->isChecked(), fallback_box->currentIndex());
 
   fclose(input);
   fclose(output);
@@ -584,7 +586,7 @@ Main_GUI::create_layout()
 
   // hinting and fallback controls
   QLabel* hinting_label = new QLabel(tr("Hint Set Range") + " ");
-  QLabel* fallback_label = new QLabel(tr("F&allback Script:"));
+  QLabel* fallback_label = new QLabel(tr("Fallback &Script:"));
   hinting_label->setToolTip(
     tr("The PPEM range for which <b>TTFautohint</b> computes"
        " <i>hint sets</i>."
@@ -671,6 +673,18 @@ Main_GUI::create_layout()
   flags_layout->addWidget(increase_box);
   flags_layout->addStretch(2);
 
+  // info
+  info_box = new QCheckBox(tr("add ttf&autohint info"), this);
+  info_box->setToolTip(
+    tr("If switched on, information about <b>ttfautohint</b>"
+       " and its calling parameters are added to the version string(s)"
+       " (name ID&nbsp;5) in the <i>name</i> table."));
+  if (!no_info)
+    info_box->setChecked(true);
+
+  QHBoxLayout* info_layout = new QHBoxLayout;
+  info_layout->addWidget(info_box);
+
   // running
   run_button = new QPushButton(tr("&Run"));
   run_button->setEnabled(false);
@@ -690,6 +704,8 @@ Main_GUI::create_layout()
   gui_layout->addLayout(limit_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(flags_layout);
+  gui_layout->addSpacing(20); // XXX urgh, pixels...
+  gui_layout->addLayout(info_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(running_layout);
   gui_layout->addSpacing(10); // XXX urgh, pixels...
