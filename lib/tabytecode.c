@@ -1566,6 +1566,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   hints = &font->loader->hints;
 
+  /* do nothing if the setup delivered the dummy module only */
+  if (!hints->num_points)
+    return FT_Err_Ok;
+
   /* we allocate a buffer which is certainly large enough */
   /* to hold all of the created bytecode instructions; */
   /* later on it gets reallocated to its real size */
