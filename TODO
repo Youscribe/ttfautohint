@@ -76,6 +76,9 @@ reduce output size of option -p:
   1. compare outline rendered at EM value with unhinted outline
   2. pre-hint only if 1. differs more than given threshold (default 0.5%?)
 
+make it possible to hint fonts which aren't alphabetic at all, for example,
+  icons; to do so, provide means to skip the global feature analysis
+
 
 later enhancements
 ------------------
@@ -100,8 +103,6 @@ separate man pages for ttfautohint and ttfautohintGUI
 add info about ttfautohint's calling parameters to output font
 
 install library
-
-add notice to font that it has been processed by ttfautohint
 
 
 EOF
