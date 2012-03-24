@@ -43,7 +43,8 @@ Main_GUI::Main_GUI(int range_min,
                    bool pre,
                    bool increase,
                    bool no,
-                   int fallback)
+                   int fallback,
+                   bool symb)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
   hinting_limit(limit),
@@ -51,7 +52,8 @@ Main_GUI::Main_GUI(int range_min,
   pre_hinting(pre),
   increase_x_height(increase),
   no_info(no),
-  latin_fallback(fallback)
+  latin_fallback(fallback),
+  symbol(symb)
 {
   create_layout();
   create_connections();
@@ -435,9 +437,12 @@ Main_GUI::handle_error(TA_Error error,
       this,
       "TTFautohint",
       tr("No glyph for the key character"
-         " to derive standard width and height.\n"
-         "For the latin script, this key character is %1 (U+006F).")
-         .arg(QUOTE_STRING_LITERAL("o")),
+         " to derive standard stem width and height.\n"
+         "For the latin script, this key character is %1 (U+006F).\n"
+         "\n"
+         "Set the %2 checkbox if you want to circumvent this test.")
+         .arg(QUOTE_STRING_LITERAL("o"))
+         .arg(QUOTE_STRING_LITERAL("symbol")),
       QMessageBox::Ok,
       QMessageBox::Ok);
   else
@@ -504,7 +509,8 @@ again:
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions,"
                  "pre-hinting, increase-x-height,"
-                 "no-info, fallback-script",
+                 "no-info, fallback-script,"
+                 "symbol",
                  input, output,
                  min_box->value(), max_box->value(),
                  no_limit_box->isChecked() ? 0 : limit_box->value(),
@@ -512,7 +518,8 @@ again:
                  gui_progress, &gui_progress_data,
                  ignore_permissions,
                  pre_box->isChecked(), increase_box->isChecked(),
-                 !info_box->isChecked(), fallback_box->currentIndex());
+                 !info_box->isChecked(), fallback_box->currentIndex(),
+                 symbol_box->isChecked());
 
   fclose(input);
   fclose(output);
@@ -592,7 +599,7 @@ Main_GUI::create_layout()
        " <i>hint sets</i>."
        " A hint set for a given PPEM value hints this size optimally."
        " The larger the range, the more hint sets are considered,"
-       " usually increasing the size of the bytecode.\n"
+       " usually increasing the size of the bytecode.<br>"
        "Note that changing this range doesn't influence"
        " the <i>gasp</i> table:"
        " Hinting is enabled for all sizes."));
@@ -661,17 +668,28 @@ Main_GUI::create_layout()
   increase_box->setToolTip(
     tr("For PPEM values in the range 5&nbsp;&lt; PPEM &lt;&nbsp;15,"
        " round up the font's x&nbsp;height much more often than normally"
-       " if switched on.\n"
+       " if switched on.<br>"
        "Use this if holes in letters like <i>e</i> get filled,"
        " for example."));
   if (increase_x_height)
     increase_box->setChecked(true);
+  symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
+  symbol_box->setToolTip(
+    tr("If switched on, <b>ttfautohint</b> uses default values"
+       " for standard stem width and height"
+       " instead of deriving these values from the input font.<br>"
+       "Use this for fonts which don't contain glyphs"
+       " of a (supported) script."));
+  if (symbol)
+    symbol_box->setChecked(true);
 
   QHBoxLayout* flags_layout = new QHBoxLayout;
   flags_layout->addWidget(pre_box);
   flags_layout->addStretch(1);
   flags_layout->addWidget(increase_box);
-  flags_layout->addStretch(2);
+  flags_layout->addStretch(1);
+  flags_layout->addWidget(symbol_box);
+  flags_layout->addStretch(1);
 
   // info
   info_box = new QCheckBox(tr("add ttf&autohint info"), this);

@@ -297,7 +297,7 @@ TA_table_build_prep(FT_Byte** prep,
                     FONT* font)
 {
   TA_LatinAxis vaxis;
-  TA_LatinBlue blue_adjustment;
+  TA_LatinBlue blue_adjustment = NULL;
   FT_UInt i;
 
   FT_UInt buf_len = 0;
@@ -306,15 +306,19 @@ TA_table_build_prep(FT_Byte** prep,
   FT_Byte* buf_p;
 
 
-  vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
-  blue_adjustment = NULL;
-
-  for (i = 0; i < vaxis->blue_count; i++)
+  if (font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE)
+    vaxis = NULL;
+  else
   {
-    if (vaxis->blues[i].flags & TA_LATIN_BLUE_ADJUSTMENT)
+    vaxis = &((TA_LatinMetrics)font->loader->hints.metrics)->axis[1];
+
+    for (i = 0; i < vaxis->blue_count; i++)
     {
-      blue_adjustment = &vaxis->blues[i];
-      break;
+      if (vaxis->blues[i].flags & TA_LATIN_BLUE_ADJUSTMENT)
+      {
+        blue_adjustment = &vaxis->blues[i];
+        break;
+      }
     }
   }
 

@@ -206,6 +206,7 @@ typedef struct FONT_
   FT_Bool ignore_permissions;
   FT_UInt fallback_script;
   FT_Bool no_info;
+  FT_Bool symbol;
 } FONT;
 
 

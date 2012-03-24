@@ -422,17 +422,23 @@
 #define CVT_HORZ_WIDTHS_OFFSET(font) \
           CVT_VERT_STANDARD_WIDTH_OFFSET(font) + 1
 #define CVT_HORZ_WIDTHS_SIZE(font) \
-          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+           ? 0 \
+           : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count)
 
 /* the vertical stem widths */
 #define CVT_VERT_WIDTHS_OFFSET(font) \
           CVT_HORZ_WIDTHS_OFFSET(font) + CVT_HORZ_WIDTHS_SIZE(font)
 #define CVT_VERT_WIDTHS_SIZE(font) \
-          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+           ? 0 \
+           : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count)
 
 /* the number of blue zones */
 #define CVT_BLUES_SIZE(font) \
-          ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+           ? 0 \
+           : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count)
 
 /* the blue zone values for flat and round edges */
 #define CVT_BLUE_REFS_OFFSET(font) \

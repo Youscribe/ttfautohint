@@ -134,6 +134,7 @@ show_help(bool all,
   fprintf(handle,
 "  -r, --hinting-range-max=N  the maximum PPEM value for hint sets\n"
 "                             (default: %d)\n"
+"  -s, --symbol               input is symbol font\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
 "  -x, --increase-x-height    increase x height for small sizes\n"
@@ -198,6 +199,8 @@ show_help(bool all,
 "Use option -i only if you have a legal permission to modify the font.\n"
 "If option -f is not set, glyphs not in the latin range stay unhinted.\n"
 "The used PPEM value for option -p is FUnits per em, normally 2048.\n"
+"With option -s, use default values for standard stem width and height,\n"
+"otherwise they are derived from latin character `o'.\n"
 "\n");
   fprintf(handle,
 "A hint set contains the optimal hinting for a certain PPEM value;\n"
@@ -253,6 +256,7 @@ main(int argc,
   bool increase_x_height = false;
   bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
+  bool symbol = false;
 
 #ifndef BUILD_GUI
   TA_Progress_Func progress_func = NULL;
@@ -281,16 +285,17 @@ main(int argc,
       {"help-all", no_argument, NULL, HELP_ALL_OPTION},
 
       // ttfautohint options
+      {"hinting-limit", required_argument, NULL, 'G'},
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
-      {"hinting-limit", required_argument, NULL, 'G'},
       {"ignore-permissions", no_argument, NULL, 'i'},
+      {"increase-x-height", no_argument, NULL, 'x'},
       {"latin-fallback", no_argument, NULL, 'f'},
-      {"pre-hinting", no_argument, NULL, 'p'},
       {"no-info", no_argument, NULL, 'n'},
+      {"pre-hinting", no_argument, NULL, 'p'},
+      {"symbol", no_argument, NULL, 's'},
       {"verbose", no_argument, NULL, 'v'},
       {"version", no_argument, NULL, 'V'},
-      {"increase-x-height", no_argument, NULL, 'x'},
       {"x-height-snapping-exceptions", required_argument, NULL, 'X'},
 
       // Qt options
@@ -323,7 +328,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fG:hil:npr:tVvxX:",
+    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvxX:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -365,6 +370,10 @@ main(int argc,
     case 'r':
       hinting_range_max = atoi(optarg);
       have_hinting_range_max = true;
+      break;
+
+    case 's':
+      symbol = true;
       break;
 
     case 'v':
@@ -475,13 +484,13 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "ignore-permissions, pre-hinting, increase-x-height,"
-                 "no-info, fallback-script",
+                 "no-info, fallback-script, symbol",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
                  &error_string,
                  progress_func, &progress_data,
                  ignore_permissions, pre_hinting, increase_x_height,
-                 no_info, latin_fallback);
+                 no_info, latin_fallback, symbol);
 
   if (error)
   {
@@ -538,7 +547,7 @@ main(int argc,
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
                ignore_permissions, pre_hinting, increase_x_height,
-               no_info, latin_fallback);
+               no_info, latin_fallback, symbol);
   gui.show();
 
   return app.exec();

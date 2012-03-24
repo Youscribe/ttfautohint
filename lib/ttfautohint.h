@@ -194,9 +194,20 @@ typedef int
  *   fallback-script              An integer which specifies the default
  *                                script for glyphs not in the `latin'
  *                                range.  If set to 1, the `latin' script is
- *                                used.  By default, no script is used
+ *                                used (other scripts are not supported
+ *                                yet).  By default, no script is used
  *                                (value 0; this disables autohinting for
  *                                such glyphs).
+ *
+ *   symbol                       Set this integer to 1 if you want to
+ *                                process a font which lacks the characters
+ *                                of a supported script, for example, a
+ *                                symbol font.  ttfautohint then uses
+ *                                default values for the standard stem width
+ *                                and height instead of deriving these
+ *                                values from a script's key character (for
+ *                                the latin script, it is character `o').
+ *                                The default value is 0.
  *
  * Remarks:
  *

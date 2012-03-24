@@ -59,6 +59,7 @@ TTF_autohint(const char* options,
   FT_Bool no_info = 0;
   FT_Bool increase_x_height = 0;
   FT_UInt fallback_script = 0;
+  FT_Bool symbol = 0;
 
   const char* op;
 
@@ -153,6 +154,8 @@ TTF_autohint(const char* options,
       progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
       progress_data = va_arg(ap, void*);
+    else if (COMPARE("symbol"))
+      symbol = (FT_Bool)va_arg(ap, FT_Int);
 
     /*
       x-height-snapping-exceptions
@@ -227,6 +230,7 @@ TTF_autohint(const char* options,
   font->increase_x_height = increase_x_height;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
+  font->symbol = symbol;
 
   /* now start with processing the data */
 
