@@ -48,6 +48,7 @@ typedef struct Naming_Table_
 
 
 /* build string which gets appended to the `Version' field(s) */
+/* XXX replace this with a callback function */
 
 static void
 build_version_string(char* data,
@@ -66,7 +67,7 @@ build_version_string(char* data,
   d += sprintf(d, "; ttfautohint (v%s)", VERSION);
 
   if (font->fallback_script)
-    d += sprintf(d, " -f %d", font->fallback_script);
+    d += sprintf(d, " -f");
   if (font->hinting_limit != TA_HINTING_LIMIT)
     d += sprintf(d, " -G %d", font->hinting_limit);
   if (font->hinting_range_min != TA_HINTING_RANGE_MIN)
@@ -79,6 +80,8 @@ build_version_string(char* data,
     d += sprintf(d, " -x");
   if (font->no_info)
     d += sprintf(d, " -n");
+  if (font->symbol)
+    d += sprintf(d, " -s");
 
   *data_len = d - data;
 
