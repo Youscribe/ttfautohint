@@ -36,6 +36,8 @@
 #if BUILD_GUI
 #  include <QApplication>
 #  include "maingui.h"
+#else
+#  include "info.h"
 #endif
 
 #include <ttfautohint.h>
@@ -44,6 +46,8 @@ using namespace std;
 
 
 #ifndef BUILD_GUI
+extern "C" {
+
 typedef struct Progress_Data_
 {
   long last_sfnt;
@@ -90,6 +94,8 @@ progress(long curr_idx,
 
   return 0;
 }
+
+} // extern "C"
 #endif /* !BUILD_GUI */
 
 
@@ -260,6 +266,7 @@ main(int argc,
 
 #ifndef BUILD_GUI
   TA_Progress_Func progress_func = NULL;
+  TA_Info_Func info_func = info;
 #endif
 
   // make GNU, Qt, and X11 command line options look the same;
@@ -475,22 +482,47 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
+  unsigned char version_data[128];
+  unsigned char version_data_wide[256];
+
   const unsigned char* error_string;
   Progress_Data progress_data = {-1, 1, 0};
+  Info_Data info_data;
+
+  if (no_info)
+    info_func = NULL;
+  else
+  {
+    info_data.data = version_data;
+    info_data.data_wide = version_data_wide;
+
+    info_data.hinting_range_min = hinting_range_min;
+    info_data.hinting_range_max = hinting_range_max;
+    info_data.hinting_limit = hinting_limit;
+
+    info_data.pre_hinting = pre_hinting;
+    info_data.increase_x_height = increase_x_height;
+    info_data.latin_fallback = latin_fallback;
+    info_data.symbol = symbol;
+
+    build_version_string(&info_data);
+  }
 
   TA_Error error =
     TTF_autohint("in-file, out-file,"
                  "hinting-range-min, hinting-range-max, hinting-limit,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
+                 "info-callback, info-callback-data,"
                  "ignore-permissions, pre-hinting, increase-x-height,"
-                 "no-info, fallback-script, symbol",
+                 "fallback-script, symbol",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
                  &error_string,
                  progress_func, &progress_data,
+                 info_func, &info_data,
                  ignore_permissions, pre_hinting, increase_x_height,
-                 no_info, latin_fallback, symbol);
+                 latin_fallback, symbol);
 
   if (error)
   {

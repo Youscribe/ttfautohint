@@ -59,6 +59,36 @@ typedef int
                     void* progress_data);
 
 
+/*
+ * A callback function to manipulate strings in the `name' table.
+ * `platform_id', `encoding_id', `language_id', and `name_id' are the
+ * identifiers of a name table entry pointed to by `str' with a length
+ * pointed to by `str_len' (in bytes; the string has no trailing NULL byte).
+ * Please refer to the OpenType specification for a detailed description of
+ * the various parameters, in particular which encoding is used for a given
+ * platform and encoding ID.
+ *
+ *   http://www.microsoft.com/typography/otspec/name.htm
+ *
+ * `str' is allocated with `malloc'; the application should reallocate the
+ * data if necessary, ensuring that the string length doesn't exceed 0xFFFF.
+ *
+ * `info_data' is a void pointer to user supplied data.
+ *
+ * If an error occurs, return a non-zero value and don't modify `str' and
+ * `str_len' (such errors are handled as non-fatal).
+ */
+
+typedef int
+(*TA_Info_Func)(unsigned short platform_id,
+                unsigned short encoding_id,
+                unsigned short language_id,
+                unsigned short name_id,
+                unsigned short* str_len,
+                unsigned char** str,
+                void* info_data);
+
+
 /* Error values in addition to the FT_Err_XXX constants from FreeType. */
 /* All error values specific to ttfautohint start with `TA_Err_'. */
 #include <ttfautohint-errors.h>
@@ -111,8 +141,9 @@ typedef int
  *                                specifying a callback function for
  *                                progress reports.  This function gets
  *                                called after a single glyph has been
- *                                processed.  If this field is not set, no
- *                                progress callback function is used.
+ *                                processed.  If this field is not set or
+ *                                set to NULL, no progress callback function
+ *                                is used.
  *
  *   progress-callback-data       A pointer of type `void*' to user data
  *                                which is passed to the progress callback
@@ -154,11 +185,16 @@ typedef int
  *                                if the hints move or scale subglyphs
  *                                independently of the output resolution.
  *
- *   no-info                      If this integer is set to 1, no
- *                                information about the parameters used to
- *                                create the output font are added to the
- *                                `Version' string (name ID 5) in the `name'
- *                                table.  Default is value 0.
+ *   info-callback                A pointer of type `TA_Info_Func',
+ *                                specifying a callback function for
+ *                                manipulating the `name' table.  This
+ *                                function gets called for each name table
+ *                                entry.  If not set or set to NULL, the
+ *                                table data stays unmodified.
+ *
+ *   info-callback-data           A pointer of type `void*' to user data
+ *                                which is passed to the info callback
+ *                                function.
  *
  *   increase-x-height            An integer (1 for `on' and 0 for `off',
  *                                which is the default).  For PPEM values in

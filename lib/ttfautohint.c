@@ -53,10 +53,11 @@ TTF_autohint(const char* options,
 
   TA_Progress_Func progress;
   void* progress_data;
+  TA_Info_Func info;
+  void* info_data;
 
   FT_Bool ignore_permissions = 0;
   FT_Bool pre_hinting = 0;
-  FT_Bool no_info = 0;
   FT_Bool increase_x_height = 0;
   FT_UInt fallback_script = 0;
   FT_Bool symbol = 0;
@@ -135,8 +136,10 @@ TTF_autohint(const char* options,
       out_file = NULL;
       out_bufp = va_arg(ap, char**);
     }
-    else if (COMPARE("no-info"))
-      no_info = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("info-callback"))
+      info = va_arg(ap, TA_Info_Func);
+    else if (COMPARE("info-callback-data"))
+      info_data = va_arg(ap, void*);
     else if (COMPARE("out-buffer-len"))
     {
       out_file = NULL;
@@ -223,10 +226,11 @@ TTF_autohint(const char* options,
 
   font->progress = progress;
   font->progress_data = progress_data;
+  font->info = info;
+  font->info_data = info_data;
 
   font->ignore_permissions = ignore_permissions;
   font->pre_hinting = pre_hinting;
-  font->no_info = no_info;
   font->increase_x_height = increase_x_height;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
@@ -361,7 +365,7 @@ TTF_autohint(const char* options,
         goto Err;
     }
 
-    if (!font->no_info)
+    if (font->info)
     {
       /* add info about ttfautohint to the version string */
       error = TA_sfnt_update_name_table(sfnt, font);

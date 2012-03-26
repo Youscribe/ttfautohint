@@ -196,6 +196,8 @@ typedef struct FONT_
   /* configuration options */
   TA_Progress_Func progress;
   void* progress_data;
+  TA_Info_Func info;
+  void* info_data;
   FT_UInt hinting_range_min;
   FT_UInt hinting_range_max;
   FT_UInt hinting_limit;
@@ -205,7 +207,6 @@ typedef struct FONT_
   FT_Byte* x_height_snapping_exceptions;
   FT_Bool ignore_permissions;
   FT_UInt fallback_script;
-  FT_Bool no_info;
   FT_Bool symbol;
 } FONT;
 

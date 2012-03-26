@@ -19,6 +19,7 @@
 
 #include <QtGui>
 
+#include "info.h"
 #include "maingui.h"
 
 #include <ttfautohint.h>
@@ -493,13 +494,36 @@ again:
   if (!open_files(input_name, &input, output_name, &output))
     return;
 
+  unsigned char version_data[128];
+  unsigned char version_data_wide[256];
+
   QProgressDialog dialog;
   dialog.setCancelButtonText(tr("Cancel"));
   dialog.setMinimumDuration(1000);
   dialog.setWindowModality(Qt::WindowModal);
 
-  GUI_Progress_Data gui_progress_data = {-1, true, &dialog};
   const unsigned char* error_string;
+  TA_Info_Func info_func = info;
+  GUI_Progress_Data gui_progress_data = {-1, true, &dialog};
+  Info_Data info_data;
+
+  info_data.data = version_data;
+  info_data.data_wide = version_data_wide;
+
+  info_data.hinting_range_min = min_box->value();
+  info_data.hinting_range_max = max_box->value();
+  info_data.hinting_limit = no_limit_box->isChecked() ? 0
+                                                      : limit_box->value();
+
+  info_data.pre_hinting = pre_box->isChecked();
+  info_data.increase_x_height = increase_box->isChecked();
+  info_data.latin_fallback = fallback_box->currentIndex();
+  info_data.symbol = symbol_box->isChecked();
+
+  if (info_box->isChecked())
+    build_version_string(&info_data);
+  else
+    info_func = NULL;
 
   TA_Error error =
     TTF_autohint("in-file, out-file,"
@@ -507,19 +531,19 @@ again:
                  "hinting-limit,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
+                 "info-callback, info-callback-data,"
                  "ignore-permissions,"
                  "pre-hinting, increase-x-height,"
-                 "no-info, fallback-script,"
-                 "symbol",
+                 "fallback-script, symbol",
                  input, output,
-                 min_box->value(), max_box->value(),
-                 no_limit_box->isChecked() ? 0 : limit_box->value(),
+                 info_data.hinting_range_min, info_data.hinting_range_max,
+                 info_data.hinting_limit,
                  &error_string,
                  gui_progress, &gui_progress_data,
+                 info_func, &info_data,
                  ignore_permissions,
-                 pre_box->isChecked(), increase_box->isChecked(),
-                 !info_box->isChecked(), fallback_box->currentIndex(),
-                 symbol_box->isChecked());
+                 info_data.pre_hinting, info_data.increase_x_height,
+                 info_data.latin_fallback, info_data.symbol);
 
   fclose(input);
   fclose(output);

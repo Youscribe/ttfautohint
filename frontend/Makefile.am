@@ -28,11 +28,13 @@ LDADD = $(top_builddir)/lib/libttfautohint.a \
         $(FREETYPE_LIBS)
 
 bin_PROGRAMS = ttfautohint
-ttfautohint_SOURCES = main.cpp
+ttfautohint_SOURCES = info.cpp \
+                      main.cpp
 
 if USE_QT
   bin_PROGRAMS += ttfautohintGUI
-  ttfautohintGUI_SOURCES = main.cpp \
+  ttfautohintGUI_SOURCES = info.cpp \
+                           main.cpp \
                            maingui.cpp \
                            maingui.h
   nodist_ttfautohintGUI_SOURCES = maingui.moc.cpp

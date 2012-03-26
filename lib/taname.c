@@ -47,56 +47,6 @@ typedef struct Naming_Table_
 } Naming_Table;
 
 
-/* build string which gets appended to the `Version' field(s) */
-/* XXX replace this with a callback function */
-
-static void
-build_version_string(char* data,
-                     char* data_wide,
-                     FT_UShort* data_len,
-                     FT_UShort* data_wide_len,
-                     FONT* font)
-{
-  char* d;
-  char* dw;
-  FT_UShort i;
-
-
-  d = data;
-
-  d += sprintf(d, "; ttfautohint (v%s)", VERSION);
-
-  if (font->fallback_script)
-    d += sprintf(d, " -f");
-  if (font->hinting_limit != TA_HINTING_LIMIT)
-    d += sprintf(d, " -G %d", font->hinting_limit);
-  if (font->hinting_range_min != TA_HINTING_RANGE_MIN)
-    d += sprintf(d, " -l %d", font->hinting_range_min);
-  if (font->hinting_range_max != TA_HINTING_RANGE_MAX)
-    d += sprintf(d, " -r %d", font->hinting_range_max);
-  if (font->pre_hinting)
-    d += sprintf(d, " -p");
-  if (font->increase_x_height)
-    d += sprintf(d, " -x");
-  if (font->no_info)
-    d += sprintf(d, " -n");
-  if (font->symbol)
-    d += sprintf(d, " -s");
-
-  *data_len = d - data;
-
-  /* prepare UTF16-BE version data */
-  d = data;
-  dw = data_wide;
-  for (i = 0; i < *data_len; i++)
-  {
-    *(dw++) = '\0';
-    *(dw++) = *(d++);
-  }
-  *data_wide_len = *data_len << 1;
-}
-
-
 static FT_Error
 parse_name_header(FT_Byte** curp,
                   Naming_Table* n,
@@ -161,10 +111,7 @@ parse_name_records(FT_Byte** curp,
                    FT_Byte* buf,
                    FT_Byte* startp,
                    FT_Byte* endp,
-                   char* version_data,
-                   char* version_data_wide,
-                   FT_UShort version_data_len,
-                   FT_UShort version_data_wide_len)
+                   FONT* font)
 {
   FT_UShort i, count;
   FT_Byte* p;
@@ -190,11 +137,6 @@ parse_name_records(FT_Byte** curp,
     FT_UShort offset;
     FT_Byte* s;
     FT_UShort l;
-
-    char* sd;
-    int sd_len;
-    char* v;
-    int v_len;
 
 
     r->platform_id = *(p++) << 8;
@@ -223,7 +165,7 @@ parse_name_records(FT_Byte** curp,
         || (r->platform_id == 3 && !(r->encoding_id == 1
                                      || r->encoding_id == 10)))
     {
-      /* (one-byte) ASCII encoding */
+      /* one-byte or multi-byte encodings */
 
       /* skip everything after a NULL byte (if any) */
       for (l = 0; l < r->len; l++)
@@ -235,9 +177,6 @@ parse_name_records(FT_Byte** curp,
         continue;
 
       r->len = l;
-
-      v = version_data;
-      v_len = version_data_len;
     }
     else
     {
@@ -252,33 +191,24 @@ parse_name_records(FT_Byte** curp,
           break;
       if (l == r->len)
         continue;
-
-      v = version_data_wide;
-      v_len = version_data_wide_len;
     }
 
-    /* if it is a version string, append our data, */
-    /* provided the string doesn't become too long */
-    if (r->name_id == 5
-        && r->len <= 0xFFFF - v_len)
-    {
-      sd = v;
-      sd_len = v_len;
-    }
-    else
-    {
-      sd = NULL;
-      sd_len = 0;
-    }
-
-    r->str = (FT_Byte*)malloc(r->len + sd_len);
+    r->str = (FT_Byte*)malloc(r->len);
     if (!r->str)
       return FT_Err_Out_Of_Memory;
-
     memcpy(r->str, s, r->len);
-    memcpy(r->str + r->len, sd, sd_len);
-    r->len += sd_len;
 
+    if (font->info)
+    {
+      if (font->info(r->platform_id,
+                     r->encoding_id,
+                     r->language_id,
+                     r->name_id,
+                     &r->len,
+                     &r->str,
+                     font->info_data))
+        continue;
+    }
     count++;
   }
 
@@ -552,11 +482,6 @@ TA_sfnt_update_name_table(SFNT* sfnt,
   FT_Byte* startp;
   FT_Byte* endp;
 
-  char version_data[1024];
-  char version_data_wide[2048];
-  FT_UShort version_data_len;
-  FT_UShort version_data_wide_len;
-
   FT_UShort i;
 
 
@@ -570,10 +495,6 @@ TA_sfnt_update_name_table(SFNT* sfnt,
   if (name_table->processed)
     return TA_Err_Ok;
 
-  build_version_string(version_data, version_data_wide,
-                       &version_data_len, &version_data_wide_len,
-                       font);
-
   p = buf;
 
   error = parse_name_header(&p, &n, buf_len, &startp, &endp);
@@ -583,9 +504,7 @@ TA_sfnt_update_name_table(SFNT* sfnt,
   /* due to the structure of the `name' table, */
   /* we must parse it completely, apply our changes, */
   /* and rebuild it from scratch */
-  error = parse_name_records(&p, &n, buf, startp, endp,
-                             version_data, version_data_wide,
-                             version_data_len, version_data_wide_len);
+  error = parse_name_records(&p, &n, buf, startp, endp, font);
   if (error)
     goto Exit;
 
