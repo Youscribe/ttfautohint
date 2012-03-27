@@ -101,19 +101,26 @@ progress(long curr_idx,
 
 #ifdef CONSOLE_OUTPUT
 static void
-show_help(bool all,
+show_help(bool
+#ifdef BUILD_GUI
+               all
+#endif
+                  ,
           bool is_error)
 {
   FILE* handle = is_error ? stderr : stdout;
 
   fprintf(handle,
+#ifdef BUILD_GUI
+"Usage: ttfautohintGUI [OPTION]...\n"
+"A GUI application to replace hints in a TrueType font.\n"
+#else
 "Usage: ttfautohint [OPTION]... IN-FILE OUT-FILE\n"
-"  or:  ttfautohintGUI [OPTION]...\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
+#endif
 "The new hints are based on FreeType's autohinter.\n"
 "\n"
-"These programs (for console and GUI, respectively)\n"
-"are simple front-ends to the `ttfautohint' library.\n"
+"This program is a simple front-end to the `ttfautohint' library.\n"
 "\n");
 
   fprintf(handle,
@@ -121,7 +128,13 @@ show_help(bool all,
 "and with and without equal sign between option and argument.\n"
 "This means that the following forms are acceptable:\n"
 "`-foo=bar', `--foo=bar', `-foo bar', `--foo bar'.\n"
-"\n");
+"\n"
+"Mandatory arguments to long options are mandatory for short options too.\n"
+#ifdef BUILD_GUI
+"Options not related to Qt or X11 set default values.\n"
+#endif
+"\n"
+);
 
   fprintf(handle,
 "Options:\n"
@@ -129,7 +142,9 @@ show_help(bool all,
 "  -G, --hinting-limit=N      switch off hinting above this PPEM value\n"
 "                             (default: %d); value 0 means no limit\n"
 "  -h, --help                 display this help and exit\n"
+#ifdef BUILD_GUI
 "      --help-all             show Qt and X11 specific options also\n"
+#endif
 "  -i, --ignore-permissions   override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum PPEM value for hint sets\n"
 "                             (default: %d)\n"
@@ -150,6 +165,7 @@ show_help(bool all,
 "\n",
           TA_HINTING_RANGE_MAX);
 
+#ifdef BUILD_GUI
   if (all)
   {
     fprintf(handle,
@@ -199,9 +215,10 @@ show_help(bool all,
 "                             (only possible value: TrueColor)\n"
 "\n");
   }
+#endif // BUILD_GUI
 
   fprintf(handle,
-"The programs accept both TTF and TTC files as input.\n"
+"The program accepts both TTF and TTC files as input.\n"
 "Use option -i only if you have a legal permission to modify the font.\n"
 "If option -f is not set, glyphs not in the latin range stay unhinted.\n"
 "The used PPEM value for option -p is FUnits per em, normally 2048.\n"
@@ -216,13 +233,14 @@ show_help(bool all,
 "for all sizes (limited by option -G which is handled in the bytecode).\n"
 "\n");
   fprintf(handle,
-"If run in GUI mode, options not related to Qt or X11 set default values.\n"
-"Additionally, there is no output to the console.\n"
-"\n"
-"GUI support might be disabled at compile time.\n"
+#ifdef BUILD_GUI
+"A command-line version of this program is called `ttfautohint'.\n"
+#else
+"A GUI version of this program is called `ttfautohintGUI'.\n"
+#endif
 "\n"
 "Report bugs to: freetype-devel@nongnu.org\n"
-"FreeType home page: <http://www.freetype.org>\n");
+"ttfautohint home page: <http://www.freetype.org/ttfautohint>\n");
 
   if (is_error)
     exit(EXIT_FAILURE);
@@ -235,7 +253,11 @@ static void
 show_version()
 {
   fprintf(stdout,
+#ifdef BUILD_GUI
+"ttfautohintGUI " VERSION "\n"
+#else
 "ttfautohint " VERSION "\n"
+#endif
 "Copyright (C) 2011-2012 Werner Lemberg <wl@gnu.org>.\n"
 "License: FreeType License (FTL) or GNU GPLv2.\n"
 "This is free software: you are free to change and redistribute it.\n"
@@ -289,7 +311,9 @@ main(int argc,
     static struct option long_options[] =
     {
       {"help", no_argument, NULL, 'h'},
+#ifdef BUILD_GUI
       {"help-all", no_argument, NULL, HELP_ALL_OPTION},
+#endif
 
       // ttfautohint options
       {"hinting-limit", required_argument, NULL, 'G'},

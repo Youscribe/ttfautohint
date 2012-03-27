@@ -98,10 +98,6 @@ testing with Windows and Apple font checkers
 
 man page for ttfautohint library
 
-separate man pages for ttfautohint and ttfautohintGUI
-
-add info about ttfautohint's calling parameters to output font
-
 install library
 
 
