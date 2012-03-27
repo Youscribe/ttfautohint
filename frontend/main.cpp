@@ -96,7 +96,7 @@ progress(long curr_idx,
 }
 
 } // extern "C"
-#endif /* !BUILD_GUI */
+#endif // !BUILD_GUI
 
 
 #ifdef CONSOLE_OUTPUT
@@ -243,7 +243,7 @@ show_version()
 
   exit(EXIT_SUCCESS);
 }
-#endif /* CONSOLE_OUTPUT */
+#endif // CONSOLE_OUTPUT
 
 
 int
@@ -562,7 +562,7 @@ main(int argc,
 
   return 0; // never reached
 
-#else /* BUILD_GUI */
+#else // BUILD_GUI
 
   int new_argc = new_arg_string.size();
   char** new_argv = new char*[new_argc];
@@ -584,7 +584,7 @@ main(int argc,
 
   return app.exec();
 
-#endif /* BUILD_GUI */
+#endif // BUILD_GUI
 }
 
 // end of main.cpp

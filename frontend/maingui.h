@@ -113,6 +113,6 @@ private:
   QLocale* locale;
 };
 
-#endif /* __MAINGUI_H__ */
+#endif // __MAINGUI_H__
 
 // end of maingui.h
