@@ -1640,9 +1640,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
       putc('=', stderr);
     fprintf(stderr, "\n\n");
 
-    ta_glyph_hints_dump_edges(_ta_debug_hints);
-    ta_glyph_hints_dump_segments(_ta_debug_hints);
-    ta_glyph_hints_dump_points(_ta_debug_hints);
   }
 #endif
 
@@ -1683,7 +1680,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     {
 #ifdef DEBUGGING
       {
-        fprintf(stderr, "  %d:\n", size);
+        fprintf(stderr, "  size %d:\n", size);
+
+        ta_glyph_hints_dump_edges(_ta_debug_hints);
+        ta_glyph_hints_dump_segments(_ta_debug_hints);
+        ta_glyph_hints_dump_points(_ta_debug_hints);
+
+        fprintf(stderr, "  hints record:\n");
         for (p = bufp; p < recorder.hints_record.buf; p += 2)
           fprintf(stderr, " %2d", *p * 256 + *(p + 1));
         fprintf(stderr, "\n");

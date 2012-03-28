@@ -264,7 +264,9 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
   FT_Int dimension;
 
 
-  for (dimension = 1; dimension >= 0; dimension--)
+  for (dimension = TA_DEBUG_STARTDIM;
+       dimension >= TA_DEBUG_ENDDIM;
+       dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
     TA_Point points = hints->points;
@@ -275,8 +277,8 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
 
 
     fprintf(stderr, "Table of %s segments:\n",
-           dimension == TA_DIMENSION_HORZ ? "vertical"
-                                          : "horizontal");
+            dimension == TA_DIMENSION_HORZ ? "vertical"
+                                           : "horizontal");
     fprintf(stderr, "  [ index |  pos  |  dir  | from |  to  | link | serif | edge |"
                     " height | extra |    flags    ]\n");
 
@@ -310,7 +312,9 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
   FT_Int dimension;
 
 
-  for (dimension = 1; dimension >= 0; dimension--)
+  for (dimension = TA_DEBUG_STARTDIM;
+       dimension >= TA_DEBUG_ENDDIM;
+       dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
     TA_Edge edges = axis->edges;
@@ -351,7 +355,9 @@ ta_glyph_hints_dump_edge_links(TA_GlyphHints hints)
   FT_Int dimension;
 
 
-  for (dimension = 1; dimension >= 0; dimension--)
+  for (dimension = TA_DEBUG_STARTDIM;
+       dimension >= TA_DEBUG_ENDDIM;
+       dimension--)
   {
     TA_AxisHints axis = &hints->axis[dimension];
     TA_Segment segments = axis->segments;
