@@ -1544,6 +1544,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
   load_flags = font->fallback_script << 30;
+  load_flags |= 1 << 28; /* vertical hinting only */
   if (font->increase_x_height)
     load_flags |= 1 << 29;
   if (!font->pre_hinting)

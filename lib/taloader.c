@@ -515,11 +515,14 @@ ta_loader_load_glyph(TA_Loader loader,
   scaler.flags = 0; /* XXX: fix this */
 
   /* XXX this is an ugly hack of ttfautohint: */
-  /* bit 30 and 31 of `load_flags' specify the fallback script, */
-  /* and bit 29 holds the `ignore_x_height' value */
+  /* bits 30 and 31 of `load_flags' specify the fallback script, */
+  /* bit 29 holds the `ignore_x_height' value, */
+  /* and bit 28 triggers vertical hinting only */
   fallback_script = load_flags >> 30;
   if (load_flags & (1 << 29))
     scaler.flags |= TA_SCALER_FLAG_INCREASE_X_HEIGHT;
+  if (load_flags & (1 << 28))
+    scaler.flags |= TA_SCALER_FLAG_NO_HORIZONTAL;
 
   /* note that the fallback script can't be changed anymore */
   /* after the first call of `ta_loader_load_glyph' */
