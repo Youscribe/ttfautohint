@@ -679,6 +679,7 @@ ta_latin_metrics_scale(TA_LatinMetrics metrics,
 {
   metrics->root.scaler.render_mode = scaler->render_mode;
   metrics->root.scaler.face = scaler->face;
+  metrics->root.scaler.flags = scaler->flags;
 
   ta_latin_metrics_scale_dim(metrics, scaler, TA_DIMENSION_HORZ);
   ta_latin_metrics_scale_dim(metrics, scaler, TA_DIMENSION_VERT);
