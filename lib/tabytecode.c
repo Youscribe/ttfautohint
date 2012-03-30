@@ -408,8 +408,16 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
         max = q;
     }
 
-    *(arg--) = TA_adjust_point_index(recorder, min);
-    *(arg--) = TA_adjust_point_index(recorder, max);
+    if (min > max)
+    {
+      *(arg--) = TA_adjust_point_index(recorder, max);
+      *(arg--) = TA_adjust_point_index(recorder, min);
+    }
+    else
+    {
+      *(arg--) = TA_adjust_point_index(recorder, min);
+      *(arg--) = TA_adjust_point_index(recorder, max);
+    }
 
     start = end + 1;
   }
