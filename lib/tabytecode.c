@@ -125,6 +125,8 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
 
   FT_Int n;
   FT_UInt i, j;
+  FT_UInt base;
+  FT_UInt num_packed_segments;
   FT_UInt num_storage;
   FT_UInt num_stack_elements;
   FT_UInt num_twilight_points;
@@ -133,12 +135,38 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   seg_limit = segments + axis->num_segments;
   num_segments = axis->num_segments;
 
+  /* to pack the data in the bytecode more tightly, */
+  /* we store up to the first nine segments in nibbles if possible, */
+  /* using delta values */
+  base = 0;
+  num_packed_segments = 0;
+  for (seg = segments; seg < seg_limit; seg++)
+  {
+    FT_UInt first = seg->first - points;
+    FT_UInt last = seg->last - points;
+
+
+    first = TA_adjust_point_index(recorder, first);
+    last = TA_adjust_point_index(recorder, last);
+
+    if (first - base >= 16)
+      break;
+    if (first > last || last - first >= 16)
+      break;
+    if (num_packed_segments == 9)
+      break;
+    num_packed_segments++;
+    base = last;
+  }
+
   /* some segments can `wrap around' */
   /* a contour's start point like 24-25-26-0-1-2 */
   /* (there can be at most one such segment per contour); */
   /* we thus append additional records to split them into 24-26 and 0-2 */
   wrap_around_segment = recorder->wrap_around_segments;
-  for (seg = segments; seg < seg_limit; seg++)
+  /* `num_packed_segments' segments */
+  /* have already been checked in previous loop */
+  for (seg = segments + num_packed_segments; seg < seg_limit; seg++)
     if (seg->first > seg->last)
     {
       /* the stored data is used later for edge linking */
@@ -149,8 +177,12 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
                              - recorder->wrap_around_segments;
   num_segments += num_wrap_around_segments;
 
-  /* wrap-around segments are pushed with four arguments */
-  num_args = 2 * num_segments + 2 * num_wrap_around_segments + 2;
+  /* wrap-around segments are pushed with four arguments; */
+  /* a segment stored in nibbles needs only one byte instead of two */
+  num_args = num_packed_segments
+             + 2 * (num_segments - num_packed_segments)
+             + 2 * num_wrap_around_segments
+             + 2;
 
   /* collect all arguments temporarily in an array (in reverse order) */
   /* so that we can easily split into chunks of 255 args */
@@ -164,13 +196,37 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   if (num_segments > 0xFF)
     need_words = 1;
 
+  /* the number of packed segments is indicated by the function number */
   if (recorder->glyph->num_components)
-    *(arg--) = bci_create_segments_composite;
+    *(arg--) = bci_create_segments_composite_0 + num_packed_segments;
   else
-    *(arg--) = bci_create_segments;
+    *(arg--) = bci_create_segments_0 + num_packed_segments;
   *(arg--) = num_segments;
 
-  for (seg = segments; seg < seg_limit; seg++)
+  base = 0;
+  for (seg = segments; seg < segments + num_packed_segments; seg++)
+  {
+    FT_UInt first = seg->first - points;
+    FT_UInt last = seg->last - points;
+    FT_UInt low_nibble;
+    FT_UInt high_nibble;
+
+
+    first = TA_adjust_point_index(recorder, first);
+    last = TA_adjust_point_index(recorder, last);
+
+    low_nibble = first - base;
+    high_nibble = last - first;
+
+    *(arg--) = 16 * high_nibble + low_nibble;
+
+    base = last;
+
+    if (last > 0xFF)
+      need_words = 1;
+  }
+
+  for (seg = segments + num_packed_segments; seg < seg_limit; seg++)
   {
     FT_UInt first = seg->first - points;
     FT_UInt last = seg->last - points;

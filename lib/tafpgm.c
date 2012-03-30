@@ -617,6 +617,61 @@ unsigned char FPGM(bci_get_point_extrema) [] =
 
 
 /*
+ * bci_nibbles
+ *
+ *   An auxiliary function for `bci_create_segment'.
+ *
+ * in: 16 * (end - start) + (start - base)
+ *
+ * out: start
+ *      end
+ *
+ * sal: sal_base (set to `end' at return)
+ */
+
+
+unsigned char FPGM(bci_nibbles) [] =
+{
+  PUSHB_1,
+    bci_nibbles,
+  FDEF,
+
+  DUP,
+  PUSHW_1,
+    0x04, /* 16*64 */
+    0x00,
+  DIV, /* s: in hnibble */
+  DUP,
+  PUSHW_1,
+    0x04, /* 16*64 */
+    0x00,
+  MUL, /* s: in hnibble (hnibble * 16) */
+  ROLL,
+  SWAP,
+  SUB, /* s: hnibble lnibble */
+
+  PUSHB_1,
+    sal_base,
+  RS,
+  ADD, /* s: hnibble start */
+  DUP,
+  ROLL,
+  ADD, /* s: start end */
+
+  DUP,
+  PUSHB_1,
+    sal_base,
+  SWAP,
+  WS, /* sal_base = end */
+
+  SWAP,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_create_segment
  *
  *   Store start and end point of a segment in the storage area,
@@ -635,10 +690,15 @@ unsigned char FPGM(bci_get_point_extrema) [] =
  *      sal_j (current twilight point)
  *      sal_point_min
  *      sal_point_max
+ *      sal_base
+ *      sal_num_packed_segments
  *
  * CVT: cvtl_scale
  *      cvtl_0x10000
  *      cvtl_temp
+ *
+ * If `sal_num_packed_segments' is > 0, the start/end pair is stored as
+ * delta values in nibbles (without a wrap-around segment).
  */
 
 unsigned char FPGM(bci_create_segment) [] =
@@ -647,6 +707,26 @@ unsigned char FPGM(bci_create_segment) [] =
   PUSHB_1,
     bci_create_segment,
   FDEF,
+
+  PUSHB_2,
+    0,
+    sal_num_packed_segments,
+  RS,
+  NEQ,
+  IF,
+    PUSHB_2,
+      sal_num_packed_segments,
+      sal_num_packed_segments,
+    RS,
+    PUSHB_1,
+      1,
+    SUB,
+    WS, /* sal_num_packed_segments = sal_num_packed_segments - 1 */
+
+    PUSHB_1,
+      bci_nibbles,
+    CALL,
+  EIF,
 
   PUSHB_1,
     sal_i,
@@ -804,7 +884,8 @@ unsigned char FPGM(bci_create_segment) [] =
  *   Set up segments by defining point ranges which defines them
  *   and computing twilight points to represent them.
  *
- * in: num_segments (N)
+ * in: num_packed_segments
+ *     num_segments (N)
  *     segment_start_0
  *     segment_end_0
  *       [contour_last 0 (if wrap-around segment)]
@@ -823,8 +904,17 @@ unsigned char FPGM(bci_create_segment) [] =
  *
  * sal: sal_i (start of current segment)
  *      sal_j (current twilight point)
+ *      sal_num_packed_segments
+ *      sal_base (the base for delta values in nibbles)
  *
  * CVT: cvtl_is_subglyph
+ *
+ * If `num_packed_segments' is set to p, the first p start/end pairs are
+ * stored as delta values in nibbles, with the `start' delta in the lower
+ * nibble (and there are no wrap-around segments).  For example, if the
+ * first three pairs are 1/3, 5/8, and 12/13, the topmost three bytes on the
+ * stack are 0x21, 0x32, and 0x14.
+ *
  */
 
 unsigned char FPGM(bci_create_segments) [] =
@@ -844,18 +934,26 @@ unsigned char FPGM(bci_create_segments) [] =
     /* all our measurements are taken along the y axis */
     SVTCA_y,
 
+    PUSHB_1,
+      sal_num_packed_segments,
+    SWAP,
+    WS,
+
     DUP,
     ADD,
     PUSHB_1,
       1,
     SUB, /* delta = (2*num_segments - 1) */
 
-    PUSHB_4,
+    PUSHB_6,
       sal_segment_offset,
       sal_segment_offset,
 
       sal_j,
       0,
+      sal_base,
+      0,
+    WS, /* sal_base = 0 */
     WS, /* sal_j = 0 (point offset) */
 
     ROLL,
@@ -871,6 +969,173 @@ unsigned char FPGM(bci_create_segments) [] =
   ELSE,
     CLEAR,
   EIF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_create_segments_X
+ *
+ * Top-level routines for calling `bci_create_segments'.
+ */
+
+unsigned char FPGM(bci_create_segments_0) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_0,
+  FDEF,
+
+  PUSHB_2,
+    0,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_1) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_1,
+  FDEF,
+
+  PUSHB_2,
+    1,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_2) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_2,
+  FDEF,
+
+  PUSHB_2,
+    2,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_3) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_3,
+  FDEF,
+
+  PUSHB_2,
+    3,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_4) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_4,
+  FDEF,
+
+  PUSHB_2,
+    4,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_5) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_5,
+  FDEF,
+
+  PUSHB_2,
+    5,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_6) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_6,
+  FDEF,
+
+  PUSHB_2,
+    6,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_7) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_7,
+  FDEF,
+
+  PUSHB_2,
+    7,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_8) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_8,
+  FDEF,
+
+  PUSHB_2,
+    8,
+    bci_create_segments,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_9) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_9,
+  FDEF,
+
+  PUSHB_2,
+    9,
+    bci_create_segments,
+  CALL,
 
   ENDF,
 
@@ -909,18 +1174,26 @@ unsigned char FPGM(bci_create_segments_composite) [] =
     /* all our measurements are taken along the y axis */
     SVTCA_y,
 
+    PUSHB_1,
+      sal_num_packed_segments,
+    SWAP,
+    WS,
+
     DUP,
     ADD,
     PUSHB_1,
       1,
     SUB, /* delta = (2*num_segments - 1) */
 
-    PUSHB_4,
+    PUSHB_6,
       sal_segment_offset,
       sal_segment_offset,
 
       sal_j,
       0,
+      sal_base,
+      0,
+    WS, /* sal_base = 0 */
     WS, /* sal_j = 0 (point offset) */
 
     ROLL,
@@ -936,6 +1209,173 @@ unsigned char FPGM(bci_create_segments_composite) [] =
   ELSE,
     CLEAR,
   EIF,
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_create_segments_composite_X
+ *
+ * Top-level routines for calling `bci_create_segments_composite'.
+ */
+
+unsigned char FPGM(bci_create_segments_composite_0) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_0,
+  FDEF,
+
+  PUSHB_2,
+    0,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_1) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_1,
+  FDEF,
+
+  PUSHB_2,
+    1,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_2) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_2,
+  FDEF,
+
+  PUSHB_2,
+    2,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_3) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_3,
+  FDEF,
+
+  PUSHB_2,
+    3,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_4) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_4,
+  FDEF,
+
+  PUSHB_2,
+    4,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_5) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_5,
+  FDEF,
+
+  PUSHB_2,
+    5,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_6) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_6,
+  FDEF,
+
+  PUSHB_2,
+    6,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_7) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_7,
+  FDEF,
+
+  PUSHB_2,
+    7,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_8) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_8,
+  FDEF,
+
+  PUSHB_2,
+    8,
+    bci_create_segments_composite,
+  CALL,
+
+  ENDF,
+
+};
+
+unsigned char FPGM(bci_create_segments_composite_9) [] =
+{
+
+  PUSHB_1,
+    bci_create_segments_composite_9,
+  FDEF,
+
+  PUSHB_2,
+    9,
+    bci_create_segments_composite,
+  CALL,
 
   ENDF,
 
@@ -3734,10 +4174,31 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_blue_round_b))
             + sizeof (FPGM(bci_decrement_component_counter))
             + sizeof (FPGM(bci_get_point_extrema))
+            + sizeof (FPGM(bci_nibbles))
 
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
+            + sizeof (FPGM(bci_create_segments_0))
+            + sizeof (FPGM(bci_create_segments_1))
+            + sizeof (FPGM(bci_create_segments_2))
+            + sizeof (FPGM(bci_create_segments_3))
+            + sizeof (FPGM(bci_create_segments_4))
+            + sizeof (FPGM(bci_create_segments_5))
+            + sizeof (FPGM(bci_create_segments_6))
+            + sizeof (FPGM(bci_create_segments_7))
+            + sizeof (FPGM(bci_create_segments_8))
+            + sizeof (FPGM(bci_create_segments_9))
             + sizeof (FPGM(bci_create_segments_composite))
+            + sizeof (FPGM(bci_create_segments_composite_0))
+            + sizeof (FPGM(bci_create_segments_composite_1))
+            + sizeof (FPGM(bci_create_segments_composite_2))
+            + sizeof (FPGM(bci_create_segments_composite_3))
+            + sizeof (FPGM(bci_create_segments_composite_4))
+            + sizeof (FPGM(bci_create_segments_composite_5))
+            + sizeof (FPGM(bci_create_segments_composite_6))
+            + sizeof (FPGM(bci_create_segments_composite_7))
+            + sizeof (FPGM(bci_create_segments_composite_8))
+            + sizeof (FPGM(bci_create_segments_composite_9))
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
 
@@ -3823,10 +4284,31 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_blue_round_b);
   COPY_FPGM(bci_decrement_component_counter);
   COPY_FPGM(bci_get_point_extrema);
+  COPY_FPGM(bci_nibbles);
 
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
+  COPY_FPGM(bci_create_segments_0);
+  COPY_FPGM(bci_create_segments_1);
+  COPY_FPGM(bci_create_segments_2);
+  COPY_FPGM(bci_create_segments_3);
+  COPY_FPGM(bci_create_segments_4);
+  COPY_FPGM(bci_create_segments_5);
+  COPY_FPGM(bci_create_segments_6);
+  COPY_FPGM(bci_create_segments_7);
+  COPY_FPGM(bci_create_segments_8);
+  COPY_FPGM(bci_create_segments_9);
   COPY_FPGM(bci_create_segments_composite);
+  COPY_FPGM(bci_create_segments_composite_0);
+  COPY_FPGM(bci_create_segments_composite_1);
+  COPY_FPGM(bci_create_segments_composite_2);
+  COPY_FPGM(bci_create_segments_composite_3);
+  COPY_FPGM(bci_create_segments_composite_4);
+  COPY_FPGM(bci_create_segments_composite_5);
+  COPY_FPGM(bci_create_segments_composite_6);
+  COPY_FPGM(bci_create_segments_composite_7);
+  COPY_FPGM(bci_create_segments_composite_8);
+  COPY_FPGM(bci_create_segments_composite_9);
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
 
