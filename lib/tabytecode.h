@@ -367,15 +367,15 @@
 #define bci_ip_between_align_points bci_ip_between_align_point + 1
 
 /* 42 */
-#define bci_action_adjust_common bci_ip_between_align_points + 1
-#define bci_action_stem_common bci_action_adjust_common + 1
-#define bci_action_serif_common bci_action_stem_common + 1
-#define bci_action_serif_anchor_common bci_action_serif_common + 1
-#define bci_action_serif_link1_common bci_action_serif_anchor_common + 1
-#define bci_action_serif_link2_common bci_action_serif_link1_common + 1
+#define bci_adjust_common bci_ip_between_align_points + 1
+#define bci_stem_common bci_adjust_common + 1
+#define bci_serif_common bci_stem_common + 1
+#define bci_serif_anchor_common bci_serif_common + 1
+#define bci_serif_link1_common bci_serif_anchor_common + 1
+#define bci_serif_link2_common bci_serif_link1_common + 1
 
 /* 48 */
-#define bci_lower_bound bci_action_serif_link2_common + 1
+#define bci_lower_bound bci_serif_link2_common + 1
 #define bci_upper_bound bci_lower_bound + 1
 #define bci_lower_upper_bound bci_upper_bound + 1
 
