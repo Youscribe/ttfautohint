@@ -619,7 +619,8 @@ unsigned char FPGM(bci_get_point_extrema) [] =
 /*
  * bci_nibbles
  *
- *   An auxiliary function for `bci_create_segment'.
+ *   Pop a byte with two delta arguments in its nibbles and push the
+ *   expanded arguments separately as two bytes.
  *
  * in: 16 * (end - start) + (start - base)
  *

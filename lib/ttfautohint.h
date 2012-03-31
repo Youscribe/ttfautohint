@@ -89,8 +89,11 @@ typedef int
                 void* info_data);
 
 
-/* Error values in addition to the FT_Err_XXX constants from FreeType. */
-/* All error values specific to ttfautohint start with `TA_Err_'. */
+/*
+ * Error values in addition to the FT_Err_XXX constants from FreeType.
+ *
+ * All error values specific to ttfautohint start with `TA_Err_'.
+ */
 #include <ttfautohint-errors.h>
 
 /*
@@ -108,142 +111,116 @@ typedef int
  *
  * Note that fields marked as `not implemented yet' are subject to change.
  *
- *   in-file                      A pointer of type `FILE*' to the data
- *                                stream of the input font, opened for
- *                                binary reading.  Mutually exclusive with
- *                                `in-buffer'.
+ *   in-file
+ *     A pointer of type `FILE*' to the data stream of the input font,
+ *     opened for binary reading.  Mutually exclusive with `in-buffer'.
  *
- *   in-buffer                    A pointer of type `const char*' to a
- *                                buffer which contains the input font.
- *                                Needs `in-buffer-len'.  Mutually exclusive
- *                                with `in-file'.
+ *   in-buffer
+ *     A pointer of type `const char*' to a buffer which contains the input
+ *     font.  Needs `in-buffer-len'.  Mutually exclusive with `in-file'.
  *
- *   in-buffer-len                A value of type `size_t', giving the
- *                                length of the input buffer.  Needs
- *                                `in-buffer'.
+ *   in-buffer-len
+ *     A value of type `size_t', giving the length of the input buffer.
+ *     Needs `in-buffer'.
  *
- *   out-file                     A pointer of type `FILE*' to the data
- *                                stream of the output font, opened for
- *                                binary writing.  Mutually exclusive with
- *                                `out-buffer'.
+ *   out-file
+ *      A pointer of type `FILE*' to the data stream of the output font,
+ *      opened for binary writing.  Mutually exclusive with `out-buffer'.
  *
- *   out-buffer                   A pointer of type `char**' to a buffer
- *                                which contains the output font.  Needs
- *                                `out-buffer-len'.  Mutually exclusive with
- *                                `out-file'.  Deallocate the memory with
- *                                `free'.
+ *   out-buffer
+ *     A pointer of type `char**' to a buffer which contains the output
+ *     font.  Needs `out-buffer-len'.  Mutually exclusive with `out-file'.
+ *     Deallocate the memory with `free'.
  *
- *   out-buffer-len               A pointer of type `size_t*' to a value
- *                                giving the length of the output buffer.
- *                                Needs `out-buffer'.
+ *   out-buffer-len
+ *     A pointer of type `size_t*' to a value giving the length of the
+ *     output buffer.  Needs `out-buffer'.
  *
- *   progress-callback            A pointer of type `TA_Progress_Func',
- *                                specifying a callback function for
- *                                progress reports.  This function gets
- *                                called after a single glyph has been
- *                                processed.  If this field is not set or
- *                                set to NULL, no progress callback function
- *                                is used.
+ *   progress-callback
+ *     A pointer of type `TA_Progress_Func', specifying a callback function
+ *     for progress reports.  This function gets called after a single glyph
+ *     has been processed.  If this field is not set or set to NULL, no
+ *     progress callback function is used.
  *
- *   progress-callback-data       A pointer of type `void*' to user data
- *                                which is passed to the progress callback
- *                                function.
+ *   progress-callback-data
+ *     A pointer of type `void*' to user data which is passed to the
+ *     progress callback function.
  *
- *   error-string                 A pointer of type `unsigned char**' to a
- *                                string (in UTF-8 encoding) which verbally
- *                                describes the error code.  You must not
- *                                change the returned value.
+ *   error-string
+ *     A pointer of type `unsigned char**' to a string (in UTF-8 encoding)
+ *     which verbally describes the error code.  You must not change the
+ *     returned value.
  *
- *   hinting-range-min            An integer (which must be larger than or
- *                                equal to 2) giving the lowest PPEM value
- *                                used for autohinting.  If this field is
- *                                not set, it defaults to
- *                                TA_HINTING_RANGE_MIN.
+ *   hinting-range-min
+ *     An integer (which must be larger than or equal to 2) giving the
+ *     lowest PPEM value used for autohinting.  If this field is not set, it
+ *     defaults to TA_HINTING_RANGE_MIN.
  *
- *   hinting-range-max            An integer (which must be larger than or
- *                                equal to the value of `hinting-range-min')
- *                                giving the highest PPEM value used for
- *                                autohinting.  If this field is not set, it
- *                                defaults to TA_HINTING_RANGE_MAX.
+ *   hinting-range-max
+ *     An integer (which must be larger than or equal to the value of
+ *     `hinting-range-min') giving the highest PPEM value used for
+ *     autohinting.  If this field is not set, it defaults to
+ *     TA_HINTING_RANGE_MAX.
  *
- *   hinting-limit                An integer (which must be larger than or
- *                                equal to the value of `hinting-range-max')
- *                                which gives the largest PPEM value at
- *                                which hinting is applied.  For larger
- *                                values, hinting is switched off.  If this
- *                                field is not set, it defaults to
- *                                TA_HINTING_LIMIT.  If it is set to 0, no
- *                                hinting limit is added to the bytecode.
+ *   hinting-limit
+ *     An integer (which must be larger than or equal to the value of
+ *     `hinting-range-max') which gives the largest PPEM value at which
+ *     hinting is applied.  For larger values, hinting is switched off.  If
+ *     this field is not set, it defaults to TA_HINTING_LIMIT.  If it is set
+ *     to 0, no hinting limit is added to the bytecode.
  *
- *   pre-hinting                  An integer (1 for `on' and 0 for `off',
- *                                which is the default) to specify whether
- *                                native TrueType hinting shall be applied
- *                                to all glyphs before passing them to the
- *                                (internal) autohinter.  The used
- *                                resolution is the em-size in font units;
- *                                for most fonts this is 2048ppem.  Use this
- *                                if the hints move or scale subglyphs
- *                                independently of the output resolution.
+ *   pre-hinting
+ *     An integer (1 for `on' and 0 for `off', which is the default) to
+ *     specify whether native TrueType hinting shall be applied to all
+ *     glyphs before passing them to the (internal) autohinter.  The used
+ *     resolution is the em-size in font units; for most fonts this is
+ *     2048ppem.  Use this if the hints move or scale subglyphs
+ *     independently of the output resolution.
  *
- *   info-callback                A pointer of type `TA_Info_Func',
- *                                specifying a callback function for
- *                                manipulating the `name' table.  This
- *                                function gets called for each name table
- *                                entry.  If not set or set to NULL, the
- *                                table data stays unmodified.
+ *   info-callback
+ *     A pointer of type `TA_Info_Func', specifying a callback function for
+ *     manipulating the `name' table.  This function gets called for each
+ *     name table entry.  If not set or set to NULL, the table data stays
+ *     unmodified.
  *
- *   info-callback-data           A pointer of type `void*' to user data
- *                                which is passed to the info callback
- *                                function.
+ *   info-callback-data
+ *     A pointer of type `void*' to user data which is passed to the info
+ *     callback function.
  *
- *   increase-x-height            An integer (1 for `on' and 0 for `off',
- *                                which is the default).  For PPEM values in
- *                                the range 5 < PPEM < 15, round up the
- *                                font's x height much more often than
- *                                normally if this flag is set.  Use this if
- *                                holes in letters like `e' get filled, for
- *                                example.
+ *   increase-x-height
+ *     An integer (1 for `on' and 0 for `off', which is the default).  For
+ *     PPEM values in the range 5 < PPEM < 15, round up the font's x height
+ *     much more often than normally if this flag is set.  Use this if holes
+ *     in letters like `e' get filled, for example.
  *
- *   x-height-snapping-exceptions A pointer of type `const char*' to a
- *                                null-terminated string which gives a list
- *                                of comma separated PPEM values or value
- *                                ranges at which no x-height snapping shall
- *                                be applied.  A value range has the form
- *                                `value1-value2', meaning `value1' <= PPEM
- *                                <= `value2'.  Whitespace is not
- *                                significant; a trailing comma is ignored.
- *                                If the supplied argument is NULL, no
- *                                x-height snapping takes place at all.  By
- *                                default, there are no snapping exceptions.
- *                                Not implemented yet.
+ *   x-height-snapping-exceptions
+ *     A pointer of type `const char*' to a null-terminated string which
+ *     gives a list of comma separated PPEM values or value ranges at which
+ *     no x-height snapping shall be applied.  A value range has the form
+ *     `value1-value2', meaning `value1' <= PPEM <= `value2'.  Whitespace is
+ *     not significant; a trailing comma is ignored.  If the supplied
+ *     argument is NULL, no x-height snapping takes place at all.  By
+ *     default, there are no snapping exceptions.  Not implemented yet.
  *
- *   ignore-permissions           If the font has set bit 1 in the `fsType'
- *                                field of the `OS/2' table, the ttfautohint
- *                                library refuses to process the font since
- *                                a permission to do that is required from
- *                                the font's legal owner.  In case you have
- *                                such a permission you might set the
- *                                integer argument to value 1 to make
- *                                ttfautohint handle the font.  The default
- *                                value is 0.
+ *   ignore-permissions
+ *     If the font has set bit 1 in the `fsType' field of the `OS/2' table,
+ *     the ttfautohint library refuses to process the font since a
+ *     permission to do that is required from the font's legal owner.  In
+ *     case you have such a permission you might set the integer argument to
+ *     value 1 to make ttfautohint handle the font.  The default value is 0.
  *
- *   fallback-script              An integer which specifies the default
- *                                script for glyphs not in the `latin'
- *                                range.  If set to 1, the `latin' script is
- *                                used (other scripts are not supported
- *                                yet).  By default, no script is used
- *                                (value 0; this disables autohinting for
- *                                such glyphs).
+ *   fallback-script
+ *     An integer which specifies the default script for glyphs not in the
+ *     `latin' range.  If set to 1, the `latin' script is used (other
+ *     scripts are not supported yet).  By default, no script is used (value
+ *     0; this disables autohinting for such glyphs).
  *
- *   symbol                       Set this integer to 1 if you want to
- *                                process a font which lacks the characters
- *                                of a supported script, for example, a
- *                                symbol font.  ttfautohint then uses
- *                                default values for the standard stem width
- *                                and height instead of deriving these
- *                                values from a script's key character (for
- *                                the latin script, it is character `o').
- *                                The default value is 0.
+ *   symbol
+ *     Set this integer to 1 if you want to process a font which lacks the
+ *     characters of a supported script, for example, a symbol font.
+ *     ttfautohint then uses default values for the standard stem width and
+ *     height instead of deriving these values from a script's key character
+ *     (for the latin script, it is character `o').  The default value is 0.
  *
  * Remarks:
  *
