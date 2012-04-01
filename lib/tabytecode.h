@@ -409,36 +409,36 @@
 #define bci_action_anchor bci_action_blue_anchor + 1
 #define bci_action_anchor_serif bci_action_anchor + 1
 #define bci_action_anchor_round bci_action_anchor_serif + 1
-#define bci_action_anchor_serif_round bci_action_anchor_round + 1
+#define bci_action_anchor_round_serif bci_action_anchor_round + 1
 
 /* 67 */
-#define bci_action_adjust bci_action_anchor_serif_round + 1
+#define bci_action_adjust bci_action_anchor_round_serif + 1
 #define bci_action_adjust_serif bci_action_adjust + 1
 #define bci_action_adjust_round bci_action_adjust_serif + 1
-#define bci_action_adjust_serif_round bci_action_adjust_round + 1
-#define bci_action_adjust_bound bci_action_adjust_serif_round + 1
+#define bci_action_adjust_round_serif bci_action_adjust_round + 1
+#define bci_action_adjust_bound bci_action_adjust_round_serif + 1
 #define bci_action_adjust_bound_serif bci_action_adjust_bound + 1
 #define bci_action_adjust_bound_round bci_action_adjust_bound_serif + 1
-#define bci_action_adjust_bound_serif_round bci_action_adjust_bound_round + 1
+#define bci_action_adjust_bound_round_serif bci_action_adjust_bound_round + 1
 
 /* 75 */
-#define bci_action_link bci_action_adjust_bound_serif_round + 1
+#define bci_action_link bci_action_adjust_bound_round_serif + 1
 #define bci_action_link_serif bci_action_link + 1
 #define bci_action_link_round bci_action_link_serif + 1
-#define bci_action_link_serif_round bci_action_link_round + 1
+#define bci_action_link_round_serif bci_action_link_round + 1
 
 /* 79 */
-#define bci_action_stem bci_action_link_serif_round + 1
+#define bci_action_stem bci_action_link_round_serif + 1
 #define bci_action_stem_serif bci_action_stem + 1
 #define bci_action_stem_round bci_action_stem_serif + 1
-#define bci_action_stem_serif_round bci_action_stem_round + 1
-#define bci_action_stem_bound bci_action_stem_serif_round + 1
+#define bci_action_stem_round_serif bci_action_stem_round + 1
+#define bci_action_stem_bound bci_action_stem_round_serif + 1
 #define bci_action_stem_bound_serif bci_action_stem_bound + 1
 #define bci_action_stem_bound_round bci_action_stem_bound_serif + 1
-#define bci_action_stem_bound_serif_round bci_action_stem_bound_round + 1
+#define bci_action_stem_bound_round_serif bci_action_stem_bound_round + 1
 
 /* 87 */
-#define bci_action_serif bci_action_stem_bound_serif_round + 1
+#define bci_action_serif bci_action_stem_bound_round_serif + 1
 #define bci_action_serif_lower_bound bci_action_serif + 1
 #define bci_action_serif_upper_bound bci_action_serif_lower_bound + 1
 #define bci_action_serif_lower_upper_bound bci_action_serif_upper_bound + 1

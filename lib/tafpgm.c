@@ -2280,7 +2280,7 @@ unsigned char FPGM(bci_adjust_bound) [] =
  * bci_action_adjust_bound
  * bci_action_adjust_bound_serif
  * bci_action_adjust_bound_round
- * bci_action_adjust_bound_serif_round
+ * bci_action_adjust_bound_round_serif
  *
  * Higher-level routines for calling `bci_adjust_bound'.
  */
@@ -2336,11 +2336,11 @@ unsigned char FPGM(bci_action_adjust_bound_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_adjust_bound_serif_round) [] =
+unsigned char FPGM(bci_action_adjust_bound_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_adjust_bound_serif_round,
+    bci_action_adjust_bound_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -2397,7 +2397,7 @@ unsigned char FPGM(bci_adjust) [] =
  * bci_action_adjust
  * bci_action_adjust_serif
  * bci_action_adjust_round
- * bci_action_adjust_serif_round
+ * bci_action_adjust_round_serif
  *
  * Higher-level routines for calling `bci_adjust'.
  */
@@ -2453,11 +2453,11 @@ unsigned char FPGM(bci_action_adjust_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_adjust_serif_round) [] =
+unsigned char FPGM(bci_action_adjust_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_adjust_serif_round,
+    bci_action_adjust_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -2834,7 +2834,7 @@ unsigned char FPGM(bci_stem_bound) [] =
  * bci_action_stem_bound
  * bci_action_stem_bound_serif
  * bci_action_stem_bound_round
- * bci_action_stem_bound_serif_round
+ * bci_action_stem_bound_round_serif
  *
  * Higher-level routines for calling `bci_stem_bound'.
  */
@@ -2890,11 +2890,11 @@ unsigned char FPGM(bci_action_stem_bound_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_stem_bound_serif_round) [] =
+unsigned char FPGM(bci_action_stem_bound_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_stem_bound_serif_round,
+    bci_action_stem_bound_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -2976,7 +2976,7 @@ unsigned char FPGM(bci_stem) [] =
  * bci_action_stem
  * bci_action_stem_serif
  * bci_action_stem_round
- * bci_action_stem_serif_round
+ * bci_action_stem_round_serif
  *
  * Higher-level routines for calling `bci_stem'.
  */
@@ -3032,11 +3032,11 @@ unsigned char FPGM(bci_action_stem_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_stem_serif_round) [] =
+unsigned char FPGM(bci_action_stem_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_stem_serif_round,
+    bci_action_stem_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -3111,7 +3111,7 @@ unsigned char FPGM(bci_link) [] =
  * bci_action_link
  * bci_action_link_serif
  * bci_action_link_round
- * bci_action_link_serif_round
+ * bci_action_link_round_serif
  *
  * Higher-level routines for calling `bci_link'.
  */
@@ -3167,11 +3167,11 @@ unsigned char FPGM(bci_action_link_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_link_serif_round) [] =
+unsigned char FPGM(bci_action_link_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_link_serif_round,
+    bci_action_link_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -3405,7 +3405,7 @@ unsigned char FPGM(bci_anchor) [] =
  * bci_action_anchor
  * bci_action_anchor_serif
  * bci_action_anchor_round
- * bci_action_anchor_serif_round
+ * bci_action_anchor_round_serif
  *
  * Higher-level routines for calling `bci_anchor'.
  */
@@ -3461,11 +3461,11 @@ unsigned char FPGM(bci_action_anchor_round) [] =
 
 };
 
-unsigned char FPGM(bci_action_anchor_serif_round) [] =
+unsigned char FPGM(bci_action_anchor_round_serif) [] =
 {
 
   PUSHB_1,
-    bci_action_anchor_serif_round,
+    bci_action_anchor_round_serif,
   FDEF,
 
   PUSHB_3,
@@ -4557,34 +4557,34 @@ unsigned char FPGM(bci_handle_action) [] =
  *       bci_action_adjust_bound
  *       bci_action_adjust_bound_serif
  *       bci_action_adjust_bound_round
- *       bci_action_adjust_bound_serif_round
+ *       bci_action_adjust_bound_round_serif
  *
  *       bci_action_stem_bound
  *       bci_action_stem_bound_serif
  *       bci_action_stem_bound_round
- *       bci_action_stem_bound_serif_round
+ *       bci_action_stem_bound_round_serif
  *
  *       bci_action_link
  *       bci_action_link_serif
  *       bci_action_link_round
- *       bci_action_link_serif_round
+ *       bci_action_link_round_serif
  *
  *       bci_action_anchor
  *       bci_action_anchor_serif
  *       bci_action_anchor_round
- *       bci_action_anchor_serif_round
+ *       bci_action_anchor_round_serif
  *
  *       bci_action_blue_anchor
  *
  *       bci_action_adjust
  *       bci_action_adjust_serif
  *       bci_action_adjust_round
- *       bci_action_adjust_serif_round
+ *       bci_action_adjust_round_serif
  *
  *       bci_action_stem
  *       bci_action_stem_serif
  *       bci_action_stem_round
- *       bci_action_stem_serif_round
+ *       bci_action_stem_round_serif
  *
  *       bci_action_blue
  *
@@ -4731,33 +4731,33 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_adjust_bound))
             + sizeof (FPGM(bci_action_adjust_bound_serif))
             + sizeof (FPGM(bci_action_adjust_bound_round))
-            + sizeof (FPGM(bci_action_adjust_bound_serif_round))
+            + sizeof (FPGM(bci_action_adjust_bound_round_serif))
             + sizeof (FPGM(bci_stem_bound))
             + sizeof (FPGM(bci_action_stem_bound))
             + sizeof (FPGM(bci_action_stem_bound_serif))
             + sizeof (FPGM(bci_action_stem_bound_round))
-            + sizeof (FPGM(bci_action_stem_bound_serif_round))
+            + sizeof (FPGM(bci_action_stem_bound_round_serif))
             + sizeof (FPGM(bci_link))
             + sizeof (FPGM(bci_action_link))
             + sizeof (FPGM(bci_action_link_serif))
             + sizeof (FPGM(bci_action_link_round))
-            + sizeof (FPGM(bci_action_link_serif_round))
+            + sizeof (FPGM(bci_action_link_round_serif))
             + sizeof (FPGM(bci_anchor))
             + sizeof (FPGM(bci_action_anchor))
             + sizeof (FPGM(bci_action_anchor_serif))
             + sizeof (FPGM(bci_action_anchor_round))
-            + sizeof (FPGM(bci_action_anchor_serif_round))
+            + sizeof (FPGM(bci_action_anchor_round_serif))
             + sizeof (FPGM(bci_action_blue_anchor))
             + sizeof (FPGM(bci_adjust))
             + sizeof (FPGM(bci_action_adjust))
             + sizeof (FPGM(bci_action_adjust_serif))
             + sizeof (FPGM(bci_action_adjust_round))
-            + sizeof (FPGM(bci_action_adjust_serif_round))
+            + sizeof (FPGM(bci_action_adjust_round_serif))
             + sizeof (FPGM(bci_stem))
             + sizeof (FPGM(bci_action_stem))
             + sizeof (FPGM(bci_action_stem_serif))
             + sizeof (FPGM(bci_action_stem_round))
-            + sizeof (FPGM(bci_action_stem_serif_round))
+            + sizeof (FPGM(bci_action_stem_round_serif))
             + sizeof (FPGM(bci_action_blue))
             + sizeof (FPGM(bci_action_serif))
             + sizeof (FPGM(bci_action_serif_lower_bound))
@@ -4865,33 +4865,33 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_adjust_bound);
   COPY_FPGM(bci_action_adjust_bound_serif);
   COPY_FPGM(bci_action_adjust_bound_round);
-  COPY_FPGM(bci_action_adjust_bound_serif_round);
+  COPY_FPGM(bci_action_adjust_bound_round_serif);
   COPY_FPGM(bci_stem_bound);
   COPY_FPGM(bci_action_stem_bound);
   COPY_FPGM(bci_action_stem_bound_serif);
   COPY_FPGM(bci_action_stem_bound_round);
-  COPY_FPGM(bci_action_stem_bound_serif_round);
+  COPY_FPGM(bci_action_stem_bound_round_serif);
   COPY_FPGM(bci_link);
   COPY_FPGM(bci_action_link);
   COPY_FPGM(bci_action_link_serif);
   COPY_FPGM(bci_action_link_round);
-  COPY_FPGM(bci_action_link_serif_round);
+  COPY_FPGM(bci_action_link_round_serif);
   COPY_FPGM(bci_anchor);
   COPY_FPGM(bci_action_anchor);
   COPY_FPGM(bci_action_anchor_serif);
   COPY_FPGM(bci_action_anchor_round);
-  COPY_FPGM(bci_action_anchor_serif_round);
+  COPY_FPGM(bci_action_anchor_round_serif);
   COPY_FPGM(bci_action_blue_anchor);
   COPY_FPGM(bci_adjust);
   COPY_FPGM(bci_action_adjust);
   COPY_FPGM(bci_action_adjust_serif);
   COPY_FPGM(bci_action_adjust_round);
-  COPY_FPGM(bci_action_adjust_serif_round);
+  COPY_FPGM(bci_action_adjust_round_serif);
   COPY_FPGM(bci_stem);
   COPY_FPGM(bci_action_stem);
   COPY_FPGM(bci_action_stem_serif);
   COPY_FPGM(bci_action_stem_round);
-  COPY_FPGM(bci_action_stem_serif_round);
+  COPY_FPGM(bci_action_stem_round_serif);
   COPY_FPGM(bci_action_blue);
   COPY_FPGM(bci_action_serif);
   COPY_FPGM(bci_action_serif_lower_bound);
