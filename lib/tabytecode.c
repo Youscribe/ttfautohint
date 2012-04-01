@@ -1117,8 +1117,6 @@ TA_hints_recorder(TA_Action action,
   FT_UInt* wraps = recorder->wrap_around_segments;
   FT_Byte* p = recorder->hints_record.buf;
 
-  FT_Byte bound_offset = 0;
-
   FT_UInt* ip;
   FT_UInt* limit;
 
@@ -1214,21 +1212,16 @@ TA_hints_recorder(TA_Action action,
 
   case ta_bound:
     /* we ignore the BOUND action since we signal this information */
-    /* with the `bound_offset' parameter below */
+    /* with the proper function number */
     return;
 
   default:
     break;
   }
 
-  if (lower_bound)
-    bound_offset += 1;
-  if (upper_bound)
-    bound_offset += 2;
-
-  /* this reflects the order in the TA_Action enumeration */
-  *(p++) = 0;
-  *(p++) = (FT_Byte)action + bound_offset + ACTION_OFFSET;
+  /* some enum values correspond to four or eight bytecode functions; */
+  /* if the value is n, the function numbers are n, ..., n+7, */
+  /* to be differentiated with flags */
 
   switch (action)
   {
@@ -1239,9 +1232,10 @@ TA_hints_recorder(TA_Action action,
 
 
       *(p++) = 0;
-      *(p++) = stem_edge->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = base_edge->flags & TA_EDGE_ROUND;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + ((stem_edge->flags & TA_EDGE_SERIF) != 0)
+               + 2 * ((base_edge->flags & TA_EDGE_ROUND) != 0);
+
       *(p++) = HIGH(base_edge->first - segments);
       *(p++) = LOW(base_edge->first - segments);
       *(p++) = HIGH(stem_edge->first - segments);
@@ -1258,9 +1252,10 @@ TA_hints_recorder(TA_Action action,
 
 
       *(p++) = 0;
-      *(p++) = edge2->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + ((edge2->flags & TA_EDGE_SERIF) != 0)
+               + 2 * ((edge->flags & TA_EDGE_ROUND) != 0);
+
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
       *(p++) = HIGH(edge2->first - segments);
@@ -1278,9 +1273,11 @@ TA_hints_recorder(TA_Action action,
 
 
       *(p++) = 0;
-      *(p++) = edge2->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + ((edge2->flags & TA_EDGE_SERIF) != 0)
+               + 2 * ((edge->flags & TA_EDGE_ROUND) != 0)
+               + 4 * (edge_minus_one != NULL);
+
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
       *(p++) = HIGH(edge2->first - segments);
@@ -1301,6 +1298,9 @@ TA_hints_recorder(TA_Action action,
       TA_Edge edge = (TA_Edge)arg1;
       TA_Edge blue = arg2;
 
+
+      *(p++) = 0;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET;
 
       *(p++) = HIGH(blue->first - segments);
       *(p++) = LOW(blue->first - segments);
@@ -1331,9 +1331,11 @@ TA_hints_recorder(TA_Action action,
 
 
       *(p++) = 0;
-      *(p++) = edge2->flags & TA_EDGE_SERIF;
-      *(p++) = 0;
-      *(p++) = edge->flags & TA_EDGE_ROUND;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + ((edge2->flags & TA_EDGE_SERIF) != 0)
+               + 2 * ((edge->flags & TA_EDGE_ROUND) != 0)
+               + 4 * (edge_minus_one != NULL);
+
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
       *(p++) = HIGH(edge2->first - segments);
@@ -1354,6 +1356,9 @@ TA_hints_recorder(TA_Action action,
     {
       TA_Edge edge = (TA_Edge)arg1;
 
+
+      *(p++) = 0;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET;
 
       if (edge->best_blue_is_shoot)
       {
@@ -1378,6 +1383,11 @@ TA_hints_recorder(TA_Action action,
       TA_Edge serif = (TA_Edge)arg1;
       TA_Edge base = serif->serif;
 
+
+      *(p++) = 0;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + (lower_bound != NULL)
+               + 2 * (upper_bound != NULL);
 
       *(p++) = HIGH(serif->first - segments);
       *(p++) = LOW(serif->first - segments);
@@ -1405,6 +1415,11 @@ TA_hints_recorder(TA_Action action,
       TA_Edge edge = (TA_Edge)arg1;
 
 
+      *(p++) = 0;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + (lower_bound != NULL)
+               + 2 * (upper_bound != NULL);
+
       *(p++) = HIGH(edge->first - segments);
       *(p++) = LOW(edge->first - segments);
 
@@ -1430,6 +1445,11 @@ TA_hints_recorder(TA_Action action,
       TA_Edge after = arg3;
 
 
+      *(p++) = 0;
+      *(p++) = (FT_Byte)action + ACTION_OFFSET
+               + (lower_bound != NULL)
+               + 2 * (upper_bound != NULL);
+
       *(p++) = HIGH(before->first - segments);
       *(p++) = LOW(before->first - segments);
       *(p++) = HIGH(edge->first - segments);
@@ -1454,7 +1474,7 @@ TA_hints_recorder(TA_Action action,
 
   default:
     /* there are more cases in the enumeration */
-    /* which are handled with the `bound_offset' parameter */
+    /* which are handled with flags */
     break;
   }
 

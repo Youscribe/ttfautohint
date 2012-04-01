@@ -316,32 +316,60 @@ typedef struct TA_AxisHintsRec_
 typedef enum TA_Action_
 {
   /* point actions */
+
   ta_ip_before,
   ta_ip_after,
   ta_ip_on,
   ta_ip_between,
 
   /* edge actions */
+
   ta_blue,
   ta_blue_anchor,
+
   ta_anchor,
+  ta_anchor_serif,
+  ta_anchor_round,
+  ta_anchor_serif_round,
+
   ta_adjust,
+  ta_adjust_serif,
+  ta_adjust_round,
+  ta_adjust_serif_round,
   ta_adjust_bound,
+  ta_adjust_bound_serif,
+  ta_adjust_bound_round,
+  ta_adjust_bound_serif_round,
+
   ta_link,
+  ta_link_serif,
+  ta_link_round,
+  ta_link_serif_round,
+
   ta_stem,
+  ta_stem_serif,
+  ta_stem_round,
+  ta_stem_serif_round,
   ta_stem_bound,
+  ta_stem_bound_serif,
+  ta_stem_bound_round,
+  ta_stem_bound_serif_round,
+
   ta_serif,
   ta_serif_lower_bound,
   ta_serif_upper_bound,
   ta_serif_lower_upper_bound,
+
   ta_serif_anchor,
   ta_serif_anchor_lower_bound,
   ta_serif_anchor_upper_bound,
   ta_serif_anchor_lower_upper_bound,
+
   ta_serif_link1,
   ta_serif_link1_lower_bound,
   ta_serif_link1_upper_bound,
   ta_serif_link1_lower_upper_bound,
+
   ta_serif_link2,
   ta_serif_link2_lower_bound,
   ta_serif_link2_upper_bound,
