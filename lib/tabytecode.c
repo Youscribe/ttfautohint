@@ -1617,8 +1617,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   TA_GlyphHints hints;
 
-  FT_UInt num_hints_records;
-  Hints_Record* hints_records;
+  FT_UInt num_action_hints_records;
+  Hints_Record* action_hints_records;
 
   Recorder recorder;
 
@@ -1668,8 +1668,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* so that we can easily find the array length at reallocation time */
   memset(ins_buf, INS_A0, ins_len);
 
-  num_hints_records = 0;
-  hints_records = NULL;
+  num_action_hints_records = 0;
+  action_hints_records = NULL;
 
   /* handle composite glyph */
   if (font->loader->gloader->base.num_subglyphs)
@@ -1752,8 +1752,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     *ins_buf = HIGH(recorder.hints_record.num_actions);
     *(ins_buf + 1) = LOW(recorder.hints_record.num_actions);
 
-    if (TA_hints_record_is_different(hints_records,
-                                     num_hints_records,
+    if (TA_hints_record_is_different(action_hints_records,
+                                     num_action_hints_records,
                                      ins_buf, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
@@ -1771,15 +1771,15 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
       }
 #endif
 
-      error = TA_add_hints_record(&hints_records,
-                                  &num_hints_records,
+      error = TA_add_hints_record(&action_hints_records,
+                                  &num_action_hints_records,
                                   ins_buf, recorder.hints_record);
       if (error)
         goto Err;
     }
   }
 
-  if (num_hints_records == 1 && !hints_records[0].num_actions)
+  if (num_action_hints_records == 1 && !action_hints_records[0].num_actions)
   {
     /* since we only have a single empty record we just scale the glyph */
     bufp = TA_sfnt_build_glyph_scaler(sfnt, &recorder, ins_buf);
@@ -1799,7 +1799,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   /* store the hints records */
   bufp = TA_emit_hints_records(&recorder,
-                               hints_records, num_hints_records,
+                               action_hints_records, num_action_hints_records,
                                ins_buf);
 
   /* clear the rest of the temporarily used part of `ins_buf' */
@@ -1816,7 +1816,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   }
 
 Done:
-  TA_free_hints_records(hints_records, num_hints_records);
+  TA_free_hints_records(action_hints_records, num_action_hints_records);
   TA_free_recorder(&recorder);
 
   /* we are done, so reallocate the instruction array to its real size */
@@ -1846,7 +1846,7 @@ Done1:
   return FT_Err_Ok;
 
 Err:
-  TA_free_hints_records(hints_records, num_hints_records);
+  TA_free_hints_records(action_hints_records, num_action_hints_records);
   TA_free_recorder(&recorder);
   free(ins_buf);
 
