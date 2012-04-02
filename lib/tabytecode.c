@@ -1561,12 +1561,21 @@ TA_init_recorder(Recorder* recorder,
 
 
 static void
+TA_reset_recorder(Recorder* recorder,
+                  FT_Byte* bufp)
+{
+  recorder->hints_record.buf = bufp;
+  recorder->hints_record.num_actions = 0;
+}
+
+
+static void
 TA_rewind_recorder(Recorder* recorder,
                    FT_Byte* bufp,
                    FT_UInt size)
 {
-  recorder->hints_record.buf = bufp;
-  recorder->hints_record.num_actions = 0;
+  TA_reset_recorder(recorder, bufp);
+
   recorder->hints_record.size = size;
 
   /* We later check with MISSING (which expands to 0xFF bytes) */
@@ -1618,9 +1627,12 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   TA_GlyphHints hints;
 
   FT_UInt num_action_hints_records;
+  FT_UInt num_point_hints_records;
   Hints_Record* action_hints_records;
+  Hints_Record* point_hints_records;
 
   Recorder recorder;
+  FT_UInt num_stack_elements;
 
   FT_Int32 load_flags;
   FT_UInt size;
@@ -1667,9 +1679,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* initialize array with an invalid bytecode */
   /* so that we can easily find the array length at reallocation time */
   memset(ins_buf, INS_A0, ins_len);
-
-  num_action_hints_records = 0;
-  action_hints_records = NULL;
 
   /* handle composite glyph */
   if (font->loader->gloader->base.num_subglyphs)
@@ -1726,10 +1735,20 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                     TA_hints_recorder,
                                     (void*)&recorder);
 
+  num_action_hints_records = 0;
+  num_point_hints_records = 0;
+  action_hints_records = NULL;
+  point_hints_records = NULL;
+
   for (size = font->hinting_range_min;
        size <= font->hinting_range_max;
        size++)
   {
+#ifdef DEBUGGING
+    int have_dumps = 0;
+#endif
+
+
     TA_rewind_recorder(&recorder, ins_buf, size);
 
     error = FT_Set_Pixel_Sizes(face, size, size);
@@ -1743,22 +1762,21 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     if (error)
       goto Err;
 
-    /* append the point hints data collected in `TA_hints_recorder' */
-    TA_build_point_hints(&recorder, hints);
-
     if (TA_hints_record_is_different(action_hints_records,
                                      num_action_hints_records,
                                      ins_buf, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
       {
+        have_dumps = 1;
+
         fprintf(stderr, "  size %d:\n", size);
 
         ta_glyph_hints_dump_edges(_ta_debug_hints);
         ta_glyph_hints_dump_segments(_ta_debug_hints);
         ta_glyph_hints_dump_points(_ta_debug_hints);
 
-        fprintf(stderr, "  hints record:\n");
+        fprintf(stderr, "  action hints record:\n");
         for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
           fprintf(stderr, " %2d", *p * 256 + *(p + 1));
         fprintf(stderr, "\n");
@@ -1767,6 +1785,42 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
       error = TA_add_hints_record(&action_hints_records,
                                   &num_action_hints_records,
+                                  ins_buf, recorder.hints_record);
+      if (error)
+        goto Err;
+    }
+
+    /* now handle point records */
+
+    TA_reset_recorder(&recorder, ins_buf);
+
+    /* use the point hints data collected in `TA_hints_recorder' */
+    TA_build_point_hints(&recorder, hints);
+
+    if (TA_hints_record_is_different(point_hints_records,
+                                     num_point_hints_records,
+                                     ins_buf, recorder.hints_record.buf))
+    {
+#ifdef DEBUGGING
+      {
+        if (!have_dumps)
+        {
+          fprintf(stderr, "  size %d:\n", size);
+
+          ta_glyph_hints_dump_edges(_ta_debug_hints);
+          ta_glyph_hints_dump_segments(_ta_debug_hints);
+          ta_glyph_hints_dump_points(_ta_debug_hints);
+        }
+
+        fprintf(stderr, "  point hints record:\n");
+        for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
+          fprintf(stderr, " %2d", *p * 256 + *(p + 1));
+        fprintf(stderr, "\n");
+      }
+#endif
+
+      error = TA_add_hints_record(&point_hints_records,
+                                  &num_point_hints_records,
                                   ins_buf, recorder.hints_record);
       if (error)
         goto Err;
@@ -1791,16 +1845,18 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     goto Done;
   }
 
-  /* store the hints records */
+  /* store the hints records and handle stack depth */
   bufp = TA_emit_hints_records(&recorder,
-                               action_hints_records, num_action_hints_records,
+                               point_hints_records,
+                               num_point_hints_records,
                                ins_buf);
-
-  /* clear the rest of the temporarily used part of `ins_buf' */
-  /* before storing the glyph segments */
-  p = bufp;
-  while (*p != INS_A0)
-    *(p++) = INS_A0;
+  num_stack_elements = recorder.num_stack_elements;
+  recorder.num_stack_elements = 0;
+  bufp = TA_emit_hints_records(&recorder,
+                               action_hints_records,
+                               num_action_hints_records,
+                               bufp);
+  recorder.num_stack_elements += num_stack_elements;
 
   bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, bufp);
   if (!bufp)
@@ -1808,6 +1864,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     error = FT_Err_Out_Of_Memory;
     goto Err;
   }
+
+  /* clear the rest of the temporarily used part of `ins_buf' */
+  p = bufp;
+  while (*p != INS_A0)
+    *(p++) = INS_A0;
 
 Done:
   TA_free_hints_records(action_hints_records, num_action_hints_records);
