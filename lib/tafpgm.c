@@ -4523,45 +4523,18 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] =
 
 
 /*
- * bci_handle_action
- *
- *   Execute function.
- *
- * in: function_index
- */
-
-unsigned char FPGM(bci_handle_action) [] =
-{
-
-  PUSHB_1,
-    bci_handle_action,
-  FDEF,
-
-  CALL,
-
-  ENDF,
-
-};
-
-
-/*
  * bci_hint_glyph
  *
  *   This is the top-level glyph hinting function which parses the arguments
  *   on the stack and calls subroutines.
  *
- * in: num_actions (M)
- *       action_0_func_idx
- *         ... data ...
- *       action_1_func_idx
- *         ... data ...
- *       ...
- *       action_M_func_idx
- *         ... data ...
+ * in: action_0_func_idx
+ *       ... data ...
+ *     action_1_func_idx
+ *       ... data ...
+ *     ...
  *
- * uses: bci_handle_action
- *
- *       bci_action_ip_before
+ * uses: bci_action_ip_before
  *       bci_action_ip_after
  *       bci_action_ip_on
  *       bci_action_ip_between
@@ -4630,9 +4603,17 @@ unsigned char FPGM(bci_hint_glyph) [] =
     bci_hint_glyph,
   FDEF,
 
+/* start_loop: */
+  /* loop until all data on stack is used */
+  CALL,
   PUSHB_1,
-    bci_handle_action,
-  LOOPCALL,
+    8,
+  NEG,
+  PUSHB_1,
+    3,
+  DEPTH,
+  LT,
+  JROT, /* goto start_loop */
 
   PUSHB_1,
     1,
@@ -4777,7 +4758,6 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_serif_link2_upper_bound))
             + sizeof (FPGM(bci_action_serif_link2_lower_upper_bound))
 
-            + sizeof (FPGM(bci_handle_action))
             + sizeof (FPGM(bci_hint_glyph));
 
   /* buffer length must be a multiple of four */
@@ -4911,7 +4891,6 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_serif_link2_upper_bound);
   COPY_FPGM(bci_action_serif_link2_lower_upper_bound);
 
-  COPY_FPGM(bci_handle_action);
   COPY_FPGM(bci_hint_glyph);
 
   *fpgm = buf;

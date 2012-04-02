@@ -1565,7 +1565,7 @@ TA_rewind_recorder(Recorder* recorder,
                    FT_Byte* bufp,
                    FT_UInt size)
 {
-  recorder->hints_record.buf = bufp + 2;
+  recorder->hints_record.buf = bufp;
   recorder->hints_record.num_actions = 0;
   recorder->hints_record.size = size;
 
@@ -1721,9 +1721,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   }
 #endif
 
-  /* we temporarily use `ins_buf' to record the current glyph hints, */
-  /* leaving two bytes at the beginning so that the number of actions */
-  /* can be inserted later on */
+  /* we temporarily use `ins_buf' to record the current glyph hints */
   ta_loader_register_hints_recorder(font->loader,
                                     TA_hints_recorder,
                                     (void*)&recorder);
@@ -1747,10 +1745,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
     /* append the point hints data collected in `TA_hints_recorder' */
     TA_build_point_hints(&recorder, hints);
-
-    /* store the number of actions in `ins_buf' */
-    *ins_buf = HIGH(recorder.hints_record.num_actions);
-    *(ins_buf + 1) = LOW(recorder.hints_record.num_actions);
 
     if (TA_hints_record_is_different(action_hints_records,
                                      num_action_hints_records,

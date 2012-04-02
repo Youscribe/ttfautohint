@@ -462,8 +462,7 @@
 #define bci_action_serif_link2_lower_upper_bound bci_action_serif_link2_upper_bound + 1
 
 /* 103 */
-#define bci_handle_action bci_action_serif_link2_lower_upper_bound + 1
-#define bci_hint_glyph bci_handle_action + 1
+#define bci_hint_glyph bci_action_serif_link2_lower_upper_bound + 1
 
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
 
