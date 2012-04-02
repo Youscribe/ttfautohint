@@ -883,8 +883,11 @@ unsigned char FPGM(bci_create_segment) [] =
 /*
  * bci_create_segments
  *
- *   Set up segments by defining point ranges which defines them
- *   and computing twilight points to represent them.
+ *   This is the top-level entry function.
+ *
+ *   It pops point ranges from the stack to define segments, computes
+ *   twilight points to represent segments, and finally calls
+ *   `bci_hint_glyph' to handle the rest.
  *
  * in: num_packed_segments
  *     num_segments (N)
@@ -901,6 +904,7 @@ unsigned char FPGM(bci_create_segment) [] =
  *     segment_end_(N-1)
  *       [contour_last (N-1) (if wrap-around segment)]
  *       [contour_first (N-1) (if wrap-around segment)]
+ *     ... stuff for bci_hint_glyph ...
  *
  * uses: bci_create_segment
  *
@@ -966,6 +970,10 @@ unsigned char FPGM(bci_create_segments) [] =
     PUSHB_2,
       bci_create_segment,
       bci_loop,
+    CALL,
+
+    PUSHB_1,
+      bci_hint_glyph,
     CALL,
 
   ELSE,
@@ -1147,7 +1155,7 @@ unsigned char FPGM(bci_create_segments_9) [] =
 /*
  * bci_create_segments_composite
  *
- *   The same as `bci_create_composite'.
+ *   The same as `bci_create_segments'.
  *   It also decrements the composite component counter.
  *
  * uses: bci_decrement_composite_counter
@@ -1206,6 +1214,10 @@ unsigned char FPGM(bci_create_segments_composite) [] =
     PUSHB_2,
       bci_create_segment,
       bci_loop,
+    CALL,
+
+    PUSHB_1,
+      bci_hint_glyph,
     CALL,
 
   ELSE,
@@ -4535,8 +4547,8 @@ unsigned char FPGM(bci_handle_action) [] =
 /*
  * bci_hint_glyph
  *
- *   This is the top-level glyph hinting function
- *   which parses the arguments on the stack and calls subroutines.
+ *   This is the top-level glyph hinting function which parses the arguments
+ *   on the stack and calls subroutines.
  *
  * in: num_actions (M)
  *       action_0_func_idx
@@ -4618,25 +4630,14 @@ unsigned char FPGM(bci_hint_glyph) [] =
     bci_hint_glyph,
   FDEF,
 
-  PUSHB_2,
-    0,
-    cvtl_is_subglyph,
-  RCVT,
-  EQ,
-  IF,
-    /* only do something if we are not a subglyph */
-    PUSHB_1,
-      bci_handle_action,
-    LOOPCALL,
+  PUSHB_1,
+    bci_handle_action,
+  LOOPCALL,
 
-    PUSHB_1,
-      1,
-    SZP2, /* set zp2 to normal zone 1 */
-    IUP_y,
-
-  ELSE,
-    CLEAR,
-  EIF,
+  PUSHB_1,
+    1,
+  SZP2, /* set zp2 to normal zone 1 */
+  IUP_y,
 
   ENDF,
 

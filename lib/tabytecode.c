@@ -52,8 +52,15 @@ typedef struct Recorder_
   GLYPH* glyph; /* the current glyph */
   Hints_Record hints_record;
 
-  /* see explanations in `TA_sfnt_build_glyph_segments' */
+  /* some segments can `wrap around' */
+  /* a contour's start point like 24-25-26-0-1-2 */
+  /* (there can be at most one such segment per contour); */
+  /* later on we append additional records */
+  /* to split them into 24-26 and 0-2 */
   FT_UInt* wrap_around_segments;
+  FT_UInt num_wrap_around_segments;
+
+  FT_UShort num_stack_elements; /* the necessary stack depth so far */
 
   /* data necessary for strong point interpolation */
   FT_UInt* ip_before_points;
@@ -118,9 +125,6 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   FT_UInt nargs;
   FT_UInt num_segments;
 
-  FT_UInt* wrap_around_segment;
-  FT_UInt num_wrap_around_segments;
-
   FT_Bool need_words = 0;
 
   FT_Int n;
@@ -159,29 +163,14 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     base = last;
   }
 
-  /* some segments can `wrap around' */
-  /* a contour's start point like 24-25-26-0-1-2 */
-  /* (there can be at most one such segment per contour); */
-  /* we thus append additional records to split them into 24-26 and 0-2 */
-  wrap_around_segment = recorder->wrap_around_segments;
-  /* `num_packed_segments' segments */
-  /* have already been checked in previous loop */
-  for (seg = segments + num_packed_segments; seg < seg_limit; seg++)
-    if (seg->first > seg->last)
-    {
-      /* the stored data is used later for edge linking */
-      *(wrap_around_segment++) = seg - segments;
-    }
-
-  num_wrap_around_segments = wrap_around_segment
-                             - recorder->wrap_around_segments;
-  num_segments += num_wrap_around_segments;
+  /* also handle wrap-around segments */
+  num_segments += recorder->num_wrap_around_segments;
 
   /* wrap-around segments are pushed with four arguments; */
   /* a segment stored in nibbles needs only one byte instead of two */
   num_args = num_packed_segments
              + 2 * (num_segments - num_packed_segments)
-             + 2 * num_wrap_around_segments
+             + 2 * recorder->num_wrap_around_segments
              + 2;
 
   /* collect all arguments temporarily in an array (in reverse order) */
@@ -338,7 +327,10 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   if (num_twilight_points > sfnt->max_twilight_points)
     sfnt->max_twilight_points = num_twilight_points;
 
-  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_args;
+  /* both this function and `TA_emit_hints_record' */
+  /* push data onto the stack */
+  num_stack_elements = ADDITIONAL_STACK_ELEMENTS
+                       + recorder->num_stack_elements + num_args;
   if (num_stack_elements > sfnt->max_stack_elements)
     sfnt->max_stack_elements = num_stack_elements;
 
@@ -884,9 +876,9 @@ TA_add_hints_record(Hints_Record** hints_records,
 
 
 static FT_Byte*
-TA_sfnt_emit_hints_record(SFNT* sfnt,
-                          Hints_Record* hints_record,
-                          FT_Byte* bufp)
+TA_emit_hints_record(Recorder* recorder,
+                     Hints_Record* hints_record,
+                     FT_Byte* bufp)
 {
   FT_Byte* p;
   FT_Byte* endp;
@@ -895,7 +887,6 @@ TA_sfnt_emit_hints_record(SFNT* sfnt,
   FT_UInt i, j;
   FT_UInt num_arguments;
   FT_UInt num_args;
-  FT_UInt num_stack_elements;
 
 
   /* check whether any argument is larger than 0xFF */
@@ -946,19 +937,19 @@ TA_sfnt_emit_hints_record(SFNT* sfnt,
     }
   }
 
-  num_stack_elements = ADDITIONAL_STACK_ELEMENTS + num_arguments;
-  if (num_stack_elements > sfnt->max_stack_elements)
-    sfnt->max_stack_elements = num_stack_elements;
+  /* collect stack depth data */
+  if (num_arguments > recorder->num_stack_elements)
+    recorder->num_stack_elements = num_arguments;
 
   return bufp;
 }
 
 
 static FT_Byte*
-TA_sfnt_emit_hints_records(SFNT* sfnt,
-                           Hints_Record* hints_records,
-                           FT_UInt num_hints_records,
-                           FT_Byte* bufp)
+TA_emit_hints_records(Recorder* recorder,
+                      Hints_Record* hints_records,
+                      FT_UInt num_hints_records,
+                      FT_Byte* bufp)
 {
   FT_UInt i;
   Hints_Record* hints_record;
@@ -982,20 +973,16 @@ TA_sfnt_emit_hints_records(SFNT* sfnt,
     }
     BCI(LT);
     BCI(IF);
-    bufp = TA_sfnt_emit_hints_record(sfnt, hints_record, bufp);
+    bufp = TA_emit_hints_record(recorder, hints_record, bufp);
     BCI(ELSE);
 
     hints_record++;
   }
 
-  bufp = TA_sfnt_emit_hints_record(sfnt, hints_record, bufp);
+  bufp = TA_emit_hints_record(recorder, hints_record, bufp);
 
   for (i = 0; i < num_hints_records - 1; i++)
     BCI(EIF);
-
-  BCI(PUSHB_1);
-  BCI(bci_hint_glyph);
-  BCI(CALL);
 
   return bufp;
 }
@@ -1485,7 +1472,6 @@ TA_hints_recorder(TA_Action action,
 
 static FT_Error
 TA_init_recorder(Recorder* recorder,
-                 FT_UInt wrap_around_size,
                  FONT* font,
                  GLYPH* glyph,
                  TA_GlyphHints hints)
@@ -1495,8 +1481,12 @@ TA_init_recorder(Recorder* recorder,
   TA_Point point_limit = points + hints->num_points;
   TA_Point point;
 
-  FT_UInt num_strong_points = 0;
+  TA_Segment segments = axis->segments;
+  TA_Segment seg_limit = segments + axis->num_segments;
+  TA_Segment seg;
 
+  FT_UInt num_strong_points = 0;
+  FT_UInt* wrap_around_segment;
 
   recorder->font = font;
   recorder->glyph = glyph;
@@ -1507,13 +1497,25 @@ TA_init_recorder(Recorder* recorder,
   recorder->ip_on_point_array = NULL;
   recorder->ip_between_point_array = NULL;
 
+  recorder->num_stack_elements = 0;
+
   /* no need to clean up allocated arrays in case of error; */
   /* this is handled later by `TA_free_recorder' */
 
+  recorder->num_wrap_around_segments = 0;
+  for (seg = segments; seg < seg_limit; seg++)
+    if (seg->first > seg->last)
+      recorder->num_wrap_around_segments++;
+
   recorder->wrap_around_segments =
-    (FT_UInt*)malloc(wrap_around_size * sizeof (FT_UInt));
+    (FT_UInt*)malloc(recorder->num_wrap_around_segments * sizeof (FT_UInt));
   if (!recorder->wrap_around_segments)
     return FT_Err_Out_Of_Memory;
+
+  wrap_around_segment = recorder->wrap_around_segments;
+  for (seg = segments; seg < seg_limit; seg++)
+    if (seg->first > seg->last)
+      *(wrap_around_segment++) = seg - segments;
 
   /* get number of strong points */
   for (point = points; point < point_limit; point++)
@@ -1580,7 +1582,6 @@ TA_rewind_recorder(Recorder* recorder,
   memset(recorder->ip_between_point_array, 0xFF,
          recorder->num_segments * recorder->num_segments
          * recorder->num_strong_points * sizeof (FT_UInt));
-
 }
 
 
@@ -1700,19 +1701,11 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     goto Done1;
   }
 
-  error = TA_init_recorder(&recorder, face->glyph->outline.n_contours,
-                           font, glyph, hints);
+  error = TA_init_recorder(&recorder, font, glyph, hints);
   if (error)
     goto Err;
 
-  bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, ins_buf);
-  if (!bufp)
-  {
-    error = FT_Err_Out_Of_Memory;
-    goto Err;
-  }
-
-  /* now we loop over a large range of pixel sizes */
+  /* loop over a large range of pixel sizes */
   /* to find hints records which get pushed onto the bytecode stack */
 
 #ifdef DEBUGGING
@@ -1739,7 +1732,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
        size <= font->hinting_range_max;
        size++)
   {
-    TA_rewind_recorder(&recorder, bufp, size);
+    TA_rewind_recorder(&recorder, ins_buf, size);
 
     error = FT_Set_Pixel_Sizes(face, size, size);
     if (error)
@@ -1756,12 +1749,12 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     TA_build_point_hints(&recorder, hints);
 
     /* store the number of actions in `ins_buf' */
-    *bufp = HIGH(recorder.hints_record.num_actions);
-    *(bufp + 1) = LOW(recorder.hints_record.num_actions);
+    *ins_buf = HIGH(recorder.hints_record.num_actions);
+    *(ins_buf + 1) = LOW(recorder.hints_record.num_actions);
 
     if (TA_hints_record_is_different(hints_records,
                                      num_hints_records,
-                                     bufp, recorder.hints_record.buf))
+                                     ins_buf, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
       {
@@ -1772,7 +1765,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
         ta_glyph_hints_dump_points(_ta_debug_hints);
 
         fprintf(stderr, "  hints record:\n");
-        for (p = bufp; p < recorder.hints_record.buf; p += 2)
+        for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
           fprintf(stderr, " %2d", *p * 256 + *(p + 1));
         fprintf(stderr, "\n");
       }
@@ -1780,7 +1773,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
       error = TA_add_hints_record(&hints_records,
                                   &num_hints_records,
-                                  bufp, recorder.hints_record);
+                                  ins_buf, recorder.hints_record);
       if (error)
         goto Err;
     }
@@ -1788,8 +1781,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   if (num_hints_records == 1 && !hints_records[0].num_actions)
   {
-    /* since we only have a single empty record we just scale the glyph, */
-    /* overwriting the data from `TA_sfnt_build_glyph_segments' */
+    /* since we only have a single empty record we just scale the glyph */
     bufp = TA_sfnt_build_glyph_scaler(sfnt, &recorder, ins_buf);
     if (!bufp)
     {
@@ -1805,17 +1797,23 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     goto Done;
   }
 
-  /* in most cases, the output of `TA_sfnt_build_glyph_segments' */
-  /* is shorter than the previously stored data, */
-  /* so clear the rest of the temporarily used part of `ins_buf' */
-  /* before appending the hints records */
+  /* store the hints records */
+  bufp = TA_emit_hints_records(&recorder,
+                               hints_records, num_hints_records,
+                               ins_buf);
+
+  /* clear the rest of the temporarily used part of `ins_buf' */
+  /* before storing the glyph segments */
   p = bufp;
   while (*p != INS_A0)
     *(p++) = INS_A0;
 
-  bufp = TA_sfnt_emit_hints_records(sfnt,
-                                    hints_records, num_hints_records,
-                                    bufp);
+  bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, bufp);
+  if (!bufp)
+  {
+    error = FT_Err_Out_Of_Memory;
+    goto Err;
+  }
 
 Done:
   TA_free_hints_records(hints_records, num_hints_records);
