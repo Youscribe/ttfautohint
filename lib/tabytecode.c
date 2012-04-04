@@ -14,6 +14,7 @@
 
 
 #include "ta.h"
+#include <string.h>
 
 
 #undef MISSING
@@ -1865,6 +1866,89 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     goto Err;
   }
 
+  /* XXX do nothing if we have NPUSHW in the data */
+  if (num_action_hints_records == 1
+      && !memchr(ins_buf, NPUSHW, bufp - ins_buf))
+  {
+    /*
+     * we optimize two common cases, replacing
+     *
+     *   NPUSHB A ... NPUSHB B [... NPUSHB C] ... CALL
+     *
+     * with
+     *
+     *   NPUSHB (A+B[+C]) ... CALL
+     *
+     * if possible
+     */
+    FT_Byte* pos1;
+    FT_UInt size1;
+    FT_Byte* pos2;
+    FT_UInt size2;
+    FT_Byte* pos3;
+    FT_UInt size3;
+
+    FT_UInt sum;
+    FT_UInt i;
+
+
+    /* there are at least two NPUSHB instructions */
+    pos1 = (FT_Byte*)memchr(ins_buf, NPUSHB, bufp - ins_buf);
+    size1 = *(pos1 + 1);
+    pos2 = (FT_Byte*)memchr(pos1 + 2, NPUSHB, bufp - ins_buf);
+    size2 = *(pos2 + 1);
+    pos3 = (FT_Byte*)memchr(pos2 + 2, NPUSHB, bufp - ins_buf);
+    size3 = pos3 ? *(pos3 + 1) : 0;
+
+    sum = size1 + size2 + size3;
+
+    if (sum > 2 * 0xFF)
+      goto Done2; /* nothing to do since we need three NPUSHB */
+    else if (!size3 && (sum > 0xFF))
+      goto Done2; /* nothing to do since we need two NPUSHB */
+
+    if (sum > 0xFF)
+    {
+      /* reduce three NPUSHB to two */
+      size1 = 0xFF;
+      size2 = sum - 0xFF;
+    }
+    else
+    {
+      /* reduce two or three NPUSHB to one */
+      size1 = sum;
+      size2 = 0;
+    }
+
+    /* pack data */
+    p = ins_buf;
+    bufp = ins_buf;
+
+    BCI(NPUSHB);
+    BCI(size1);
+    for (i = 0; i < size1; i++)
+    {
+      if (*p == NPUSHB)
+        p += 2; /* skip NPUSHB and its counter */
+      *(bufp++) = *(p++);
+    }
+
+    if (size2)
+    {
+      BCI(NPUSHB);
+      BCI(size2);
+      for (i = 0; i < size2; i++)
+      {
+        if (*p == NPUSHB)
+          p += 2;
+        *(bufp++) = *(p++);
+      }
+    }
+
+    BCI(CALL);
+  }
+
+Done2:
   /* clear the rest of the temporarily used part of `ins_buf' */
   p = bufp;
   while (*p != INS_A0)
