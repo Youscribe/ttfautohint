@@ -1638,6 +1638,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Int32 load_flags;
   FT_UInt size;
 
+  FT_Byte* pos[3];
+
 
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
@@ -1847,18 +1849,23 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   }
 
   /* store the hints records and handle stack depth */
+  pos[0] = ins_buf;
   bufp = TA_emit_hints_records(&recorder,
                                point_hints_records,
                                num_point_hints_records,
                                ins_buf);
+
   num_stack_elements = recorder.num_stack_elements;
   recorder.num_stack_elements = 0;
+
+  pos[1] = bufp;
   bufp = TA_emit_hints_records(&recorder,
                                action_hints_records,
                                num_action_hints_records,
                                bufp);
   recorder.num_stack_elements += num_stack_elements;
 
+  pos[2] = bufp;
   bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, bufp);
   if (!bufp)
   {
@@ -1868,7 +1875,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   /* XXX do nothing if we have NPUSHW in the data */
   if (num_action_hints_records == 1
-      && !memchr(ins_buf, NPUSHW, bufp - ins_buf))
+      && *(pos[0]) != NPUSHW && *(pos[1]) != NPUSHW && *(pos[2]) != NPUSHW)
   {
     /*
      * we optimize two common cases, replacing
@@ -1881,7 +1888,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
      *
      * if possible
      */
-    FT_Byte* pos[3];
     FT_Byte sizes[3];
     FT_Byte new_size1;
     FT_Byte new_size2;
@@ -1891,13 +1897,17 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     FT_UInt pos_idx;
 
 
+    /* the point hints records block can be missing */
+    if (pos[0] == pos[1])
+    {
+      pos[1] = pos[2];
+      pos[2] = NULL;
+    }
+
     /* there are at least two NPUSHB instructions */
     /* (one of them directly at the start) */
-    pos[0] = ins_buf;
     sizes[0] = *(pos[0] + 1);
-    pos[1] = (FT_Byte*)memchr(pos[0] + 1 + sizes[0], NPUSHB, bufp - ins_buf);
     sizes[1] = *(pos[1] + 1);
-    pos[2] = (FT_Byte*)memchr(pos[1] + 1 + sizes[1], NPUSHB, bufp - ins_buf);
     sizes[2] = pos[2] ? *(pos[2] + 1) : 0;
 
     sum = sizes[0] + sizes[1] + sizes[2];
