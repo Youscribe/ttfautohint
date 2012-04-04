@@ -1881,66 +1881,73 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
      *
      * if possible
      */
-    FT_Byte* pos1;
-    FT_UInt size1;
-    FT_Byte* pos2;
-    FT_UInt size2;
-    FT_Byte* pos3;
-    FT_UInt size3;
+    FT_Byte* pos[3];
+    FT_Byte sizes[3];
+    FT_Byte new_size1;
+    FT_Byte new_size2;
 
     FT_UInt sum;
     FT_UInt i;
+    FT_UInt pos_idx;
 
 
     /* there are at least two NPUSHB instructions */
-    pos1 = (FT_Byte*)memchr(ins_buf, NPUSHB, bufp - ins_buf);
-    size1 = *(pos1 + 1);
-    pos2 = (FT_Byte*)memchr(pos1 + 2, NPUSHB, bufp - ins_buf);
-    size2 = *(pos2 + 1);
-    pos3 = (FT_Byte*)memchr(pos2 + 2, NPUSHB, bufp - ins_buf);
-    size3 = pos3 ? *(pos3 + 1) : 0;
+    /* (one of them directly at the start) */
+    pos[0] = ins_buf;
+    sizes[0] = *(pos[0] + 1);
+    pos[1] = (FT_Byte*)memchr(pos[0] + 1 + sizes[0], NPUSHB, bufp - ins_buf);
+    sizes[1] = *(pos[1] + 1);
+    pos[2] = (FT_Byte*)memchr(pos[1] + 1 + sizes[1], NPUSHB, bufp - ins_buf);
+    sizes[2] = pos[2] ? *(pos[2] + 1) : 0;
 
-    sum = size1 + size2 + size3;
+    sum = sizes[0] + sizes[1] + sizes[2];
 
     if (sum > 2 * 0xFF)
       goto Done2; /* nothing to do since we need three NPUSHB */
-    else if (!size3 && (sum > 0xFF))
+    else if (!sizes[2] && (sum > 0xFF))
       goto Done2; /* nothing to do since we need two NPUSHB */
 
     if (sum > 0xFF)
     {
       /* reduce three NPUSHB to two */
-      size1 = 0xFF;
-      size2 = sum - 0xFF;
+      new_size1 = 0xFF;
+      new_size2 = sum - 0xFF;
     }
     else
     {
       /* reduce two or three NPUSHB to one */
-      size1 = sum;
-      size2 = 0;
+      new_size1 = sum;
+      new_size2 = 0;
     }
 
     /* pack data */
     p = ins_buf;
     bufp = ins_buf;
+    pos_idx = 0;
 
     BCI(NPUSHB);
-    BCI(size1);
-    for (i = 0; i < size1; i++)
+    BCI(new_size1);
+    for (i = 0; i < new_size1; i++)
     {
-      if (*p == NPUSHB)
-        p += 2; /* skip NPUSHB and its counter */
+      if (p == pos[pos_idx])
+      {
+        pos_idx++;
+        p += 2; /* skip old NPUSHB */
+      }
       *(bufp++) = *(p++);
     }
 
-    if (size2)
+    if (new_size2)
     {
       BCI(NPUSHB);
-      BCI(size2);
-      for (i = 0; i < size2; i++)
+      BCI(new_size2);
+      for (i = 0; i < new_size2; i++)
       {
-        if (*p == NPUSHB)
+        if (p == pos[pos_idx])
+        {
+          pos_idx++;
           p += 2;
+        }
         *(bufp++) = *(p++);
       }
     }
