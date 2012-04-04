@@ -1945,8 +1945,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     bufp = ins_buf;
     pos_idx = 0;
 
-    BCI(NPUSHB);
-    BCI(new_size1);
+    if (new_size1 <= 8)
+      BCI(PUSHB_1 - 1 + new_size1);
+    else
+    {
+      BCI(NPUSHB);
+      BCI(new_size1);
+    }
     for (i = 0; i < new_size1; i++)
     {
       if (p == pos[pos_idx])
@@ -1959,8 +1964,13 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
     if (new_size2)
     {
-      BCI(NPUSHB);
-      BCI(new_size2);
+      if (new_size2 <= 8)
+        BCI(PUSHB_1 - 1 + new_size2);
+      else
+      {
+        BCI(NPUSHB);
+        BCI(new_size2);
+      }
       for (i = 0; i < new_size2; i++)
       {
         if (p == pos[pos_idx])
