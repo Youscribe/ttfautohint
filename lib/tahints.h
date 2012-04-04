@@ -358,22 +358,22 @@ typedef enum TA_Action_
   ta_serif,
   ta_serif_lower_bound,
   ta_serif_upper_bound,
-  ta_serif_lower_upper_bound,
+  ta_serif_upper_lower_bound,
 
   ta_serif_anchor,
   ta_serif_anchor_lower_bound,
   ta_serif_anchor_upper_bound,
-  ta_serif_anchor_lower_upper_bound,
+  ta_serif_anchor_upper_lower_bound,
 
   ta_serif_link1,
   ta_serif_link1_lower_bound,
   ta_serif_link1_upper_bound,
-  ta_serif_link1_lower_upper_bound,
+  ta_serif_link1_upper_lower_bound,
 
   ta_serif_link2,
   ta_serif_link2_lower_bound,
   ta_serif_link2_upper_bound,
-  ta_serif_link2_lower_upper_bound,
+  ta_serif_link2_upper_lower_bound,
 
   ta_bound
 } TA_Action;

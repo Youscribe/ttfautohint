@@ -3697,7 +3697,7 @@ unsigned char FPGM(bci_upper_bound) [] =
 
 
 /*
- * bci_lower_upper_bound
+ * bci_upper_lower_bound
  *
  *   Move an edge if necessary to stay within a lower and lower bound.
  *
@@ -3706,11 +3706,11 @@ unsigned char FPGM(bci_upper_bound) [] =
  *     upper
  */
 
-unsigned char FPGM(bci_lower_upper_bound) [] =
+unsigned char FPGM(bci_upper_lower_bound) [] =
 {
 
   PUSHB_1,
-    bci_lower_upper_bound,
+    bci_upper_lower_bound,
   FDEF,
 
   SWAP, /* s: upper serif lower */
@@ -3861,7 +3861,7 @@ unsigned char FPGM(bci_action_serif_upper_bound) [] =
 
 
 /*
- * bci_action_serif_lower_upper_bound
+ * bci_action_serif_upper_lower_bound
  *
  *   Handle the SERIF action to align a serif with its base, then moving it
  *   again if necessary to stay within a lower and upper bound.
@@ -3873,14 +3873,14 @@ unsigned char FPGM(bci_action_serif_upper_bound) [] =
  *     ... stuff for bci_align_segments (serif) ...
  *
  * uses: bci_serif_common
- *       bci_lower_upper_bound
+ *       bci_upper_lower_bound
  */
 
-unsigned char FPGM(bci_action_serif_lower_upper_bound) [] =
+unsigned char FPGM(bci_action_serif_upper_lower_bound) [] =
 {
 
   PUSHB_1,
-    bci_action_serif_lower_upper_bound,
+    bci_action_serif_upper_lower_bound,
   FDEF,
 
   PUSHB_1,
@@ -3892,7 +3892,7 @@ unsigned char FPGM(bci_action_serif_lower_upper_bound) [] =
   CALL,
 
   PUSHB_1,
-    bci_lower_upper_bound,
+    bci_upper_lower_bound,
   CALL,
 
   ENDF,
@@ -4048,7 +4048,7 @@ unsigned char FPGM(bci_action_serif_anchor_upper_bound) [] =
 
 
 /*
- * bci_action_serif_anchor_lower_upper_bound
+ * bci_action_serif_anchor_upper_lower_bound
  *
  *   Handle the SERIF_ANCHOR action to align a serif and to set the edge
  *   anchor, then moving it again if necessary to stay within a lower and
@@ -4060,14 +4060,14 @@ unsigned char FPGM(bci_action_serif_anchor_upper_bound) [] =
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_serif_anchor_common
- *       bci_lower_upper_bound
+ *       bci_upper_lower_bound
  */
 
-unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] =
+unsigned char FPGM(bci_action_serif_anchor_upper_lower_bound) [] =
 {
 
   PUSHB_1,
-    bci_action_serif_anchor_lower_upper_bound,
+    bci_action_serif_anchor_upper_lower_bound,
   FDEF,
 
   PUSHB_1,
@@ -4075,7 +4075,7 @@ unsigned char FPGM(bci_action_serif_anchor_lower_upper_bound) [] =
   CALL,
 
   PUSHB_1,
-    bci_lower_upper_bound,
+    bci_upper_lower_bound,
   CALL,
 
   ENDF,
@@ -4297,7 +4297,7 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] =
 
 
 /*
- * bci_action_serif_link1_lower_upper_bound
+ * bci_action_serif_link1_upper_lower_bound
  *
  *   Handle the SERIF_LINK1 action to align a serif, depending on edges
  *   before and after.  Additionally, move the serif again if necessary to
@@ -4311,14 +4311,14 @@ unsigned char FPGM(bci_action_serif_link1_upper_bound) [] =
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_serif_link1_common
- *       bci_lower_upper_bound
+ *       bci_upper_lower_bound
  */
 
-unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] =
+unsigned char FPGM(bci_action_serif_link1_upper_lower_bound) [] =
 {
 
   PUSHB_1,
-    bci_action_serif_link1_lower_upper_bound,
+    bci_action_serif_link1_upper_lower_bound,
   FDEF,
 
   PUSHB_1,
@@ -4326,7 +4326,7 @@ unsigned char FPGM(bci_action_serif_link1_lower_upper_bound) [] =
   CALL,
 
   PUSHB_1,
-    bci_lower_upper_bound,
+    bci_upper_lower_bound,
   CALL,
 
   ENDF,
@@ -4487,7 +4487,7 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] =
 
 
 /*
- * bci_action_serif_link2_lower_upper_bound
+ * bci_action_serif_link2_upper_lower_bound
  *
  *   Handle the SERIF_LINK2 action to align a serif relative to the anchor.
  *   Additionally, move the serif again if necessary to stay within a lower
@@ -4499,14 +4499,14 @@ unsigned char FPGM(bci_action_serif_link2_upper_bound) [] =
  *     ... stuff for bci_align_segments (edge) ...
  *
  * uses: bci_serif_link2_common
- *       bci_lower_upper_bound
+ *       bci_upper_lower_bound
  */
 
-unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] =
+unsigned char FPGM(bci_action_serif_link2_upper_lower_bound) [] =
 {
 
   PUSHB_1,
-    bci_action_serif_link2_lower_upper_bound,
+    bci_action_serif_link2_upper_lower_bound,
   FDEF,
 
   PUSHB_1,
@@ -4514,7 +4514,7 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] =
   CALL,
 
   PUSHB_1,
-    bci_lower_upper_bound,
+    bci_upper_lower_bound,
   CALL,
 
   ENDF,
@@ -4576,22 +4576,22 @@ unsigned char FPGM(bci_action_serif_link2_lower_upper_bound) [] =
  *       bci_action_serif
  *       bci_action_serif_lower_bound
  *       bci_action_serif_upper_bound
- *       bci_action_serif_lower_upper_bound
+ *       bci_action_serif_upper_lower_bound
  *
  *       bci_action_serif_anchor
  *       bci_action_serif_anchor_lower_bound
  *       bci_action_serif_anchor_upper_bound
- *       bci_action_serif_anchor_lower_upper_bound
+ *       bci_action_serif_anchor_upper_lower_bound
  *
  *       bci_action_serif_link1
  *       bci_action_serif_link1_lower_bound
  *       bci_action_serif_link1_upper_bound
- *       bci_action_serif_link1_lower_upper_bound
+ *       bci_action_serif_link1_upper_lower_bound
  *
  *       bci_action_serif_link2
  *       bci_action_serif_link2_lower_bound
  *       bci_action_serif_link2_upper_bound
- *       bci_action_serif_link2_lower_upper_bound
+ *       bci_action_serif_link2_upper_lower_bound
  *
  * CVT: cvtl_is_subglyph
  */
@@ -4702,7 +4702,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
             + sizeof (FPGM(bci_lower_bound))
             + sizeof (FPGM(bci_upper_bound))
-            + sizeof (FPGM(bci_lower_upper_bound))
+            + sizeof (FPGM(bci_upper_lower_bound))
 
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
@@ -4744,19 +4744,19 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_action_serif))
             + sizeof (FPGM(bci_action_serif_lower_bound))
             + sizeof (FPGM(bci_action_serif_upper_bound))
-            + sizeof (FPGM(bci_action_serif_lower_upper_bound))
+            + sizeof (FPGM(bci_action_serif_upper_lower_bound))
             + sizeof (FPGM(bci_action_serif_anchor))
             + sizeof (FPGM(bci_action_serif_anchor_lower_bound))
             + sizeof (FPGM(bci_action_serif_anchor_upper_bound))
-            + sizeof (FPGM(bci_action_serif_anchor_lower_upper_bound))
+            + sizeof (FPGM(bci_action_serif_anchor_upper_lower_bound))
             + sizeof (FPGM(bci_action_serif_link1))
             + sizeof (FPGM(bci_action_serif_link1_lower_bound))
             + sizeof (FPGM(bci_action_serif_link1_upper_bound))
-            + sizeof (FPGM(bci_action_serif_link1_lower_upper_bound))
+            + sizeof (FPGM(bci_action_serif_link1_upper_lower_bound))
             + sizeof (FPGM(bci_action_serif_link2))
             + sizeof (FPGM(bci_action_serif_link2_lower_bound))
             + sizeof (FPGM(bci_action_serif_link2_upper_bound))
-            + sizeof (FPGM(bci_action_serif_link2_lower_upper_bound))
+            + sizeof (FPGM(bci_action_serif_link2_upper_lower_bound))
 
             + sizeof (FPGM(bci_hint_glyph));
 
@@ -4835,7 +4835,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
   COPY_FPGM(bci_lower_bound);
   COPY_FPGM(bci_upper_bound);
-  COPY_FPGM(bci_lower_upper_bound);
+  COPY_FPGM(bci_upper_lower_bound);
 
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
@@ -4877,19 +4877,19 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_action_serif);
   COPY_FPGM(bci_action_serif_lower_bound);
   COPY_FPGM(bci_action_serif_upper_bound);
-  COPY_FPGM(bci_action_serif_lower_upper_bound);
+  COPY_FPGM(bci_action_serif_upper_lower_bound);
   COPY_FPGM(bci_action_serif_anchor);
   COPY_FPGM(bci_action_serif_anchor_lower_bound);
   COPY_FPGM(bci_action_serif_anchor_upper_bound);
-  COPY_FPGM(bci_action_serif_anchor_lower_upper_bound);
+  COPY_FPGM(bci_action_serif_anchor_upper_lower_bound);
   COPY_FPGM(bci_action_serif_link1);
   COPY_FPGM(bci_action_serif_link1_lower_bound);
   COPY_FPGM(bci_action_serif_link1_upper_bound);
-  COPY_FPGM(bci_action_serif_link1_lower_upper_bound);
+  COPY_FPGM(bci_action_serif_link1_upper_lower_bound);
   COPY_FPGM(bci_action_serif_link2);
   COPY_FPGM(bci_action_serif_link2_lower_bound);
   COPY_FPGM(bci_action_serif_link2_upper_bound);
-  COPY_FPGM(bci_action_serif_link2_lower_upper_bound);
+  COPY_FPGM(bci_action_serif_link2_upper_lower_bound);
 
   COPY_FPGM(bci_hint_glyph);
 

@@ -382,10 +382,10 @@
 /* 48 */
 #define bci_lower_bound bci_serif_link2_common + 1
 #define bci_upper_bound bci_lower_bound + 1
-#define bci_lower_upper_bound bci_upper_bound + 1
+#define bci_upper_lower_bound bci_upper_bound + 1
 
 /* 51 */
-#define bci_adjust_bound bci_lower_upper_bound + 1
+#define bci_adjust_bound bci_upper_lower_bound + 1
 #define bci_stem_bound bci_adjust_bound + 1
 #define bci_link bci_stem_bound + 1
 #define bci_anchor bci_link + 1
@@ -441,28 +441,28 @@
 #define bci_action_serif bci_action_stem_bound_round_serif + 1
 #define bci_action_serif_lower_bound bci_action_serif + 1
 #define bci_action_serif_upper_bound bci_action_serif_lower_bound + 1
-#define bci_action_serif_lower_upper_bound bci_action_serif_upper_bound + 1
+#define bci_action_serif_upper_lower_bound bci_action_serif_upper_bound + 1
 
 /* 91 */
-#define bci_action_serif_anchor bci_action_serif_lower_upper_bound + 1
+#define bci_action_serif_anchor bci_action_serif_upper_lower_bound + 1
 #define bci_action_serif_anchor_lower_bound bci_action_serif_anchor + 1
 #define bci_action_serif_anchor_upper_bound bci_action_serif_anchor_lower_bound + 1
-#define bci_action_serif_anchor_lower_upper_bound bci_action_serif_anchor_upper_bound + 1
+#define bci_action_serif_anchor_upper_lower_bound bci_action_serif_anchor_upper_bound + 1
 
 /* 95 */
-#define bci_action_serif_link1 bci_action_serif_anchor_lower_upper_bound + 1
+#define bci_action_serif_link1 bci_action_serif_anchor_upper_lower_bound + 1
 #define bci_action_serif_link1_lower_bound bci_action_serif_link1 + 1
 #define bci_action_serif_link1_upper_bound bci_action_serif_link1_lower_bound + 1
-#define bci_action_serif_link1_lower_upper_bound bci_action_serif_link1_upper_bound + 1
+#define bci_action_serif_link1_upper_lower_bound bci_action_serif_link1_upper_bound + 1
 
 /* 99 */
-#define bci_action_serif_link2 bci_action_serif_link1_lower_upper_bound + 1
+#define bci_action_serif_link2 bci_action_serif_link1_upper_lower_bound + 1
 #define bci_action_serif_link2_lower_bound bci_action_serif_link2 + 1
 #define bci_action_serif_link2_upper_bound bci_action_serif_link2_lower_bound + 1
-#define bci_action_serif_link2_lower_upper_bound bci_action_serif_link2_upper_bound + 1
+#define bci_action_serif_link2_upper_lower_bound bci_action_serif_link2_upper_bound + 1
 
 /* 103 */
-#define bci_hint_glyph bci_action_serif_link2_lower_upper_bound + 1
+#define bci_hint_glyph bci_action_serif_link2_upper_lower_bound + 1
 
 #define NUM_FDEFS bci_hint_glyph + 1 /* must be last */
 
