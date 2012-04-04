@@ -430,8 +430,13 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
     {
       nargs = (num_args - i > 255) ? 255 : num_args - i;
 
-      BCI(NPUSHW);
-      BCI(nargs);
+      if (nargs <= 8)
+        BCI(PUSHW_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHW);
+        BCI(nargs);
+      }
       for (j = 0; j < nargs; j++)
       {
         BCI(HIGH(*arg));
@@ -446,8 +451,13 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
     {
       nargs = (num_args - i > 255) ? 255 : num_args - i;
 
-      BCI(NPUSHB);
-      BCI(nargs);
+      if (nargs <= 8)
+        BCI(PUSHB_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHB);
+        BCI(nargs);
+      }
       for (j = 0; j < nargs; j++)
       {
         BCI(*arg);
