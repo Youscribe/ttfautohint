@@ -211,9 +211,6 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     *(arg--) = 16 * high_nibble + low_nibble;
 
     base = last;
-
-    if (last > 0xFF)
-      need_words = 1;
   }
 
   for (seg = segments + num_packed_segments; seg < seg_limit; seg++)
