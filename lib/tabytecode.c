@@ -108,7 +108,8 @@ TA_adjust_point_index(Recorder* recorder,
 static FT_Byte*
 TA_sfnt_build_glyph_segments(SFNT* sfnt,
                              Recorder* recorder,
-                             FT_Byte* bufp)
+                             FT_Byte* bufp,
+                             FT_Bool optimize)
 {
   FONT* font = recorder->font;
   TA_GlyphHints hints = &font->loader->hints;
@@ -289,8 +290,14 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     {
       nargs = (num_args - i > 255) ? 255 : num_args - i;
 
-      BCI(NPUSHW);
-      BCI(nargs);
+
+      if (optimize && nargs <= 8)
+        BCI(PUSHW_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHW);
+        BCI(nargs);
+      }
       for (j = 0; j < nargs; j++)
       {
         BCI(HIGH(*arg));
@@ -305,8 +312,13 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     {
       nargs = (num_args - i > 255) ? 255 : num_args - i;
 
-      BCI(NPUSHB);
-      BCI(nargs);
+      if (optimize && nargs <= 8)
+        BCI(PUSHB_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHB);
+        BCI(nargs);
+      }
       for (j = 0; j < nargs; j++)
       {
         BCI(*arg);
@@ -886,7 +898,8 @@ TA_add_hints_record(Hints_Record** hints_records,
 static FT_Byte*
 TA_emit_hints_record(Recorder* recorder,
                      Hints_Record* hints_record,
-                     FT_Byte* bufp)
+                     FT_Byte* bufp,
+                     FT_Bool optimize)
 {
   FT_Byte* p;
   FT_Byte* endp;
@@ -916,8 +929,13 @@ TA_emit_hints_record(Recorder* recorder,
     {
       num_args = (num_arguments - i > 255) ? 255 : (num_arguments - i);
 
-      BCI(NPUSHW);
-      BCI(num_args);
+      if (optimize && num_args <= 8)
+        BCI(PUSHW_1 - 1 + num_args);
+      else
+      {
+        BCI(NPUSHW);
+        BCI(num_args);
+      }
       for (j = 0; j < num_args; j++)
       {
         BCI(*p);
@@ -935,8 +953,13 @@ TA_emit_hints_record(Recorder* recorder,
     {
       num_args = (num_arguments - i > 255) ? 255 : (num_arguments - i);
 
-      BCI(NPUSHB);
-      BCI(num_args);
+      if (optimize && num_args <= 8)
+        BCI(PUSHB_1 - 1 + num_args);
+      else
+      {
+        BCI(NPUSHB);
+        BCI(num_args);
+      }
       for (j = 0; j < num_args; j++)
       {
         BCI(*p);
@@ -957,7 +980,8 @@ static FT_Byte*
 TA_emit_hints_records(Recorder* recorder,
                       Hints_Record* hints_records,
                       FT_UInt num_hints_records,
-                      FT_Byte* bufp)
+                      FT_Byte* bufp,
+                      FT_Bool optimize)
 {
   FT_UInt i;
   Hints_Record* hints_record;
@@ -981,13 +1005,13 @@ TA_emit_hints_records(Recorder* recorder,
     }
     BCI(LT);
     BCI(IF);
-    bufp = TA_emit_hints_record(recorder, hints_record, bufp);
+    bufp = TA_emit_hints_record(recorder, hints_record, bufp, optimize);
     BCI(ELSE);
 
     hints_record++;
   }
 
-  bufp = TA_emit_hints_record(recorder, hints_record, bufp);
+  bufp = TA_emit_hints_record(recorder, hints_record, bufp, optimize);
 
   for (i = 0; i < num_hints_records - 1; i++)
     BCI(EIF);
@@ -1641,6 +1665,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   Recorder recorder;
   FT_UInt num_stack_elements;
+  FT_Bool optimize = 0;
 
   FT_Int32 load_flags;
   FT_UInt size;
@@ -1855,12 +1880,18 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     goto Done;
   }
 
+  /* if there is only a single record, */
+  /* we do a global optimization later on */
+  if (num_action_hints_records > 1)
+    optimize = 1;
+
   /* store the hints records and handle stack depth */
   pos[0] = ins_buf;
   bufp = TA_emit_hints_records(&recorder,
                                point_hints_records,
                                num_point_hints_records,
-                               ins_buf);
+                               ins_buf,
+                               optimize);
 
   num_stack_elements = recorder.num_stack_elements;
   recorder.num_stack_elements = 0;
@@ -1869,18 +1900,20 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   bufp = TA_emit_hints_records(&recorder,
                                action_hints_records,
                                num_action_hints_records,
-                               bufp);
+                               bufp,
+                               optimize);
+
   recorder.num_stack_elements += num_stack_elements;
 
   pos[2] = bufp;
-  bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, bufp);
+  bufp = TA_sfnt_build_glyph_segments(sfnt, &recorder, bufp, optimize);
   if (!bufp)
   {
     error = FT_Err_Out_Of_Memory;
     goto Err;
   }
 
-  /* XXX do nothing if we have NPUSHW in the data */
+  /* XXX improve handling of NPUSHW */
   if (num_action_hints_records == 1
       && *(pos[0]) != NPUSHW && *(pos[1]) != NPUSHW && *(pos[2]) != NPUSHW)
   {
