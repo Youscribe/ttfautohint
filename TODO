@@ -34,7 +34,9 @@ control `gasp' table; Adam Twardoch suggest the following:
   parameter > 0, then up to that parameter value the gasp value 7 should be
   applied, and gasp value 15 should be applied above.
 
-control activation threshold of blue zone widths
+control activation threshold of blue zone widths; handle fonts with large
+  serifs like `Palatino' or `Quattrocento' (cf. this bug report:
+  https://savannah.nongnu.org/bugs/?36091)
 
 control the width of blue zones
 

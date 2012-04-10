@@ -5,7 +5,7 @@ by Werner Lemberg <wl@gnu.org>
 
 
 This project provides a library which takes a TrueType font as the input,
-remove its bytecode instructions (if any), and return a new font where all
+removes its bytecode instructions (if any), and returns a new font where all
 glyphs are bytecode hinted using the information given by FreeType's
 autohinting module.  The idea is to provide the excellent quality of the
 autohinter on platforms which don't use FreeType.
