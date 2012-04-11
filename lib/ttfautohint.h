@@ -84,8 +84,9 @@ typedef int TA_Error;
  * (this value can't be larger than 65535).
  *
  * *curr_sfnt* gives the current subfont within a TrueType Collection (TTC),
- * and *num_sfnts* the total number of subfonts.  Currently, the ttfautohint
- * library only hints glyphs from the 'glyf' table used in subfont\ 0.
+ * and *num_sfnts* the total number of subfonts.  Currently, the
+ * `ttfautohint` library only hints glyphs from the 'glyf' table used in
+ * subfont\ 0.
  *
  * If the return value is non-zero, `TTF_autohint` aborts with
  * `TA_Err_Canceled`.  Use this for a 'Cancel' button or similar features in
@@ -275,7 +276,7 @@ typedef int
  *     the `ttfautohint` library refuses to process the font since a
  *     permission to do that is required from the font's legal owner.  In
  *     case you have such a permission you might set the integer argument to
- *     value\ 1 to make ttfautohint handle the font.  The default value
+ *     value\ 1 to make `ttfautohint` handle the font.  The default value
  *     is\ 0.
  *
  * `fallback-script`

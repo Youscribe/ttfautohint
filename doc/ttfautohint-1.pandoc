@@ -7,7 +7,7 @@
 Introduction
 ============
 
-ttfautohint is a library which takes a TrueType font as the input, removes
+`ttfautohint` is a library which takes a TrueType font as the input, removes
 its bytecode instructions (if any), and returns a new font where all glyphs
 are bytecode hinted using the information given by FreeType's autohinting
 module.  The idea is to provide the excellent quality of the autohinter on
