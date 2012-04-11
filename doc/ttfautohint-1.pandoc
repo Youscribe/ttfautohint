@@ -1,0 +1,168 @@
+% The ttfautohint library
+% Werner Lemberg
+% April 2012
+
+
+
+Introduction
+============
+
+ttfautohint is a library which takes a TrueType font as the input, removes
+its bytecode instructions (if any), and returns a new font where all glyphs
+are bytecode hinted using the information given by FreeType's autohinting
+module.  The idea is to provide the excellent quality of the autohinter on
+platforms which don't use FreeType.
+
+The library has a single API function, `TTF_autohint`, which is described
+[below](#TTF_autohint).
+
+Bundled with the library there are two front-end programs, `ttfautohint` and
+`ttfautohintGUI`, being a command line and GUI application, respectively.
+
+
+
+Background
+==========
+
+Hint Sets
+---------
+
+A *hint set* is the *optimal* configuration for a given PPEM (pixel per EM)
+value.  However, it can also hint larger and smaller values.
+
+Internally, `ttfautohint` creates hint sets for every PPEM value in the
+range given by the `--hinting-range-min` and `--hinting-range-max` options
+(this is a per-glyph operation).  If it differs to the current one, a new
+set is emitted.  For some glyphs it is possible that one set covers, say,
+the range 8px-1000px, while other glyphs need 10 or more such sets.
+
+Consider, for example, this glyph:
+
+     __    __    __
+    |  |  |  |  |  |
+    |  |  |  |  |  |
+    |  |  |  |__|  |         -> y2
+    |  |__|        |         -> y1
+    |              |
+    |______________|
+
+
+For small PPEM values, the horizontal segments with vertical coordinates y1
+and y2 get unified, being positioned on one horizontal line.  Starting with
+a certain (larger) PPEM value, this no longer happens, and `ttfautohint`
+creates a new hint set to accomodate this situation.
+
+
+Scripts
+-------
+
+`ttfautohint` checks which autohinting module should be used to hint a
+specific glyph.  To do so, it checks a glyph's Unicode character code
+whether it belongs to a given script.  Currently, only FreeType's 'latin'
+autohinting module is implemented, but more are expected to come.  Here is
+the hardcoded list of character ranges which are hinted by this 'latin'
+module.  As you can see, this also covers some non-latin scripts (in the
+Unicode sense) which have similar typographical properties.
+
+    Character range    Description
+  -------------------  -------------
+  0x0020 - 0x007F      Basic Latin (no control chars)
+  0x00A0 - 0x00FF      Latin-1 Supplement (no control chars)
+  0x0100 - 0x017F      Latin Extended-A
+  0x0180 - 0x024F      Latin Extended-B
+  0x0250 - 0x02AF      IPA Extensions
+  0x02B0 - 0x02FF      Spacing Modifier Letters
+  0x0300 - 0x036F      Combining Diacritical Marks
+  0x0370 - 0x03FF      Greek and Coptic
+  0x0400 - 0x04FF      Cyrillic
+  0x0500 - 0x052F      Cyrillic Supplement
+  0x1D00 - 0x1D7F      Phonetic Extensions
+  0x1D80 - 0x1DBF      Phonetic Extensions Supplement
+  0x1DC0 - 0x1DFF      Combining Diacritical Marks Supplement
+  0x1E00 - 0x1EFF      Latin Extended Additional
+  0x1F00 - 0x1FFF      Greek Extended
+  0x2000 - 0x206F      General Punctuation
+  0x2070 - 0x209F      Superscripts and Subscripts
+  0x20A0 - 0x20CF      Currency Symbols
+  0x2150 - 0x218F      Number Forms
+  0x2460 - 0x24FF      Enclosed Alphanumerics
+  0x2C60 - 0x2C7F      Latin Extended-C
+  0x2DE0 - 0x2DFF      Cyrillic Extended-A
+  0xA640 - 0xA69F      Cyrillic Extended-B
+  0xA720 - 0xA7FF      Latin Extended-D
+  0xFB00 - 0xFB06      Alphab. Present. Forms (Latin Ligs)
+  0x1D400 - 0x1D7FF    Mathematical Alphanumeric Symbols
+
+If a glyph's character code is not covered by a script range, it is not
+hinted (or rather, it gets hinted by the 'dummy' autohinting module which
+essentially does nothing).  This can be changed by specifying a *fallback
+script* with option `--latin-fallback`.
+
+
+
+`ttfautohint` and `ttfautohintGUI`
+==================================
+
+On all supported platforms (GNU/Linux, Windows, and Mac OS\ X), the GUI
+looks quite similar; the used toolkit is [Qt], which in turn uses the
+platform's native widgets.
+
+![`ttfautohintGUI` on GNU/Linux running KDE](ttfautohintGUI.png)
+
+Both the GUI and console version share the same features, to be discussed in
+the next subsection.
+
+
+Options
+-------
+
+`ttfautohintGUI` doesn't send any output to a console; however, it accepts
+the same command line options as `ttfautohint`, setting default values for
+the GUI.
+
+Long options can be given with one or two dashes, and with and without equal
+sign between option and argument.  This means that the following forms are
+acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, `--foo`\ *bar*.
+
+### Hint Set Ranges
+
+`--hinting-range-min=`*n*, `-l`\ *n*
+:   The minimum PPEM value (in pixels) at which hint sets are created.  The
+    default value for *n* is\ 8.
+`--hinting-range-max=`*n*, `-r`\ *n*
+:   The maximum PPEM value (in pixels) at which hint sets are created.  The
+    default value for *n* is 1000.
+
+### Hinting Limit
+
+`--hinting-limit=`*n*, `-G`\ *n*
+:   The *hinting limit* is the PPEM value (in pixels) where hinting gets
+    switched off completely; it has zero impact on the file size.  The
+    default value for *n* is 1000.
+
+    Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
+    uses the hinting configuration for 'hinting-range-max'.
+
+    To omit a hinting limit, use `--hinting-limit=0` (or check the 'No
+    Hinting Limit' box in the GUI).  Since this will cause internal math
+    overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
+    is strongly recommended to not use this except for testing purposes.
+
+### Fallback Script
+
+`--latin-fallback`, `-f`
+:   Set fallback script to 'latin', this is, use the 'latin' autohinting
+    module for all glyphs which can't be assigned to a script.  See
+    [above](#scripts) for more details.
+
+### Pre-hinting
+
+`--pre-hinting`, `-p`
+:   *Pre-hinting* means that a font's original bytecode is applied to all
+    glyphs before it is replaced with bytecode created by `ttfautohint`. 
+    This makes only sense if your font already has some hints in it which
+    modify the shape even at EM size (normally 2048px); for example, some
+    CJK fonts need this because the bytecode is used to scale and shift
+    subglyphs.  For most fonts, however, this is not the case.
+
+[Qt]: http://qt-project.org

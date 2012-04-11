@@ -6,7 +6,8 @@ ACLOCAL_AMFLAGS = -I gnulib/m4 -I m4
 
 SUBDIRS = gnulib/src \
           lib \
-          frontend
+          frontend \
+          doc
 EXTRA_DIST = bootstrap \
              bootstrap.conf \
              FTL.TXT \

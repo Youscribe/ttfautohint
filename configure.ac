@@ -136,12 +136,19 @@ else
   HELP2MAN=:
 fi
 
+AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
+if test x"$PANDOC" == x"no"; then
+  AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
+  PANDOC=":"
+  AC_SUBST([PANDOC])
+fi
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
                  gnulib/src/Makefile
                  lib/Makefile
-                 frontend/Makefile])
+                 frontend/Makefile
+                 doc/Makefile])
 AC_OUTPUT
 
 # end of configure.ac
