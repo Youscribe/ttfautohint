@@ -24,6 +24,21 @@ Bundled with the library there are two front-end programs, `ttfautohint` and
 Background
 ==========
 
+[Scholarly paper](http://www.tug.org/TUGboat/tb24-3/lemberg.pdf)
+
+
+Feature Analysis
+----------------
+
+TODO
+
+
+Blue Zones
+----------
+
+TODO
+
+
 Hint Sets
 ---------
 
@@ -51,6 +66,15 @@ For small PPEM values, the horizontal segments with vertical coordinates y1
 and y2 get unified, being positioned on one horizontal line.  Starting with
 a certain (larger) PPEM value, this no longer happens, and `ttfautohint`
 creates a new hint set to accomodate this situation.
+
+Obviously, the more hint sets get emitted, the larger the bytecode
+`ttfautohint` adds to the output font.
+
+
+The '.ttfautohint' glyph
+------------------------
+
+TODO
 
 
 Scripts
@@ -122,7 +146,7 @@ the GUI.
 
 Long options can be given with one or two dashes, and with and without equal
 sign between option and argument.  This means that the following forms are
-acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, `--foo`\ *bar*.
+acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 ### Hint Set Ranges
 
@@ -137,8 +161,8 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, `--foo`\ *bar*.
 
 `--hinting-limit=`*n*, `-G`\ *n*
 :   The *hinting limit* is the PPEM value (in pixels) where hinting gets
-    switched off completely; it has zero impact on the file size.  The
-    default value for *n* is 1000.
+    switched off completely (using the `INSTCTRL` bytecode instruction); it
+    has zero impact on the file size.  The default value for *n* is 1000.
 
     Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
     uses the hinting configuration for 'hinting-range-max'.
@@ -152,17 +176,55 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, `--foo`\ *bar*.
 
 `--latin-fallback`, `-f`
 :   Set fallback script to 'latin', this is, use the 'latin' autohinting
-    module for all glyphs which can't be assigned to a script.  See
-    [above](#scripts) for more details.
+    module instead of 'none' for all glyphs which can't be assigned to a
+    script.  See [above](#scripts) for more details.
 
 ### Pre-hinting
 
 `--pre-hinting`, `-p`
 :   *Pre-hinting* means that a font's original bytecode is applied to all
-    glyphs before it is replaced with bytecode created by `ttfautohint`. 
+    glyphs before it is replaced with bytecode created by `ttfautohint`.
     This makes only sense if your font already has some hints in it which
     modify the shape even at EM size (normally 2048px); for example, some
     CJK fonts need this because the bytecode is used to scale and shift
     subglyphs.  For most fonts, however, this is not the case.
+
+### `ttfautohint` Info
+
+`--no-info`, `-i`
+:   Don't add `ttfautohint` version and command line information to the
+    version string or strings (with name ID\ 5) in the font's 'name' table.
+    In the GUI it is handled the opposite: If you check the 'Add ttfautohint
+    info' box, information is added to the 'name' table.
+
+### Symbol Fonts
+
+`--symbol`, `-s`
+:   Use default values for standard stem width and height instead of
+    deriving them from latin character 'o'.  Use this option (usually in
+    combination with option `--latin-fallback`) to hint symbol fonts, for
+    example, which lack character 'o', at the expense of possibly poor
+    hinting results at small sizes.
+
+### Font License Restrictions
+
+`--ignore-permissions`, `-i`
+:   By default, fonts which have bit\ 1 set in the 'fsType' field of the
+    'OS/2' table are rejected.  If you have a permission of the font's legal
+    owner to modify the font, specify this command line option.
+
+    If this option is not set, `ttfautohintGUI` shows a dialogue to handle
+    such fonts if necessary.
+
+### Miscellaneous
+
+`--help`, `-h`
+:   On the console, print a brief documentation on standard output and exit.
+    This doesn't work with `ttfautohintGUI` on MS Windows.
+
+`--version`, `-v`
+:   On the console, print version information on standard output and exit.
+    This doesn't work with `ttfautohintGUI` on MS Windows.
+
 
 [Qt]: http://qt-project.org
