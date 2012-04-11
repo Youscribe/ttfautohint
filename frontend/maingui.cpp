@@ -716,7 +716,7 @@ Main_GUI::create_layout()
   flags_layout->addStretch(1);
 
   // info
-  info_box = new QCheckBox(tr("add ttf&autohint info"), this);
+  info_box = new QCheckBox(tr("Add ttf&autohint Info"), this);
   info_box->setToolTip(
     tr("If switched on, information about <b>ttfautohint</b>"
        " and its calling parameters are added to the version string(s)"
