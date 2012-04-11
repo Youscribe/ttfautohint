@@ -1,6 +1,6 @@
 # Makefile.am
 
-# Copyright (C) 2011 by Werner Lemberg.
+# Copyright (C) 2011-2012 by Werner Lemberg.
 #
 # This file is part of the ttfautohint library, and may only be used,
 # modified, and distributed under the terms given in `COPYING'.  By
@@ -22,6 +22,9 @@ DOCGEN = ttfautohint.html \
 dist_doc_DATA = $(DOCSRC) \
                 $(DOCIMAGES) \
                 $(DOCGEN)
+
+ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
+	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
 # XXX embed CSS data
 ttfautohint.html: $(DOCSRC) $(DOCIMAGES)

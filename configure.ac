@@ -136,6 +136,7 @@ else
   HELP2MAN=:
 fi
 
+AC_PROG_SED
 AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
 if test x"$PANDOC" == x"no"; then
   AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
