@@ -4,5 +4,6 @@
 /ttfautohint
 /ttfautohint.1
 /ttfautohintGUI
+/ttfautohintGUI.1
 *.moc.cpp
 *.o

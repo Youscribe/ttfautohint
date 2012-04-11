@@ -1,0 +1,5 @@
+/.deps/
+/Makefile
+/Makefile.in
+/ttfautohint.html
+/ttfautohint.pdf
