@@ -227,4 +227,21 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
     This doesn't work with `ttfautohintGUI` on MS Windows.
 
 
+
+Samples
+=======
+
+
+Roboto
+------
+
+TODO
+
+
+Ubuntu
+------
+
+TODO
+
+
 [Qt]: http://qt-project.org
