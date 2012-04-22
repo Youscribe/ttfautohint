@@ -55,8 +55,8 @@ extern "C" {
  */
 
 #define TA_HINTING_RANGE_MIN 8
-#define TA_HINTING_RANGE_MAX 1000
-#define TA_HINTING_LIMIT 1000
+#define TA_HINTING_RANGE_MAX 50
+#define TA_HINTING_LIMIT 200
 
 /*
  *```

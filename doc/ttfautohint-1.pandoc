@@ -156,14 +156,14 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
     default value for *n* is\ 8.
 `--hinting-range-max=`*n*, `-r`\ *n*
 :   The maximum PPEM value (in pixels) at which hint sets are created.  The
-    default value for *n* is 1000.
+    default value for *n* is 50.
 
 ### Hinting Limit
 
 `--hinting-limit=`*n*, `-G`\ *n*
 :   The *hinting limit* is the PPEM value (in pixels) where hinting gets
     switched off completely (using the `INSTCTRL` bytecode instruction); it
-    has zero impact on the file size.  The default value for *n* is 1000.
+    has zero impact on the file size.  The default value for *n* is 200.
 
     Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
     uses the hinting configuration for 'hinting-range-max'.
