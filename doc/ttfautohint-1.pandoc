@@ -7,11 +7,11 @@
 Introduction
 ============
 
-`ttfautohint` is a library which takes a TrueType font as the input, removes
-its bytecode instructions (if any), and returns a new font where all glyphs
-are bytecode hinted using the information given by FreeType's autohinting
-module.  The idea is to provide the excellent quality of the autohinter on
-platforms which don't use FreeType.
+**ttfautohint** is a library which takes a TrueType font as the input,
+removes its bytecode instructions (if any), and returns a new font where all
+glyphs are bytecode hinted using the information given by FreeType's
+autohinting module.  The idea is to provide the excellent quality of the
+autohinter on platforms which don't use FreeType.
 
 The library has a single API function, `TTF_autohint`, which is described
 [below](#TTF_autohint).
@@ -45,11 +45,11 @@ Hint Sets
 A *hint set* is the *optimal* configuration for a given PPEM (pixel per EM)
 value.  However, it can also hint larger and smaller values.
 
-Internally, `ttfautohint` creates hint sets for every PPEM value in the
-range given by the `--hinting-range-min` and `--hinting-range-max` options
-(this is a per-glyph operation).  If it differs to the current one, a new
-set is emitted.  For some glyphs it is possible that one set covers, say,
-the range 8px-1000px, while other glyphs need 10 or more such sets.
+Internally, ttfautohint creates hint sets for every PPEM value in the range
+given by the `--hinting-range-min` and `--hinting-range-max` options (this
+is a per-glyph operation).  If it differs to the current one, a new set is
+emitted.  For some glyphs it is possible that one set covers, say, the range
+8px-1000px, while other glyphs need 10 or more such sets.
 
 Consider, for example, this glyph:
 
@@ -64,11 +64,11 @@ Consider, for example, this glyph:
 
 For small PPEM values, the horizontal segments with vertical coordinates y1
 and y2 get unified, being positioned on one horizontal line.  Starting with
-a certain (larger) PPEM value, this no longer happens, and `ttfautohint`
+a certain (larger) PPEM value, this no longer happens, and ttfautohint
 creates a new hint set to accomodate this situation.
 
 Obviously, the more hint sets get emitted, the larger the bytecode
-`ttfautohint` adds to the output font.
+ttfautohint adds to the output font.
 
 
 The '.ttfautohint' glyph
@@ -80,7 +80,7 @@ TODO
 Scripts
 -------
 
-`ttfautohint` checks which autohinting module should be used to hint a
+ttfautohint checks which autohinting module should be used to hint a
 specific glyph.  To do so, it checks a glyph's Unicode character code
 whether it belongs to a given script.  Currently, only FreeType's 'latin'
 autohinting module is implemented, but more are expected to come.  Here is
@@ -183,16 +183,16 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 `--pre-hinting`, `-p`
 :   *Pre-hinting* means that a font's original bytecode is applied to all
-    glyphs before it is replaced with bytecode created by `ttfautohint`.
+    glyphs before it is replaced with bytecode created by ttfautohint.
     This makes only sense if your font already has some hints in it which
     modify the shape even at EM size (normally 2048px); for example, some
     CJK fonts need this because the bytecode is used to scale and shift
     subglyphs.  For most fonts, however, this is not the case.
 
-### `ttfautohint` Info
+### ttfautohint Info
 
 `--no-info`, `-i`
-:   Don't add `ttfautohint` version and command line information to the
+:   Don't add ttfautohint version and command line information to the
     version string or strings (with name ID\ 5) in the font's 'name' table.
     In the GUI it is handled the opposite: If you check the 'Add ttfautohint
     info' box, information is added to the 'name' table.

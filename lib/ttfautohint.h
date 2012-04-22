@@ -35,10 +35,10 @@ extern "C" {
 /* pandoc-start */
 
 /*
- * The `ttfautohint` API
- * =====================
+ * The ttfautohint API
+ * ===================
  *
- * This section documents the single function of the `ttfautohint` library,
+ * This section documents the single function of the ttfautohint library,
  * together with its callbacks.  All information has been directly extracted
  * from the `ttfautohint.h` header file.
  *
@@ -84,9 +84,8 @@ typedef int TA_Error;
  * (this value can't be larger than 65535).
  *
  * *curr_sfnt* gives the current subfont within a TrueType Collection (TTC),
- * and *num_sfnts* the total number of subfonts.  Currently, the
- * `ttfautohint` library only hints glyphs from the 'glyf' table used in
- * subfont\ 0.
+ * and *num_sfnts* the total number of subfonts.  Currently, the ttfautohint
+ * library only hints glyphs from the 'glyf' table used in subfont\ 0.
  *
  * If the return value is non-zero, `TTF_autohint` aborts with
  * `TA_Err_Canceled`.  Use this for a 'Cancel' button or similar features in
@@ -114,7 +113,7 @@ typedef int
  * `TA_Info_Func`
  * --------------
  *
- * A callback function to manipulate strings in the 'name' table. 
+ * A callback function to manipulate strings in the 'name' table.
  * *platform_id*, *encoding_id*, *language_id*, and *name_id* are the
  * identifiers of a name table entry pointed to by *str* with a length
  * pointed to by *str_len* (in bytes; the string has no trailing NULL byte).
@@ -268,15 +267,15 @@ typedef int
  *     no x-height snapping shall be applied.  A value range has the form
  *     *value1*`-`*value2*, meaning *value1* <= PPEM <= *value2*.
  *     Whitespace is not significant; a trailing comma is ignored.  If the
- *     supplied argument is NULL, no x-height snapping takes place at all. 
+ *     supplied argument is NULL, no x-height snapping takes place at all.
  *     By default, there are no snapping exceptions.  Not implemented yet.
  *
  * `ignore-permissions`
  * :   If the font has set bit\ 1 in the 'fsType' field of the 'OS/2' table,
- *     the `ttfautohint` library refuses to process the font since a
+ *     the ttfautohint library refuses to process the font since a
  *     permission to do that is required from the font's legal owner.  In
  *     case you have such a permission you might set the integer argument to
- *     value\ 1 to make `ttfautohint` handle the font.  The default value
+ *     value\ 1 to make ttfautohint handle the font.  The default value
  *     is\ 0.
  *
  * `fallback-script`
@@ -288,10 +287,10 @@ typedef int
  * `symbol`
  * :   Set this integer to\ 1 if you want to process a font which lacks the
  *     characters of a supported script, for example, a symbol font.
- *     `ttfautohint` then uses default values for the standard stem width
- *     and height instead of deriving these values from a script's key
- *     character (for the latin script, it is character 'o').  The default
- *     value is\ 0.
+ *     ttfautohint then uses default values for the standard stem width and
+ *     height instead of deriving these values from a script's key character
+ *     (for the latin script, it is character 'o').  The default value
+ *     is\ 0.
  *
  * Remarks:
  *
@@ -308,10 +307,10 @@ typedef int
  *     for standard hinting, and symmetric grid-fitting and symmetric
  *     smoothing for horizontal subpixel hinting (ClearType).
  *
- *   * `ttfautohint` can't process a font a second time (well, it can, if
- *     the font doesn't contain composite glyphs).  Just think of
- *     `ttfautohint` as being a compiler, a tool which also can't process
- *     its created output again.
+ *   * ttfautohint can't process a font a second time (well, it can, if the
+ *     font doesn't contain composite glyphs).  Just think of ttfautohint as
+ *     being a compiler, a tool which also can't process its created output
+ *     again.
  *
  * ```C
  */
