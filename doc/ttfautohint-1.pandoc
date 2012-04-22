@@ -14,10 +14,11 @@ autohinting module.  The idea is to provide the excellent quality of the
 autohinter on platforms which don't use FreeType.
 
 The library has a single API function, `TTF_autohint`, which is described
-[below](#TTF_autohint).
+[below](#ttf_autohint).
 
-Bundled with the library there are two front-end programs, `ttfautohint` and
-`ttfautohintGUI`, being a command line and GUI application, respectively.
+Bundled with the library there are two front-end programs, [`ttfautohint`
+and `ttfautohintGUI`](#ttfautohint-and-ttfautohintgui), being a command line
+and GUI application, respectively.
 
 
 
