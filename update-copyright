@@ -6,6 +6,7 @@
 UPDATE_COPYRIGHT=./.gnulib/build-aux/update-copyright
 
 git ls-files \
+| sed 's|^|./|' \
 | grep -vFf no-copyright \
 | UPDATE_COPYRIGHT_HOLDER="by Werner Lemberg" \
   UPDATE_COPYRIGHT_USE_INTERVALS=1 \

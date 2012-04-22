@@ -3,16 +3,17 @@
 # Don't put empty lines into this file!
 #
 .gitignore
-m4/.gitignore
-lib/.gitignore
+.gnulib
+.gitmodules
 #
+m4/autotroll.m4
 m4/ltlize_lang.m4
 FTL.TXT
 GPLv2.TXT
 INSTALL
 #
 bootstrap
-Makefile.am
+./Makefile.am
 #
 AUTHORS
 COPYING
@@ -24,5 +25,8 @@ TODO
 pledgies
 no-copyright
 update-copyright
+#
+doc/c2pandoc.sed
+doc/img
 #
 # EOF
