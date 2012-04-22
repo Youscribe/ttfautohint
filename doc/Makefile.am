@@ -14,14 +14,14 @@ DOCSRC = ttfautohint-1.pandoc \
          ttfautohint-2.pandoc \
          ttfautohint-3.pandoc
 
-DOCIMAGES = ttfautohintGUI.png
+DOCIMAGES = img/ttfautohintGUI.png
 
 DOCGEN = ttfautohint.html \
          ttfautohint.pdf
 
-dist_doc_DATA = $(DOCSRC) \
-                $(DOCIMAGES) \
-                $(DOCGEN)
+nobase_dist_doc_DATA = $(DOCSRC) \
+                       $(DOCIMAGES) \
+                       $(DOCGEN)
 
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@

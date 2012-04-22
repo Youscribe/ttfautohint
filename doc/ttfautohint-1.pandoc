@@ -132,7 +132,7 @@ On all supported platforms (GNU/Linux, Windows, and Mac OS\ X), the GUI
 looks quite similar; the used toolkit is [Qt], which in turn uses the
 platform's native widgets.
 
-![`ttfautohintGUI` on GNU/Linux running KDE](ttfautohintGUI.png)
+![`ttfautohintGUI` on GNU/Linux running KDE](img/ttfautohintGUI.png)
 
 Both the GUI and console version share the same features, to be discussed in
 the next subsection.
