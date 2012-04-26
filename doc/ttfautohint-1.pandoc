@@ -135,6 +135,14 @@ essentially does nothing).  This can be changed by specifying a *fallback
 script* with option `--latin-fallback`.
 
 
+Problems
+--------
+
+Diagonals.
+
+TODO.
+
+
 
 `ttfautohint` and `ttfautohintGUI`
 ==================================
