@@ -36,19 +36,77 @@ and GUI application, respectively.
 Background
 ==========
 
-[Scholarly paper](http://www.tug.org/TUGboat/tb24-3/lemberg.pdf)
+[Real-Time Grid Fitting of Typographic
+Outlines](http://www.tug.org/TUGboat/tb24-3/lemberg.pdf) is a scholarly
+paper which describes FreeType's auto-hinter in some detail.  Regarding the
+described data structures it's slightly out of date, but the algorithm
+itself hasn't changed.
+
+In the following, some important concepts are introduced.  Note that
+ttfautohint only does hinting along the vertical direction (this is,
+modifying y\ coordinates).
+
+
+Segments and Edges
+------------------
+
+A glyph consists of one or more contours (this is, closed curves).  For
+example, glyph 'O' consists of two contours, while glyph 'I' has only one.
+
+A *segment* is a series of consecutive points of a contour that are
+approximately aligned along a coordinate axis.  The analysis to do so is
+specific to a script.
+
+An *edge* corresponds to a single position on the main dimension that
+collects one or more segments (allowing for a small threshold).  While
+finding segments is done on the unscaled outline, finding edges is bound to
+the device resolution.  See [below](#hint-sets) for an example.
 
 
 Feature Analysis
 ----------------
 
-TODO
+The auto-hinter analyzes a font in two steps.
+
+  * Global Analysis
+
+      + Compute standard stem widths and heights of the font.  The values
+        are normally taken from the glyph of letter 'o'.
+
+      + Compute blue zones, see below.
+
+  * Glyph Analysis
+
+      + Find segments and edges.
+
+      + Link edges together to find stems and serifs.
 
 
 Blue Zones
 ----------
 
 TODO
+
+
+Grid Fitting
+------------
+
+This is the central routine of the auto-hinter; its actions are highly
+dependent on the used script.  Currently, only support for scripts which
+work similarly to Latin (i.e. Greek and Cyrillic) is available.
+
+  * Align edges linked to blue zones.
+
+  * Fit edges to the pixel grid.
+
+  * Align serif edges.
+
+  * Handle remaining 'strong' points.  Such points are not part of an edge
+    but are still important for defining the shape.  This roughly
+    corresponds to the `IP` TrueType instruction.
+
+  * Everything else (the 'weak' points) is handled with an `IUP`
+    instruction.
 
 
 Hint Sets
@@ -78,9 +136,9 @@ Consider, for example, this glyph:
 ```
 
 For small PPEM values, the horizontal segments with vertical coordinates y1
-and y2 get unified, being positioned on one horizontal line.  Starting with
-a certain (larger) PPEM value, this no longer happens, and ttfautohint
-creates a new hint set to accomodate this situation.
+and y2 get unified to one edge, being positioned on one horizontal line.
+Starting with a certain (larger) PPEM value, this no longer happens, and
+ttfautohint creates a new hint set to accomodate this situation.
 
 Obviously, the more hint sets get emitted, the larger the bytecode
 ttfautohint adds to the output font.
@@ -136,6 +194,15 @@ If a glyph's character code is not covered by a script range, it is not
 hinted (or rather, it gets hinted by the 'dummy' autohinting module which
 essentially does nothing).  This can be changed by specifying a *fallback
 script* with option `--latin-fallback`.
+
+
+SFNT tables
+-----------
+
+ttfautohint touches almost all SFNT tables withint a TrueType or OpenType
+font.  Some of them are removed, because they have become meaningless
+(`DSIG`, for example) or useless (e.g. `LTSH` and `hdmx`, because
+ttfautohint doesn't modify advance widths).
 
 
 Problems
