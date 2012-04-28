@@ -65,14 +65,17 @@ emitted.  For some glyphs it is possible that one set covers, say, the range
 
 Consider, for example, this glyph:
 
-     __    __    __
-    |  |  |  |  |  |
-    |  |  |  |  |  |
-    |  |  |  |__|  |         -> y2
-    |  |__|        |         -> y1
-    |              |
-    |______________|
+```{.ditaa name="hintset"}
 
+    +--+  +--+  +--+
+    |  |  |  |  |  |
+    |  |  |  |  |  |
+    |  |  |  +--+  |  --> y2
+    |  +--+        |  --> y1
+    |              |
+    +--------------+
+
+```
 
 For small PPEM values, the horizontal segments with vertical coordinates y1
 and y2 get unified, being positioned on one horizontal line.  Starting with
