@@ -53,9 +53,9 @@ Segments and Edges
 A glyph consists of one or more contours (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
-A *segment* is a series of consecutive points of a contour that are
-approximately aligned along a coordinate axis.  The analysis to do so is
-specific to a script.
+A *segment* is a series of consecutive points of a contour (including Bézier
+control points) that are approximately aligned along a coordinate axis.  The
+analysis to do so is specific to a script.
 
 An *edge* corresponds to a single position on the main dimension that
 collects one or more segments (allowing for a small threshold).  While
@@ -79,13 +79,34 @@ The auto-hinter analyzes a font in two steps.
 
       + Find segments and edges.
 
-      + Link edges together to find stems and serifs.
+      + Link edges together to find stems and serifs.  The abovementioned
+        paper gives more details on what exactly constitutes a stem or a
+        serif.
 
 
 Blue Zones
 ----------
 
-TODO
+Outlines of certain characters are used to determine *blue zones*.  This
+concept is the same as with Type\ 1 fonts: all glyph points which lie in
+certain small horizontal zones get aligned vertically.
+
+Here a table which shows the characters used by the latin module; the values
+are hard-coded in the source code.
+
+  ID    Blue zone                              Characters
+  ----  -----------                            ------------
+  1     top of capital letters                 THEZOCQS
+  2     bottom of capital letters              HEZLOCUS
+  3     top of 'small f' like letters          fijkdbh
+  4     top of small letters                   xzroesc
+  5     bottom of small letters                xzroesc
+  6     bottom of descenders of small letters  pqgjy
+
+The 'round' characters (e.g. 'OCQS') from Zones 1, 2, and 5 are also used to
+control the overshoot handling; to improve rendering at small sizes, zone\ 4
+gets adjusted to be on the pixel grid; cf. the [`--increase-x-height`
+option](#x-heights).
 
 
 Grid Fitting
@@ -137,14 +158,15 @@ Consider, for example, this glyph:
 
 For small PPEM values, the horizontal segments with vertical coordinates y1
 and y2 get unified to one edge, being positioned on one horizontal line.
-Starting with a certain (larger) PPEM value, this no longer happens, and
-ttfautohint creates a new hint set to accomodate this situation.
+Starting with a certain (larger) PPEM value, this no longer happens:
+ttfautohint uses two edges and emits a new hint set to accomodate this
+situation.
 
 Obviously, the more hint sets get emitted, the larger the bytecode
 ttfautohint adds to the output font.
 
 
-The '.ttfautohint' glyph
+The '\.ttfautohint' glyph
 ------------------------
 
 TODO
@@ -261,6 +283,14 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
     Hinting Limit' box in the GUI).  Since this will cause internal math
     overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
     is strongly recommended to not use this except for testing purposes.
+
+### x heights
+
+`--increase-x-height`, `-x`
+:   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
+    slight preference for rounding up.  If this flag is set, values are much
+    more often rounded up.  Use this flag to increase the legibility of
+    small sizes if necessary.
 
 ### Fallback Script
 
