@@ -149,12 +149,20 @@ fi
 
 if test x"$with_doc" != x"no"; then
   AC_PROG_SED
+
   AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
   if test x"$PANDOC" == x"no"; then
     AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
     PANDOC=":"
     AC_SUBST([PANDOC])
   fi
+
+  AC_CHECK_PROG([PDFLATEX], [pdflatex], [pdflatex], [no])
+  if test x"$PDFLATEX" == x"no"; then
+    AC_MSG_WARN([Install pdflatex to create documentation in PDF format])
+  fi
+
+  AM_CONDITIONAL([MAKE_PDF], [test x"$PDFLATEX" != x"no"])
 fi
 
 AC_CONFIG_HEADERS([config.h])

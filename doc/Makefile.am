@@ -16,8 +16,10 @@ DOCSRC = ttfautohint-1.pandoc \
 
 DOCIMAGES = img/ttfautohintGUI.png
 
-DOCGEN = ttfautohint.html \
-         ttfautohint.pdf
+DOCGEN = ttfautohint.html
+if MAKE_PDF
+  DOCGEN += ttfautohint.pdf
+endif
 
 if WITH_DOC
   nobase_dist_doc_DATA = $(DOCSRC) \
@@ -34,6 +36,6 @@ ttfautohint.html: $(DOCSRC) $(DOCIMAGES)
 
 # XXX write template
 ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
-	$(PANDOC) --toc -S -s -o $@ $(DOCSRC)
+	$(PANDOC) --latex-engine=$(PDFLATEX) --toc -S -s -o $@ $(DOCSRC)
 
 # end of Makefile.am
