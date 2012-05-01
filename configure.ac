@@ -11,10 +11,11 @@
 # with the ttfautohint library.
 
 AC_INIT([ttfautohint],
-        [0.8],
+        m4_esyscmd([gnulib/git-version-gen VERSION]),
         [freetype-devel@nongnu.org])
 AC_CONFIG_AUX_DIR([gnulib])
-AM_INIT_AUTOMAKE([-Wall -Werror gnits])
+AM_INIT_AUTOMAKE([-Wall -Werror]
+                 m4_bmatch(m4_defn([AC_PACKAGE_VERSION]), [-], [gnu], [gnits]))
 AC_CONFIG_MACRO_DIR([gnulib/m4
                      m4])
 AM_SILENT_RULES([yes])

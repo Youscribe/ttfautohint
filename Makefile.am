@@ -11,9 +11,17 @@ SUBDIRS = gnulib/src \
 EXTRA_DIST = bootstrap \
              bootstrap.conf \
              FTL.TXT \
+             gnulib/m4/gnulib-cache.m4 \
              GPLv2.TXT \
              README \
              TODO \
-             gnulib/m4/gnulib-cache.m4
+             .version
+
+BUILT_SOURCES = .version
+.version:
+	echo $(VERSION) > $@-t && mv $@-t $@
+
+dist-hook:
+	echo $(VERSION) > $(distdir)/VERSION
 
 ## end of Makefile.am
