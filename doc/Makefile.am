@@ -19,9 +19,11 @@ DOCIMAGES = img/ttfautohintGUI.png
 DOCGEN = ttfautohint.html \
          ttfautohint.pdf
 
-nobase_dist_doc_DATA = $(DOCSRC) \
-                       $(DOCIMAGES) \
-                       $(DOCGEN)
+if WITH_DOC
+  nobase_dist_doc_DATA = $(DOCSRC) \
+                         $(DOCIMAGES) \
+                         $(DOCGEN)
+endif
 
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@

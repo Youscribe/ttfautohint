@@ -30,7 +30,7 @@ LDADD = $(top_builddir)/lib/libttfautohint.a \
 bin_PROGRAMS = ttfautohint
 ttfautohint_SOURCES = info.cpp \
                       main.cpp
-dist_man_MANS = ttfautohint.1
+manpages = ttfautohint.1
 
 if USE_QT
   bin_PROGRAMS += ttfautohintGUI
@@ -48,9 +48,12 @@ if USE_QT
                          $(QT_LIBS)
 
   BUILT_SOURCES = maingui.moc.cpp
-  dist_man_MANS += ttfautohintGUI.1
+  manpages += ttfautohintGUI.1
 endif
 
+if WITH_DOC
+  dist_man_MANS = $(manpages)
+endif
 
 # `ttfautohint.h' holds default values for some options.
 ttfautohint.1: $(top_srcdir)/frontend/main.cpp \

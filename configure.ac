@@ -15,7 +15,8 @@ AC_INIT([ttfautohint],
         [freetype-devel@nongnu.org])
 AC_CONFIG_AUX_DIR([gnulib])
 AM_INIT_AUTOMAKE([-Wall -Werror]
-                 m4_bmatch(m4_defn([AC_PACKAGE_VERSION]), [-], [gnu], [gnits]))
+                 m4_bmatch(m4_defn([AC_PACKAGE_VERSION]), [-],
+                           [gnu], [gnits]))
 AC_CONFIG_MACRO_DIR([gnulib/m4
                      m4])
 AM_SILENT_RULES([yes])
@@ -48,12 +49,21 @@ LT_INIT
 LT_LTLIZE_LANG([C])
 
 
-AC_ARG_WITH(freetype-config,
-            [  --with-freetype-config=PROG   Use FreeType configuration program PROG],
-            freetype_config=$withval,
-            freetype_config=yes)
+AC_ARG_WITH([doc],
+            [AS_HELP_STRING([--without-doc],
+                            [don't install documentation @<:@default=yes@:>@])],
+            [],
+            [with_doc=yes])
 
-if test "$freetype_config" = "yes"; then 
+AM_CONDITIONAL([WITH_DOC], [test x"$with_doc" != x"no"])
+
+AC_ARG_WITH([freetype-config],
+            [AS_HELP_STRING([--with-freetype-config=PROG],
+                            [use FreeType configuration program PROG])],
+            [],
+            [freetype_config=yes])
+
+if test "$freetype_config" = "yes"; then
   AC_PATH_PROG(ft_config,
                freetype-config,
                no)
@@ -137,12 +147,14 @@ else
   HELP2MAN=:
 fi
 
-AC_PROG_SED
-AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
-if test x"$PANDOC" == x"no"; then
-  AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
-  PANDOC=":"
-  AC_SUBST([PANDOC])
+if test x"$with_doc" != x"no"; then
+  AC_PROG_SED
+  AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
+  if test x"$PANDOC" == x"no"; then
+    AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
+    PANDOC=":"
+    AC_SUBST([PANDOC])
+  fi
 fi
 
 AC_CONFIG_HEADERS([config.h])
