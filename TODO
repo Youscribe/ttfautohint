@@ -38,6 +38,12 @@ control activation threshold of blue zone widths; handle fonts with large
   serifs like `Palatino' or `Quattrocento' (cf. this bug report:
   https://savannah.nongnu.org/bugs/?36091)
 
+control the characters used for blue zones
+  -> non-latin scripts
+
+user-defined blue zones?
+  -> old-style digits
+
 control the width of blue zones
 
 handle normal and bold fonts differently; cf. Infinality patches;
