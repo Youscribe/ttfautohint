@@ -53,14 +53,16 @@ Segments and Edges
 A glyph consists of one or more contours (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
-A *segment* is a series of consecutive points of a contour (including Bézier
-control points) that are approximately aligned along a coordinate axis.  The
-analysis to do so is specific to a script.
+A *segment* is a series of consecutive points of a contour (including its
+Bézier control points) that are approximately aligned along a coordinate
+axis.
 
-An *edge* corresponds to a single position on the main dimension that
-collects one or more segments (allowing for a small threshold).  While
+An *edge* corresponds to a single coordinate value on the main dimension
+that collects one or more segments (allowing for a small threshold).  While
 finding segments is done on the unscaled outline, finding edges is bound to
 the device resolution.  See [below](#hint-sets) for an example.
+
+The analysis to find segments and edges is specific to a script.
 
 
 Feature Analysis
@@ -70,25 +72,34 @@ The auto-hinter analyzes a font in two steps.
 
   * Global Analysis
 
+    This affects the hinting of all glyphs, trying to give them a uniform
+    appearance.
+
       + Compute standard stem widths and heights of the font.  The values
         are normally taken from the glyph of letter 'o'.
 
-      + Compute blue zones, see below.
+      + Compute blue zones, see [below](#blue-zones).
+
+    If stem widths and heights of single glyphs differ by a large value, or
+    if ttfautohint fails to find proper blue zones, hinting becomes quite
+    poor, leading even to severe shape distortions.
 
   * Glyph Analysis
+
+    This is a per-glyph operation.
 
       + Find segments and edges.
 
       + Link edges together to find stems and serifs.  The abovementioned
         paper gives more details on what exactly constitutes a stem or a
-        serif.
+        serif and how the algorithm works.
 
 
 Blue Zones
 ----------
 
 Outlines of certain characters are used to determine *blue zones*.  This
-concept is the same as with Type\ 1 fonts: all glyph points which lie in
+concept is the same as with Type\ 1 fonts: All glyph points which lie in
 certain small horizontal zones get aligned vertically.
 
 Here a table which shows the characters used by the latin module; the values
@@ -169,13 +180,52 @@ ttfautohint adds to the output font.
 The '\.ttfautohint' glyph
 ------------------------
 
-TODO
+ttfautohint doesn't hint subglyphs of composite glyphs separately.  Instead,
+it hints the whole glyph, this is, composites get recursively expanded so
+that they form simple glyphs, then hints are applied -- this is the normal
+working mode of FreeType's auto-hinter.
+
+One problem, however, must be solved: Hinting for subglyphs (which usually
+are used as normal glyphs also) must be deactivated so that nothing but the
+final bytecode of the composite gets executed.
+
+The trick used by ttfautohint is to prepend a composite element called
+'.ttfautohint', a dummy glyph with a single point, and which has a single
+job: Its bytecode increases a CVT register (called `cvtl_is_subglyph` in the
+source code), indicating that we are within a composite glyph.  The final
+bytecode of the composite glyph eventually decrements the CVT register
+again.
+
+As an example, let's consider composite glyph 'Agrave' which has the
+subglyph 'A' as the base and 'grave' as its accent.  After processing with
+ttfautohint it consists of three subglyphs: '.ttfautohint', 'A', and 'grave'
+(in this order).
+
+  bytecode of    action
+  -------------  --------
+  .ttfautohint   increase `cvtl_is_subglyph` (now: 1)
+  A              do nothing because `cvtl_is_subglyph` > 0
+  grave          do nothing because `cvtl_is_subglyph` > 0
+  Agrave         decrease `cvtl_is_subglyph` (now: 0)\
+                 apply hints because `cvtl_is_subglyph` == 0
+
+All glyph point indices get adjusted since each '.ttfautohint' subglyph
+shifts all following indices by one.  This must be done for both the
+bytecode and one subformat of `GPOS` anchor tables.
+
+While this approach works fine on all tested platforms, there is one single
+drawback: Direct rendering of the '.ttfautohint' subglyph (this is,
+rendering as a stand-alone glyph) disables proper hinting of all glyphs in
+the font!  Under normal circumstances this never happens because
+'.ttfautohint' doesn't have an entry in the font's `cmap` table.  However,
+some test and demo programs like FreeType's `ftview` application or other
+glyph viewers which are able to bypass the `cmap` table might be affected.
 
 
 Scripts
 -------
 
-ttfautohint checks which autohinting module should be used to hint a
+ttfautohint checks which auto-hinting module should be used to hint a
 specific glyph.  To do so, it checks a glyph's Unicode character code
 whether it belongs to a given script.  Currently, only FreeType's 'latin'
 autohinting module is implemented, but more are expected to come.  Here is
@@ -213,7 +263,7 @@ Unicode sense) which have similar typographical properties.
   0x1D400 - 0x1D7FF    Mathematical Alphanumeric Symbols
 
 If a glyph's character code is not covered by a script range, it is not
-hinted (or rather, it gets hinted by the 'dummy' autohinting module which
+hinted (or rather, it gets hinted by the 'dummy' auto-hinting module which
 essentially does nothing).  This can be changed by specifying a *fallback
 script* with option `--latin-fallback`.
 
@@ -222,7 +272,7 @@ SFNT tables
 -----------
 
 ttfautohint touches almost all SFNT tables withint a TrueType or OpenType
-font.  Some of them are removed, because they have become meaningless
+font.  Some of them are removed because they have become meaningless
 (`DSIG`, for example) or useless (e.g. `LTSH` and `hdmx`, because
 ttfautohint doesn't modify advance widths).
 
@@ -295,7 +345,7 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 ### Fallback Script
 
 `--latin-fallback`, `-f`
-:   Set fallback script to 'latin', this is, use the 'latin' autohinting
+:   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
     module instead of 'none' for all glyphs which can't be assigned to a
     script.  See [above](#scripts) for more details.
 
