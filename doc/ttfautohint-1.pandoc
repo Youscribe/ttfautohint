@@ -196,7 +196,7 @@ source code), indicating that we are within a composite glyph.  The final
 bytecode of the composite glyph eventually decrements the CVT register
 again.
 
-As an example, let's consider composite glyph 'Agrave' which has the
+As an example, let's consider composite glyph 'Agrave' ('À') which has the
 subglyph 'A' as the base and 'grave' as its accent.  After processing with
 ttfautohint it consists of three subglyphs: '.ttfautohint', 'A', and 'grave'
 (in this order).
