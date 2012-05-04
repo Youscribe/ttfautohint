@@ -1,0 +1,113 @@
+<style type="text/css">
+  /* top-level appearance */
+  body {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+    margin-bottom: 5%;
+    text-align: justify;
+    font-size: medium; }
+  code {
+    font-family: monospace; }
+  h1 { }
+  h2 { }
+  h3 { }
+  h4 { }
+  h5 { }
+  h6 { }
+  h1.title {
+   text-align: center; }
+  h2.author {
+   text-align: center; }
+  h3.date {
+   text-align: center; }
+
+  /* figures */
+  div.figure {
+    text-align: center;
+    margin-top: 5ex;
+    margin-bottom: 5ex; }
+  p.caption {
+    font-size: smaller; }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    /* the next two lines center the table horizontally */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5ex;
+    margin-bottom: 5ex; } 
+  td {
+    padding-left: 0.8em;
+    padding-right: 0.8em; }
+  tbody tr:first-child td {
+    /* some vertical space after the horizontal rule */
+    padding-top: 1ex; }
+  thead {
+    /* a horizontal rule between table head and body */
+    border-bottom: solid thin; }
+  th {
+    padding-left: 0.8em;
+    padding-right: 0.8em;
+    /* some vertical space before the horizontal rule */
+    padding-bottom: 1ex; }
+
+  /* if we have paragraphs in definition lists, */
+  /* suppress the very first vertical space */
+  dd > p:first-child {
+    margin-top: 0; }
+
+  /* source-code highlighting */
+  table.sourceCode,
+  tr.sourceCode,
+  td.lineNumbers,
+  td.sourceCode,
+  table.sourceCode pre {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+    border: none; }
+  td.lineNumbers {
+    border-right: 1px solid #AAAAAA;
+    text-align: right;
+    color: #AAAAAA;
+    padding-right: 5px;
+    padding-left: 5px; }
+  td.sourceCode {
+    padding-left: 5px; }
+
+  pre.sourceCode {
+    margin-left: 2em; }
+
+  code.sourceCode span.kw {
+    color: #007020;
+    font-weight: bold; }
+  code.sourceCode span.dt {
+    color: #902000; }
+  code.sourceCode span.dv {
+    color: #40a070; }
+  code.sourceCode span.bn {
+    color: #40a070; }
+  code.sourceCode span.fl {
+    color: #40a070; }
+  code.sourceCode span.ch {
+    color: #4070a0; }
+  code.sourceCode span.st {
+    color: #4070a0; }
+  code.sourceCode span.co {
+    color: #60a0b0;
+    font-style: italic; }
+  code.sourceCode span.ot {
+    color: #007020; }
+  code.sourceCode span.al {
+    color: red;
+    font-weight: bold; }
+  code.sourceCode span.fu {
+    color: #06287e; }
+  code.sourceCode span.re { }
+  code.sourceCode span.er {
+    color: red;
+    font-weight: bold; }
+</style>

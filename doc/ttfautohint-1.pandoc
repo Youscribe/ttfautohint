@@ -201,7 +201,7 @@ subglyph 'A' as the base and 'grave' as its accent.  After processing with
 ttfautohint it consists of three subglyphs: '.ttfautohint', 'A', and 'grave'
 (in this order).
 
-  bytecode of    action
+  Bytecode of    Action
   -------------  --------
   .ttfautohint   increase `cvtl_is_subglyph` (now: 1)
   A              do nothing because `cvtl_is_subglyph` > 0
