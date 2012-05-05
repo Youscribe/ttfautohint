@@ -60,7 +60,7 @@ AM_CONDITIONAL([WITH_DOC], [test x"$with_doc" != x"no"])
 AC_ARG_WITH([freetype-config],
             [AS_HELP_STRING([--with-freetype-config=PROG],
                             [use FreeType configuration program PROG])],
-            [],
+            [freetype_config=$withval],
             [freetype_config=yes])
 
 if test "$freetype_config" = "yes"; then
@@ -163,6 +163,8 @@ if test x"$with_doc" != x"no"; then
   fi
 
   AM_CONDITIONAL([MAKE_PDF], [test x"$PDFLATEX" != x"no"])
+else
+  AM_CONDITIONAL([MAKE_PDF], [false])
 fi
 
 AC_CONFIG_HEADERS([config.h])
