@@ -46,7 +46,7 @@ extern "C" {
 
 
 /*
- * Preprocessor macros and typedefs
+ * Preprocessor Macros and Typedefs
  * --------------------------------
  *
  * Some default values.

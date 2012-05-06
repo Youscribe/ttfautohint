@@ -177,8 +177,8 @@ Obviously, the more hint sets get emitted, the larger the bytecode
 ttfautohint adds to the output font.
 
 
-The '\.ttfautohint' glyph
-------------------------
+The '\.ttfautohint' Glyph
+-------------------------
 
 ttfautohint doesn't hint subglyphs of composite glyphs separately.  Instead,
 it hints the whole glyph, this is, composites get recursively expanded so
@@ -268,7 +268,7 @@ essentially does nothing).  This can be changed by specifying a *fallback
 script* with option `--latin-fallback`.
 
 
-SFNT tables
+SFNT Tables
 -----------
 
 ttfautohint touches almost all SFNT tables withint a TrueType or OpenType
@@ -334,7 +334,7 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
     overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
     is strongly recommended to not use this except for testing purposes.
 
-### x heights
+### x Heights
 
 `--increase-x-height`, `-x`
 :   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
@@ -349,7 +349,7 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
     module instead of 'none' for all glyphs which can't be assigned to a
     script.  See [above](#scripts) for more details.
 
-### Pre-hinting
+### Pre-Hinting
 
 `--pre-hinting`, `-p`
 :   *Pre-hinting* means that a font's original bytecode is applied to all
