@@ -50,7 +50,7 @@ modifying y\ coordinates).
 Segments and Edges
 ------------------
 
-A glyph consists of one or more contours (this is, closed curves).  For
+A glyph consists of one or more *contours* (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
 A *segment* is a series of consecutive points of a contour (including its
@@ -190,7 +190,7 @@ are used as normal glyphs also) must be deactivated so that nothing but the
 final bytecode of the composite gets executed.
 
 The trick used by ttfautohint is to prepend a composite element called
-'.ttfautohint', a dummy glyph with a single point, and which has a single
+'\.ttfautohint', a dummy glyph with a single point, and which has a single
 job: Its bytecode increases a CVT register (called `cvtl_is_subglyph` in the
 source code), indicating that we are within a composite glyph.  The final
 bytecode of the composite glyph eventually decrements the CVT register
@@ -198,8 +198,8 @@ again.
 
 As an example, let's consider composite glyph 'Agrave' ('À') which has the
 subglyph 'A' as the base and 'grave' as its accent.  After processing with
-ttfautohint it consists of three subglyphs: '.ttfautohint', 'A', and 'grave'
-(in this order).
+ttfautohint it consists of three subglyphs: '\.ttfautohint', 'A', and
+'grave' (in this order).
 
   Bytecode of    Action
   -------------  --------
@@ -209,15 +209,15 @@ ttfautohint it consists of three subglyphs: '.ttfautohint', 'A', and 'grave'
   Agrave         decrease `cvtl_is_subglyph` (now: 0)\
                  apply hints because `cvtl_is_subglyph` == 0
 
-All glyph point indices get adjusted since each '.ttfautohint' subglyph
+All glyph point indices get adjusted since each '\.ttfautohint' subglyph
 shifts all following indices by one.  This must be done for both the
 bytecode and one subformat of `GPOS` anchor tables.
 
 While this approach works fine on all tested platforms, there is one single
-drawback: Direct rendering of the '.ttfautohint' subglyph (this is,
+drawback: Direct rendering of the '\.ttfautohint' subglyph (this is,
 rendering as a stand-alone glyph) disables proper hinting of all glyphs in
 the font!  Under normal circumstances this never happens because
-'.ttfautohint' doesn't have an entry in the font's `cmap` table.  However,
+'\.ttfautohint' doesn't have an entry in the font's `cmap` table.  However,
 some test and demo programs like FreeType's `ftview` application or other
 glyph viewers which are able to bypass the `cmap` table might be affected.
 
@@ -271,10 +271,35 @@ script* with option `--latin-fallback`.
 SFNT Tables
 -----------
 
-ttfautohint touches almost all SFNT tables withint a TrueType or OpenType
-font.  Some of them are removed because they have become meaningless
-(`DSIG`, for example) or useless (e.g. `LTSH` and `hdmx`, because
-ttfautohint doesn't modify advance widths).
+ttfautohint touches almost all SFNT tables within a TrueType or OpenType
+font.
+
+  * `glyf`: One glyph gets added (namely the '\.ttfautohint' glyph); all
+    composites get an additional component; all hints in the table are
+    replaced with new ones.
+
+  * `cvt`, `prep`, and `fpgm`: These tables get replaced with data
+    necessary for the new hinting bytecode.
+
+  * `gasp`: Replaced with new, quite generic data.
+
+  * `DSIG`: Replaced with a dummy version.  ttfautohint can't digitally sign
+    a font.
+
+  * `name`: The 'version' entries are modified to add information about the
+    parameters which have been used for calling ttfautohint.  This can be
+    controlled with the [`--no-info`](#ttfautohint-info) option.
+
+  * `GPOS`, `hmtx`, `loca`, `head`, `maxp`, `post`: Updated to fit the
+    additional '\.ttfautohint' glyph, the additional subglyphs in
+    composites, and the new hinting bytecode.
+
+  * `LTSH`, `hdmx`: Since ttfautohint doesn't do any horizontal hinting,
+    those tables are superfluous and thus removed.
+
+  * `VDMX`: Removed, since it depends on the original bytecode which
+    ttfautohint removes.  A font editor might recompute the necessary data
+    later on.
 
 
 Problems
