@@ -108,5 +108,6 @@ man page for ttfautohint library
 
 install library
 
+add help2man script so that parallel builds always work
 
 EOF

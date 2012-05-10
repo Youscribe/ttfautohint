@@ -20,8 +20,9 @@ Say
   ./bootstrap
 
 to clone the `gnulib' repository (which gets installed as a git submodule),
-to build the `configure' script, and to set up necessary auxiliary files.
-Then you can proceed with the instructions given in the `INSTALL' file.
+to build the `configure' script, and to set up necessary auxiliary files. 
+Then you can proceed with the instructions given in the `INSTALL' file with
+the exception that parellel builds with `make -j' are not supported yet.
 
 Some additional remarks for compilation within the MinGW environment.
 
