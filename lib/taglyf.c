@@ -361,7 +361,7 @@ TA_glyph_parse_simple(GLYPH* glyph,
     FT_Byte y_short;
     FT_Byte have_x;
     FT_Byte have_y;
-    FT_Byte count;
+    FT_UInt count;
 
 
     if (p + 1 > endp)
