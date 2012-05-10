@@ -26,7 +26,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
 
   /* basic check whether font is a TTF or TTC */
   if (!FT_IS_SFNT(sfnt->face))
-    return FT_Err_Invalid_Argument;
+    return TA_Err_Invalid_Font_Type;
 
   error = FT_Sfnt_Table_Info(sfnt->face, 0, NULL, &sfnt->num_table_infos);
   if (error)
@@ -171,7 +171,7 @@ TA_sfnt_split_into_SFNT_tables(SFNT* sfnt,
       || sfnt->loca_idx == MISSING
       || sfnt->head_idx == MISSING
       || sfnt->maxp_idx == MISSING)
-    return FT_Err_Invalid_Argument;
+    return TA_Err_Invalid_Font_Type;
 
   return TA_Err_Ok;
 }

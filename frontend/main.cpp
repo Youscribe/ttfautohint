@@ -554,6 +554,11 @@ main(int argc,
       fprintf(stderr,
               "FreeType version 2.4.5 or higher is needed.\n"
               "Perhaps using a wrong FreeType DLL?\n");
+    else if (error == TA_Err_Invalid_Font_Type)
+      fprintf(stderr,
+              "This font is not a valid font"
+                " in SFNT format with TrueType outlines.\n"
+              "In particular, CFF outlines are not supported.\n");
     else if (error == TA_Err_Already_Processed)
       fprintf(stderr,
               "This font has already been processed with ttfautohint.\n");

@@ -400,6 +400,15 @@ Main_GUI::handle_error(TA_Error error,
          "Are you perhaps using a wrong FreeType DLL?"),
       QMessageBox::Ok,
       QMessageBox::Ok);
+  else if (error == TA_Err_Invalid_Font_Type)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("This font is not a valid font"
+         " in SFNT format with TrueType outlines.\n"
+         "In particular, CFF outlines are not supported."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
   else if (error == TA_Err_Already_Processed)
     QMessageBox::warning(
       this,

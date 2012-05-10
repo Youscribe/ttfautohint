@@ -249,7 +249,7 @@ TTF_autohint(const char* options,
     /* a valid TTF can never be that small */
     if (in_len < 100)
     {
-      error = FT_Err_Invalid_Argument;
+      error = TA_Err_Invalid_Font_Type;
       goto Err1;
     }
     font->in_buf = (FT_Byte*)in_buf;

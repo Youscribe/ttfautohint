@@ -63,6 +63,8 @@ TA_ERRORDEF_(Canceled,                 0xF3, \
              "execution canceled")
 TA_ERRORDEF_(Already_Processed,        0xF4, \
              "font already processed by ttfautohint")
+TA_ERRORDEF_(Invalid_Font_Type,        0xF5, \
+             "not a font with TrueType outlines in SFNT format")
 
 #ifdef TA_ERROR_END_LIST
   TA_ERROR_END_LIST

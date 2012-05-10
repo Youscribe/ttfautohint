@@ -26,7 +26,7 @@ TA_font_file_read(FONT* font,
 
   /* a valid TTF can never be that small */
   if (font->in_len < 100)
-    return FT_Err_Invalid_Argument;
+    return TA_Err_Invalid_Font_Type;
 
   font->in_buf = (FT_Byte*)malloc(font->in_len);
   if (!font->in_buf)
