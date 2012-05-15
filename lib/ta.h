@@ -205,7 +205,7 @@ typedef struct FONT_
   FT_Bool increase_x_height;
   FT_Bool no_x_height_snapping;
   FT_Byte* x_height_snapping_exceptions;
-  FT_Bool ignore_permissions;
+  FT_Bool ignore_restrictions;
   FT_UInt fallback_script;
   FT_Bool symbol;
 } FONT;

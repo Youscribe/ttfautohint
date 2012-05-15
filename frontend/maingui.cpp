@@ -49,7 +49,7 @@ Main_GUI::Main_GUI(int range_min,
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
   hinting_limit(limit),
-  ignore_permissions(ignore),
+  ignore_restrictions(ignore),
   pre_hinting(pre),
   increase_x_height(increase),
   no_info(no),
@@ -431,7 +431,7 @@ Main_GUI::handle_error(TA_Error error,
                   QMessageBox::No);
     if (yesno == QMessageBox::Yes)
     {
-      ignore_permissions = true;
+      ignore_restrictions = true;
       ret = 1;
     }
   }
@@ -541,7 +541,7 @@ again:
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
-                 "ignore-permissions,"
+                 "ignore-restrictions,"
                  "pre-hinting, increase-x-height,"
                  "fallback-script, symbol",
                  input, output,
@@ -550,7 +550,7 @@ again:
                  &error_string,
                  gui_progress, &gui_progress_data,
                  info_func, &info_data,
-                 ignore_permissions,
+                 ignore_restrictions,
                  info_data.pre_hinting, info_data.increase_x_height,
                  info_data.latin_fallback, info_data.symbol);
 

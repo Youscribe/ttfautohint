@@ -145,7 +145,7 @@ show_help(bool
 #ifdef BUILD_GUI
 "      --help-all             show Qt and X11 specific options also\n"
 #endif
-"  -i, --ignore-permissions   override font license restrictions\n"
+"  -i, --ignore-restrictions  override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum PPEM value for hint sets\n"
 "                             (default: %d)\n"
 "  -n  --no-info              don't add ttfautohint info\n"
@@ -279,7 +279,7 @@ main(int argc,
   bool have_hinting_range_max = false;
   bool have_hinting_limit = false;
 
-  bool ignore_permissions = false;
+  bool ignore_restrictions = false;
   bool pre_hinting = false;
   bool increase_x_height = false;
   bool no_info = false;
@@ -319,7 +319,7 @@ main(int argc,
       {"hinting-limit", required_argument, NULL, 'G'},
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
-      {"ignore-permissions", no_argument, NULL, 'i'},
+      {"ignore-restrictions", no_argument, NULL, 'i'},
       {"increase-x-height", no_argument, NULL, 'x'},
       {"latin-fallback", no_argument, NULL, 'f'},
       {"no-info", no_argument, NULL, 'n'},
@@ -382,7 +382,7 @@ main(int argc,
       break;
 
     case 'i':
-      ignore_permissions = true;
+      ignore_restrictions = true;
       break;
 
     case 'l':
@@ -538,14 +538,14 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
-                 "ignore-permissions, pre-hinting, increase-x-height,"
+                 "ignore-restrictions, pre-hinting, increase-x-height,"
                  "fallback-script, symbol",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
                  &error_string,
                  progress_func, &progress_data,
                  info_func, &info_data,
-                 ignore_permissions, pre_hinting, increase_x_height,
+                 ignore_restrictions, pre_hinting, increase_x_height,
                  latin_fallback, symbol);
 
   if (error)
@@ -607,7 +607,7 @@ main(int argc,
   app.setOrganizationDomain("freetype.org");
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
-               ignore_permissions, pre_hinting, increase_x_height,
+               ignore_restrictions, pre_hinting, increase_x_height,
                no_info, latin_fallback, symbol);
   gui.show();
 

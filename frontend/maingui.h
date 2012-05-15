@@ -60,7 +60,7 @@ private:
   int hinting_range_min;
   int hinting_range_max;
   int hinting_limit;
-  int ignore_permissions;
+  int ignore_restrictions;
   int pre_hinting;
   int increase_x_height;
   int no_info;

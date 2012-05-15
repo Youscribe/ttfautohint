@@ -56,7 +56,7 @@ TTF_autohint(const char* options,
   TA_Info_Func info;
   void* info_data;
 
-  FT_Bool ignore_permissions = 0;
+  FT_Bool ignore_restrictions = 0;
   FT_Bool pre_hinting = 0;
   FT_Bool increase_x_height = 0;
   FT_UInt fallback_script = 0;
@@ -111,8 +111,8 @@ TTF_autohint(const char* options,
       hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-min"))
       hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
-    else if (COMPARE("ignore-permissions"))
-      ignore_permissions = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("ignore-restrictions"))
+      ignore_restrictions = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("in-buffer"))
     {
       in_file = NULL;
@@ -229,7 +229,7 @@ TTF_autohint(const char* options,
   font->info = info;
   font->info_data = info_data;
 
-  font->ignore_permissions = ignore_permissions;
+  font->ignore_restrictions = ignore_restrictions;
   font->pre_hinting = pre_hinting;
   font->increase_x_height = increase_x_height;
   /* restrict value to two bits */
@@ -300,7 +300,7 @@ TTF_autohint(const char* options,
 
       /* check lower byte of the `fsType' field */
       if (OS2_table->buf[OS2_FSTYPE_OFFSET + 1] == 0x02
-          && !font->ignore_permissions)
+          && !font->ignore_restrictions)
       {
         error = TA_Err_Missing_Legal_Permission;
         goto Err;

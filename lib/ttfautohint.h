@@ -270,7 +270,7 @@ typedef int
  *     supplied argument is NULL, no x-height snapping takes place at all.
  *     By default, there are no snapping exceptions.  Not implemented yet.
  *
- * `ignore-permissions`
+ * `ignore-restrictions`
  * :   If the font has set bit\ 1 in the 'fsType' field of the 'OS/2' table,
  *     the ttfautohint library refuses to process the font since a
  *     permission to do that is required from the font's legal owner.  In
