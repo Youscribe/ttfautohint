@@ -1,4 +1,7 @@
 <style type="text/css">
+  /* use Roboto font */
+  @import url("http://fonts.googleapis.com/css?family=Roboto");
+
   /* top-level appearance */
   body {
     width: 50em;
@@ -7,8 +10,9 @@
     margin-right: auto;
     margin-top: 5%;
     margin-bottom: 5%;
-    text-align: justify;
-    font-size: medium; }
+    text-align: left;
+    font-size: medium;
+    font-family: "Roboto", sans; }
   code {
     font-family: monospace; }
   h1 { }

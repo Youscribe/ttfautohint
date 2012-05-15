@@ -386,11 +386,11 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 ### ttfautohint Info
 
-`--no-info`, `-i`
+`--no-info`, `-n`
 :   Don't add ttfautohint version and command line information to the
     version string or strings (with name ID\ 5) in the font's 'name' table.
-    In the GUI it is handled the opposite: If you check the 'Add ttfautohint
-    info' box, information is added to the 'name' table.
+    In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
+    information is not added to the 'name' table.
 
 ### Symbol Fonts
 
