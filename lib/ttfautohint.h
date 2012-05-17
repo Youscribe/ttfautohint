@@ -85,7 +85,7 @@ typedef int TA_Error;
  *
  * *curr_sfnt* gives the current subfont within a TrueType Collection (TTC),
  * and *num_sfnts* the total number of subfonts.  Currently, the ttfautohint
- * library only hints glyphs from the 'glyf' table used in subfont\ 0.
+ * library only hints glyphs from the `glyf` table used in subfont\ 0.
  *
  * If the return value is non-zero, `TTF_autohint` aborts with
  * `TA_Err_Canceled`.  Use this for a 'Cancel' button or similar features in
@@ -113,15 +113,15 @@ typedef int
  * `TA_Info_Func`
  * --------------
  *
- * A callback function to manipulate strings in the 'name' table.
+ * A callback function to manipulate strings in the `name` table.
  * *platform_id*, *encoding_id*, *language_id*, and *name_id* are the
- * identifiers of a name table entry pointed to by *str* with a length
+ * identifiers of a `name` table entry pointed to by *str* with a length
  * pointed to by *str_len* (in bytes; the string has no trailing NULL byte).
- * Please refer to the [OpenType] specification for a detailed description
+ * Please refer to the [OpenType specification] for a detailed description
  * of the various parameters, in particular which encoding is used for a
  * given platform and encoding ID.
  *
- * [OpenType]: http://www.microsoft.com/typography/otspec/name.htm
+ * [OpenType specification]: http://www.microsoft.com/typography/otspec/name.htm
  *
  * *str* is allocated with `malloc`; the application should reallocate the
  * data if necessary, ensuring that the string length doesn't exceed 0xFFFF.
@@ -166,7 +166,7 @@ typedef int
  * --------------
  *
  * Read a TrueType font, remove existing bytecode (in the SFNT tables
- * 'prep', 'fpgm', 'cvt ', and 'glyf'), and write a new TrueType font with
+ * `prep`, `fpgm`, `cvt `, and `glyf`), and write a new TrueType font with
  * new bytecode based on the autohinting of the FreeType library.
  *
  * It expects a format string *options* and a variable number of arguments,
@@ -181,7 +181,7 @@ typedef int
  *
  * `in-file`
  * :   A pointer of type `FILE*` to the data stream of the input font,
- *     opened for binary reading.  Mutually exclusive with `in-buffer'.
+ *     opened for binary reading.  Mutually exclusive with `in-buffer`.
  *
  * `in-buffer`
  * :   A pointer of type `const char*` to a buffer which contains the input
@@ -247,8 +247,8 @@ typedef int
  *
  * `info-callback`
  * :   A pointer of type [`TA_Info_Func`](#ta_info_func), specifying a
- *     callback function for manipulating the 'name' table.  This function
- *     gets called for each name table entry.  If not set or set to NULL,
+ *     callback function for manipulating the `name` table.  This function
+ *     gets called for each `name` table entry.  If not set or set to NULL,
  *     the table data stays unmodified.
  *
  * `info-callback-data`
@@ -259,7 +259,7 @@ typedef int
  * :   An integer (1\ for 'on' and 0\ for 'off', which is the default).  For
  *     PPEM values in the range 5\ < PPEM <\ 15, round up the font's
  *     x\ height much more often than normally if this flag is set.  Use
- *     this if holes in letters like 'e' get filled, for example.
+ *     this flag to increase the legibility of small sizes if necessary.
  *
  * `x-height-snapping-exceptions`
  * :   A pointer of type `const char*` to a null-terminated string which
@@ -271,7 +271,7 @@ typedef int
  *     By default, there are no snapping exceptions.  Not implemented yet.
  *
  * `ignore-restrictions`
- * :   If the font has set bit\ 1 in the 'fsType' field of the 'OS/2' table,
+ * :   If the font has set bit\ 1 in the 'fsType' field of the `OS/2` table,
  *     the ttfautohint library refuses to process the font since a
  *     permission to do that is required from the font's legal owner.  In
  *     case you have such a permission you might set the integer argument to
@@ -302,7 +302,7 @@ typedef int
  *     value is smaller than the value of `hinting-range-min`, hinting still
  *     takes place but the configuration created for `hinting-range-min` is
  *     used.  The analogous action is taken for `hinting-range-max`, only
- *     limited by the value given with `hinting-limit`.  The font's 'gasp'
+ *     limited by the value given with `hinting-limit`.  The font's `gasp`
  *     table is set up to always use grayscale rendering with grid-fitting
  *     for standard hinting, and symmetric grid-fitting and symmetric
  *     smoothing for horizontal subpixel hinting (ClearType).

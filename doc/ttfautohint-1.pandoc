@@ -340,6 +340,7 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 `--hinting-range-min=`*n*, `-l`\ *n*
 :   The minimum PPEM value (in pixels) at which hint sets are created.  The
     default value for *n* is\ 8.
+
 `--hinting-range-max=`*n*, `-r`\ *n*
 :   The maximum PPEM value (in pixels) at which hint sets are created.  The
     default value for *n* is 50.
@@ -388,9 +389,9 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 `--no-info`, `-n`
 :   Don't add ttfautohint version and command line information to the
-    version string or strings (with name ID\ 5) in the font's 'name' table.
+    version string or strings (with name ID\ 5) in the font's `name` table.
     In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
-    information is not added to the 'name' table.
+    information is not added to the `name` table.
 
 ### Symbol Fonts
 
@@ -403,9 +404,9 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 ### Font License Restrictions
 
-`--ignore-permissions`, `-i`
+`--ignore-restrictions`, `-i`
 :   By default, fonts which have bit\ 1 set in the 'fsType' field of the
-    'OS/2' table are rejected.  If you have a permission of the font's legal
+    `OS/2` table are rejected.  If you have a permission of the font's legal
     owner to modify the font, specify this command line option.
 
     If this option is not set, `ttfautohintGUI` shows a dialogue to handle

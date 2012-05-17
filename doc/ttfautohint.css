@@ -11,7 +11,8 @@
     border: 0;
     text-align: left;
     font-size: large;
-    font-family: "Droid Serif", serif; }
+    font-family: "Droid Serif", serif;
+    line-height: 130%; }
 
   /* table of contents; */
   /* width and offsets must be synchronized with col2 below */
@@ -72,6 +73,9 @@
 
   code {
     font-family: "Droid Sans Mono", monospace; }
+  a {
+    text-decoration: none; }
+
   h1 { }
   h2 { }
   h3 { }
@@ -90,8 +94,7 @@
   h4 a,
   h5 a,
   h6 a {
-    color: black;
-    text-decoration: none; }
+    color: black; }
 
   /* figures */
   div.figure {
