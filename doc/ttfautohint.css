@@ -5,15 +5,71 @@
 
   /* top-level appearance */
   body {
-    width: 45em;
-    max-width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5%;
-    margin-bottom: 5%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
     text-align: left;
     font-size: large;
     font-family: "Droid Serif", serif; }
+
+  /* table of contents; */
+  /* width and offsets must be synchronized with col2 below */
+  #TOC {
+    position: fixed;
+    font-size: 115%;
+    left: 0em;
+    width: 13em; }
+  #TOC ul {
+    list-style: none; }
+  #TOC ul li {
+    text-indent: -1em;
+    margin-bottom: 1ex; }
+  #TOC ul li ul {
+    display: none; }
+  #TOC a {
+    color: black;
+    text-decoration: none; }
+
+  /* column container */
+  .colmask {
+    /* this fixes the IE7 overflow hidden bug */
+    /* and stops the layout jumping out of place */
+    position: relative;
+    clear: both;
+    float: left;
+    width: 100%;
+    /* this chops off any overhanging divs */
+    overflow: hidden; }
+  /* two-column left menu settings (col1 is right, col2 is left) */
+  .leftmenu {
+    background: white; }
+  .leftmenu .colright {
+    float: left;
+    width: 200%;
+    position: relative;
+    left: 15em; /* pad2_l + wd2 + pad2_r */
+    background: white; }
+  .leftmenu .col1wrap {
+    float: right;
+    width: 50%;
+    position: relative;
+    right: 15em; /* pad2_l + wd2 + pad2_r */
+    padding-bottom: 1em; }
+  .leftmenu .col1 {
+    margin: 0 1em   /* pad2_r */
+            0 15em; /* pad2_l + wd2 + pad2_r + pad1_l */
+    position: relative;
+    right: 100%;
+    width: 45em;
+    max-width: 66%;
+    overflow: hidden; }
+  .leftmenu .col2 {
+    float: left;
+    width: 13em; /* wd2 */
+    position: relative;
+    right: 14em; } /* wd2 + pad2_r */
+
   code {
     font-family: "Droid Sans Mono", monospace; }
   h1 { }
@@ -28,6 +84,14 @@
    text-align: center; }
   h3.date {
    text-align: center; }
+  h1 a,
+  h2 a,
+  h3 a,
+  h4 a,
+  h5 a,
+  h6 a {
+    color: black;
+    text-decoration: none; }
 
   /* figures */
   div.figure {

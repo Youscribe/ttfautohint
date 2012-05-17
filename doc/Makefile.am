@@ -31,8 +31,14 @@ endif
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
-ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css
-	$(PANDOC) --toc -H ttfautohint.css -S -s -o $@ $(DOCSRC)
+ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
+	$(PANDOC) --template=template.html \
+	          --toc \
+	          --include-in-header=ttfautohint.css \
+	          --smart \
+	          --standalone \
+	          --output=$@ \
+	          $(DOCSRC)
 
 # XXX write template
 ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
