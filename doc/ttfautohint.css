@@ -21,16 +21,20 @@
     font-size: 115%;
     left: 0em;
     width: 13em; }
+  /* don't display list markers in TOC */
   #TOC ul {
     list-style: none; }
   #TOC ul li {
+    /* negative indentation for the first line of a TOC entry */
     text-indent: -1em;
+    /* leave some vertical space between TOC entries */
     margin-bottom: 1ex; }
+  /* only display first-level TOC entries */
   #TOC ul li ul {
     display: none; }
+  /* no link color necessary for TOC entries */
   #TOC a {
-    color: black;
-    text-decoration: none; }
+    color: black; }
 
   /* column container */
   .colmask {
@@ -40,7 +44,7 @@
     clear: both;
     float: left;
     width: 100%;
-    /* this chops off any overhanging divs */
+    /* this chops off any overhanging <div>s */
     overflow: hidden; }
   /* two-column left menu settings (col1 is right, col2 is left) */
   .leftmenu {
@@ -73,12 +77,16 @@
 
   code {
     font-family: "Droid Sans Mono", monospace; }
+  /* no underline for links */
   a {
     text-decoration: none; }
 
-  h1 { }
-  h2 { }
-  h3 { }
+  h1 {
+    margin-top: 3.5ex; }
+  h2 {
+    margin-top: 3ex; }
+  h3 {
+    margin-top: 2.5ex; }
   h4 { }
   h5 { }
   h6 { }
@@ -88,6 +96,8 @@
    text-align: center; }
   h3.date {
    text-align: center; }
+  /* since we have a TOC at a fixed position, */
+  /* links in headers back to the TOC are unnecessary */
   h1 a,
   h2 a,
   h3 a,
@@ -115,9 +125,6 @@
   td {
     padding-left: 0.8em;
     padding-right: 0.8em; }
-  tbody tr:first-child td {
-    /* some vertical space after the horizontal rule */
-    padding-top: 1ex; }
   thead {
     /* a horizontal rule between table head and body */
     border-bottom: solid thin; }
@@ -126,6 +133,9 @@
     padding-right: 0.8em;
     /* some vertical space before the horizontal rule */
     padding-bottom: 1ex; }
+  tbody tr:first-child td {
+    /* some vertical space after the horizontal rule */
+    padding-top: 1ex; }
 
   /* if we have paragraphs in definition lists, */
   /* suppress the very first vertical space */
