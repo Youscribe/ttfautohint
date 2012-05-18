@@ -68,7 +68,7 @@ ttfautohint.1: $(top_srcdir)/frontend/main.cpp \
 ttfautohintGUI.1: $(top_srcdir)/frontend/main.cpp \
                   $(top_srcdir)/lib/ttfautohint.h \
                   $(top_srcdir)/configure.ac
-	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
+	$(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
 	$(HELP2MAN) --output=$@ \
 	            --no-info \
 	            --name="add new auto-generated hints to a TrueType font" \
