@@ -24,6 +24,7 @@ endif
 if WITH_DOC
   nobase_dist_doc_DATA = $(DOCSRC) \
                          ttfautohint.css \
+                         template.html \
                          $(DOCIMAGES) \
                          $(DOCGEN)
 endif
