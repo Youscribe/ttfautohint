@@ -12,8 +12,13 @@
 
 SUFFIXES = .moc.cpp .h
 
+# Make call to `moc' emit just `MOC'.
+moc_verbose = $(moc_verbose_@AM_V@)
+moc_verbose_ = $(moc_verbose_@AM_DEFAULT_V@)
+moc_verbose_0 = @echo "  MOC   " $@;
+
 .h.moc.cpp:
-	$(MOC) $(QT_CPPFLAGS) $(EXTRA_CPPFLAGS) $< -o $@
+	$(moc_verbose)$(MOC) $(QT_CPPFLAGS) $(EXTRA_CPPFLAGS) $< -o $@
 
 DISTCLEANFILES = $(BUILT_SOURCES)
 
