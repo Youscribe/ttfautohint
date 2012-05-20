@@ -16,21 +16,30 @@ DOCSRC = ttfautohint-1.pandoc \
 
 DOCIMAGES = img/ttfautohintGUI.png
 
-DOCGEN = ttfautohint.html
-if MAKE_PDF
-  DOCGEN += ttfautohint.pdf
-endif
+DOCGEN = ttfautohint.html \
+         ttfautohint.pdf \
+         $(DOCIMAGES)
 
 if WITH_DOC
   nobase_dist_doc_DATA = $(DOCSRC) \
                          ttfautohint.css \
                          template.html \
-                         $(DOCIMAGES) \
                          $(DOCGEN)
 endif
 
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
+
+# build snapshot image of ttfautohintGUI:
+# this needs X11 and ImageMagick's `import' tool
+# (in the `make-snaphshot.sh' script)
+img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
+                        $(top_srcdir)/configure.ac
+	cd $(top_builddir)/frontend \
+	  && $(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
+	-mkdir img
+	$(SHELL) $(srcdir)/make-snapshot.sh \
+	           $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
 ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
 	$(PANDOC) --template=template.html \

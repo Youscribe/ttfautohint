@@ -1,4 +1,5 @@
 /.deps/
+/img/
 /Makefile
 /Makefile.in
 /ttfautohint.html

@@ -147,24 +147,44 @@ else
   HELP2MAN=:
 fi
 
+# The documentation is part of the distributed bundle.  In the following, we
+# test for the documentation building tools in case those files are missing
+# (which can happen during bootstrap).
+
+image_file=$srcdir/doc/img/ttfautohintGUI.png
+html_file=$srcdir/doc/ttfautohint.html
+pdf_file=$srcdir/doc/ttfautohint.pdf
+
 if test x"$with_doc" != x"no"; then
   AC_PROG_SED
 
-  AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
-  if test x"$PANDOC" == x"no"; then
-    AC_MSG_WARN([Install pandoc to create PDF and HTML documentation files])
-    PANDOC=":"
-    AC_SUBST([PANDOC])
+  # snapshot image creation
+  if test ! -f $image_file; then
+    if test x"$DISPLAY" == x; then
+      AC_MSG_ERROR([Need X11 to create snapshot image of ttfautohintGUI])
+    else
+      AC_CHECK_PROG([IMPORT], [import], [import], [no])
+      if test x"$IMPORT" == x"no"; then
+        AC_MSG_ERROR([Need ImageMagick to create snapshot image of ttfautohintGUI])
+      fi
+    fi
   fi
 
-  AC_CHECK_PROG([PDFLATEX], [pdflatex], [pdflatex], [no])
-  if test x"$PDFLATEX" == x"no"; then
-    AC_MSG_WARN([Install pdflatex to create documentation in PDF format])
+  # documentation creation
+  if test ! -f $html_file -o ! -f $pdf_file; then
+    AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
+    if test x"$PANDOC" == x"no"; then
+      AC_MSG_ERROR([Need pandoc to create PDF and HTML documentation files])
+    fi
   fi
 
-  AM_CONDITIONAL([MAKE_PDF], [test x"$PDFLATEX" != x"no"])
-else
-  AM_CONDITIONAL([MAKE_PDF], [false])
+  # PDF documentation
+  if test ! -f $pdf_file; then
+    AC_CHECK_PROG([PDFLATEX], [pdflatex], [pdflatex], [no])
+    if test x"$PDFLATEX" == x"no"; then
+      AC_MSG_ERROR([Need pdflatex to create documentation in PDF format])
+    fi
+  fi
 fi
 
 AC_CONFIG_HEADERS([config.h])
