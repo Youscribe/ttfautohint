@@ -35,6 +35,7 @@ manpages = ttfautohint.1
 if USE_QT
   bin_PROGRAMS += ttfautohintGUI
   ttfautohintGUI_SOURCES = info.cpp \
+                           info.h \
                            main.cpp \
                            maingui.cpp \
                            maingui.h
