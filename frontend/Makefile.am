@@ -59,7 +59,7 @@ endif
 # `ttfautohint.h' holds default values for some options.
 ttfautohint.1: $(top_srcdir)/frontend/main.cpp \
                $(top_srcdir)/lib/ttfautohint.h \
-               $(top_srcdir)/configure.ac
+               $(top_srcdir)/.version
 	$(MAKE) $(AM_MAKEFLAGS) ttfautohint$(EXEEXT)
 	$(HELP2MAN) --output=$@ \
 	            --no-info \
@@ -68,7 +68,7 @@ ttfautohint.1: $(top_srcdir)/frontend/main.cpp \
 
 ttfautohintGUI.1: $(top_srcdir)/frontend/main.cpp \
                   $(top_srcdir)/lib/ttfautohint.h \
-                  $(top_srcdir)/configure.ac
+                  $(top_srcdir)/.version
 	$(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
 	$(HELP2MAN) --output=$@ \
 	            --no-info \
