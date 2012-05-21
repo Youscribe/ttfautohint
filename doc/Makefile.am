@@ -37,7 +37,7 @@ img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
                         $(top_srcdir)/configure.ac
 	cd $(top_builddir)/frontend \
 	  && $(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
-	-mkdir img
+	-mkdir img 2> /dev/null
 	$(SHELL) $(srcdir)/make-snapshot.sh \
 	           $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
