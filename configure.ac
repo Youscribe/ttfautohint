@@ -77,6 +77,11 @@ fi
 FREETYPE_CPPFLAGS="`$ft_config --cflags`"
 FREETYPE_LIBS="`$ft_config --libtool`"
 
+# many platforms no longer install .la files for system libraries
+if test ! -f $FREETYPE_LIBS; then
+  FREETYPE_LIBS="`$ft_config --libs`"
+fi
+
 AC_SUBST(FREETYPE_CPPFLAGS)
 AC_SUBST(FREETYPE_LIBS)
 
