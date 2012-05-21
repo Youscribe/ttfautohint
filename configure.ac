@@ -50,8 +50,8 @@ LT_LTLIZE_LANG([C])
 
 
 AC_ARG_WITH([doc],
-            [AS_HELP_STRING([--without-doc],
-                            [don't install documentation @<:@default=yes@:>@])],
+            [AS_HELP_STRING([--with-doc],
+                            [install documentation @<:@default=yes@:>@])],
             [],
             [with_doc=yes])
 
