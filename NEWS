@@ -1,3 +1,23 @@
+New in 0.9:
+
+* The created bytecode has been reduced in size, making it approx. 20%
+  smaller.
+
+* New option `--symbol' to use standard stem height and width values instead
+  of using character `o' (which may be missing).  Use this option for symbol
+  fonts or math glyphs.
+
+* More documentation (in text, HTML, and PDF format).  It's still
+  incomplete, though.
+
+* Option `--ignore-permissions' has been renamed to `--ignore-restrictions'. 
+  The short form is still `-i'.
+
+* Defaults for various parameters have been set to more sensible values:
+
+    hinting-range-max: 50 (was 1000)
+    hinting-limit: 200 (was 1000)
+
 New in 0.8:
 
 * Implement option `-x' to increase the x height of the font for small PPEM
