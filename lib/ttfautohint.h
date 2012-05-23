@@ -39,8 +39,9 @@ extern "C" {
  * ===================
  *
  * This section documents the single function of the ttfautohint library,
- * together with its callbacks.  All information has been directly extracted
- * from the `ttfautohint.h` header file.
+ * `TTF_autohint`, together with its callback functions, `TA_Progress_Func`
+ * and `TA_Info_Func`.  All information has been directly extracted from the
+ * `ttfautohint.h` header file.
  *
  */
 
@@ -123,8 +124,9 @@ typedef int
  *
  * [OpenType specification]: http://www.microsoft.com/typography/otspec/name.htm
  *
- * *str* is allocated with `malloc`; the application should reallocate the
- * data if necessary, ensuring that the string length doesn't exceed 0xFFFF.
+ * The string *str* is allocated with `malloc`; the application should
+ * reallocate the data if necessary, ensuring that the string length doesn't
+ * exceed 0xFFFF.
  *
  * *info_data* is a void pointer to user supplied data.
  *

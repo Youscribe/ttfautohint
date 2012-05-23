@@ -32,6 +32,92 @@ and `ttfautohintGUI`](#ttfautohint-and-ttfautohintgui), being a command line
 and GUI application, respectively.
 
 
+What exactly are hints?
+-----------------------
+
+To cite [Wikipedia](http://en.wikipedia.org/wiki/Font_hinting):
+
+> *Font hinting* (also known as *instructing*) is the use of mathematical
+> instructions to adjust the display of an outline font so that it lines up
+> with a rasterized grid.
+
+and Apple's [TrueType Reference
+Manual](https://developer.apple.com/fonts/TTRefMan/RM03/Chap3.html#features):
+
+> For optimal results, a font instructor should follow these guidelines:
+>
+>  - At small sizes, chance effects should not be allowed to magnify small
+>    differences in the original outline design of a glyph.
+>
+>  - At large sizes, the subtlety of the original design should emerge.
+
+In general, there are three possibilities how to hint a glyph.
+
+ 1. The font contains exact instructions (also called *bytecode*) how to
+    move the points of its outlines, depending on the resolution of the
+    output device, and which intentionally distort the (outline) shape to
+    produce a well-rasterized result.  The hinting logic is in the font;
+    ideally, all rasterizeres simply process these instructions to get the
+    same result on all platforms.
+
+    This is how TrueType hints work.
+
+ 2. The font contains hints (in the original sense of this word) to guide
+    the rasterizer, telling it which shapes of the glyphs need special
+    consideration.  The hinting logic is partly in the font and partly in
+    the rasterizer.  More sophisticated rasterizers are able to produce
+    better rendering results.
+
+    This is how Type\ 1 and CFF font hints work.
+
+ 3. The font gets auto-hinted (at run-time).  The hinting logic is
+    completely in the rasterizer.  No hints in the font are used or needed;
+    instead, the rasterizer scans and analyzes the glyphs to apply
+    corrections by itself.
+
+    This is how FreeType's auto-hinter works (see [below](#background) for
+    more).
+
+
+What problems can arise with TrueType hinting?
+----------------------------------------------
+
+While it is relatively easy to specify PostScript hints (either manually or
+by an auto-hinter which works at font creation time), creating TrueType
+hints is far more difficult.  There are at least two reasons:
+
+  - TrueType instructions form a programming language, operating at a very
+    low level.  They are comparable to assembler code, thus lacking all
+    high-level concepts to make programming more comfortable.
+
+    Another major obstacle is the fact that font designers usually aren't
+    programmers.
+
+  - It is very time consuming to manually hint glyphs.  Given that the
+    number of specialists for TrueType hinting is very limited, hinting a
+    large set of glyphs for a font or font family can become very expensive.
+
+
+Why ttfautohint?
+----------------
+
+The ttfautohint library brings the excellent quality of FreeType rendering
+to platforms which don't use FreeType, yet require hinting for text to look
+good -- like Microsoft Windows.  Roughly speaking, it converts the glyph
+analysis done by FreeType's auto-hinting module to TrueType bytecode.
+Internally, the auto-hinter's algorithm resembles PostScript hinting
+methods; it thus combines all three hinting methods discussed in a [previous
+subsection](#what-exactly-are-hints).
+
+Across Windows rendering environments today, fonts processed with
+ttfautohint look best with DirectWrite ClearType enabled.  This is the
+default for Windows\ 7.  Good visual results are also seen in recent
+MacOS\ X versions and GNU/Linux systems that do use FreeType for rendering.
+Work is now underway to improve quality of older Windows 'GDI' rendering.
+
+The goal of the project is to generate a 'first pass' of hinting that font
+developers can refine further for ultimate quality.
+
 
 Background
 ==========
@@ -42,9 +128,9 @@ paper which describes FreeType's auto-hinter in some detail.  Regarding the
 described data structures it's slightly out of date, but the algorithm
 itself hasn't changed.
 
-In the following, some important concepts are introduced.  Note that
-ttfautohint only does hinting along the vertical direction (this is,
-modifying y\ coordinates).
+The next few subsections are mainly based on this article, introducing some
+important concepts.  Note that ttfautohint only does hinting along the
+vertical direction (this is, modifying y\ coordinates).
 
 
 Segments and Edges
@@ -53,9 +139,13 @@ Segments and Edges
 A glyph consists of one or more *contours* (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
+TODO: Image
+
 A *segment* is a series of consecutive points of a contour (including its
 Bézier control points) that are approximately aligned along a coordinate
 axis.
+
+TODO: Image
 
 An *edge* corresponds to a single coordinate value on the main dimension
 that collects one or more segments (allowing for a small threshold).  While
@@ -98,6 +188,8 @@ The auto-hinter analyzes a font in two steps.
 Blue Zones
 ----------
 
+TODO: Image
+
 Outlines of certain characters are used to determine *blue zones*.  This
 concept is the same as with Type\ 1 fonts: All glyph points which lie in
 certain small horizontal zones get aligned vertically.
@@ -123,9 +215,14 @@ option](#x-heights).
 Grid Fitting
 ------------
 
+TODO: Image
+
+Aligning outlines along the grid lines is called *grid fitting*.  It doesn't
+necessarily mean that the outlines are positioned *exactly* on the grid,
+however, especially if you want a smooth appearance at different sizes.
 This is the central routine of the auto-hinter; its actions are highly
 dependent on the used script.  Currently, only support for scripts which
-work similarly to Latin (i.e. Greek and Cyrillic) is available.
+work similarly to Latin (i.e.  Greek and Cyrillic) is available.
 
   * Align edges linked to blue zones.
 
@@ -144,8 +241,8 @@ work similarly to Latin (i.e. Greek and Cyrillic) is available.
 Hint Sets
 ---------
 
-A *hint set* is the *optimal* configuration for a given PPEM (pixel per EM)
-value.  However, it can also hint larger and smaller values.
+In ttfautohint terminology, a *hint set* is the *optimal* configuration for
+a given PPEM (pixel per EM) value.
 
 Internally, ttfautohint creates hint sets for every PPEM value in the range
 given by the `--hinting-range-min` and `--hinting-range-max` options (this
@@ -168,13 +265,38 @@ Consider, for example, this glyph:
 ```
 
 For small PPEM values, the horizontal segments with vertical coordinates y1
-and y2 get unified to one edge, being positioned on one horizontal line.
+and y2 get unified to one edge, being positioned on a single horizontal
+line:
+
+```{.ditaa name="hintset"}
+
+    +--+  +--+  +--+
+    |  |  |  |  |  |
+    |  |  |  |  |  |
+    |  +--+  +--+  |  --> y1 = y2
+    |              |
+    |              |
+    +--------------+
+
+```
+
 Starting with a certain (larger) PPEM value, this no longer happens:
 ttfautohint uses two edges and emits a new hint set to accomodate this
-situation.
+situation.  Note that aligning edges is only a part of the possible
+parameters which form a hint set.
 
 Obviously, the more hint sets get emitted, the larger the bytecode
-ttfautohint adds to the output font.
+ttfautohint adds to the output font.  To find a good value\ *n* for
+`--hinting-range-max`, some experimentation is necessary since *n* depends
+on the glyph shapes in the input font.  If the value is too low, the hint
+set created for the PPEM value\ *n* (this hint set gets used for all larger
+PPEM values) might distort the outlines too much in the PPEM range given
+by\ *n* and the value set by `--hinting-limit` (at which hinting gets
+switched off).  If the value is too high, the font size increases due to
+more hint sets without any noticeable hinting effects.
+
+Similar arguments hold for `--hinting-range-min` except that there is no
+lower limit at which hinting is switched off.
 
 
 The '\.ttfautohint' Glyph
@@ -191,10 +313,10 @@ final bytecode of the composite gets executed.
 
 The trick used by ttfautohint is to prepend a composite element called
 '\.ttfautohint', a dummy glyph with a single point, and which has a single
-job: Its bytecode increases a CVT register (called `cvtl_is_subglyph` in the
-source code), indicating that we are within a composite glyph.  The final
-bytecode of the composite glyph eventually decrements the CVT register
-again.
+job: Its bytecode increases a variable (to be more precise, it is a CVT
+register called `cvtl_is_subglyph` in the source code), indicating that we
+are within a composite glyph.  The final bytecode of the composite glyph
+eventually decrements this variable again.
 
 As an example, let's consider composite glyph 'Agrave' ('À') which has the
 subglyph 'A' as the base and 'grave' as its accent.  After processing with
@@ -209,17 +331,18 @@ ttfautohint it consists of three subglyphs: '\.ttfautohint', 'A', and
   Agrave         decrease `cvtl_is_subglyph` (now: 0)\
                  apply hints because `cvtl_is_subglyph` == 0
 
-All glyph point indices get adjusted since each '\.ttfautohint' subglyph
-shifts all following indices by one.  This must be done for both the
-bytecode and one subformat of `GPOS` anchor tables.
+Some technical details (which you might skip): All glyph point indices get
+adjusted since each '\.ttfautohint' subglyph shifts all following indices by
+one.  This must be done for both the bytecode and one subformat of
+OpenType's `GPOS` anchor tables.
 
 While this approach works fine on all tested platforms, there is one single
 drawback: Direct rendering of the '\.ttfautohint' subglyph (this is,
 rendering as a stand-alone glyph) disables proper hinting of all glyphs in
 the font!  Under normal circumstances this never happens because
-'\.ttfautohint' doesn't have an entry in the font's `cmap` table.  However,
+'\.ttfautohint' doesn't have an entry in the font's `cmap` table.  (However,
 some test and demo programs like FreeType's `ftview` application or other
-glyph viewers which are able to bypass the `cmap` table might be affected.
+glyph viewers which are able to bypass the `cmap` table might be affected.)
 
 
 Scripts
@@ -267,6 +390,10 @@ hinted (or rather, it gets hinted by the 'dummy' auto-hinting module which
 essentially does nothing).  This can be changed by specifying a *fallback
 script* with option `--latin-fallback`.
 
+It is planned to extend ttfautohint so that the `GSUB` OpenType table gets
+analyzed, mapping character codes to all glyph indices which can be reached
+by switching on or off various OpenType features.
+
 
 SFNT Tables
 -----------
@@ -284,7 +411,7 @@ font.
   * `gasp`: Replaced with new, quite generic data.
 
   * `DSIG`: Replaced with a dummy version.  ttfautohint can't digitally sign
-    a font.
+    a font; you have to do that afterwards.
 
   * `name`: The 'version' entries are modified to add information about the
     parameters which have been used for calling ttfautohint.  This can be
@@ -301,13 +428,15 @@ font.
     ttfautohint removes.  A font editor might recompute the necessary data
     later on.
 
+Note that OpenType fonts with a `CFF` table are not supported.
+
 
 Problems
 --------
 
 Diagonals.
 
-TODO.
+TODO
 
 
 
@@ -349,8 +478,9 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
 `--hinting-limit=`*n*, `-G`\ *n*
 :   The *hinting limit* is the PPEM value (in pixels) where hinting gets
-    switched off completely (using the `INSTCTRL` bytecode instruction); it
-    has zero impact on the file size.  The default value for *n* is 200.
+    switched off (using the `INSTCTRL` bytecode instruction); it has zero
+    impact on the file size.  The default value for *n* is 200 which means
+    that the font is not hinted for PPEM values larger than 200.
 
     Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
     uses the hinting configuration for 'hinting-range-max'.
@@ -366,7 +496,8 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 :   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
     slight preference for rounding up.  If this flag is set, values are much
     more often rounded up.  Use this flag to increase the legibility of
-    small sizes if necessary.
+    small sizes if necessary; you might get weird rendering results
+    otherwise for glyphs like 'a' or 'e', depending on the font design.
 
 ### Fallback Script
 
@@ -398,9 +529,9 @@ acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 `--symbol`, `-s`
 :   Use default values for standard stem width and height instead of
     deriving them from latin character 'o'.  Use this option (usually in
-    combination with option `--latin-fallback`) to hint symbol fonts, for
-    example, which lack character 'o', at the expense of possibly poor
-    hinting results at small sizes.
+    combination with option `--latin-fallback`) to hint symbol fonts or math
+    glyphs, for example, which lack character 'o', at the expense of
+    possibly poor hinting results at small sizes.
 
 ### Font License Restrictions
 
