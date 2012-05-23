@@ -15,6 +15,7 @@
 -->
 
 
+
 Introduction
 ============
 
@@ -117,6 +118,142 @@ Work is now underway to improve quality of older Windows 'GDI' rendering.
 
 The goal of the project is to generate a 'first pass' of hinting that font
 developers can refine further for ultimate quality.
+
+
+
+`ttfautohint` and `ttfautohintGUI`
+==================================
+
+On all supported platforms (GNU/Linux, Windows, and Mac OS\ X), the GUI
+looks quite similar; the used toolkit is [Qt], which in turn uses the
+platform's native widgets.
+
+![`ttfautohintGUI` on GNU/Linux running KDE](img/ttfautohintGUI.png)
+
+Both the GUI and console version share the same features, to be discussed in
+the next subsection.
+
+
+Options
+-------
+
+`ttfautohintGUI` doesn't send any output to a console; however, it accepts
+the same command line options as `ttfautohint`, setting default values for
+the GUI.
+
+Long options can be given with one or two dashes, and with and without equal
+sign between option and argument.  This means that the following forms are
+acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
+
+More details on the meaning of the various options are given in the [next
+section](#background).
+
+### Hint Set Ranges
+
+`--hinting-range-min=`*n*, `-l`\ *n*
+:   The minimum PPEM value (in pixels) at which hint sets are created.  The
+    default value for *n* is\ 8.
+
+`--hinting-range-max=`*n*, `-r`\ *n*
+:   The maximum PPEM value (in pixels) at which hint sets are created.  The
+    default value for *n* is 50.
+
+### Hinting Limit
+
+`--hinting-limit=`*n*, `-G`\ *n*
+:   The *hinting limit* is the PPEM value (in pixels) where hinting gets
+    switched off (using the `INSTCTRL` bytecode instruction); it has zero
+    impact on the file size.  The default value for *n* is 200 which means
+    that the font is not hinted for PPEM values larger than 200.
+
+    Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
+    uses the hinting configuration for 'hinting-range-max'.
+
+    To omit a hinting limit, use `--hinting-limit=0` (or check the 'No
+    Hinting Limit' box in the GUI).  Since this will cause internal math
+    overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
+    is strongly recommended to not use this except for testing purposes.
+
+### x Heights
+
+`--increase-x-height`, `-x`
+:   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
+    slight preference for rounding up.  If this flag is set, values are much
+    more often rounded up.  Use this flag to increase the legibility of
+    small sizes if necessary; you might get weird rendering results
+    otherwise for glyphs like 'a' or 'e', depending on the font design.
+
+### Fallback Script
+
+`--latin-fallback`, `-f`
+:   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
+    module instead of 'none' for all glyphs which can't be assigned to a
+    script.  See [above](#scripts) for more details.
+
+### Pre-Hinting
+
+`--pre-hinting`, `-p`
+:   *Pre-hinting* means that a font's original bytecode is applied to all
+    glyphs before it is replaced with bytecode created by ttfautohint.
+    This makes only sense if your font already has some hints in it which
+    modify the shape even at EM size (normally 2048px); for example, some
+    CJK fonts need this because the bytecode is used to scale and shift
+    subglyphs.  For most fonts, however, this is not the case.
+
+### ttfautohint Info
+
+`--no-info`, `-n`
+:   Don't add ttfautohint version and command line information to the
+    version string or strings (with name ID\ 5) in the font's `name` table.
+    In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
+    information is not added to the `name` table.
+
+### Symbol Fonts
+
+`--symbol`, `-s`
+:   Use default values for standard stem width and height instead of
+    deriving them from latin character 'o'.  Use this option (usually in
+    combination with option `--latin-fallback`) to hint symbol fonts or math
+    glyphs, for example, which lack character 'o', at the expense of
+    possibly poor hinting results at small sizes.
+
+### Font License Restrictions
+
+`--ignore-restrictions`, `-i`
+:   By default, fonts which have bit\ 1 set in the 'fsType' field of the
+    `OS/2` table are rejected.  If you have a permission of the font's legal
+    owner to modify the font, specify this command line option.
+
+    If this option is not set, `ttfautohintGUI` shows a dialogue to handle
+    such fonts if necessary.
+
+### Miscellaneous
+
+`--help`, `-h`
+:   On the console, print a brief documentation on standard output and exit.
+    This doesn't work with `ttfautohintGUI` on MS Windows.
+
+`--version`, `-v`
+:   On the console, print version information on standard output and exit.
+    This doesn't work with `ttfautohintGUI` on MS Windows.
+
+
+
+Samples
+=======
+
+
+Roboto
+------
+
+TODO
+
+
+Ubuntu
+------
+
+TODO
+
 
 
 Background
@@ -435,138 +572,6 @@ Problems
 --------
 
 Diagonals.
-
-TODO
-
-
-
-`ttfautohint` and `ttfautohintGUI`
-==================================
-
-On all supported platforms (GNU/Linux, Windows, and Mac OS\ X), the GUI
-looks quite similar; the used toolkit is [Qt], which in turn uses the
-platform's native widgets.
-
-![`ttfautohintGUI` on GNU/Linux running KDE](img/ttfautohintGUI.png)
-
-Both the GUI and console version share the same features, to be discussed in
-the next subsection.
-
-
-Options
--------
-
-`ttfautohintGUI` doesn't send any output to a console; however, it accepts
-the same command line options as `ttfautohint`, setting default values for
-the GUI.
-
-Long options can be given with one or two dashes, and with and without equal
-sign between option and argument.  This means that the following forms are
-acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
-
-### Hint Set Ranges
-
-`--hinting-range-min=`*n*, `-l`\ *n*
-:   The minimum PPEM value (in pixels) at which hint sets are created.  The
-    default value for *n* is\ 8.
-
-`--hinting-range-max=`*n*, `-r`\ *n*
-:   The maximum PPEM value (in pixels) at which hint sets are created.  The
-    default value for *n* is 50.
-
-### Hinting Limit
-
-`--hinting-limit=`*n*, `-G`\ *n*
-:   The *hinting limit* is the PPEM value (in pixels) where hinting gets
-    switched off (using the `INSTCTRL` bytecode instruction); it has zero
-    impact on the file size.  The default value for *n* is 200 which means
-    that the font is not hinted for PPEM values larger than 200.
-
-    Note that hinting in the range 'hinting-range-max' up to 'hinting-limit'
-    uses the hinting configuration for 'hinting-range-max'.
-
-    To omit a hinting limit, use `--hinting-limit=0` (or check the 'No
-    Hinting Limit' box in the GUI).  Since this will cause internal math
-    overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
-    is strongly recommended to not use this except for testing purposes.
-
-### x Heights
-
-`--increase-x-height`, `-x`
-:   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
-    slight preference for rounding up.  If this flag is set, values are much
-    more often rounded up.  Use this flag to increase the legibility of
-    small sizes if necessary; you might get weird rendering results
-    otherwise for glyphs like 'a' or 'e', depending on the font design.
-
-### Fallback Script
-
-`--latin-fallback`, `-f`
-:   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
-    module instead of 'none' for all glyphs which can't be assigned to a
-    script.  See [above](#scripts) for more details.
-
-### Pre-Hinting
-
-`--pre-hinting`, `-p`
-:   *Pre-hinting* means that a font's original bytecode is applied to all
-    glyphs before it is replaced with bytecode created by ttfautohint.
-    This makes only sense if your font already has some hints in it which
-    modify the shape even at EM size (normally 2048px); for example, some
-    CJK fonts need this because the bytecode is used to scale and shift
-    subglyphs.  For most fonts, however, this is not the case.
-
-### ttfautohint Info
-
-`--no-info`, `-n`
-:   Don't add ttfautohint version and command line information to the
-    version string or strings (with name ID\ 5) in the font's `name` table.
-    In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
-    information is not added to the `name` table.
-
-### Symbol Fonts
-
-`--symbol`, `-s`
-:   Use default values for standard stem width and height instead of
-    deriving them from latin character 'o'.  Use this option (usually in
-    combination with option `--latin-fallback`) to hint symbol fonts or math
-    glyphs, for example, which lack character 'o', at the expense of
-    possibly poor hinting results at small sizes.
-
-### Font License Restrictions
-
-`--ignore-restrictions`, `-i`
-:   By default, fonts which have bit\ 1 set in the 'fsType' field of the
-    `OS/2` table are rejected.  If you have a permission of the font's legal
-    owner to modify the font, specify this command line option.
-
-    If this option is not set, `ttfautohintGUI` shows a dialogue to handle
-    such fonts if necessary.
-
-### Miscellaneous
-
-`--help`, `-h`
-:   On the console, print a brief documentation on standard output and exit.
-    This doesn't work with `ttfautohintGUI` on MS Windows.
-
-`--version`, `-v`
-:   On the console, print version information on standard output and exit.
-    This doesn't work with `ttfautohintGUI` on MS Windows.
-
-
-
-Samples
-=======
-
-
-Roboto
-------
-
-TODO
-
-
-Ubuntu
-------
 
 TODO
 
