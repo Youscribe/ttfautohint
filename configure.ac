@@ -55,8 +55,6 @@ AC_ARG_WITH([doc],
             [],
             [with_doc=yes])
 
-AM_CONDITIONAL([WITH_DOC], [test x"$with_doc" != x"no"])
-
 AC_ARG_WITH([freetype-config],
             [AS_HELP_STRING([--with-freetype-config=PROG],
                             [use FreeType configuration program PROG])],
@@ -152,45 +150,51 @@ else
   HELP2MAN=:
 fi
 
-# The documentation is part of the distributed bundle.  In the following, we
-# test for the documentation building tools in case those files are missing
-# (which can happen during bootstrap).
+# The documentation is part of the distributed bundle.  In the following,
+# tests for the documentation building tools are made fatal in case those
+# files are missing (which can happen during bootstrap).
+
+AC_DEFUN([TA_DOC],
+  [if test -f "$1"; then
+     AC_MSG_WARN([$2])
+     with_doc=no
+   else
+     AC_MSG_ERROR([$2])
+   fi])
 
 image_file=$srcdir/doc/img/ttfautohintGUI.png
 html_file=$srcdir/doc/ttfautohint.html
 pdf_file=$srcdir/doc/ttfautohint.pdf
 
 if test x"$with_doc" != x"no"; then
-  AC_PROG_SED
-
   # snapshot image creation
-  if test ! -f $image_file; then
-    if test x"$DISPLAY" == x; then
-      AC_MSG_ERROR([Need X11 to create snapshot image of ttfautohintGUI])
-    else
-      AC_CHECK_PROG([IMPORT], [import], [import], [no])
-      if test x"$IMPORT" == x"no"; then
-        AC_MSG_ERROR([Need ImageMagick to create snapshot image of ttfautohintGUI])
-      fi
+  if test x"$DISPLAY" == x; then
+    TA_DOC([$image_file],
+           [Need X11 to create snapshot image of ttfautohintGUI])
+  else
+    AC_CHECK_PROG([IMPORT], [import], [import], [no])
+    if test x"$IMPORT" == x"no"; then
+      TA_DOC([$image_file],
+             [Need ImageMagick to create snapshot image of ttfautohintGUI])
     fi
   fi
 
   # documentation creation
-  if test ! -f $html_file -o ! -f $pdf_file; then
-    AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
-    if test x"$PANDOC" == x"no"; then
-      AC_MSG_ERROR([Need pandoc to create PDF and HTML documentation files])
-    fi
+  AC_CHECK_PROG([PANDOC], [pandoc], [pandoc], [no])
+  if test x"$PANDOC" == x"no"; then
+    TA_DOC([$html_file],
+           [Need pandoc to create PDF and HTML documentation files])
   fi
 
   # PDF documentation
-  if test ! -f $pdf_file; then
-    AC_CHECK_PROG([PDFLATEX], [pdflatex], [pdflatex], [no])
-    if test x"$PDFLATEX" == x"no"; then
-      AC_MSG_ERROR([Need pdflatex to create documentation in PDF format])
-    fi
+  AC_CHECK_PROG([PDFLATEX], [pdflatex], [pdflatex], [no])
+  if test x"$PDFLATEX" == x"no"; then
+    TA_DOC([$pdf_file],
+           [Need pdflatex to create documentation in PDF format])
   fi
 fi
+
+AM_CONDITIONAL([WITH_DOC], [test x"$with_doc" != x"no"])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile

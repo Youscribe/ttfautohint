@@ -30,28 +30,43 @@ endif
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
-# build snapshot image of ttfautohintGUI:
-# this needs X11 and ImageMagick's `import' tool
-# (in the `make-snaphshot.sh' script)
-img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
-                        $(top_srcdir)/configure.ac
-	cd $(top_builddir)/frontend \
-	  && $(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
-	-mkdir img 2> /dev/null
-	$(SHELL) $(srcdir)/make-snapshot.sh \
-	           $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
+if WITH_DOC
+  # build snapshot image of ttfautohintGUI:
+  # this needs X11 and ImageMagick's `import' tool
+  # (in the `make-snaphshot.sh' script)
+  img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
+                          $(top_srcdir)/configure.ac
+	  cd $(top_builddir)/frontend \
+	    && $(MAKE) $(AM_MAKEFLAGS) ttfautohintGUI$(EXEEXT)
+	  -mkdir img 2> /dev/null
+	  $(SHELL) $(srcdir)/make-snapshot.sh \
+	             $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
-ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
-	$(PANDOC) --template=template.html \
-	          --toc \
-	          --include-in-header=ttfautohint.css \
-	          --smart \
-	          --standalone \
-	          --output=$@ \
-	          $(DOCSRC)
+  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
+	  $(PANDOC) --template=template.html \
+	            --toc \
+	            --include-in-header=ttfautohint.css \
+	            --smart \
+	            --standalone \
+	            --output=$@ \
+	            $(DOCSRC)
 
-# XXX write template
-ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
-	$(PANDOC) --latex-engine=$(PDFLATEX) --toc -S -s -o $@ $(DOCSRC)
+  # XXX write template
+  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
+	  $(PANDOC) --latex-engine=$(PDFLATEX) --toc -S -s -o $@ $(DOCSRC)
+else
+  img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
+                          $(top_srcdir)/configure.ac
+	  @echo 1>&2 "warning: can't generate \`$@'"
+	  @echo 1>&2 "         please install ImageMagick's \`import' tool and reconfigure"
+
+  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
+	  @echo 1>&2 "warning: can't generate \`$@'"
+	  @echo 1>&2 "         pleasae install pandoc and reconfigure"
+
+  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
+	  @echo 1>&2 "warning: can't generate \`$@'"
+	  @echo 1>&2 "         please install pdftex and pandoc, then reconfigure"
+endif
 
 # end of Makefile.am
