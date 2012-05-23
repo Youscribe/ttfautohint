@@ -42,7 +42,8 @@ if WITH_DOC
 	  $(SHELL) $(srcdir)/make-snapshot.sh \
 	             $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
-  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
+  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) \
+                    ttfautohint.css template.html $(top_srcdir)/.version
 	  $(PANDOC) --template=template.html \
 	            --variable="version:$(VERSION)" \
 	            --toc \
@@ -53,7 +54,7 @@ if WITH_DOC
 	            $(DOCSRC)
 
   # XXX write template
-  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
+  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES) $(top_srcdir)/.version
 	  $(PANDOC) --latex-engine=$(PDFLATEX) --toc -S -s -o $@ $(DOCSRC)
 else
   img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
@@ -61,11 +62,12 @@ else
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         please install ImageMagick's \`import' tool and reconfigure"
 
-  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
+  ttfautohint.html: $(DOCSRC) $(DOCIMAGES) \
+                    ttfautohint.css template.html $(top_srcdir)/.version
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         pleasae install pandoc and reconfigure"
 
-  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES)
+  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES) $(top_srcdir)/.version
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         please install pdftex and pandoc, then reconfigure"
 endif
