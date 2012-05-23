@@ -44,6 +44,7 @@ if WITH_DOC
 
   ttfautohint.html: $(DOCSRC) $(DOCIMAGES) ttfautohint.css template.html
 	  $(PANDOC) --template=template.html \
+	            --variable="version:$(VERSION)" \
 	            --toc \
 	            --include-in-header=ttfautohint.css \
 	            --smart \
