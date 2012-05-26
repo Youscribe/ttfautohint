@@ -26,7 +26,7 @@ autohinting module.  The idea is to provide the excellent quality of the
 autohinter on platforms which don't use FreeType.
 
 The library has a single API function, `TTF_autohint`, which is described
-[below](#ttf_autohint).
+[below](#function-ttf_autohint).
 
 Bundled with the library there are two front-end programs, [`ttfautohint`
 and `ttfautohintGUI`](#ttfautohint-and-ttfautohintgui), being a command line
@@ -40,7 +40,10 @@ To cite [Wikipedia](http://en.wikipedia.org/wiki/Font_hinting):
 
 > *Font hinting* (also known as *instructing*) is the use of mathematical
 > instructions to adjust the display of an outline font so that it lines up
-> with a rasterized grid.
+> with a rasterized grid.  At low screen resolutions, hinting is critical
+> for producing a clear, legible text.  It can be accompanied by
+> antialiasing and (on liquid crystal displays) subpixel rendering for
+> further clarity.
 
 and Apple's [TrueType Reference
 Manual](https://developer.apple.com/fonts/TTRefMan/RM03/Chap3.html#features):
@@ -52,9 +55,18 @@ Manual](https://developer.apple.com/fonts/TTRefMan/RM03/Chap3.html#features):
 >
 >  - At large sizes, the subtlety of the original design should emerge.
 
+
 In general, there are three possibilities how to hint a glyph.
 
- 1. The font contains exact instructions (also called *bytecode*) how to
+ 1. The font contains hints (in the original sense of this word) to guide
+    the rasterizer, telling it which shapes of the glyphs need special
+    consideration.  The hinting logic is partly in the font and partly in
+    the rasterizer.  More sophisticated rasterizers are able to produce
+    better rendering results.
+
+    This is how Type\ 1 and CFF font hints work.
+
+ 2. The font contains exact instructions (also called *bytecode*) how to
     move the points of its outlines, depending on the resolution of the
     output device, and which intentionally distort the (outline) shape to
     produce a well-rasterized result.  The hinting logic is in the font;
@@ -63,21 +75,13 @@ In general, there are three possibilities how to hint a glyph.
 
     This is how TrueType hints work.
 
- 2. The font contains hints (in the original sense of this word) to guide
-    the rasterizer, telling it which shapes of the glyphs need special
-    consideration.  The hinting logic is partly in the font and partly in
-    the rasterizer.  More sophisticated rasterizers are able to produce
-    better rendering results.
-
-    This is how Type\ 1 and CFF font hints work.
-
  3. The font gets auto-hinted (at run-time).  The hinting logic is
     completely in the rasterizer.  No hints in the font are used or needed;
     instead, the rasterizer scans and analyzes the glyphs to apply
     corrections by itself.
 
-    This is how FreeType's auto-hinter works (see [below](#background) for
-    more).
+    This is how FreeType's auto-hinter works; see
+    [below](#background-and-technical-details) for more.
 
 
 What problems can arise with TrueType hinting?
@@ -90,6 +94,21 @@ hints is far more difficult.  There are at least two reasons:
   - TrueType instructions form a programming language, operating at a very
     low level.  They are comparable to assembler code, thus lacking all
     high-level concepts to make programming more comfortable.
+
+    Here an example how such code looks like:
+
+    ```
+        SVTCA[0]
+        PUSHB[ ]  /* 3 values pushed */
+        18 1 0
+        CALL[ ]
+        PUSHB[ ]  /* 2 values pushed */
+        15 4
+        MIRP[01001]
+        PUSHB[ ]  /* 3 values pushed */
+        7 3 0
+        CALL[ ]
+    ```
 
     Another major obstacle is the fact that font designers usually aren't
     programmers.
@@ -107,8 +126,13 @@ to platforms which don't use FreeType, yet require hinting for text to look
 good -- like Microsoft Windows.  Roughly speaking, it converts the glyph
 analysis done by FreeType's auto-hinting module to TrueType bytecode.
 Internally, the auto-hinter's algorithm resembles PostScript hinting
-methods; it thus combines all three hinting methods discussed in a [previous
-subsection](#what-exactly-are-hints).
+methods; it thus combines all three hinting methods discussed
+[previously](#what-exactly-are-hints).
+
+The simple interface of the front-ends (both on the command line and with
+the GUI) allows quick hinting of a whole font with a few mouse clicks or a
+single command on the prompt.  As a result, you get better rendering results
+with web browsers, for example.
 
 Across Windows rendering environments today, fonts processed with
 ttfautohint look best with DirectWrite ClearType enabled.  This is the
@@ -145,8 +169,12 @@ Long options can be given with one or two dashes, and with and without equal
 sign between option and argument.  This means that the following forms are
 acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
 
-More details on the meaning of the various options are given in the [next
-section](#background).
+Below, the section title gives the command's label in the GUI, then comes
+the name of the corresponding long command line option and its short
+equivalent, followed by a description.
+
+Background and technical details on the meaning of the various options are
+given [afterwards](#background-and-technical-details).
 
 ### Hint Set Ranges
 
@@ -206,16 +234,17 @@ section](#background).
 :   Don't add ttfautohint version and command line information to the
     version string or strings (with name ID\ 5) in the font's `name` table.
     In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
-    information is not added to the `name` table.
+    information is not added to the `name` table.  Except for testing and
+    development purposes it is strongly recommended to not use this option.
 
 ### Symbol Fonts
 
 `--symbol`, `-s`
 :   Use default values for standard stem width and height instead of
     deriving them from latin character 'o'.  Use this option (usually in
-    combination with option `--latin-fallback`) to hint symbol fonts or math
-    glyphs, for example, which lack character 'o', at the expense of
-    possibly poor hinting results at small sizes.
+    combination with option `--latin-fallback`) to hint symbol or dingbat
+    fonts or math glyphs, for example, which lack character 'o', at the
+    expense of possibly poor hinting results at small sizes.
 
 ### Font License Restrictions
 
@@ -256,8 +285,8 @@ TODO
 
 
 
-Background
-==========
+Background and Technical Details
+================================
 
 [Real-Time Grid Fitting of Typographic
 Outlines](http://www.tug.org/TUGboat/tb24-3/lemberg.pdf) is a scholarly
@@ -536,7 +565,10 @@ SFNT Tables
 -----------
 
 ttfautohint touches almost all SFNT tables within a TrueType or OpenType
-font.
+font.  Note that only OpenType fonts with TrueType outlines are supported. 
+OpenType fonts with a `CFF` table (this is, with PostScript outlines) won't
+work.
+
 
   * `glyf`: One glyph gets added (namely the '\.ttfautohint' glyph); all
     composites get an additional component; all hints in the table are
@@ -565,7 +597,6 @@ font.
     ttfautohint removes.  A font editor might recompute the necessary data
     later on.
 
-Note that OpenType fonts with a `CFF` table are not supported.
 
 
 Problems

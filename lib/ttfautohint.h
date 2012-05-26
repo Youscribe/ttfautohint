@@ -76,8 +76,8 @@ typedef int TA_Error;
 
 
 /*
- * `TA_Progress_Func`
- * ------------------
+ * Callback: `TA_Progress_Func`
+ * ----------------------------
  *
  * A callback function to get progress information.  *curr_idx* gives the
  * currently processed glyph index; if it is negative, an error has
@@ -111,8 +111,8 @@ typedef int
 
 
 /*
- * `TA_Info_Func`
- * --------------
+ * Callback: `TA_Info_Func`
+ * ------------------------
  *
  * A callback function to manipulate strings in the `name` table.
  * *platform_id*, *encoding_id*, *language_id*, and *name_id* are the
@@ -164,8 +164,8 @@ typedef int
 /* pandoc-start */
 
 /*
- * `TTF_autohint`
- * --------------
+ * Function: `TTF_autohint`
+ * ------------------------
  *
  * Read a TrueType font, remove existing bytecode (in the SFNT tables
  * `prep`, `fpgm`, `cvt `, and `glyf`), and write a new TrueType font with
@@ -207,10 +207,10 @@ typedef int
  *     output buffer.  Needs `out-buffer`.
  *
  * `progress-callback`
- * :   A pointer of type [`TA_Progress_Func`](#ta_progress_func), specifying
- *     a callback function for progress reports.  This function gets called
- *     after a single glyph has been processed.  If this field is not set or
- *     set to NULL, no progress callback function is used.
+ * :   A pointer of type [`TA_Progress_Func`](#callback-ta_progress_func),
+ *     specifying a callback function for progress reports.  This function
+ *     gets called after a single glyph has been processed.  If this field
+ *     is not set or set to NULL, no progress callback function is used.
  *
  * `progress-callback-data`
  * :   A pointer of type `void*` to user data which is passed to the
@@ -248,10 +248,10 @@ typedef int
  *     independently of the output resolution.
  *
  * `info-callback`
- * :   A pointer of type [`TA_Info_Func`](#ta_info_func), specifying a
- *     callback function for manipulating the `name` table.  This function
- *     gets called for each `name` table entry.  If not set or set to NULL,
- *     the table data stays unmodified.
+ * :   A pointer of type [`TA_Info_Func`](#callback-ta_info_func),
+ *     specifying a callback function for manipulating the `name` table. 
+ *     This function gets called for each `name` table entry.  If not set or
+ *     set to NULL, the table data stays unmodified.
  *
  * `info-callback-data`
  * :   A pointer of type `void*` to user data which is passed to the info

@@ -11,17 +11,13 @@
 -->
 
 
-Compilation
-===========
+
+Compilation and Installation
+============================
 
 Please read the files `INSTALL` and `INSTALL.git` (part of the source code
 bundle) for instructions how to compile the ttfautohint library together
 with its front-ends.
-
-
-
-Installation
-============
 
 TODO
 
