@@ -24,6 +24,7 @@ if WITH_DOC
   nobase_dist_doc_DATA = $(DOCSRC) \
                          ttfautohint.css \
                          template.html \
+                         template.tex \
                          $(DOCGEN)
 endif
 
@@ -54,8 +55,16 @@ if WITH_DOC
 	            $(DOCSRC)
 
   # XXX write template
-  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES) $(top_srcdir)/.version
-	  $(PANDOC) --latex-engine=$(PDFLATEX) --toc -S -s -o $@ $(DOCSRC)
+  ttfautohint.pdf: $(DOCSRC) $(DOCIMAGES) \
+                   template.tex $(top_srcdir)/.version
+	  $(PANDOC) --latex-engine=$(PDFLATEX) \
+	            --template=template.tex \
+	            --variable="version:$(VERSION)" \
+	            --toc \
+	            --smart \
+	            --standalone \
+	            --output=$@ \
+	            $(DOCSRC)
 else
   img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
                           $(top_srcdir)/configure.ac
