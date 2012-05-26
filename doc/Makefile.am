@@ -60,6 +60,7 @@ if WITH_DOC
 	  $(PANDOC) --latex-engine=$(PDFLATEX) \
 	            --template=template.tex \
 	            --variable="version:$(VERSION)" \
+	            --number-sections \
 	            --toc \
 	            --smart \
 	            --standalone \

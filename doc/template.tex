@@ -67,6 +67,34 @@ $endif$
 \fi
 \hypersetup{breaklinks=true, pdfborder={0 0 0}}
 
+% We want the names `section 2', `subsection 4.1', and the like in local
+% links, omitting the original link text.  To do that, we redefine \href.
+\makeatletter
+
+\let\original@href\href
+% Check whether the first token is \#.  If yes, call \autoref, otherwise the
+% original \href.  \@nil is a delimiter token which we need because we call
+% the arguments in \modified@href without braces.
+\def\href#1{%
+  \modified@href #1\@nil}
+\def\modified@href#1#2\@nil{%
+  \ifx #1\#%
+    \expandafter\almost@autoref
+  \else
+    \expandafter\almost@original@href
+  \fi
+  {#1}{#2}}
+% We normalize \_ in the reference (#2), which we put it into parentheses
+% after the label (#3).  Argument #1 holds \# which we skip.
+\def\almost@autoref#1#2#3{%
+  #3 (\hyper@normalise\autoref{#2})}
+% For a non-local link, unify the split off first character with the
+% remaining part of the link.
+\def\almost@original@href#1#2{%
+  \original@href{#1#2}}
+
+\makeatother
+
 $if(subscript)$
 \newcommand{\textsubscr}[1]{\ensuremath{_{\scriptsize\textrm{#1}}}}
 $endif$
