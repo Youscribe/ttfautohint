@@ -72,11 +72,16 @@ $endif$
 \makeatletter
 
 \let\original@href\href
-% Check whether the first token is \#.  If yes, call \autoref, otherwise the
-% original \href.  \@nil is a delimiter token which we need because we call
-% the arguments in \modified@href without braces.
+
+% Here is the new \href wrapper.  We check whether the first token is \#.
+% If yes, we call \autoref, otherwise the original \href macro.  \@nil is a
+% delimiter token which we need, because we call the arguments in
+% \modified@href without braces so that we can split off the first token.
 \def\href#1{%
   \modified@href #1\@nil}
+
+% Using \expandafter makes TeX finish the \if clause before one of the
+% \almost@xxx macros picks up the arguments.
 \def\modified@href#1#2\@nil{%
   \ifx #1\#%
     \expandafter\almost@autoref
@@ -84,10 +89,13 @@ $endif$
     \expandafter\almost@original@href
   \fi
   {#1}{#2}}
-% We normalize \_ in the reference (#2), which we put it into parentheses
-% after the label (#3).  Argument #1 holds \# which we skip.
+
+% We normalize \_ in the reference (argument #2), which we put into
+% parentheses after the label (argument #3).  Argument #1 holds \# which we
+% skip.
 \def\almost@autoref#1#2#3{%
   #3 (\hyper@normalise\autoref{#2})}
+
 % For a non-local link, unify the split off first character with the
 % remaining part of the link.
 \def\almost@original@href#1#2{%
