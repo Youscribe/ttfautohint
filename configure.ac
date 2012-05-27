@@ -163,6 +163,7 @@ AC_DEFUN([TA_DOC],
    fi])
 
 image_file=$srcdir/doc/img/ttfautohintGUI.png
+svg2png_file=$srcdir/doc/img/segment-edge.png
 html_file=$srcdir/doc/ttfautohint.html
 pdf_file=$srcdir/doc/ttfautohint.pdf
 
@@ -177,6 +178,13 @@ if test x"$with_doc" != x"no"; then
       TA_DOC([$image_file],
              [Need ImageMagick to create snapshot image of ttfautohintGUI])
     fi
+  fi
+
+  # conversion of SVG to PNG
+  AC_CHECK_PROG([INKSCAPE], [inkscape], [inkscape], [no])
+  if test x"$PANDOC" == x"no"; then
+    TA_DOC([$svg2png_file],
+           [Need inkscape to convert SVG to PNG image files])
   fi
 
   # documentation creation

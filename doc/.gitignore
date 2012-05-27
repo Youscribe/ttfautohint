@@ -1,7 +1,8 @@
 /.deps/
-/img/
 /Makefile
 /Makefile.in
 /ttfautohint.html
 /ttfautohint.pdf
 /ttfautohint-2.pandoc
+
+/img/*.png

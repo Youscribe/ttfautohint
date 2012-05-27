@@ -311,7 +311,11 @@ A *segment* is a series of consecutive points of a contour (including its
 Bézier control points) that are approximately aligned along a coordinate
 axis.
 
-TODO: Image
+![A serif.  Contour and control points are represented by squares and
+  circles, respectively.  The bottom 'line' DE is approximately aligned
+  along the horizontal axis, thus it forms a segment of 7\ points.  Together
+  with the two other horizontal segments, BC and FG, they form two edges
+  (BC+FG, DE).](img/segment-edge.png)
 
 An *edge* corresponds to a single coordinate value on the main dimension
 that collects one or more segments (allowing for a small threshold).  While

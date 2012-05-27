@@ -8,9 +8,17 @@ required when building from a release:
   autoconf (2.68)
   automake (1.11.1)
   git (1.5.5)
-  help2man (1.40.1)
   libtool (2.4.2)
+
+If you configure to build the documentation files also (which are normally
+distributed with the release package), the following is necessary:
+
+  help2man (1.40.1)
   pandoc (1.9.1.2)
+  inkscape (0.48.2)
+  X11
+  ImageMagick (6.7.4)
+  pdflatex (TeXLive 2011)
 
 The version numbers in parentheses are known to work.  Newer versions should
 work also.

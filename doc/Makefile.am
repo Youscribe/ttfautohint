@@ -14,7 +14,8 @@ DOCSRC = ttfautohint-1.pandoc \
          ttfautohint-2.pandoc \
          ttfautohint-3.pandoc
 
-DOCIMAGES = img/ttfautohintGUI.png
+DOCIMAGES = img/ttfautohintGUI.png \
+            img/segment-edge.png
 
 DOCGEN = ttfautohint.html \
          ttfautohint.pdf \
@@ -28,10 +29,17 @@ if WITH_DOC
                          $(DOCGEN)
 endif
 
+
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
 if WITH_DOC
+  # this is a temporary solution:
+  # the right one is to write a pandoc filter
+  # which uses `foo.svg' for HTML and `foo.pdf' for PDF output
+.svg.png:
+	  inkscape --export-background=white --export-png=$@ $<
+
   # build snapshot image of ttfautohintGUI:
   # this needs X11 and ImageMagick's `import' tool
   # (in the `make-snaphshot.sh' script)
@@ -67,6 +75,10 @@ if WITH_DOC
 	            --output=$@ \
 	            $(DOCSRC)
 else
+.svg.png:
+	  @echo 1>&2 "warning: can't generate \`$@'"
+	  @echo 1>&2 "         please install inkscape and reconfigure"
+
   img/ttfautohintGUI.png: $(top_srcdir)/frontend/maingui.cpp \
                           $(top_srcdir)/configure.ac
 	  @echo 1>&2 "warning: can't generate \`$@'"
