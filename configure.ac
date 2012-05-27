@@ -21,9 +21,13 @@ AC_CONFIG_MACRO_DIR([gnulib/m4
                      m4])
 AM_SILENT_RULES([yes])
 
+AC_USE_SYSTEM_EXTENSIONS
+
 AC_PROG_CPP
 AC_PROG_CC
 AC_PROG_CXX
+
+AM_PROG_AR
 
 gl_EARLY
 gl_INIT
