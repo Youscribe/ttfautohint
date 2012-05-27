@@ -38,7 +38,7 @@ if WITH_DOC
   # the right one is to write a pandoc filter
   # which uses `foo.svg' for HTML and `foo.pdf' for PDF output
 .svg.png:
-	  inkscape --export-background=white --export-png=$@ $<
+	  $(INKSCAPE) --export-background=white --export-png=$@ $<
 
   # build snapshot image of ttfautohintGUI:
   # this needs X11 and ImageMagick's `import' tool
