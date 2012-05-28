@@ -14,13 +14,15 @@ DOCSRC = ttfautohint-1.pandoc \
          ttfautohint-2.pandoc \
          ttfautohint-3.pandoc
 
-DOCIMGSRC = img/ttfautohintGUI.svg \
-            img/blue-zones.svg \
+DOCIMGSRC = img/blue-zones.svg \
             img/glyph-terms.svg \
             img/o-and-i.svg \
             img/segment-edge.svg
 
 DOCIMG = img/ttfautohintGUI.png \
+         img/a-before-hinting.png \
+         img/a-after-hinting.png \
+         img/a-after-autohinting.png \
          img/blue-zones.png \
          img/glyph-terms.png \
          img/o-and-i.png \

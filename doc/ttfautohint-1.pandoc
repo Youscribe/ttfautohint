@@ -390,8 +390,6 @@ option](#x-heights).
 Grid Fitting
 ------------
 
-TODO: Image
-
 Aligning outlines along the grid lines is called *grid fitting*.  It doesn't
 necessarily mean that the outlines are positioned *exactly* on the grid,
 however, especially if you want a smooth appearance at different sizes.
@@ -411,6 +409,18 @@ work similarly to Latin (i.e.  Greek and Cyrillic) is available.
 
   * Everything else (the 'weak' points) is handled with an `IUP`
     instruction.
+
+The following images illustrate the hinting process, using glyph 'a' from
+the freely available font '[Ubuntu Book](http://font.ubuntu.com)'.  The
+manual hints were added by [Dalton Maag Ltd], the used application to create
+the hinting debug snapshots was [FontForge].
+
+![Before hinting.](img/a-before-hinting.png)
+
+![After hinting, using manual hints.](img/a-after-hinting.png)
+
+![After hinting, using ttfautohint.  Note that the hinting process
+  doesn't change horizontal positions.](img/a-after-autohinting.png)
 
 
 Hint Sets
@@ -615,5 +625,6 @@ Diagonals.
 
 TODO
 
-
+[Dalton Maag Ltd]: http://daltonmaag.com
+[FontForge]: http://fontforge.sf.net
 [Qt]: http://qt-project.org
