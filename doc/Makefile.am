@@ -36,8 +36,6 @@ if WITH_DOC
   nobase_dist_doc_DATA = $(DOCIMGSRC) \
                          $(DOCSRC) \
                          ttfautohint.css \
-                         template.html \
-                         template.tex \
                          $(DOCGEN)
 endif
 
