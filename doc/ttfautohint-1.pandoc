@@ -305,7 +305,8 @@ Segments and Edges
 A glyph consists of one or more *contours* (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
-TODO: Image
+![The letter 'O' has two contours, an inner and an outer one, while letter
+  'I' has only an outer contour.](img/o-and-i.png)
 
 A *segment* is a series of consecutive points of a contour (including its
 Bézier control points) that are approximately aligned along a coordinate
@@ -358,7 +359,8 @@ The auto-hinter analyzes a font in two steps.
 Blue Zones
 ----------
 
-TODO: Image
+![Two blue zones relevant to the glyph 'a'.  Vertical point coordinates of
+  *all* glyphs within these zones are aligned.](img/blue-zones.png)
 
 Outlines of certain characters are used to determine *blue zones*.  This
 concept is the same as with Type\ 1 fonts: All glyph points which lie in
@@ -380,6 +382,9 @@ The 'round' characters (e.g. 'OCQS') from Zones 1, 2, and 5 are also used to
 control the overshoot handling; to improve rendering at small sizes, zone\ 4
 gets adjusted to be on the pixel grid; cf. the [`--increase-x-height`
 option](#x-heights).
+
+![This image shows the relevant glyph terms for vertical blue zone
+  positions.](img/glyph-terms.png)
 
 
 Grid Fitting

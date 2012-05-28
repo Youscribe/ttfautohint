@@ -15,6 +15,9 @@ DOCSRC = ttfautohint-1.pandoc \
          ttfautohint-3.pandoc
 
 DOCIMAGES = img/ttfautohintGUI.png \
+            img/blue-zones.png \
+            img/glyph-terms.png \
+            img/o-and-i.png \
             img/segment-edge.png
 
 DOCGEN = ttfautohint.html \
