@@ -14,6 +14,12 @@ DOCSRC = ttfautohint-1.pandoc \
          ttfautohint-2.pandoc \
          ttfautohint-3.pandoc
 
+DOCIMGSRC = img/ttfautohintGUI.svg \
+            img/blue-zones.svg \
+            img/glyph-terms.svg \
+            img/o-and-i.svg \
+            img/segment-edge.svg
+
 DOCIMG = img/ttfautohintGUI.png \
          img/blue-zones.png \
          img/glyph-terms.png \
@@ -25,7 +31,8 @@ DOCGEN = ttfautohint.html \
          $(DOCIMG)
 
 if WITH_DOC
-  nobase_dist_doc_DATA = $(DOCSRC) \
+  nobase_dist_doc_DATA = $(DOCIMGSRC) \
+                         $(DOCSRC) \
                          ttfautohint.css \
                          template.html \
                          template.tex \
