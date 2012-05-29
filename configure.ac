@@ -27,7 +27,9 @@ AC_PROG_CPP
 AC_PROG_CC
 AC_PROG_CXX
 
-AM_PROG_AR
+# AM_PROG_AR is new in automake 1.11.2;
+# however, MinGW doesn't have it yet (May 2012)
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 gl_EARLY
 gl_INIT
