@@ -22,20 +22,25 @@ $endif$
 $if(fancy-enums)$
 % Redefine labelwidth for lists; otherwise, the enumerate package will cause
 % markers to extend beyond the left margin.
-\makeatletter\AtBeginDocument{%
+\makeatletter
+
+\AtBeginDocument{%
   \renewcommand{\@listi}
-    {\setlength{\labelwidth}{4em}}
-}\makeatother
+    {\setlength{\labelwidth}{4em}}%
+}
+
+\makeatother
+
 \usepackage{enumerate}
 $endif$
 
 $if(tables)$
 \usepackage{ctable}
 \usepackage{float} % provides the H option for float placement
+
 % pandoc uses \medskip between table rows which looks ugly
-\setupctable{
-  doinside={\let\medskip\relax}
-}
+\setupctable{%
+  doinside={\let\medskip\relax}}
 $endif$
 
 $if(url)$
@@ -44,15 +49,24 @@ $endif$
 
 $if(graphics)$
 \usepackage{graphicx}
-% We will generate all images so they have a width \maxwidth. This means
-% that they will get their normal width if they fit onto the page, but
-% are scaled down if they would overflow the margins.
+
+% We will generate all images so they have a width 0.6\maxwidth. This means
+% that they will get their normal width if they fit onto the page, but are
+% scaled down if they would overflow this limit.
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth
-\else\Gin@nat@width\fi}
+
+\def\maxwidth{%
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi}
+
 \makeatother
+
 \let\Oldincludegraphics\includegraphics
-\renewcommand{\includegraphics}[1]{\Oldincludegraphics[width=0.6\maxwidth]{#1}}
+\renewcommand{\includegraphics}[1]{%
+  \Oldincludegraphics[width=0.6\maxwidth]{#1}}
 $endif$
 
 \ifxetex
@@ -105,7 +119,8 @@ $endif$
 \makeatother
 
 $if(subscript)$
-\newcommand{\textsubscr}[1]{\ensuremath{_{\scriptsize\textrm{#1}}}}
+\newcommand{\textsubscr}[1]{%
+  \ensuremath{_{\scriptsize\textrm{#1}}}}
 $endif$
 
 \setlength{\parindent}{0pt}
@@ -191,6 +206,17 @@ $endif$
 }
 
 \makeatother
+
+% we want block quotes formatted as italic
+\renewenvironment{quote}{%
+  \list{}{\rightmargin\leftmargin}%
+  \item\relax
+  \itshape
+}{%
+  \endlist
+}
+
+
 
 $if(numbersections)$
 $else$

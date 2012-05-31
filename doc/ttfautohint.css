@@ -75,6 +75,10 @@
     position: relative;
     right: 14em; } /* wd2 + pad2_r */
 
+  blockquote {
+    font-style: italic;
+  }
+
   code {
     font-family: "Droid Sans Mono", monospace; }
   /* no underline for links */

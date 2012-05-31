@@ -38,10 +38,10 @@ What exactly are hints?
 
 To cite [Wikipedia](http://en.wikipedia.org/wiki/Font_hinting):
 
-> *Font hinting* (also known as *instructing*) is the use of mathematical
-> instructions to adjust the display of an outline font so that it lines up
-> with a rasterized grid.  At low screen resolutions, hinting is critical
-> for producing a clear, legible text.  It can be accompanied by
+> **Font hinting** (also known as **instructing**) is the use of
+> mathematical instructions to adjust the display of an outline font so that
+> it lines up with a rasterized grid.  At low screen resolutions, hinting is
+> critical for producing a clear, legible text.  It can be accompanied by
 > antialiasing and (on liquid crystal displays) subpixel rendering for
 > further clarity.
 
@@ -584,7 +584,7 @@ SFNT Tables
 -----------
 
 ttfautohint touches almost all SFNT tables within a TrueType or OpenType
-font.  Note that only OpenType fonts with TrueType outlines are supported. 
+font.  Note that only OpenType fonts with TrueType outlines are supported.
 OpenType fonts with a `CFF` table (this is, with PostScript outlines) won't
 work.
 
