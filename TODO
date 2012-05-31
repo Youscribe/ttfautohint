@@ -38,6 +38,11 @@ control activation threshold of blue zone widths; handle fonts with large
   serifs like `Palatino' or `Quattrocento' (cf. this bug report:
   https://savannah.nongnu.org/bugs/?36091)
 
+create a separate blue zone class for `i' and `j':
+  . if the values differ more than a given threshold, handle them
+    separately
+  . otherwise, unify them with `f' and friends.
+
 control the characters used for blue zones
   -> non-latin scripts
 
