@@ -1,4 +1,4 @@
-% The ttfautohint library
+% ttfautohint
 % Werner Lemberg
 %
 
@@ -56,7 +56,7 @@ Manual](https://developer.apple.com/fonts/TTRefMan/RM03/Chap3.html#features):
 >  - At large sizes, the subtlety of the original design should emerge.
 
 
-In general, there are three possibilities how to hint a glyph.
+In general, there are three possible ways to hint a glyph.
 
  1. The font contains hints (in the original sense of this word) to guide
     the rasterizer, telling it which shapes of the glyphs need special
@@ -66,7 +66,7 @@ In general, there are three possibilities how to hint a glyph.
 
     This is how Type\ 1 and CFF font hints work.
 
- 2. The font contains exact instructions (also called *bytecode*) how to
+ 2. The font contains exact instructions (also called *bytecode*) on how to
     move the points of its outlines, depending on the resolution of the
     output device, and which intentionally distort the (outline) shape to
     produce a well-rasterized result.  The hinting logic is in the font;
@@ -137,8 +137,9 @@ with web browsers, for example.
 Across Windows rendering environments today, fonts processed with
 ttfautohint look best with DirectWrite ClearType enabled.  This is the
 default for Windows\ 7.  Good visual results are also seen in recent
-MacOS\ X versions and GNU/Linux systems that do use FreeType for rendering.
-Work is now underway to improve quality of older Windows 'GDI' rendering.
+MacOS\ X versions and GNU/Linux systems that use FreeType for rendering.
+Work is now underway to improve the quality of the older Windows 'GDI'
+rendering.
 
 The goal of the project is to generate a 'first pass' of hinting that font
 developers can refine further for ultimate quality.
@@ -156,6 +157,10 @@ platform's native widgets.
 
 Both the GUI and console version share the same features, to be discussed in
 the next subsection.
+
+**Warning: ttfautohint can't process a font a second time** (well, it can,
+if the font doesn't contain composite glyphs).  Just think of ttfautohint as
+being a compiler, a tool which also can't process its created output again.
 
 
 Options
@@ -291,7 +296,7 @@ Background and Technical Details
 [Real-Time Grid Fitting of Typographic
 Outlines](http://www.tug.org/TUGboat/tb24-3/lemberg.pdf) is a scholarly
 paper which describes FreeType's auto-hinter in some detail.  Regarding the
-described data structures it's slightly out of date, but the algorithm
+described data structures it is slightly out of date, but the algorithm
 itself hasn't changed.
 
 The next few subsections are mainly based on this article, introducing some
@@ -588,7 +593,6 @@ font.  Note that only OpenType fonts with TrueType outlines are supported.
 OpenType fonts with a `CFF` table (this is, with PostScript outlines) won't
 work.
 
-
   * `glyf`: One glyph gets added (namely the '\.ttfautohint' glyph); all
     composites get an additional component; all hints in the table are
     replaced with new ones.
@@ -596,10 +600,12 @@ work.
   * `cvt`, `prep`, and `fpgm`: These tables get replaced with data
     necessary for the new hinting bytecode.
 
-  * `gasp`: Replaced with new, quite generic data.
+  * `gasp`: Set up to always use grayscale rendering with grid-fitting
+    for standard hinting, and symmetric grid-fitting and symmetric
+    smoothing for horizontal subpixel hinting (ClearType).
 
-  * `DSIG`: Replaced with a dummy version.  ttfautohint can't digitally sign
-    a font; you have to do that afterwards.
+  * `DSIG`: If it exists, it gets replaced with a dummy version.
+    ttfautohint can't digitally sign a font; you have to do that afterwards.
 
   * `name`: The 'version' entries are modified to add information about the
     parameters which have been used for calling ttfautohint.  This can be
@@ -615,7 +621,6 @@ work.
   * `VDMX`: Removed, since it depends on the original bytecode which
     ttfautohint removes.  A font editor might recompute the necessary data
     later on.
-
 
 
 Problems
