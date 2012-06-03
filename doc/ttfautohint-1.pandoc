@@ -440,40 +440,24 @@ is a per-glyph operation).  If it differs to the current one, a new set is
 emitted.  For some glyphs it is possible that one set covers, say, the range
 8px-1000px, while other glyphs need 10 or more such sets.
 
-Consider, for example, this glyph:
+One of the hinting configuration parameters is the decision which segments
+form an edge.  For example, let us assume that two segments get aligned on a
+single horizontal edge at 11px, while two edges are used at 12px.
+This change makes ttfautohint emit a new hint set to accomodate this
+situation.
 
-```{.ditaa name="hintset"}
+![Before hinting, size 11px.](img/afii10108-11px-before-hinting.png)
 
-    +--+  +--+  +--+
-    |  |  |  |  |  |
-    |  |  |  |  |  |
-    |  |  |  +--+  |  --> y2
-    |  +--+        |  --> y1
-    |              |
-    +--------------+
+![After hinting, size 11px.  Segments 43-27-28 and 14-15 are aligned on a
+  single edge, as are segments 26-0-1 and
+  20-21.](img/afii10108-11px-after-hinting.png)
 
-```
+![Before hinting, size 12px.](img/afii10108-12px-before-hinting.png)
 
-For small PPEM values, the horizontal segments with vertical coordinates y1
-and y2 get unified to one edge, being positioned on a single horizontal
-line:
-
-```{.ditaa name="hintset"}
-
-    +--+  +--+  +--+
-    |  |  |  |  |  |
-    |  |  |  |  |  |
-    |  +--+  +--+  |  --> y1 = y2
-    |              |
-    |              |
-    +--------------+
-
-```
-
-Starting with a certain (larger) PPEM value, this no longer happens:
-ttfautohint uses two edges and emits a new hint set to accomodate this
-situation.  Note that aligning edges is only a part of the possible
-parameters which form a hint set.
+![After hinting, size 12px.  The segments are not aligned.  While
+  segments 43-27-28 and 20-21 now have almost the same horizontal position,
+  they don't form an edge because the outlines passing through the segments
+  point into different directions.](img/afii10108-12px-after-hinting.png)
 
 Obviously, the more hint sets get emitted, the larger the bytecode
 ttfautohint adds to the output font.  To find a good value\ *n* for

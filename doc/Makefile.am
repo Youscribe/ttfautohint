@@ -23,6 +23,10 @@ DOCIMG = img/ttfautohintGUI.png \
          img/a-before-hinting.png \
          img/a-after-hinting.png \
          img/a-after-autohinting.png \
+         img/afii10108-11px-after-hinting.png \
+         img/afii10108-11px-before-hinting.png \
+         img/afii10108-12px-after-hinting.png \
+         img/afii10108-12px-before-hinting.png \
          img/blue-zones.png \
          img/glyph-terms.png \
          img/o-and-i.png \
@@ -72,7 +76,6 @@ if WITH_DOC
 	            --output=$@ \
 	            $(DOCSRC)
 
-  # XXX write template
   ttfautohint.pdf: $(DOCSRC) $(DOCIMG) \
                    template.tex $(top_srcdir)/.version
 	  $(PANDOC) --latex-engine=$(PDFLATEX) \
