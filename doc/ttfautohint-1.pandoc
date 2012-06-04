@@ -183,6 +183,8 @@ given [afterwards](#background-and-technical-details).
 
 ### Hint Set Ranges
 
+See ['Hint Sets'](#hint-sets) for a definition and explanation.
+
 `--hinting-range-min=`*n*, `-l`\ *n*
 :   The minimum PPEM value (in pixels) at which hint sets are created.  The
     default value for *n* is\ 8.
@@ -215,6 +217,8 @@ given [afterwards](#background-and-technical-details).
     more often rounded up.  Use this flag to increase the legibility of
     small sizes if necessary; you might get weird rendering results
     otherwise for glyphs like 'a' or 'e', depending on the font design.
+
+    TODO: Image
 
 ### Fallback Script
 
