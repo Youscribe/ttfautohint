@@ -209,14 +209,18 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
     is strongly recommended to not use this except for testing purposes.
 
-### x Heights
+### x Height Increase Limit
 
-`--increase-x-height`, `-x`
+`--increase-x-height=`*n*, `-x`\ *n*
 :   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
-    slight preference for rounding up.  If this flag is set, values are much
-    more often rounded up.  Use this flag to increase the legibility of
-    small sizes if necessary; you might get weird rendering results
-    otherwise for glyphs like 'a' or 'e', depending on the font design.
+    slight preference for rounding up.  If this flag is set, values in the
+    range 6\ PPEM to *n*\ PPEM are much more often rounded up.  The default
+    value for *n* is 14.  Use this flag to increase the legibility of small
+    sizes if necessary; you might get weird rendering results otherwise for
+    glyphs like 'a' or 'e', depending on the font design.
+
+    To switch off this feature, use `--increase-x-height=0` (or check the
+    `No x\ Height Increase' box in the GUI).
 
     TODO: Image
 
@@ -390,7 +394,7 @@ are hard-coded in the source code.
 The 'round' characters (e.g. 'OCQS') from Zones 1, 2, and 5 are also used to
 control the overshoot handling; to improve rendering at small sizes, zone\ 4
 gets adjusted to be on the pixel grid; cf. the [`--increase-x-height`
-option](#x-heights).
+option](#x-height-increase-limit).
 
 ![This image shows the relevant glyph terms for vertical blue zone
   positions.](img/glyph-terms.png)

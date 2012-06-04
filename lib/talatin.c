@@ -547,14 +547,19 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
       FT_Pos scaled;
       FT_Pos threshold;
       FT_Pos fitted;
+      FT_UInt limit;
 
 
       scaled = FT_MulFix(blue->shoot.org, scaler->y_scale);
 
       threshold = 40;
-      if ((scaler->flags & TA_SCALER_FLAG_INCREASE_X_HEIGHT)
-          && metrics->root.scaler.face->size->metrics.x_ppem < 15
-          && metrics->root.scaler.face->size->metrics.x_ppem > 5)
+      /* scaler flag bits 3-6 hold the x height increase limit; */
+      /* if zero, the feature is switched off, */
+      /* otherwise the limit is the bits value + 5 */
+      limit = (scaler->flags >> 3) & 15;
+      if (limit
+          && metrics->root.scaler.face->size->metrics.x_ppem <= limit + 5
+          && metrics->root.scaler.face->size->metrics.x_ppem >= 6)
         threshold = 52;
 
       fitted = (scaled + threshold) & ~63;

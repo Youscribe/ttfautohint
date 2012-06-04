@@ -158,12 +158,14 @@ show_help(bool
 "  -s, --symbol               input is symbol font\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
-"  -x, --increase-x-height    increase x height for small sizes\n"
+"  -x, --increase-x-height=N  increase x height for sizes in the range\n"
+"                             6<=PPEM<=N; value 0 switches off this feature\n"
+"                             (default: %d)\n"
 "  -X, --x-height-snapping-exceptions=STRING\n"
 "                             specify a comma-separated list of\n"
 "                             x-height snapping exceptions\n"
 "\n",
-          TA_HINTING_RANGE_MAX);
+          TA_HINTING_RANGE_MAX, TA_INCREASE_X_HEIGHT);
 
 #ifdef BUILD_GUI
   if (all)
@@ -275,13 +277,14 @@ main(int argc,
   int hinting_range_min = 0;
   int hinting_range_max = 0;
   int hinting_limit = 0;
+  int increase_x_height = 0;
   bool have_hinting_range_min = false;
   bool have_hinting_range_max = false;
   bool have_hinting_limit = false;
+  bool have_increase_x_height = false;
 
   bool ignore_restrictions = false;
   bool pre_hinting = false;
-  bool increase_x_height = false;
   bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
   bool symbol = false;
@@ -320,7 +323,7 @@ main(int argc,
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
       {"ignore-restrictions", no_argument, NULL, 'i'},
-      {"increase-x-height", no_argument, NULL, 'x'},
+      {"increase-x-height", required_argument, NULL, 'x'},
       {"latin-fallback", no_argument, NULL, 'f'},
       {"no-info", no_argument, NULL, 'n'},
       {"pre-hinting", no_argument, NULL, 'p'},
@@ -359,7 +362,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvxX:",
+    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvx:X:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -420,7 +423,8 @@ main(int argc,
       break;
 
     case 'x':
-      increase_x_height = true;
+      increase_x_height = atoi(optarg);
+      have_increase_x_height = true;
       break;
 
     case 'X':
@@ -459,6 +463,8 @@ main(int argc,
     hinting_range_max = TA_HINTING_RANGE_MAX;
   if (!have_hinting_limit)
     hinting_limit = TA_HINTING_LIMIT;
+  if (!have_increase_x_height)
+    increase_x_height = TA_INCREASE_X_HEIGHT;
 
 #ifndef BUILD_GUI
 
@@ -479,6 +485,13 @@ main(int argc,
     fprintf(stderr, "A non-zero hinting limit must not be smaller"
                     " than the hinting range maximum (%d)\n",
                     hinting_range_max);
+    exit(EXIT_FAILURE);
+  }
+  if (increase_x_height != 0
+      && (increase_x_height < 6 || increase_x_height > 20))
+  {
+    fprintf(stderr, "A non-zero x height increase limit"
+                    " must be in the range 6-20\n");
     exit(EXIT_FAILURE);
   }
 
@@ -607,7 +620,7 @@ main(int argc,
   app.setOrganizationDomain("freetype.org");
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
-               ignore_restrictions, pre_hinting, increase_x_height,
+               increase_x_height, ignore_restrictions, pre_hinting,
                no_info, latin_fallback, symbol);
   gui.show();
 

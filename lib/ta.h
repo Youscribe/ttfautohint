@@ -201,8 +201,8 @@ typedef struct FONT_
   FT_UInt hinting_range_min;
   FT_UInt hinting_range_max;
   FT_UInt hinting_limit;
+  FT_UInt increase_x_height;
   FT_Bool pre_hinting;
-  FT_Bool increase_x_height;
   FT_Bool no_x_height_snapping;
   FT_Byte* x_height_snapping_exceptions;
   FT_Bool ignore_restrictions;

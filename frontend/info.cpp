@@ -38,11 +38,11 @@ build_version_string(Info_Data* idata)
     d += sprintf(d, " -r %d", idata->hinting_range_max);
   if (idata->hinting_limit != TA_HINTING_LIMIT)
     d += sprintf(d, " -G %d", idata->hinting_limit);
+  if (idata->increase_x_height != TA_INCREASE_X_HEIGHT)
+    d += sprintf(d, " -x %d", idata->increase_x_height);
 
   if (idata->pre_hinting)
     d += sprintf(d, " -p");
-  if (idata->increase_x_height)
-    d += sprintf(d, " -x");
   if (idata->latin_fallback)
     d += sprintf(d, " -f");
   if (idata->symbol)

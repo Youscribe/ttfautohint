@@ -58,6 +58,7 @@ extern "C" {
 #define TA_HINTING_RANGE_MIN 8
 #define TA_HINTING_RANGE_MAX 50
 #define TA_HINTING_LIMIT 200
+#define TA_INCREASE_X_HEIGHT 14
 
 /*
  *```
@@ -239,6 +240,14 @@ typedef int
  *     this field is not set, it defaults to `TA_HINTING_LIMIT`.  If it is
  *     set to\ 0, no hinting limit is added to the bytecode.
  *
+ * `increase-x-height`
+ * :   An integer in the range 6-20.  For PPEM values in the range 6\ <=
+ *     PPEM <=\ `increase-x-height`, round up the font's x\ height much more
+ *     often than normally.  If it is set to\ 0, this feature is switched
+ *     off.  If this field is not set, it defaults to
+ *     `TA_INCREASE_X_HEIGHT`.  Use this flag to improve the legibility of
+ *     small font sizes if necessary.
+ *
  * `pre-hinting`
  * :   An integer (1\ for 'on' and 0\ for 'off', which is the default) to
  *     specify whether native TrueType hinting shall be applied to all
@@ -256,12 +265,6 @@ typedef int
  * `info-callback-data`
  * :   A pointer of type `void*` to user data which is passed to the info
  *     callback function.
- *
- * `increase-x-height`
- * :   An integer (1\ for 'on' and 0\ for 'off', which is the default).  For
- *     PPEM values in the range 5\ < PPEM <\ 15, round up the font's
- *     x\ height much more often than normally if this flag is set.  Use
- *     this flag to increase the legibility of small sizes if necessary.
  *
  * `x-height-snapping-exceptions`
  * :   A pointer of type `const char*` to a null-terminated string which

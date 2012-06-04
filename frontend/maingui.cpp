@@ -40,18 +40,18 @@
 Main_GUI::Main_GUI(int range_min,
                    int range_max,
                    int limit,
+                   int increase,
                    bool ignore,
                    bool pre,
-                   bool increase,
                    bool no,
                    int fallback,
                    bool symb)
 : hinting_range_min(range_min),
   hinting_range_max(range_max),
   hinting_limit(limit),
+  increase_x_height(increase),
   ignore_restrictions(ignore),
   pre_hinting(pre),
-  increase_x_height(increase),
   no_info(no),
   latin_fallback(fallback),
   symbol(symb)
@@ -186,6 +186,22 @@ Main_GUI::check_no_limit()
   {
     limit_label->setEnabled(true);
     limit_box->setEnabled(true);
+  }
+}
+
+
+void
+Main_GUI::check_no_increase()
+{
+  if (no_increase_box->isChecked())
+  {
+    increase_label->setEnabled(false);
+    increase_box->setEnabled(false);
+  }
+  else
+  {
+    increase_label->setEnabled(true);
+    increase_box->setEnabled(true);
   }
 }
 
@@ -521,11 +537,14 @@ again:
 
   info_data.hinting_range_min = min_box->value();
   info_data.hinting_range_max = max_box->value();
-  info_data.hinting_limit = no_limit_box->isChecked() ? 0
-                                                      : limit_box->value();
+  info_data.hinting_limit = no_limit_box->isChecked()
+                            ? 0
+                            : limit_box->value();
+  info_data.increase_x_height = no_increase_box->isChecked()
+                                ? 0
+                                : increase_box->value();
 
   info_data.pre_hinting = pre_box->isChecked();
-  info_data.increase_x_height = increase_box->isChecked();
   info_data.latin_fallback = fallback_box->currentIndex();
   info_data.symbol = symbol_box->isChecked();
 
@@ -675,7 +694,7 @@ Main_GUI::create_layout()
   limit_layout->addWidget(limit_box);
   limit_layout->addStretch(1);
   limit_layout->addWidget(no_limit_box);
-  limit_layout->addStretch(2);
+  limit_layout->addStretch(1);
 
   // handle command line option `--hinting-limit=0'
   if (!hinting_limit)
@@ -684,10 +703,44 @@ Main_GUI::create_layout()
     no_limit_box->setChecked(true);
   }
 
+  // x height increase limit
+  increase_label = new QLabel(tr("x Height In&crease Limit:"));
+  increase_box = new QSpinBox;
+  increase_label->setBuddy(increase_box);
+  increase_label->setToolTip(
+    tr("For PPEM values in the range 5&nbsp;&lt; PPEM &lt;&nbsp;<i>n</i>,"
+       " where <i>n</i> is the value selected by this spin box,"
+       " round up the font's x&nbsp;height much more often than normally.<br>"
+       "Use this if holes in letters like <i>e</i> get filled,"
+       " for example."));
+  increase_box->setKeyboardTracking(false);
+  increase_box->setRange(6, 20);
+  increase_box->setValue(increase_x_height ? increase_x_height : TA_INCREASE_X_HEIGHT);
+
+  no_increase_box = new QCheckBox(tr("No x Hei&ght Increase"), this);
+  no_increase_box->setToolTip(
+    tr("If switched on, <b>TTFautohint</b> does not increase the x height."));
+
+  QHBoxLayout* increase_layout = new QHBoxLayout;
+  increase_layout->addWidget(increase_label);
+  increase_layout->addWidget(increase_box);
+  increase_layout->addStretch(1);
+  increase_layout->addWidget(no_increase_box);
+  increase_layout->addStretch(1);
+
+  // handle command line option `--increase-x-height=0'
+  if (!increase_x_height)
+  {
+    increase_x_height = TA_INCREASE_X_HEIGHT;
+    no_increase_box->setChecked(true);
+  }
+
   check_min();
   check_max();
   check_limit();
+
   check_no_limit();
+  check_no_increase();
 
   // flags
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
@@ -697,15 +750,7 @@ Main_GUI::create_layout()
        " the outlines of the glyphs."));
   if (pre_hinting)
     pre_box->setChecked(true);
-  increase_box = new QCheckBox(tr("In&crease x-height"), this);
-  increase_box->setToolTip(
-    tr("For PPEM values in the range 5&nbsp;&lt; PPEM &lt;&nbsp;15,"
-       " round up the font's x&nbsp;height much more often than normally"
-       " if switched on.<br>"
-       "Use this if holes in letters like <i>e</i> get filled,"
-       " for example."));
-  if (increase_x_height)
-    increase_box->setChecked(true);
+
   symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
   symbol_box->setToolTip(
     tr("If switched on, <b>ttfautohint</b> uses default values"
@@ -716,15 +761,6 @@ Main_GUI::create_layout()
   if (symbol)
     symbol_box->setChecked(true);
 
-  QHBoxLayout* flags_layout = new QHBoxLayout;
-  flags_layout->addWidget(pre_box);
-  flags_layout->addStretch(1);
-  flags_layout->addWidget(increase_box);
-  flags_layout->addStretch(1);
-  flags_layout->addWidget(symbol_box);
-  flags_layout->addStretch(1);
-
-  // info
   info_box = new QCheckBox(tr("Add ttf&autohint Info"), this);
   info_box->setToolTip(
     tr("If switched on, information about <b>ttfautohint</b>"
@@ -733,8 +769,13 @@ Main_GUI::create_layout()
   if (!no_info)
     info_box->setChecked(true);
 
-  QHBoxLayout* info_layout = new QHBoxLayout;
-  info_layout->addWidget(info_box);
+  QHBoxLayout* flags_layout = new QHBoxLayout;
+  flags_layout->addWidget(pre_box);
+  flags_layout->addStretch(1);
+  flags_layout->addWidget(symbol_box);
+  flags_layout->addStretch(1);
+  flags_layout->addWidget(info_box);
+  flags_layout->addStretch(1);
 
   // running
   run_button = new QPushButton(tr("&Run"));
@@ -754,9 +795,9 @@ Main_GUI::create_layout()
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(limit_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
-  gui_layout->addLayout(flags_layout);
+  gui_layout->addLayout(increase_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
-  gui_layout->addLayout(info_layout);
+  gui_layout->addLayout(flags_layout);
   gui_layout->addSpacing(20); // XXX urgh, pixels...
   gui_layout->addLayout(running_layout);
   gui_layout->addSpacing(10); // XXX urgh, pixels...
@@ -796,6 +837,9 @@ Main_GUI::create_connections()
           SLOT(check_limit()));
   connect(no_limit_box, SIGNAL(clicked()), this,
           SLOT(check_no_limit()));
+
+  connect(no_increase_box, SIGNAL(clicked()), this,
+          SLOT(check_no_increase()));
 
   connect(run_button, SIGNAL(clicked()), this,
           SLOT(run()));

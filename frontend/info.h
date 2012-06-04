@@ -28,9 +28,9 @@ typedef struct Info_Data_
   int hinting_range_min;
   int hinting_range_max;
   int hinting_limit;
+  int increase_x_height;
 
   bool pre_hinting;
-  bool increase_x_height;
   int latin_fallback;
   bool symbol;
 } Info_Data;

@@ -50,6 +50,7 @@ TTF_autohint(const char* options,
   FT_Long hinting_range_min = -1;
   FT_Long hinting_range_max = -1;
   FT_Long hinting_limit = -1;
+  FT_Long increase_x_height = -1;
 
   TA_Progress_Func progress;
   void* progress_data;
@@ -58,7 +59,6 @@ TTF_autohint(const char* options,
 
   FT_Bool ignore_restrictions = 0;
   FT_Bool pre_hinting = 0;
-  FT_Bool increase_x_height = 0;
   FT_UInt fallback_script = 0;
   FT_Bool symbol = 0;
 
@@ -130,7 +130,7 @@ TTF_autohint(const char* options,
       in_len = 0;
     }
     else if (COMPARE("increase-x-height"))
-      increase_x_height = (FT_Bool)va_arg(ap, FT_Int);
+      increase_x_height = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("out-buffer"))
     {
       out_file = NULL;
@@ -220,9 +220,20 @@ TTF_autohint(const char* options,
   if (hinting_limit < 0)
     hinting_limit = TA_HINTING_LIMIT;
 
+  /* we have 4 bits to store the values 0 and 6-20 */
+  if (increase_x_height > 0
+      && (increase_x_height < 6 || increase_x_height > 20))
+  {
+    error = FT_Err_Invalid_Argument;
+    goto Err1;
+  }
+  if (increase_x_height < 0)
+    increase_x_height = TA_INCREASE_X_HEIGHT;
+
   font->hinting_range_min = (FT_UInt)hinting_range_min;
   font->hinting_range_max = (FT_UInt)hinting_range_max;
   font->hinting_limit = (FT_UInt)hinting_limit;
+  font->increase_x_height = increase_x_height;
 
   font->progress = progress;
   font->progress_data = progress_data;
@@ -231,7 +242,6 @@ TTF_autohint(const char* options,
 
   font->ignore_restrictions = ignore_restrictions;
   font->pre_hinting = pre_hinting;
-  font->increase_x_height = increase_x_height;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
   font->symbol = symbol;

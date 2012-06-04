@@ -93,19 +93,27 @@ unsigned char PREP(align_top_b) [] =
 
 };
 
-unsigned char PREP(align_top_c1) [] =
+unsigned char PREP(align_top_c1a) [] =
 {
 
-  /* this is for option `increase_x_height': */
-  /* apply much `stronger' rounding up of x height for 5 < PPEM < 15 */
+  /* use this if option `increase_x_height' > 0 */
+  /* apply much `stronger' rounding up of x height for */
+  /* 6 <= PPEM <= increase_x_height */
   MPPEM,
   PUSHB_1,
-    15,
-  LT,
+
+};
+
+/*  %c, x height increase limit */
+
+unsigned char PREP(align_top_c1b) [] =
+{
+
+  LTEQ,
   MPPEM,
   PUSHB_1,
-    5,
-  GT,
+    6,
+  GTEQ,
   AND,
   IF,
     PUSHB_1,
@@ -333,7 +341,9 @@ TA_table_build_prep(FT_Byte** prep,
     buf_len += sizeof (PREP(align_top_a))
                + 1
                + sizeof (PREP(align_top_b))
-               + (font->increase_x_height ? sizeof (PREP(align_top_c1))
+               + (font->increase_x_height ? (sizeof (PREP(align_top_c1a))
+                                             + 1
+                                             + sizeof (PREP(align_top_c1b)))
                                           : sizeof (PREP(align_top_c2)))
                + sizeof (PREP(align_top_d))
                + sizeof (PREP(loop_cvt_a))
@@ -387,7 +397,11 @@ TA_table_build_prep(FT_Byte** prep,
                                  + blue_adjustment - vaxis->blues);
     COPY_PREP(align_top_b);
     if (font->increase_x_height)
-      COPY_PREP(align_top_c1);
+    {
+      COPY_PREP(align_top_c1a);
+      *(buf_p++) = (unsigned char)font->increase_x_height;
+      COPY_PREP(align_top_c1b);
+    }
     else
       COPY_PREP(align_top_c2);
     COPY_PREP(align_top_d);
