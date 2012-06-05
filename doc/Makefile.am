@@ -39,6 +39,15 @@ DOC = ttfautohint.html \
       ttfautohint.txt \
       $(DOCIMG)
 
+EXTRA_DIST = c2pandoc.sed \
+             make-snapshot.sh \
+             ttfautohint-1.pandoc \
+             ttfautohint-2.pandoc \
+             ttfautohint-3.pandoc \
+             template.html \
+             template.tex \
+             ttfautohint.css
+
 if WITH_DOC
   nobase_dist_doc_DATA = $(DOC) \
                          $(DOCIMGSRC)
@@ -49,7 +58,7 @@ ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
 ttfautohint.txt: $(DOCSRC)
-	cat $(DOCSRC) > $@
+	cat $^ > $@
 
 if WITH_DOC
   # this is a temporary solution:
@@ -71,10 +80,10 @@ if WITH_DOC
 
   ttfautohint.html: ttfautohint.txt $(DOCIMG) \
                     ttfautohint.css template.html $(top_srcdir)/.version
-	  $(PANDOC) --template=template.html \
+	  $(PANDOC) --template=$(srcdir)/template.html \
 	            --variable="version:$(VERSION)" \
 	            --toc \
-	            --include-in-header=ttfautohint.css \
+	            --include-in-header=$(srcdir)/ttfautohint.css \
 	            --smart \
 	            --standalone \
 	            --output=$@ \
@@ -82,8 +91,9 @@ if WITH_DOC
 
   ttfautohint.pdf: ttfautohint.txt $(DOCIMG) \
                    template.tex $(top_srcdir)/.version
+	  TEXINPUTS="$(srcdir);" \
 	  $(PANDOC) --latex-engine=$(PDFLATEX) \
-	            --template=template.tex \
+	            --template=$(srcdir)/template.tex \
 	            --variable="version:$(VERSION)" \
 	            --number-sections \
 	            --toc \
