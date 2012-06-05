@@ -222,7 +222,19 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     To switch off this feature, use `--increase-x-height=0` (or check the
     `No x\ Height Increase' box in the GUI).
 
-    TODO: Image
+    The following images use the font ['Mertz
+    Bold'](http://code.newtypography.co.uk/?p=2449) (still under
+    development) from [Vernon Adams].
+
+    ![At 17px, without option `-x`, the hole in glyph 'e' looks very grey in
+      the FontForge snapshot, and the GDI ClearType rendering (which is the
+      default on older Windows versions) fills it completely with black
+      because it uses B/W rendering along the y\ axis.  FreeType's
+      autohinter (and thus ttfautohint too) intentionally aligns horizontal
+      lines to non-integer values also to avoid large glyph shape
+      distortions.](img/e-17px-x14.png)
+
+    ![The same, this time with option `-x 17`.](img/e-17px-x17.png)
 
 ### Fallback Script
 
@@ -424,7 +436,7 @@ work similarly to Latin (i.e.  Greek and Cyrillic) is available.
     instruction.
 
 The following images illustrate the hinting process, using glyph 'a' from
-the freely available font '[Ubuntu Book](http://font.ubuntu.com)'.  The
+the freely available font ['Ubuntu Book'](http://font.ubuntu.com).  The
 manual hints were added by [Dalton Maag Ltd], the used application to create
 the hinting debug snapshots was [FontForge].
 
@@ -453,6 +465,9 @@ form an edge.  For example, let us assume that two segments get aligned on a
 single horizontal edge at 11px, while two edges are used at 12px.
 This change makes ttfautohint emit a new hint set to accomodate this
 situation.
+
+The next images illustrate this, using a Cyrillic letter (glyph 'afii10108')
+from the 'Ubuntu book' font, processed with ttfautohint.
 
 ![Before hinting, size 11px.](img/afii10108-11px-before-hinting.png)
 
@@ -622,6 +637,3 @@ Diagonals.
 
 TODO
 
-[Dalton Maag Ltd]: http://daltonmaag.com
-[FontForge]: http://fontforge.sf.net
-[Qt]: http://qt-project.org

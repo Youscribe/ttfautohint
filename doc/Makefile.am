@@ -28,24 +28,28 @@ DOCIMG = img/ttfautohintGUI.png \
          img/afii10108-12px-after-hinting.png \
          img/afii10108-12px-before-hinting.png \
          img/blue-zones.png \
+         img/e-17px-x14.png \
+         img/e-17px-x17.png \
          img/glyph-terms.png \
          img/o-and-i.png \
          img/segment-edge.png
 
-DOCGEN = ttfautohint.html \
-         ttfautohint.pdf \
-         $(DOCIMG)
+DOC = ttfautohint.html \
+      ttfautohint.pdf \
+      ttfautohint.txt \
+      $(DOCIMG)
 
 if WITH_DOC
-  nobase_dist_doc_DATA = $(DOCIMGSRC) \
-                         $(DOCSRC) \
-                         ttfautohint.css \
-                         $(DOCGEN)
+  nobase_dist_doc_DATA = $(DOC) \
+                         $(DOCSRC)
 endif
 
 
 ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
+
+ttfautohint.txt: $(DOCSRC)
+	cat $(DOCSRC) > $@
 
 if WITH_DOC
   # this is a temporary solution:
@@ -65,7 +69,7 @@ if WITH_DOC
 	  $(SHELL) $(srcdir)/make-snapshot.sh \
 	             $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
-  ttfautohint.html: $(DOCSRC) $(DOCIMG) \
+  ttfautohint.html: ttfautohint.txt $(DOCIMG) \
                     ttfautohint.css template.html $(top_srcdir)/.version
 	  $(PANDOC) --template=template.html \
 	            --variable="version:$(VERSION)" \
@@ -74,9 +78,9 @@ if WITH_DOC
 	            --smart \
 	            --standalone \
 	            --output=$@ \
-	            $(DOCSRC)
+	            $<
 
-  ttfautohint.pdf: $(DOCSRC) $(DOCIMG) \
+  ttfautohint.pdf: ttfautohint.txt $(DOCIMG) \
                    template.tex $(top_srcdir)/.version
 	  $(PANDOC) --latex-engine=$(PDFLATEX) \
 	            --template=template.tex \
@@ -86,7 +90,7 @@ if WITH_DOC
 	            --smart \
 	            --standalone \
 	            --output=$@ \
-	            $(DOCSRC)
+	            $<
 else
 .svg.png:
 	  @echo 1>&2 "warning: can't generate \`$@'"
@@ -97,12 +101,13 @@ else
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         please install ImageMagick's \`import' tool and reconfigure"
 
-  ttfautohint.html: $(DOCSRC) $(DOCIMG) \
+  ttfautohint.html: ttfautohint.txt $(DOCIMG) \
                     ttfautohint.css template.html $(top_srcdir)/.version
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         pleasae install pandoc and reconfigure"
 
-  ttfautohint.pdf: $(DOCSRC) $(DOCIMG) $(top_srcdir)/.version
+  ttfautohint.pdf: $ttfautohint.txt $(DOCIMG) \
+                   template.tex $(top_srcdir)/.version
 	  @echo 1>&2 "warning: can't generate \`$@'"
 	  @echo 1>&2 "         please install pdftex and pandoc, then reconfigure"
 endif
