@@ -41,7 +41,7 @@ DOC = ttfautohint.html \
 
 if WITH_DOC
   nobase_dist_doc_DATA = $(DOC) \
-                         $(DOCSRC)
+                         $(DOCIMGSRC)
 endif
 
 
