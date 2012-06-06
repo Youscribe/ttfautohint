@@ -41,6 +41,7 @@ DOC = ttfautohint.html \
 
 EXTRA_DIST = c2pandoc.sed \
              make-snapshot.sh \
+             strip-comments.sh \
              ttfautohint-1.pandoc \
              ttfautohint-2.pandoc \
              ttfautohint-3.pandoc \
@@ -58,7 +59,7 @@ ttfautohint-2.pandoc: $(top_srcdir)/lib/ttfautohint.h
 	$(SED) -f $(srcdir)/c2pandoc.sed < $< > $@
 
 ttfautohint.txt: $(DOCSRC)
-	cat $^ > $@
+	$(SHELL) $(srcdir)/strip-comments.sh $^ > $@
 
 if WITH_DOC
   # this is a temporary solution:
