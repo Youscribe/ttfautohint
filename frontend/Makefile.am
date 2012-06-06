@@ -34,6 +34,7 @@ LDADD = $(top_builddir)/lib/libttfautohint.a \
 
 bin_PROGRAMS = ttfautohint
 ttfautohint_SOURCES = info.cpp \
+                      info.h \
                       main.cpp
 manpages = ttfautohint.1
 
