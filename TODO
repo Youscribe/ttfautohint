@@ -2,10 +2,7 @@
 important improvements
 ----------------------
 
-try to reduce size of hints
-  -> handling strong points separately
-  -> `compress' data
-  -> more subroutines to avoid flags
+try to reduce size of hints even more
 
 add features to the GUI
   -> direct control over `actions'
@@ -91,6 +88,8 @@ reduce output size of option -p:
 
 make it possible to hint fonts which aren't alphabetic at all, for example,
   icons; to do so, provide means to skip the global feature analysis
+
+better control -i output
 
 
 later enhancements
