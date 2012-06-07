@@ -715,11 +715,13 @@ Main_GUI::create_layout()
        " for example."));
   increase_box->setKeyboardTracking(false);
   increase_box->setRange(6, 20);
-  increase_box->setValue(increase_x_height ? increase_x_height : TA_INCREASE_X_HEIGHT);
+  increase_box->setValue(increase_x_height ? increase_x_height
+                                           : TA_INCREASE_X_HEIGHT);
 
   no_increase_box = new QCheckBox(tr("No x Hei&ght Increase"), this);
   no_increase_box->setToolTip(
-    tr("If switched on, <b>TTFautohint</b> does not increase the x height."));
+    tr("If switched on,"
+       " <b>TTFautohint</b> does not increase the x&nbsp;height."));
 
   QHBoxLayout* increase_layout = new QHBoxLayout;
   increase_layout->addWidget(increase_label);
