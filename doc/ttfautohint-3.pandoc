@@ -15,9 +15,12 @@
 Compilation and Installation
 ============================
 
-Please read the files `INSTALL` and `INSTALL.git` (part of the source code
-bundle) for instructions how to compile the ttfautohint library together
-with its front-ends.
+Please read the files
+[`INSTALL`](http://repo.or.cz/w/ttfautohint.git/blob_plain/HEAD:/INSTALL)
+and
+[`INSTALL.git`](http://repo.or.cz/w/ttfautohint.git/blob_plain/HEAD:/INSTALL.git)
+(part of the source code bundle) for instructions how to compile the
+ttfautohint library together with its front-ends.
 
 TODO
 
@@ -48,9 +51,10 @@ Copyright © 2011-2012 by [Werner Lemberg](mailto:wl@gnu.org).\
 Copyright © 2011-2012 by [Dave Crossland](mailto:dave@understandingfonts.com).
 
 This file is part of the ttfautohint library, and may only be used,
-modified, and distributed under the terms given in `COPYING`.  By continuing
-to use, modify, or distribute this file you indicate that you have read
-`COPYING` and understand and accept it fully.
+modified, and distributed under the terms given in
+[`COPYING`](http://repo.or.cz/w/ttfautohint.git/blob_plain/HEAD:/COPYING).
+By continuing to use, modify, or distribute this file you indicate that you
+have read `COPYING` and understand and accept it fully.
 
 The file `COPYING` mentioned in the previous paragraph is distributed with
 the ttfautohint library.

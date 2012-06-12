@@ -19,14 +19,14 @@
 Introduction
 ============
 
-**ttfautohint** is a library which takes a TrueType font as the input,
-removes its bytecode instructions (if any), and returns a new font where all
-glyphs are bytecode hinted using the information given by FreeType's
-autohinting module.  The idea is to provide the excellent quality of the
-autohinter on platforms which don't use FreeType.
+**ttfautohint** is a library written in\ C which takes a TrueType font as
+the input, removes its bytecode instructions (if any), and returns a new
+font where all glyphs are bytecode hinted using the information given by
+FreeType's autohinting module.  The idea is to provide the excellent quality
+of the autohinter on platforms which don't use FreeType.
 
 The library has a single API function, `TTF_autohint`, which is described
-[below](#function-ttf_autohint).
+[below](#the-ttfautohint-api).
 
 Bundled with the library there are two front-end programs, [`ttfautohint`
 and `ttfautohintGUI`](#ttfautohint-and-ttfautohintgui), being a command line
@@ -70,7 +70,7 @@ In general, there are three possible ways to hint a glyph.
     move the points of its outlines, depending on the resolution of the
     output device, and which intentionally distort the (outline) shape to
     produce a well-rasterized result.  The hinting logic is in the font;
-    ideally, all rasterizeres simply process these instructions to get the
+    ideally, all rasterizers simply process these instructions to get the
     same result on all platforms.
 
     This is how TrueType hints work.
@@ -241,7 +241,7 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 `--latin-fallback`, `-f`
 :   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
     module instead of 'none' for all glyphs which can't be assigned to a
-    script.  See [above](#scripts) for more details.
+    script.  See [below](#scripts) for more details.
 
 ### Pre-Hinting
 
@@ -555,8 +555,8 @@ Unicode sense) which have similar typographical properties.
 
     Character range    Description
   -------------------  -------------
-  0x0020 - 0x007F      Basic Latin (no control chars)
-  0x00A0 - 0x00FF      Latin-1 Supplement (no control chars)
+  0x0020 - 0x007F      Basic Latin (no control characters)
+  0x00A0 - 0x00FF      Latin-1 Supplement (no control characters)
   0x0100 - 0x017F      Latin Extended-A
   0x0180 - 0x024F      Latin Extended-B
   0x0250 - 0x02AF      IPA Extensions
@@ -579,13 +579,13 @@ Unicode sense) which have similar typographical properties.
   0x2DE0 - 0x2DFF      Cyrillic Extended-A
   0xA640 - 0xA69F      Cyrillic Extended-B
   0xA720 - 0xA7FF      Latin Extended-D
-  0xFB00 - 0xFB06      Alphab. Present. Forms (Latin Ligs)
+  0xFB00 - 0xFB06      Alphabetical Presentation Forms (Latin Ligatures)
   0x1D400 - 0x1D7FF    Mathematical Alphanumeric Symbols
 
 If a glyph's character code is not covered by a script range, it is not
 hinted (or rather, it gets hinted by the 'dummy' auto-hinting module which
 essentially does nothing).  This can be changed by specifying a *fallback
-script* with option `--latin-fallback`.
+script* with [option `--latin-fallback`](#fallback-script).
 
 It is planned to extend ttfautohint so that the `GSUB` OpenType table gets
 analyzed, mapping character codes to all glyph indices which can be reached
