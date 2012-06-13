@@ -91,6 +91,9 @@ make it possible to hint fonts which aren't alphabetic at all, for example,
 
 better control -i output
 
+allow processing of multiple files by using globs as in the Midnight
+  Commander
+
 
 later enhancements
 ------------------
