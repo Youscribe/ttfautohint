@@ -104,7 +104,7 @@ unsigned char FPGM(bci_round) [] =
 
 
 /*
- * bci_compute_stem_width
+ * bci_smooth_stem_width
  *
  *   This is the equivalent to the following code from function
  *   `ta_latin_compute_stem_width':
@@ -161,11 +161,11 @@ unsigned char FPGM(bci_round) [] =
  *      std_width
  */
 
-unsigned char FPGM(bci_compute_stem_width_a) [] =
+unsigned char FPGM(bci_smooth_stem_width_a) [] =
 {
 
   PUSHB_1,
-    bci_compute_stem_width,
+    bci_smooth_stem_width,
   FDEF,
 
   DUP,
@@ -223,7 +223,7 @@ unsigned char FPGM(bci_compute_stem_width_a) [] =
 
 /*    %c, index of std_width */
 
-unsigned char FPGM(bci_compute_stem_width_b) [] =
+unsigned char FPGM(bci_smooth_stem_width_b) [] =
 {
 
     RCVT,
@@ -241,7 +241,7 @@ unsigned char FPGM(bci_compute_stem_width_b) [] =
 
 /*      %c, index of std_width */
 
-unsigned char FPGM(bci_compute_stem_width_c) [] =
+unsigned char FPGM(bci_smooth_stem_width_c) [] =
 {
 
       RCVT, /* dist = std_width */
@@ -2215,7 +2215,7 @@ unsigned char FPGM(bci_adjust_common) [] =
   MD_orig_ZP2_0, /* s: [...] edge2 edge is_round is_serif org_len */
 
   PUSHB_1,
-    bci_compute_stem_width,
+    bci_smooth_stem_width,
   CALL,
   NEG, /* s: [...] edge2 edge -cur_len */
 
@@ -2526,7 +2526,7 @@ unsigned char FPGM(bci_stem_common) [] =
   WS,
 
   PUSHB_1,
-    bci_compute_stem_width,
+    bci_smooth_stem_width,
   CALL, /* s: [...] edge2 edge cur_len */
 
   DUP,
@@ -3097,7 +3097,7 @@ unsigned char FPGM(bci_link) [] =
   MD_orig_ZP2_0, /* s: stem is_round is_serif dist_orig */
 
   PUSHB_1,
-    bci_compute_stem_width,
+    bci_smooth_stem_width,
   CALL, /* s: stem new_dist */
 
   SWAP,
@@ -3284,7 +3284,7 @@ unsigned char FPGM(bci_anchor) [] =
   WS,
 
   PUSHB_1,
-    bci_compute_stem_width,
+    bci_smooth_stem_width,
   CALL, /* s: edge2 edge cur_len */
 
   DUP,
@@ -4642,11 +4642,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
 
 
   buf_len = sizeof (FPGM(bci_round))
-            + sizeof (FPGM(bci_compute_stem_width_a))
+            + sizeof (FPGM(bci_smooth_stem_width_a))
             + 1
-            + sizeof (FPGM(bci_compute_stem_width_b))
+            + sizeof (FPGM(bci_smooth_stem_width_b))
             + 1
-            + sizeof (FPGM(bci_compute_stem_width_c))
+            + sizeof (FPGM(bci_smooth_stem_width_c))
             + sizeof (FPGM(bci_loop))
             + sizeof (FPGM(bci_cvt_rescale))
             + sizeof (FPGM(bci_blue_round_a))
@@ -4775,11 +4775,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   buf_p = buf;
 
   COPY_FPGM(bci_round);
-  COPY_FPGM(bci_compute_stem_width_a);
+  COPY_FPGM(bci_smooth_stem_width_a);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
-  COPY_FPGM(bci_compute_stem_width_b);
+  COPY_FPGM(bci_smooth_stem_width_b);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
-  COPY_FPGM(bci_compute_stem_width_c);
+  COPY_FPGM(bci_smooth_stem_width_c);
   COPY_FPGM(bci_loop);
   COPY_FPGM(bci_cvt_rescale);
   COPY_FPGM(bci_blue_round_a);

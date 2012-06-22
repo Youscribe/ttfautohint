@@ -314,8 +314,8 @@
 
 /* 0 */
 #define bci_round 0
-#define bci_compute_stem_width bci_round + 1
-#define bci_loop bci_compute_stem_width + 1
+#define bci_smooth_stem_width bci_round + 1
+#define bci_loop bci_smooth_stem_width + 1
 #define bci_cvt_rescale bci_loop + 1
 #define bci_blue_round bci_cvt_rescale + 1
 #define bci_decrement_component_counter bci_blue_round + 1
