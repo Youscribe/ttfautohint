@@ -327,6 +327,209 @@ unsigned char FPGM(bci_smooth_stem_width_c) [] =
 
 
 /*
+ * bci_get_best_width
+ *
+ *   An auxiliary function for `bci_strong_stem_width'.
+ *
+ * in: n (initialized with CVT index for first vertical width)
+ *     dist
+ *
+ * out: n+1
+ *      dist
+ *
+ * CVT: widths[]
+ *
+ * sal: sal_best
+ *      sal_ref
+ */
+
+unsigned char FPGM(bci_get_best_width) [] =
+{
+
+  PUSHB_1,
+    bci_get_best_width,
+  FDEF,
+
+  DUP,
+  RCVT, /* s: dist n w */
+  DUP,
+  PUSHB_1,
+    4,
+  CINDEX, /* s: dist n w w dist */
+  SUB,
+  ABS, /* s: dist n w d */
+  DUP,
+  PUSHB_1,
+    sal_best,
+  RS, /* s: dist n w d d best */
+  LT, /* d < best */
+  IF,
+    PUSHB_1,
+      sal_best,
+    SWAP,
+    WS, /* best = d */
+    PUSHB_1,
+      sal_ref,
+    SWAP,
+    WS, /* reference = w */
+
+  ELSE,
+    POP,
+    POP,
+  EIF,
+
+  PUSHB_1,
+    1,
+  ADD, /* n = n + 1 */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_strong_stem_width
+ *
+ *   This is the equivalent to the following code (function
+ *   `ta_latin_snap_width' and some lines from
+ *   `ta_latin_compute_stem_width'):
+ *
+ *     best = 64 + 32 + 2;
+ *     reference = width
+ *     dist = ABS(width)
+ *
+ *     for n in 0 .. num_widths:
+ *       w = widths[n]
+ *       d = ABS(dist - w)
+ *
+ *       if d < best:
+ *         best = d
+ *         reference = w;
+ *
+ *     if dist >= reference:
+ *       if dist < ROUND(reference) + 48:
+ *         dist = reference
+ *     else
+ *       if dist > ROUND(reference) - 48:
+ *         dist = reference
+ *
+ *     if dist >= 64:
+ *       dist = ROUND(dist)
+ *     else
+ *       dist = 64
+ *
+ *     if width < 0:
+ *       dist = -dist
+ *     return dist
+ *
+ * in: width
+ *     stem_is_serif (unused)
+ *     base_is_round (unused)
+ *
+ * out: new_width
+ *
+ * CVT: widths[]
+ */
+
+unsigned char FPGM(bci_strong_stem_width_a) [] =
+{
+
+  PUSHB_1,
+    bci_strong_stem_width,
+  FDEF,
+
+  SWAP,
+  POP,
+  SWAP,
+  POP,
+  DUP,
+  ABS, /* s: width dist */
+
+  PUSHB_2,
+    sal_best,
+    64 + 32 + 2,
+  WS, /* sal_best = 98 */
+
+  DUP,
+  PUSHB_1,
+    sal_ref,
+  SWAP,
+  WS, /* sal_ref = width */
+
+  PUSHB_3,
+};
+
+/*  %c, first index of vertical widths */
+/*  %c, number of vertical widths */
+
+unsigned char FPGM(bci_strong_stem_width_b) [] =
+{
+
+    bci_get_best_width,
+  LOOPCALL,
+
+  POP, /* s: width dist */
+  DUP,
+  PUSHB_1,
+    sal_ref,
+  RS, /* s: width dist dist reference */
+  DUP,
+  ROLL,
+  DUP,
+  ROLL,
+  PUSHB_1,
+    bci_round,
+  CALL, /* s: width dist reference dist dist ROUND(reference) */
+  PUSHB_2,
+    48,
+    5,
+  CINDEX,
+  ROLL, /* s: width dist reference dist ROUND(reference) 48 reference dist */
+
+  LTEQ, /* dist >= reference */
+  IF, /* s: width dist reference dist ROUND(reference) 48 */
+    ADD,
+    LT, /* dist < ROUND(reference) + 48 */
+
+  ELSE,
+    SUB,
+    GT, /* dist > ROUND(reference) - 48 */
+  EIF,
+
+  IF,
+    SWAP, /* s: width reference dist */
+  EIF,
+  POP,
+
+  DUP,
+  PUSHB_1,
+    64,
+  GTEQ, /* dist >= 64 */
+  IF,
+    PUSHB_1,
+      bci_round,
+    CALL, /* dist = ROUND(dist) */
+
+  ELSE,
+    POP,
+    PUSHB_1,
+      64, /* dist = 64 */
+  EIF,
+
+  SWAP, /* s: dist width */
+  PUSHB_1,
+    0,
+  LT, /* width < 0 */
+  IF,
+    NEG, /* dist = -dist */
+  EIF,
+
+  ENDF,
+
+};
+
+
+/*
  * bci_loop
  *
  *   Take a range and a function number and apply the function to all
@@ -2215,7 +2418,8 @@ unsigned char FPGM(bci_adjust_common) [] =
   MD_orig_ZP2_0, /* s: [...] edge2 edge is_round is_serif org_len */
 
   PUSHB_1,
-    bci_smooth_stem_width,
+    cvtl_stem_width_function,
+  RCVT,
   CALL,
   NEG, /* s: [...] edge2 edge -cur_len */
 
@@ -2526,7 +2730,8 @@ unsigned char FPGM(bci_stem_common) [] =
   WS,
 
   PUSHB_1,
-    bci_smooth_stem_width,
+    cvtl_stem_width_function,
+  RCVT,
   CALL, /* s: [...] edge2 edge cur_len */
 
   DUP,
@@ -3097,7 +3302,8 @@ unsigned char FPGM(bci_link) [] =
   MD_orig_ZP2_0, /* s: stem is_round is_serif dist_orig */
 
   PUSHB_1,
-    bci_smooth_stem_width,
+    cvtl_stem_width_function,
+  RCVT,
   CALL, /* s: stem new_dist */
 
   SWAP,
@@ -3284,7 +3490,8 @@ unsigned char FPGM(bci_anchor) [] =
   WS,
 
   PUSHB_1,
-    bci_smooth_stem_width,
+    cvtl_stem_width_function,
+  RCVT,
   CALL, /* s: edge2 edge cur_len */
 
   DUP,
@@ -4647,6 +4854,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_smooth_stem_width_b))
             + 1
             + sizeof (FPGM(bci_smooth_stem_width_c))
+            + sizeof (FPGM(bci_get_best_width))
+            + sizeof (FPGM(bci_strong_stem_width_a))
+            + 2
+            + sizeof (FPGM(bci_strong_stem_width_b))
             + sizeof (FPGM(bci_loop))
             + sizeof (FPGM(bci_cvt_rescale))
             + sizeof (FPGM(bci_blue_round_a))
@@ -4780,6 +4991,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_smooth_stem_width_b);
   *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
   COPY_FPGM(bci_smooth_stem_width_c);
+  COPY_FPGM(bci_get_best_width);
+  COPY_FPGM(bci_strong_stem_width_a);
+  *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
+  *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_SIZE(font);
+  COPY_FPGM(bci_strong_stem_width_b);
   COPY_FPGM(bci_loop);
   COPY_FPGM(bci_cvt_rescale);
   COPY_FPGM(bci_blue_round_a);

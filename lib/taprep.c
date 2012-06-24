@@ -256,6 +256,76 @@ unsigned char PREP(round_blues_b) [] =
 
 };
 
+unsigned char PREP(set_stem_width_handling) [] =
+{
+
+  /*
+   * There are two ClearType flavours available on Windows: The older GDI
+   * ClearType, introduced in 2000, and the recent DW ClearType, introduced
+   * in 2008.  The main difference is that the older incarnation behaves
+   * like a B/W renderer along the y axis, while the newer version does
+   * vertical smoothing also.
+   *
+   * The only possibility to differentiate between GDI and DW ClearType is
+   * testing bit 10 in the GETINFO instruction (with return value in bit 17;
+   * this works for TrueType version >= 38), checking whether sub-pixel
+   * positioning is available.
+   *
+   * If GDI ClearType is active, we use a different stem width function
+   * which snaps to integer pixels as much as possible.
+   */
+
+  /* set smooth positioning as the default */
+  PUSHB_2,
+    cvtl_stem_width_function,
+    bci_smooth_stem_width,
+  WCVTP,
+
+  /* get rasterizer version (bit 0) */
+  PUSHB_1,
+    0x01,
+  GETINFO,
+
+  /* if version >= 36 and version < 38, */
+  /* snap to integers if ClearType is enabled */
+  DUP,
+  PUSHB_1,
+    36,
+  GTEQ,
+  IF,
+    /* check whether ClearType is enabled (bit 6) */
+    PUSHB_1,
+      0x40,
+    GETINFO,
+    IF,
+      PUSHB_2,
+        cvtl_stem_width_function,
+        bci_strong_stem_width,
+      WCVTP,
+
+      /* if version >= 38, snap to integers if ClearType is enabled */
+      /* but sub-pixel positioning is disabled */
+      PUSHB_1,
+        38,
+      GTEQ,
+      IF,
+        /* check whether sub-pixel positioning is enabled (bit 10) */
+        PUSHW_1,
+          0x04,
+          0x00,
+        GETINFO,
+        IF,
+          PUSHB_2,
+            cvtl_stem_width_function,
+            bci_smooth_stem_width,
+          WCVTP,
+        EIF,
+      EIF,
+    EIF,
+  EIF,
+
+};
+
 unsigned char PREP(set_dropout_mode) [] =
 {
 
@@ -363,6 +433,7 @@ TA_table_build_prep(FT_Byte** prep,
                + 2
                + sizeof (PREP(round_blues_b));
 
+  buf_len += sizeof (PREP(set_stem_width_handling));
   buf_len += sizeof (PREP(set_dropout_mode));
   buf_len += sizeof (PREP(reset_component_counter));
 
@@ -434,6 +505,7 @@ TA_table_build_prep(FT_Byte** prep,
     COPY_PREP(round_blues_b);
   }
 
+  COPY_PREP(set_stem_width_handling);
   COPY_PREP(set_dropout_mode);
   COPY_PREP(reset_component_counter);
 
