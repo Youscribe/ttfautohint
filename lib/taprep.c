@@ -282,16 +282,14 @@ unsigned char PREP(set_stem_width_handling) [] =
   WCVTP,
 
   /* get rasterizer version (bit 0) */
-  PUSHB_1,
+  PUSHB_2,
+    36,
     0x01,
   GETINFO,
 
   /* if version >= 36 and version < 38, */
   /* snap to integers if ClearType is enabled */
-  DUP,
-  PUSHB_1,
-    36,
-  GTEQ,
+  LTEQ,
   IF,
     /* check whether ClearType is enabled (bit 6) */
     PUSHB_1,
@@ -303,11 +301,15 @@ unsigned char PREP(set_stem_width_handling) [] =
         bci_strong_stem_width,
       WCVTP,
 
+      /* get rasterizer version (bit 0) */
+      PUSHB_2,
+        38,
+        0x01,
+      GETINFO,
+
       /* if version >= 38, snap to integers if ClearType is enabled */
       /* but sub-pixel positioning is disabled */
-      PUSHB_1,
-        38,
-      GTEQ,
+      LTEQ,
       IF,
         /* check whether sub-pixel positioning is enabled (bit 10) */
         PUSHW_1,
