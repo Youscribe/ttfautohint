@@ -6,9 +6,13 @@
 /ttfautohint.txt
 /ttfautohint-2.pandoc
 
+/handle-images.hi
+/handle-images.o
+/handle-images
+
 /img/ttfautohintGUI.png
 
-/img/blue-zones.png
-/img/glyph-terms.png
-/img/o-and-i.png
-/img/segment-edge.png
+/img/blue-zones.pdf
+/img/glyph-terms.pdf
+/img/o-and-i.pdf
+/img/segment-edge.pdf

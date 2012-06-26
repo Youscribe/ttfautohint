@@ -169,7 +169,6 @@ AC_DEFUN([TA_DOC],
    fi])
 
 image_file=$srcdir/doc/img/ttfautohintGUI.png
-svg2png_file=$srcdir/doc/img/segment-edge.png
 html_file=$srcdir/doc/ttfautohint.html
 pdf_file=$srcdir/doc/ttfautohint.pdf
 
@@ -186,11 +185,11 @@ if test x"$with_doc" != x"no"; then
     fi
   fi
 
-  # conversion of SVG to PNG
+  # conversion of SVG to PDF
   AC_CHECK_PROG([INKSCAPE], [inkscape], [inkscape], [no])
   if test x"$PANDOC" == x"no"; then
-    TA_DOC([$svg2png_file],
-           [Need inkscape to convert SVG to PNG image files])
+    TA_DOC([$pdf_file],
+           [Need inkscape to convert SVG image files to PDF])
   fi
 
   # documentation creation
@@ -198,6 +197,11 @@ if test x"$with_doc" != x"no"; then
   if test x"$PANDOC" == x"no"; then
     TA_DOC([$html_file],
            [Need pandoc to create PDF and HTML documentation files])
+  fi
+  AC_CHECK_PROG([GHC], [ghc], [ghc], [no])
+  if test x"$GHC" == x"no"; then
+    TA_DOC([$html_file],
+           [Need Glasgow Haskell Compiler (ghc) to create pandoc filter])
   fi
 
   # PDF documentation

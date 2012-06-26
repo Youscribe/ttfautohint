@@ -331,7 +331,7 @@ A glyph consists of one or more *contours* (this is, closed curves).  For
 example, glyph 'O' consists of two contours, while glyph 'I' has only one.
 
 ![The letter 'O' has two contours, an inner and an outer one, while letter
-  'I' has only an outer contour.](img/o-and-i.png)
+  'I' has only an outer contour.](img/o-and-i)
 
 A *segment* is a series of consecutive points of a contour (including its
 Bézier control points) that are approximately aligned along a coordinate
@@ -341,7 +341,7 @@ axis.
   circles, respectively.  The bottom 'line' DE is approximately aligned
   along the horizontal axis, thus it forms a segment of 7\ points.  Together
   with the two other horizontal segments, BC and FG, they form two edges
-  (BC+FG, DE).](img/segment-edge.png)
+  (BC+FG, DE).](img/segment-edge)
 
 An *edge* corresponds to a single coordinate value on the main dimension
 that collects one or more segments (allowing for a small threshold).  While
@@ -385,7 +385,7 @@ Blue Zones
 ----------
 
 ![Two blue zones relevant to the glyph 'a'.  Vertical point coordinates of
-  *all* glyphs within these zones are aligned.](img/blue-zones.png)
+  *all* glyphs within these zones are aligned.](img/blue-zones)
 
 Outlines of certain characters are used to determine *blue zones*.  This
 concept is the same as with Type\ 1 fonts: All glyph points which lie in
@@ -409,7 +409,7 @@ gets adjusted to be on the pixel grid; cf. the [`--increase-x-height`
 option](#x-height-increase-limit).
 
 ![This image shows the relevant glyph terms for vertical blue zone
-  positions.](img/glyph-terms.png)
+  positions.](img/glyph-terms)
 
 
 Grid Fitting
