@@ -1658,10 +1658,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   TA_GlyphHints hints;
 
-  FT_UInt num_action_hints_records;
-  FT_UInt num_point_hints_records;
-  Hints_Record* action_hints_records;
-  Hints_Record* point_hints_records;
+  FT_UInt num_action_hints_records = 0;
+  FT_UInt num_point_hints_records = 0;
+  Hints_Record* action_hints_records = NULL;
+  Hints_Record* point_hints_records = NULL;
 
   Recorder recorder;
   FT_UInt num_stack_elements;
@@ -1770,11 +1770,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   ta_loader_register_hints_recorder(font->loader,
                                     TA_hints_recorder,
                                     (void*)&recorder);
-
-  num_action_hints_records = 0;
-  num_point_hints_records = 0;
-  action_hints_records = NULL;
-  point_hints_records = NULL;
 
   for (size = font->hinting_range_min;
        size <= font->hinting_range_max;
@@ -2024,6 +2019,7 @@ Done2:
 
 Done:
   TA_free_hints_records(action_hints_records, num_action_hints_records);
+  TA_free_hints_records(point_hints_records, num_point_hints_records);
   TA_free_recorder(&recorder);
 
   /* we are done, so reallocate the instruction array to its real size */
@@ -2054,6 +2050,7 @@ Done1:
 
 Err:
   TA_free_hints_records(action_hints_records, num_action_hints_records);
+  TA_free_hints_records(point_hints_records, num_point_hints_records);
   TA_free_recorder(&recorder);
   free(ins_buf);
 
