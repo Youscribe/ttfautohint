@@ -86,20 +86,23 @@ if WITH_DOC
 
   ttfautohint.html: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGSVG) \
                     ttfautohint.css template.html $(top_srcdir)/.version
-	  $(PANDOC) --to=json $< \
+	  $(PANDOC) --to=json \
+	            --smart \
+	            $< \
 	  | ./handle-images ".svg" \
 	  | $(PANDOC) --from=json \
 	              --template=$(srcdir)/template.html \
 	              --variable="version:$(VERSION)" \
 	              --toc \
 	              --include-in-header=$(srcdir)/ttfautohint.css \
-	              --smart \
 	              --standalone \
 	              --output=$@
 
   ttfautohint.pdf: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGPDF) \
                    template.tex $(top_srcdir)/.version
-	  $(PANDOC) --to=json $< \
+	  $(PANDOC) --to=json \
+	            --smart \
+	            $< \
 	  | ./handle-images ".pdf" \
 	  | TEXINPUTS="$(srcdir);" \
 	    $(PANDOC) --from=json \
@@ -108,7 +111,6 @@ if WITH_DOC
 	              --variable="version:$(VERSION)" \
 	              --number-sections \
 	              --toc \
-	              --smart \
 	              --standalone \
 	              --output=$@
 else
