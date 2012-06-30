@@ -66,7 +66,7 @@ ttfautohint.txt: $(DOCSRC)
 if WITH_DOC
 
   # the pandoc image filter
-  handleImages: handleImages.hs
+  handle-images: handle-images.hs
 	  $(GHC) -dynamic --make $@
 
   # suffix rules must always start in column 0
