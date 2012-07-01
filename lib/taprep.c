@@ -256,7 +256,7 @@ unsigned char PREP(round_blues_b) [] =
 
 };
 
-unsigned char PREP(set_stem_width_handling) [] =
+unsigned char PREP(set_stem_width_handling_a) [] =
 {
 
   /*
@@ -275,10 +275,17 @@ unsigned char PREP(set_stem_width_handling) [] =
    * which snaps to integer pixels as much as possible.
    */
 
-  /* set smooth positioning as the default */
+  /* set default positioning */
   PUSHB_2,
     cvtl_stem_width_function,
-    bci_smooth_stem_width,
+
+};
+
+/*  %d, either bci_smooth_stem_width or bci_strong_stem_width */
+
+unsigned char PREP(set_stem_width_handling_b) [] =
+{
+
   WCVTP,
 
   /* get rasterizer version (bit 0) */
@@ -287,8 +294,8 @@ unsigned char PREP(set_stem_width_handling) [] =
     0x01,
   GETINFO,
 
-  /* if version >= 36 and version < 38, */
-  /* snap to integers if ClearType is enabled */
+  /* `GDI ClearType': */
+  /* version >= 36 and version < 38, ClearType enabled */
   LTEQ,
   IF,
     /* check whether ClearType is enabled (bit 6) */
@@ -298,7 +305,13 @@ unsigned char PREP(set_stem_width_handling) [] =
     IF,
       PUSHB_2,
         cvtl_stem_width_function,
-        bci_strong_stem_width,
+};
+
+/*      %d, either bci_smooth_stem_width or bci_strong_stem_width */
+
+unsigned char PREP(set_stem_width_handling_c) [] =
+{
+
       WCVTP,
 
       /* get rasterizer version (bit 0) */
@@ -307,8 +320,8 @@ unsigned char PREP(set_stem_width_handling) [] =
         0x01,
       GETINFO,
 
-      /* if version >= 38, snap to integers if ClearType is enabled */
-      /* but sub-pixel positioning is disabled */
+      /* `DW ClearType': */
+      /* version >= 38, sub-pixel positioning is enabled */
       LTEQ,
       IF,
         /* check whether sub-pixel positioning is enabled (bit 10) */
@@ -319,7 +332,14 @@ unsigned char PREP(set_stem_width_handling) [] =
         IF,
           PUSHB_2,
             cvtl_stem_width_function,
-            bci_smooth_stem_width,
+
+};
+
+/*          %d, either bci_smooth_stem_width or bci_strong_stem_width */
+
+unsigned char PREP(set_stem_width_handling_d) [] =
+{
+
           WCVTP,
         EIF,
       EIF,
@@ -435,7 +455,13 @@ TA_table_build_prep(FT_Byte** prep,
                + 2
                + sizeof (PREP(round_blues_b));
 
-  buf_len += sizeof (PREP(set_stem_width_handling));
+  buf_len += sizeof (PREP(set_stem_width_handling_a))
+             + 1
+             + sizeof (PREP(set_stem_width_handling_b))
+             + 1
+             + sizeof (PREP(set_stem_width_handling_c))
+             + 1
+             + sizeof (PREP(set_stem_width_handling_d));
   buf_len += sizeof (PREP(set_dropout_mode));
   buf_len += sizeof (PREP(reset_component_counter));
 
@@ -507,7 +533,16 @@ TA_table_build_prep(FT_Byte** prep,
     COPY_PREP(round_blues_b);
   }
 
-  COPY_PREP(set_stem_width_handling);
+  COPY_PREP(set_stem_width_handling_a);
+  *(buf_p++) = font->gray_strong_stem_width ? bci_strong_stem_width
+                                            : bci_smooth_stem_width;
+  COPY_PREP(set_stem_width_handling_b);
+  *(buf_p++) = font->gdi_cleartype_strong_stem_width ? bci_strong_stem_width
+                                                     : bci_smooth_stem_width;
+  COPY_PREP(set_stem_width_handling_c);
+  *(buf_p++) = font->dw_cleartype_strong_stem_width ? bci_strong_stem_width
+                                                    : bci_smooth_stem_width;
+  COPY_PREP(set_stem_width_handling_d);
   COPY_PREP(set_dropout_mode);
   COPY_PREP(reset_component_counter);
 

@@ -158,6 +158,11 @@ show_help(bool
 "  -s, --symbol               input is symbol font\n"
 "  -v, --verbose              show progress information\n"
 "  -V, --version              print version information and exit\n"
+"  -w, --strong-stem-width=S  use strong stem width routine for modes S,\n"
+"                             where S is a string of up to three letters\n"
+"                             with possible values `g' for grayscale,\n"
+"                             `G' for GDI ClearType, and `D' for\n"
+"                             DirectWrite ClearType (default: G)\n"
 "  -x, --increase-x-height=N  increase x height for sizes in the range\n"
 "                             6<=PPEM<=N; value 0 switches off this feature\n"
 "                             (default: %d)\n"
@@ -283,6 +288,10 @@ main(int argc,
   bool have_hinting_limit = false;
   bool have_increase_x_height = false;
 
+  bool gray_strong_stem_width = false;
+  bool gdi_cleartype_strong_stem_width = true;
+  bool dw_cleartype_strong_stem_width = false;
+
   bool ignore_restrictions = false;
   bool pre_hinting = false;
   bool no_info = false;
@@ -327,6 +336,7 @@ main(int argc,
       {"latin-fallback", no_argument, NULL, 'f'},
       {"no-info", no_argument, NULL, 'n'},
       {"pre-hinting", no_argument, NULL, 'p'},
+      {"strong-stem-width", required_argument, NULL, 'w'},
       {"symbol", no_argument, NULL, 's'},
       {"verbose", no_argument, NULL, 'v'},
       {"version", no_argument, NULL, 'V'},
@@ -362,7 +372,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvx:X:",
+    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvx:X:w:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -420,6 +430,12 @@ main(int argc,
 #ifdef CONSOLE_OUTPUT
       show_version();
 #endif
+      break;
+
+    case 'w':
+      gray_strong_stem_width = strchr(optarg, 'g') ? true : false;
+      gdi_cleartype_strong_stem_width = strchr(optarg, 'G') ? true : false;
+      dw_cleartype_strong_stem_width = strchr(optarg, 'D') ? true : false;
       break;
 
     case 'x':
@@ -537,6 +553,10 @@ main(int argc,
     info_data.hinting_range_max = hinting_range_max;
     info_data.hinting_limit = hinting_limit;
 
+    info_data.gray_strong_stem_width = gray_strong_stem_width;
+    info_data.gdi_cleartype_strong_stem_width = gdi_cleartype_strong_stem_width;
+    info_data.dw_cleartype_strong_stem_width = dw_cleartype_strong_stem_width;
+
     info_data.pre_hinting = pre_hinting;
     info_data.increase_x_height = increase_x_height;
     info_data.latin_fallback = latin_fallback;
@@ -548,6 +568,8 @@ main(int argc,
   TA_Error error =
     TTF_autohint("in-file, out-file,"
                  "hinting-range-min, hinting-range-max, hinting-limit,"
+                 "gray-strong-stem-width, gdi-cleartype-strong-stem-width,"
+                 "dw-cleartype-strong-stem-width,"
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
@@ -555,6 +577,8 @@ main(int argc,
                  "fallback-script, symbol",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
+                 gray_strong_stem_width, gdi_cleartype_strong_stem_width,
+                 dw_cleartype_strong_stem_width,
                  &error_string,
                  progress_func, &progress_data,
                  info_func, &info_data,
@@ -620,6 +644,8 @@ main(int argc,
   app.setOrganizationDomain("freetype.org");
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
+               gray_strong_stem_width, gdi_cleartype_strong_stem_width,
+               dw_cleartype_strong_stem_width,
                increase_x_height, ignore_restrictions, pre_hinting,
                no_info, latin_fallback, symbol);
   gui.show();

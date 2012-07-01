@@ -209,6 +209,45 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
     is strongly recommended to not use this except for testing purposes.
 
+### Stem Width and Stem Positioning
+
+`--strong-stem-width=`*string*, `-w`\ *string*
+:   ttfautohint offers two different routines to handle stem widths and stem
+    positions: 'smooth' and 'strong'.  The former uses discrete values which
+    slightly increase the stem contrast with almost no distortion of the
+    outlines, while the latter snaps both stem widths and stem positions to
+    integer pixel values as much as possible, yielding a crisper appearance
+    at the cost of much more distortion.
+
+    These two routines are mapped onto three possible rendering targets:
+
+    - grayscale rendering, with or without optimization for subpixel
+      positioning (e.g. Mac OS\ X)
+
+    - 'GDI ClearType' rendering: the rasterizer version, as returned by the
+      GETINFO bytecode instruction, is in the range 36\ <= version <\ 38 and
+      ClearType is enabled (e.g. Windows XP)
+
+    - 'DirectWrite ClearType' rendering: the rasterizer version, as returned
+      by the GETINFO bytecode instruction, is >=\ 38, ClearType is enabled,
+      and subpixel positioning is enabled also (e.g.  Windows\ 7)
+
+    GDI ClearType uses a mode similar to B/W rendering along the vertical
+    axis, while DW ClearType applies grayscale rendering.  Additionally,
+    only DW ClearType provides subpixel positioning along the x\ axis.
+
+    The command line option expects *string* to contain up to three letters
+    with possible values '`g`' for grayscale, '`G`' for GDI ClearType, and
+    '`D`' for DW ClearType.  If a letter is found in *string*, the strong
+    stem width routine is used for the corresponding rendering target.  The
+    default value is '`G`' which means that strong stem width handling is
+    activated for GDI ClearType only.  To use smooth stem width handling for
+    all three rendering targets, use the empty string as an argument,
+    usually connoted with '`""`'.
+
+    In the GUI, the option is split into three sets of radio buttons to
+    select the stem width routine for a given rendering target.
+
 ### x Height Increase Limit
 
 `--increase-x-height=`*n*, `-x`\ *n*

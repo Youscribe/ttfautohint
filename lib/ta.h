@@ -202,6 +202,9 @@ typedef struct FONT_
   FT_UInt hinting_range_max;
   FT_UInt hinting_limit;
   FT_UInt increase_x_height;
+  FT_Bool gray_strong_stem_width;
+  FT_Bool gdi_cleartype_strong_stem_width;
+  FT_Bool dw_cleartype_strong_stem_width;
   FT_Bool pre_hinting;
   FT_Bool no_x_height_snapping;
   FT_Byte* x_height_snapping_exceptions;

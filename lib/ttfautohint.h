@@ -240,6 +240,26 @@ typedef int
  *     this field is not set, it defaults to `TA_HINTING_LIMIT`.  If it is
  *     set to\ 0, no hinting limit is added to the bytecode.
  *
+ * `gray-strong-stem-width`
+ * :   An integer (1\ for 'on' and 0\ for 'off', which is the default) which
+ *     specifies whether horizontal stems should be snapped and positioned
+ *     to integer pixel values for normal grayscale rendering.
+ *
+ * `gdi-cleartype-strong-stem-width`
+ * :   An integer (1\ for 'on', which is the default, and 0\ for 'off') which
+ *     specifies whether horizontal stems should be snapped and positioned
+ *     to integer pixel values for GDI ClearType rendering, this is, the
+ *     rasterizer version (as returned by the GETINFO bytecode instruction)
+ *     is in the range 36\ <= version <\ 38 and ClearType is enabled.
+ *
+ * `dw-cleartype-strong-stem-width`
+ * :   An integer (1\ for 'on' and 0\ for 'off', which is the default) which
+ *     specifies whether horizontal stems should be snapped and positioned
+ *     to integer pixel values for DW ClearType rendering, this is, the
+ *     rasterizer version (as returned by the GETINFO bytecode instruction)
+ *     is >=\ 38, ClearType is enabled, and subpixel positioning is enabled
+ *     also.
+ *
  * `increase-x-height`
  * :   An integer in the range 6-20.  For PPEM values in the range 6\ <=
  *     PPEM <=\ `increase-x-height`, round up the font's x\ height much more

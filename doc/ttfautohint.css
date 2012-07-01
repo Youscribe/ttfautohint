@@ -68,7 +68,7 @@
     right: 100%;
     width: 45em;
     max-width: 66%;
-    overflow: hidden; }
+    /* overflow: hidden; */ }
   .leftmenu .col2 {
     float: left;
     width: 13em; /* wd2 */

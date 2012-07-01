@@ -28,18 +28,28 @@ build_version_string(Info_Data* idata)
 {
   char* d;
   char* dw;
+  char strong[4];
+  int count;
 
   d = (char*)idata->data;
   d += sprintf(d, "; ttfautohint (v%s)", VERSION);
 
-  if (idata->hinting_range_min != TA_HINTING_RANGE_MIN)
-    d += sprintf(d, " -l %d", idata->hinting_range_min);
-  if (idata->hinting_range_max != TA_HINTING_RANGE_MAX)
-    d += sprintf(d, " -r %d", idata->hinting_range_max);
-  if (idata->hinting_limit != TA_HINTING_LIMIT)
-    d += sprintf(d, " -G %d", idata->hinting_limit);
-  if (idata->increase_x_height != TA_INCREASE_X_HEIGHT)
-    d += sprintf(d, " -x %d", idata->increase_x_height);
+  d += sprintf(d, " -l %d", idata->hinting_range_min);
+  d += sprintf(d, " -r %d", idata->hinting_range_max);
+  d += sprintf(d, " -G %d", idata->hinting_limit);
+  d += sprintf(d, " -x %d", idata->increase_x_height);
+
+  count = 0;
+  strong[1] = '\0';
+  strong[2] = '\0';
+  strong[3] = '\0';
+  if (idata->gray_strong_stem_width)
+    strong[count++] = 'g';
+  if (idata->gdi_cleartype_strong_stem_width)
+    strong[count++] = 'G';
+  if (idata->dw_cleartype_strong_stem_width)
+    strong[count++] = 'D';
+  d+= sprintf(d, " -w \"%s\"", strong);
 
   if (idata->pre_hinting)
     d += sprintf(d, " -p");

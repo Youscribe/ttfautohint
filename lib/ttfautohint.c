@@ -52,6 +52,10 @@ TTF_autohint(const char* options,
   FT_Long hinting_limit = -1;
   FT_Long increase_x_height = -1;
 
+  FT_Bool gray_strong_stem_width = 0;
+  FT_Bool gdi_cleartype_strong_stem_width = 1;
+  FT_Bool dw_cleartype_strong_stem_width = 0;
+
   TA_Progress_Func progress;
   void* progress_data;
   TA_Info_Func info;
@@ -101,10 +105,16 @@ TTF_autohint(const char* options,
     /* the `COMPARE' macro uses `len' and `start' */
 
     /* handle option */
-    if (COMPARE("error-string"))
+    if (COMPARE("dw-cleartype-strong-stem-width"))
+      dw_cleartype_strong_stem_width = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("error-string"))
       error_stringp = va_arg(ap, const unsigned char**);
     else if (COMPARE("fallback-script"))
       fallback_script = va_arg(ap, FT_UInt);
+    else if (COMPARE("gdi-cleartype-strong-stem-width"))
+      gdi_cleartype_strong_stem_width = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("gray-strong-stem-width"))
+      gray_strong_stem_width = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("hinting-limit"))
       hinting_limit = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-max"))
@@ -234,6 +244,10 @@ TTF_autohint(const char* options,
   font->hinting_range_max = (FT_UInt)hinting_range_max;
   font->hinting_limit = (FT_UInt)hinting_limit;
   font->increase_x_height = increase_x_height;
+
+  font->gray_strong_stem_width = gray_strong_stem_width;
+  font->gdi_cleartype_strong_stem_width = gdi_cleartype_strong_stem_width;
+  font->dw_cleartype_strong_stem_width = dw_cleartype_strong_stem_width;
 
   font->progress = progress;
   font->progress_data = progress_data;

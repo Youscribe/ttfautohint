@@ -28,6 +28,11 @@ typedef struct Info_Data_
   int hinting_range_min;
   int hinting_range_max;
   int hinting_limit;
+
+  bool gray_strong_stem_width;
+  bool gdi_cleartype_strong_stem_width;
+  bool dw_cleartype_strong_stem_width;
+
   int increase_x_height;
 
   bool pre_hinting;

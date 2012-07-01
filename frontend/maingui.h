@@ -22,15 +22,16 @@
 #include <ttfautohint.h>
 
 class QAction;
+class QButtonGroup;
+class QCheckBox;
+class QComboBox;
+class QFile;
 class QLabel;
-class QMenu;
+class QLocale;
 class QLineEdit;
+class QMenu;
 class QPushButton;
 class QSpinBox;
-class QComboBox;
-class QCheckBox;
-class QLocale;
-class QFile;
 
 class Main_GUI
 : public QMainWindow
@@ -38,7 +39,10 @@ class Main_GUI
   Q_OBJECT
 
 public:
-  Main_GUI(int, int, int, int, bool, bool, bool, int, bool);
+  Main_GUI(int, int, int,
+           bool, bool, bool,
+           int, bool, bool,
+           bool, int, bool);
 
 protected:
   void closeEvent(QCloseEvent*);
@@ -61,6 +65,9 @@ private:
   int hinting_range_min;
   int hinting_range_max;
   int hinting_limit;
+  int gray_strong_stem_width;
+  int gdi_cleartype_strong_stem_width;
+  int dw_cleartype_strong_stem_width;
   int increase_x_height;
   int ignore_restrictions;
   int pre_hinting;
@@ -69,6 +76,7 @@ private:
   int symbol;
 
   void create_layout();
+
   void create_connections();
   void create_actions();
   void create_menus();
@@ -91,6 +99,10 @@ private:
 
   QSpinBox* min_box;
   QSpinBox* max_box;
+
+  QButtonGroup* gray_button_group;
+  QButtonGroup* gdi_button_group;
+  QButtonGroup* dw_button_group;
 
   QComboBox* fallback_box;
 
