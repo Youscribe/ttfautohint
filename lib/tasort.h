@@ -28,8 +28,9 @@ ta_sort_pos(FT_UInt count,
             FT_Pos* table);
 
 void
-ta_sort_widths(FT_UInt count,
-               TA_Width widths);
+ta_sort_and_quantize_widths(FT_UInt* count,
+                            TA_Width widths,
+                            FT_Pos threshold);
 
 #endif /* __TASORT_H__ */
 
