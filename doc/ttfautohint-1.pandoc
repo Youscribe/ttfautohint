@@ -234,7 +234,9 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
     GDI ClearType uses a mode similar to B/W rendering along the vertical
     axis, while DW ClearType applies grayscale rendering.  Additionally,
-    only DW ClearType provides subpixel positioning along the x\ axis.
+    only DW ClearType provides subpixel positioning along the x\ axis.  For
+    what it's worth, the rasterizers version\ 36 and version\ 38 in
+    Microsoft Windows are two completely different rendering engines.
 
     The command line option expects *string* to contain up to three letters
     with possible values '`g`' for grayscale, '`G`' for GDI ClearType, and
