@@ -188,8 +188,8 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
   /* `ta_latin_blue_chars[blues]' string, then finding its top-most or */
   /* bottom-most points (depending on `TA_IS_TOP_BLUE') */
 
-  TA_LOG(("blue zones computation\n"));
-  TA_LOG(("------------------------------------------------\n"));
+  TA_LOG(("blue zones computation\n"
+          "======================\n\n"));
 
   for (bb = 0; bb < TA_LATIN_BLUE_MAX; bb++)
   {
@@ -199,7 +199,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
     FT_Pos* blue_shoot;
 
 
-    TA_LOG(("blue %3d: ", bb));
+    TA_LOG(("blue zone %d:\n", bb));
 
     num_flats = 0;
     num_rounds = 0;
@@ -212,8 +212,6 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
       FT_Vector* points;
       FT_Bool round = 0;
 
-
-      TA_LOG(("'%c'", *p));
 
       /* load the character in the face -- skip unknown or empty ones */
       glyph_index = FT_Get_Char_Index(face, (FT_UInt)*p);
@@ -278,7 +276,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
             best_last = last;
           }
         }
-        TA_LOG(("%5ld", best_y));
+        TA_LOG(("  %c  %ld", *p, best_y));
       }
 
       /* now check whether the point belongs to a straight or round */
@@ -324,7 +322,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
           FT_CURVE_TAG(glyph->outline.tags[prev]) != FT_CURVE_TAG_ON
           || FT_CURVE_TAG(glyph->outline.tags[next]) != FT_CURVE_TAG_ON);
 
-        TA_LOG(("%c ", round ? 'r' : 'f'));
+        TA_LOG((" (%s)\n", round ? "round" : "flat"));
       }
 
       if (round)
@@ -333,13 +331,11 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
         flats[num_flats++] = best_y;
     }
 
-    TA_LOG(("\n"));
-
     if (num_flats == 0 && num_rounds == 0)
     {
       /* we couldn't find a single glyph to compute this blue zone, */
       /* we will simply ignore it then */
-      TA_LOG(("empty\n"));
+      TA_LOG(("  empty\n"));
       continue;
     }
 
@@ -382,8 +378,13 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
 
 
       if (TA_LATIN_IS_TOP_BLUE(bb) ^ over_ref)
+      {
         *blue_ref =
         *blue_shoot = (shoot + ref) / 2;
+
+        TA_LOG(("  [overshoot smaller than reference,"
+                " taking mean value]\n"));
+      }
     }
 
     blue->flags = 0;
@@ -396,7 +397,9 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
     if (bb == TA_LATIN_BLUE_SMALL_TOP)
       blue->flags |= TA_LATIN_BLUE_ADJUSTMENT;
 
-    TA_LOG(("-- ref = %ld, shoot = %ld\n", *blue_ref, *blue_shoot));
+    TA_LOG(("    -> reference = %ld\n"
+            "       overshoot = %ld\n",
+            *blue_ref, *blue_shoot));
   }
 
   TA_LOG(("\n"));

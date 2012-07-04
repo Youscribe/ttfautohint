@@ -23,6 +23,7 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
   FT_Error error;
   FT_Face face = sfnt->face;
   FT_UInt idx;
+  FT_Int32 load_flags;
 
 
   error = ta_loader_init(font->loader);
@@ -45,8 +46,9 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
       return TA_Err_Missing_Glyph;
   }
 
-  error = ta_loader_load_glyph(font->loader, face, idx,
-                               font->fallback_script << 30);
+  load_flags = font->fallback_script << 30;
+  load_flags |= 1 << 29; /* vertical hinting only */
+  error = ta_loader_load_glyph(font->loader, face, idx, load_flags);
 
   return error;
 }

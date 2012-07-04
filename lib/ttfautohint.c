@@ -382,6 +382,9 @@ TTF_autohint(const char* options,
 
   /* XXX handle subfonts for bytecode tables */
 
+  if (font->debug)
+    _ta_debug = 1;
+
   /* build `cvt ' table */
   error = TA_sfnt_build_cvt_table(&font->sfnts[0], font);
   if (error)

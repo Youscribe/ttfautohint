@@ -1673,9 +1673,6 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Byte* pos[3];
 
 
-  if (font->debug)
-    _ta_debug = 1;
-
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
   load_flags = font->fallback_script << 30;
