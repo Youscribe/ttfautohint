@@ -284,6 +284,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
       /* lies, then inspect its previous and next points */
       if (best_point >= 0)
       {
+        FT_Pos best_x = points[best_point].x;
         FT_Int prev, next;
         FT_Pos dist;
 
@@ -300,9 +301,12 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
           else
             prev = best_last;
 
-          dist = points[prev].y - best_y;
-          if (dist < -5 || dist > 5)
-            break;
+          dist = TA_ABS(points[prev].y - best_y);
+          /* accept a small distance or a small angle (both values are */
+          /* heuristic; value 20 corresponds to approx. 2.9 degrees)   */
+          if (dist > 5)
+            if (TA_ABS(points[prev].x - best_x) <= 20 * dist)
+              break;
         } while (prev != best_point);
 
         do
@@ -312,9 +316,10 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
           else
             next = best_first;
 
-          dist = points[next].y - best_y;
-          if (dist < -5 || dist > 5)
-            break;
+          dist = TA_ABS(points[next].y - best_y);
+          if (dist > 5)
+            if (TA_ABS(points[next].x - best_x) <= 20 * dist)
+              break;
         } while (next != best_point);
 
         /* now set the `round' flag depending on the segment's kind */
