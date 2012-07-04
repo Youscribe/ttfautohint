@@ -23,8 +23,13 @@
 #include "ta.h"
 
 
-#define COMPARE(str) (len == (sizeof (str) - 1) \
-                      && !strncmp(start, str, sizeof (str) - 1))
+#define COMPARE(str) \
+          (len == (sizeof (str) - 1) \
+           && !strncmp(start, str, sizeof (str) - 1))
+#define DUMP(str, arg) \
+          fprintf(stderr, "%33s = %ld\n", \
+                          (str), \
+                          (FT_Long)(arg))
 
 
 TA_Error
@@ -106,7 +111,7 @@ TTF_autohint(const char* options,
 
     /* the `COMPARE' macro uses `len' and `start' */
 
-    /* handle option */
+    /* handle options -- don't forget to update parameter dump below! */
     if (COMPARE("debug"))
       debug = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("dw-cleartype-strong-stem-width"))
@@ -265,6 +270,38 @@ TTF_autohint(const char* options,
   font->symbol = symbol;
 
   font->debug = debug;
+
+  /* dump parameters */
+  if (debug)
+  {
+    fprintf(stderr, "TTF_autohint parameters\n"
+                    "=======================\n\n");
+
+    DUMP("dw-cleartype-strong-stem-width",
+         font->dw_cleartype_strong_stem_width);
+    DUMP("fallback-script",
+         font->fallback_script);
+    DUMP("gdi-cleartype-strong-stem-width",
+         font->gdi_cleartype_strong_stem_width);
+    DUMP("gray-strong-stem-width",
+         font->gray_strong_stem_width);
+    DUMP("hinting-limit",
+         font->hinting_limit);
+    DUMP("hinting-range-max",
+         font->hinting_range_max);
+    DUMP("hinting-range-min",
+         font->hinting_range_min);
+    DUMP("ignore-restrictions",
+         font->ignore_restrictions);
+    DUMP("increase-x-height",
+         font->increase_x_height);
+    DUMP("pre-hinting",
+         font->pre_hinting);
+    DUMP("symbol",
+         font->symbol);
+
+    fprintf(stderr, "\n\n");
+  }
 
   /* now start with processing the data */
 
