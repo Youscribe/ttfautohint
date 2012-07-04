@@ -278,7 +278,7 @@ typedef int
  *
  * `info-callback`
  * :   A pointer of type [`TA_Info_Func`](#callback-ta_info_func),
- *     specifying a callback function for manipulating the `name` table. 
+ *     specifying a callback function for manipulating the `name` table.
  *     This function gets called for each `name` table entry.  If not set or
  *     set to NULL, the table data stays unmodified.
  *
@@ -317,10 +317,14 @@ typedef int
  *     (for the latin script, it is character 'o').  The default value
  *     is\ 0.
  *
+ * `debug`
+ * :   If this integer is set to\ 1, lots of debugging information is print
+ *     to stderr.  The default value is\ 0.
+ *
  * Remarks:
  *
- *   * Obviously, it is necessary to have an input and an output data stream.
- *     All other options are optional.
+ *   * Obviously, it is necessary to have an input and an output data
+ *     stream.  All other options are optional.
  *
  *   * `hinting-range-min` and `hinting-range-max` specify the range for
  *     which the autohinter generates optimized hinting code.  If a PPEM

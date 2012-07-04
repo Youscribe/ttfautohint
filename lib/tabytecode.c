@@ -27,11 +27,11 @@
 #define ADDITIONAL_STACK_ELEMENTS 20
 
 
-/* #define DEBUGGING */
+#define DEBUGGING
 
 
 #ifdef TA_DEBUG
-int _ta_debug = 1;
+int _ta_debug = 0;
 int _ta_debug_disable_horz_hints;
 int _ta_debug_disable_vert_hints;
 int _ta_debug_disable_blue_hints;
@@ -1673,6 +1673,9 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   FT_Byte* pos[3];
 
 
+  if (font->debug)
+    _ta_debug = 1;
+
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
   load_flags = font->fallback_script << 30;
@@ -1754,6 +1757,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   /* to find hints records which get pushed onto the bytecode stack */
 
 #ifdef DEBUGGING
+  if (font->debug)
   {
     int num_chars, i;
 
@@ -1798,6 +1802,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                      ins_buf, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
+      if (font->debug)
       {
         have_dumps = 1;
 
@@ -1833,6 +1838,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
                                      ins_buf, recorder.hints_record.buf))
     {
 #ifdef DEBUGGING
+      if (font->debug)
       {
         if (!have_dumps)
         {

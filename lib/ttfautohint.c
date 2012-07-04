@@ -66,6 +66,8 @@ TTF_autohint(const char* options,
   FT_UInt fallback_script = 0;
   FT_Bool symbol = 0;
 
+  FT_Bool debug = 0;
+
   const char* op;
 
 
@@ -105,7 +107,9 @@ TTF_autohint(const char* options,
     /* the `COMPARE' macro uses `len' and `start' */
 
     /* handle option */
-    if (COMPARE("dw-cleartype-strong-stem-width"))
+    if (COMPARE("debug"))
+      debug = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("dw-cleartype-strong-stem-width"))
       dw_cleartype_strong_stem_width = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("error-string"))
       error_stringp = va_arg(ap, const unsigned char**);
@@ -259,6 +263,8 @@ TTF_autohint(const char* options,
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
   font->symbol = symbol;
+
+  font->debug = debug;
 
   /* now start with processing the data */
 

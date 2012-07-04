@@ -138,6 +138,9 @@ show_help(bool
 
   fprintf(handle,
 "Options:\n"
+#ifndef BUILD_GUI
+"      --debug                print debugging information\n"
+#endif
 "  -f, --latin-fallback       set fallback script to latin\n"
 "  -G, --hinting-limit=N      switch off hinting above this PPEM value\n"
 "                             (default: %d); value 0 means no limit\n"
@@ -299,6 +302,8 @@ main(int argc,
   bool symbol = false;
 
 #ifndef BUILD_GUI
+  bool debug = false;
+
   TA_Progress_Func progress_func = NULL;
   TA_Info_Func info_func = info;
 #endif
@@ -317,7 +322,8 @@ main(int argc,
     enum
     {
       PASS_THROUGH = CHAR_MAX + 1,
-      HELP_ALL_OPTION
+      HELP_ALL_OPTION,
+      DEBUG_OPTION
     };
 
     static struct option long_options[] =
@@ -328,6 +334,9 @@ main(int argc,
 #endif
 
       // ttfautohint options
+#ifndef BUILD_GUI
+      {"debug", no_argument, NULL, DEBUG_OPTION},
+#endif
       {"hinting-limit", required_argument, NULL, 'G'},
       {"hinting-range-max", required_argument, NULL, 'r'},
       {"hinting-range-min", required_argument, NULL, 'l'},
@@ -449,11 +458,19 @@ main(int argc,
 #endif
       break;
 
+#ifndef BUILD_GUI
+    case DEBUG_OPTION:
+      debug = true;
+      break;
+#endif
+
+#ifdef BUILD_GUI
     case HELP_ALL_OPTION:
 #ifdef CONSOLE_OUTPUT
       show_help(true, false);
 #endif
       break;
+#endif
 
     case PASS_THROUGH:
       {
@@ -574,7 +591,8 @@ main(int argc,
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
                  "ignore-restrictions, pre-hinting, increase-x-height,"
-                 "fallback-script, symbol",
+                 "fallback-script, symbol,"
+                 "debug",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
                  gray_strong_stem_width, gdi_cleartype_strong_stem_width,
@@ -583,7 +601,8 @@ main(int argc,
                  progress_func, &progress_data,
                  info_func, &info_data,
                  ignore_restrictions, pre_hinting, increase_x_height,
-                 latin_fallback, symbol);
+                 latin_fallback, symbol,
+                 debug);
 
   if (error)
   {

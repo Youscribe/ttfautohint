@@ -29,7 +29,7 @@
 /* enable one of the following three definitions for debugging */
 /* #define TA_DEBUG */
 /* #define TA_DEBUG_HORZ */
-/* #define TA_DEBUG_VERT */
+#define TA_DEBUG_VERT
 
 #if defined TA_DEBUG_HORZ
 #  define TA_DEBUG_STARTDIM TA_DIMENSION_HORZ
