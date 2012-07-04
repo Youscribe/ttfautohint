@@ -1760,10 +1760,16 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (font->debug)
   {
     int num_chars, i;
+    char buf[256];
 
 
-    num_chars = fprintf(stderr, "glyph %ld\n", idx);
-    for (i = 0; i < num_chars - 1; i++)
+    (void)FT_Get_Glyph_Name(face, idx, buf, 256);
+
+    num_chars = fprintf(stderr, "glyph %ld", idx);
+    if (*buf)
+      num_chars += fprintf(stderr, " (%s)", buf);
+    fprintf(stderr, "\n");
+    for (i = 0; i < num_chars; i++)
       putc('=', stderr);
     fprintf(stderr, "\n\n");
 
