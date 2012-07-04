@@ -433,7 +433,7 @@ ta_direction_compute(FT_Pos dx,
   }
 
   /* return no direction if arm lengths differ too much */
-  /* (value 14 is heuristic)                            */
+  /* (value 14 is heuristic, corresponding to approx. 4.1 degrees) */
   ss *= 14;
   if (TA_ABS(ll) <= TA_ABS(ss))
     dir = TA_DIR_NONE;
