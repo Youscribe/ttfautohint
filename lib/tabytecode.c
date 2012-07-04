@@ -1672,6 +1672,10 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   FT_Byte* pos[3];
 
+#ifdef TA_DEBUG
+  int _ta_debug_save;
+#endif
+
 
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
@@ -1689,8 +1693,20 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (error)
     return error;
 
+#ifdef TA_DEBUG
+  /* temporarily disable debugging output */
+  /* to avoid getting the information twice */
+  _ta_debug_save = _ta_debug;
+  _ta_debug = 0;
+#endif
+
   ta_loader_register_hints_recorder(font->loader, NULL, NULL);
   error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, load_flags);
+
+#ifdef TA_DEBUG
+  _ta_debug = _ta_debug_save;
+#endif
+
   if (error)
     return error;
 
