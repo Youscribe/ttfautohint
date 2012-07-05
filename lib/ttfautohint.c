@@ -275,7 +275,7 @@ TTF_autohint(const char* options,
   if (debug)
   {
     fprintf(stderr, "TTF_autohint parameters\n"
-                    "=======================\n");
+                    "=======================\n\n");
 
     DUMP("dw-cleartype-strong-stem-width",
          font->dw_cleartype_strong_stem_width);

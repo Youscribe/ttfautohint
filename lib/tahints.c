@@ -279,13 +279,18 @@ ta_glyph_hints_dump_segments(TA_GlyphHints hints)
     fprintf(stderr, "Table of %s segments:\n",
             dimension == TA_DIMENSION_HORZ ? "vertical"
                                            : "horizontal");
-    fprintf(stderr, "  [ index |  pos  |  dir  | from |  to  | link | serif | edge |"
-                    " height | extra |    flags    ]\n");
+    if (axis->num_segments)
+      fprintf(stderr, "  [ index |  pos  |  dir  | from"
+                      " |  to  | link | serif | edge"
+                      " | height | extra |    flags    ]\n");
+    else
+      fprintf(stderr, "  (none)\n");
 
     for (seg = segments; seg < limit; seg++)
     {
-      fprintf(stderr, "  [ %5d | %5.2g | %5s | %4d | %4d | %4d | %5d | %4d |"
-                      " %6d | %5d | %11s ]\n",
+      fprintf(stderr, "  [ %5d | %5.2g | %5s | %4d"
+                      " | %4d | %4d | %5d | %4d"
+                      " | %6d | %5d | %11s ]\n",
               seg - segments,
               dimension == TA_DIMENSION_HORZ ? (int)seg->first->ox / 64.0
                                              : (int)seg->first->oy / 64.0,
@@ -327,13 +332,16 @@ ta_glyph_hints_dump_edges(TA_GlyphHints hints)
     fprintf(stderr, "Table of %s edges:\n",
             dimension == TA_DIMENSION_HORZ ? "vertical"
                                            : "horizontal");
-    fprintf(stderr, "  [ index |  pos  |  dir  | link |"
-                    " serif | blue | opos  |  pos  |    flags    ]\n");
+    if (axis->num_edges)
+      fprintf(stderr, "  [ index |  pos  |  dir  | link"
+                      " | serif | blue | opos  |  pos  |    flags    ]\n");
+    else
+      fprintf(stderr, "  (none)\n");
 
     for (edge = edges; edge < limit; edge++)
     {
-      fprintf(stderr, "  [ %5d | %5.2g | %5s | %4d |"
-                      " %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
+      fprintf(stderr, "  [ %5d | %5.2g | %5s | %4d"
+                      " | %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
               edge - edges,
               (int)edge->opos / 64.0,
               ta_dir_str((TA_Direction)edge->dir),

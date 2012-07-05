@@ -1823,17 +1823,29 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 #ifdef DEBUGGING
       if (font->debug)
       {
+        int num_chars, i;
+
+
         have_dumps = 1;
 
-        fprintf(stderr, "  size %d:\n", size);
+        num_chars = fprintf(stderr, "size %d\n", size);
+        for (i = 0; i < num_chars - 1; i++)
+          putc('-', stderr);
+        fprintf(stderr, "\n\n");
 
         ta_glyph_hints_dump_edges(_ta_debug_hints);
         ta_glyph_hints_dump_segments(_ta_debug_hints);
         ta_glyph_hints_dump_points(_ta_debug_hints);
 
-        fprintf(stderr, "  action hints record:\n");
-        for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
-          fprintf(stderr, " %2d", *p * 256 + *(p + 1));
+        fprintf(stderr, "action hints record:\n");
+        if (ins_buf == recorder.hints_record.buf)
+          fprintf(stderr, "  (none)");
+        else
+        {
+          fprintf(stderr, "  ");
+          for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
+            fprintf(stderr, " %2d", *p * 256 + *(p + 1));
+        }
         fprintf(stderr, "\n");
       }
 #endif
@@ -1861,17 +1873,29 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
       {
         if (!have_dumps)
         {
-          fprintf(stderr, "  size %d:\n", size);
+          int num_chars, i;
+
+
+          num_chars = fprintf(stderr, "size %d\n", size);
+          for (i = 0; i < num_chars - 1; i++)
+            putc('-', stderr);
+          fprintf(stderr, "\n\n");
 
           ta_glyph_hints_dump_edges(_ta_debug_hints);
           ta_glyph_hints_dump_segments(_ta_debug_hints);
           ta_glyph_hints_dump_points(_ta_debug_hints);
         }
 
-        fprintf(stderr, "  point hints record:\n");
-        for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
-          fprintf(stderr, " %2d", *p * 256 + *(p + 1));
-        fprintf(stderr, "\n");
+        fprintf(stderr, "point hints record:\n");
+        if (ins_buf == recorder.hints_record.buf)
+          fprintf(stderr, "  (none)");
+        else
+        {
+          fprintf(stderr, "  ");
+          for (p = ins_buf; p < recorder.hints_record.buf; p += 2)
+            fprintf(stderr, " %2d", *p * 256 + *(p + 1));
+        }
+        fprintf(stderr, "\n\n");
       }
 #endif
 
