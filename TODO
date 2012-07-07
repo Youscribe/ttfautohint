@@ -2,14 +2,9 @@
 important improvements
 ----------------------
 
-try to reduce size of hints even more
-
 add features to the GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
-
-improve handling of GDI ClearType by snapping to the pixel grid (this is,
-  integer coordinates of horizontal segments)
 
 handle OT features
   -> use HarfBuzz?
@@ -31,10 +26,6 @@ control `gasp' table; Adam Twardoch suggest the following:
   parameter > 0, then up to that parameter value the gasp value 7 should be
   applied, and gasp value 15 should be applied above.
 
-control activation threshold of blue zone widths; handle fonts with large
-  serifs like `Palatino' or `Quattrocento' (cf. this bug report:
-  https://savannah.nongnu.org/bugs/?36091)
-
 create a separate blue zone class for `i' and `j':
   . if the values differ more than a given threshold, handle them
     separately
@@ -47,6 +38,9 @@ user-defined blue zones?
   -> old-style digits
 
 control the width of blue zones
+
+add control over character ranges which define a script; in particular, add
+  support for the PUA
 
 handle normal and bold fonts differently; cf. Infinality patches;
   this should help avoid filling of bowls (like in `e') for bold shapes.
