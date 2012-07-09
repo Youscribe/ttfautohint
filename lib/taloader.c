@@ -120,9 +120,11 @@ ta_loader_load_g(TA_Loader loader,
 #if 0
   FT_Slot_Internal internal = slot->internal;
 #endif
+  FT_Int32 flags;
 
 
-  error = FT_Load_Glyph(face, glyph_index, load_flags);
+  flags = load_flags | FT_LOAD_LINEAR_DESIGN;
+  error = FT_Load_Glyph(face, glyph_index, flags);
   if (error)
     goto Exit;
 
@@ -141,10 +143,6 @@ ta_loader_load_g(TA_Loader loader,
     FT_Vector_Transform(&loader->trans_delta, &inverse);
   }
 #endif
-
-  /* set linear metrics */
-  slot->linearHoriAdvance = slot->metrics.horiAdvance;
-  slot->linearVertAdvance = slot->metrics.vertAdvance;
 
   switch (slot->format)
   {
