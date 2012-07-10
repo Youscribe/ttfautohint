@@ -749,7 +749,10 @@ Main_GUI::create_layout()
   //
   // x height increase limit
   //
-  increase_label = new QLabel(tr("x Height In&crease Limit:"));
+
+  // the final \n makes this label align with the spin box to the right
+  increase_label = new QLabel(tr("x Height\n"
+                                 "In&crease Limit:\n"));
   increase_box = new QSpinBox;
   increase_label->setBuddy(increase_box);
   increase_label->setToolTip(
