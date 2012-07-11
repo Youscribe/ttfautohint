@@ -93,6 +93,9 @@ better control -i output
 allow processing of multiple files by using globs as in the Midnight
   Commander
 
+allow composite fonts already processed by ttfautohint to be processed
+  again
+
 
 later enhancements
 ------------------
