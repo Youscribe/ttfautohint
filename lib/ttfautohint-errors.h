@@ -59,11 +59,13 @@ TA_ERRORDEF_(Missing_Glyph,            0xF1, \
              "missing key character glyph")
 TA_ERRORDEF_(Missing_Unicode_CMap,     0xF2, \
              "missing Unicode character map")
-TA_ERRORDEF_(Canceled,                 0xF3, \
+TA_ERRORDEF_(Missing_Symbol_CMap,      0xF3, \
+             "missing symbol character map")
+TA_ERRORDEF_(Canceled,                 0xF4, \
              "execution canceled")
-TA_ERRORDEF_(Already_Processed,        0xF4, \
+TA_ERRORDEF_(Already_Processed,        0xF5, \
              "font already processed by ttfautohint")
-TA_ERRORDEF_(Invalid_Font_Type,        0xF5, \
+TA_ERRORDEF_(Invalid_Font_Type,        0xF6, \
              "not a font with TrueType outlines in SFNT format")
 
 #ifdef TA_ERROR_END_LIST

@@ -628,6 +628,9 @@ main(int argc,
     else if (error == TA_Err_Missing_Unicode_CMap)
       fprintf(stderr,
               "No Unicode character map.\n");
+    else if (error == TA_Err_Missing_Symbol_CMap)
+      fprintf(stderr,
+              "No symbol character map.\n");
     else if (error == TA_Err_Missing_Glyph)
       fprintf(stderr,
               "No glyph for the key character"

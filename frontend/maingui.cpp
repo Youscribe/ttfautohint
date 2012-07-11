@@ -464,6 +464,13 @@ Main_GUI::handle_error(TA_Error error,
       tr("No Unicode character map."),
       QMessageBox::Ok,
       QMessageBox::Ok);
+  else if (error == TA_Err_Missing_Symbol_CMap)
+    QMessageBox::warning(
+      this,
+      "TTFautohint",
+      tr("No symbol character map."),
+      QMessageBox::Ok,
+      QMessageBox::Ok);
   else if (error == TA_Err_Missing_Glyph)
     QMessageBox::warning(
       this,

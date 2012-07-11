@@ -32,7 +32,16 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
 
   error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
   if (error)
-    return TA_Err_Missing_Unicode_CMap;
+  {
+    if (font->symbol)
+    {
+      error = FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL);
+      if (error)
+        return TA_Err_Missing_Symbol_CMap;
+    }
+    else
+      return TA_Err_Missing_Unicode_CMap;
+  }
 
   if (font->symbol)
     idx = 0;
