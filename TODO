@@ -96,6 +96,8 @@ allow processing of multiple files by using globs as in the Midnight
 allow composite fonts already processed by ttfautohint to be processed
   again
 
+allow disabling of handling composite glyphs
+
 
 later enhancements
 ------------------
