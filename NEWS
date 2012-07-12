@@ -1,3 +1,14 @@
+New in 0.91:
+
+* A new, `strong' routine to handle stem widths and positions has been
+  added, to be selected with the `--strong-stem-width' command line option.
+  If it is active, stem widths and positions are snapped to the grid as much
+  as possible.  This algorithm is useful for GDI ClearType support.
+
+* A new command line option `--debug' (not available for ttfautohintGUI) to
+  print very detailed debugging information.
+
+
 New in 0.9:
 
 * The created bytecode has been reduced in size, making it approx. 20%
@@ -10,7 +21,7 @@ New in 0.9:
 * More documentation (in text, HTML, and PDF format).  It's still
   incomplete, though.
 
-* Option `--ignore-permissions' has been renamed to `--ignore-restrictions'. 
+* Option `--ignore-permissions' has been renamed to `--ignore-restrictions'.
   The short form is still `-i'.
 
 * Defaults for various parameters have been set to more sensible values:
