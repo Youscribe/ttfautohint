@@ -30,7 +30,7 @@ The library has a single API function, `TTF_autohint`, which is described
 
 Bundled with the library there are two front-end programs, [`ttfautohint`
 and `ttfautohintGUI`](#ttfautohint-and-ttfautohintgui), being a command line
-and GUI application, respectively.
+and an application with a Graphics User Interface (GUI), respectively.
 
 
 What exactly are hints?
@@ -135,11 +135,9 @@ single command on the prompt.  As a result, you get better rendering results
 with web browsers, for example.
 
 Across Windows rendering environments today, fonts processed with
-ttfautohint look best with DirectWrite ClearType enabled.  This is the
-default for Windows\ 7.  Good visual results are also seen in recent
-MacOS\ X versions and GNU/Linux systems that use FreeType for rendering.
-Work is now underway to improve the quality of the older Windows 'GDI'
-rendering.
+ttfautohint look best with ClearType enabled.  This is the default for
+Windows\ 7.  Good visual results are also seen in recent MacOS\ X versions
+and GNU/Linux systems that use FreeType for rendering.
 
 The goal of the project is to generate a 'first pass' of hinting that font
 developers can refine further for ultimate quality.
@@ -170,12 +168,13 @@ Options
 the same command line options as `ttfautohint`, setting default values for
 the GUI.
 
-Long options can be given with one or two dashes, and with and without equal
-sign between option and argument.  This means that the following forms are
-acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and `--foo`\ *bar*.
+Long options can be given with one or two dashes, and with and without an
+equal sign between option and argument.  This means that the following forms
+are acceptable: `-foo=`*bar*, `--foo=`*bar*, `-foo`\ *bar*, and
+`--foo`\ *bar*.
 
-Below, the section title gives the command's label in the GUI, then comes
-the name of the corresponding long command line option and its short
+Below, the section title refers to the command's label in the GUI, then
+comes the name of the corresponding long command line option and its short
 equivalent, followed by a description.
 
 Background and technical details on the meaning of the various options are
@@ -230,7 +229,8 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
     - 'DirectWrite ClearType' rendering: the rasterizer version, as returned
       by the GETINFO bytecode instruction, is >=\ 38, ClearType is enabled,
-      and subpixel positioning is enabled also (e.g.  Windows\ 7)
+      and subpixel positioning is enabled also (e.g. Internet Explorer\ 9
+      running on Windows\ 7)
 
     GDI ClearType uses a mode similar to B/W rendering along the vertical
     axis, while DW ClearType applies grayscale rendering.  Additionally,
@@ -276,17 +276,17 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
     The following images again use the font 'Mertz Bold'.
 
-    ![At 17px, without option `-x` and no '`-w G`', the hole in glyph 'e'
+    ![At 17px, without option `-x` and '`-w ""`', the hole in glyph 'e'
       looks very grey in the FontForge snapshot, and the GDI ClearType
       rendering (which is the default on older Windows versions) fills it
-      completely with black because it uses B/W rendering along the y\ axis. 
+      completely with black because it uses B/W rendering along the y\ axis.
       FreeType's 'light' autohint mode (which corresponds to ttfautohint's
       'smooth' stem width algorithm) intentionally aligns horizontal lines
       to non-integer (but still discrete) values to avoid large glyph shape
       distortions.](img/e-17px-x14.png)
 
-    ![The same, this time with option `-x 17` (and still no
-      '`-w G`').](img/e-17px-x17.png)
+    ![The same, this time with option `-x 17` (and
+      '`-w ""`').](img/e-17px-x17.png)
 
 ### Fallback Script
 
