@@ -84,7 +84,7 @@ if WITH_DOC
 	  $(SHELL) $(srcdir)/make-snapshot.sh \
 	             $(top_builddir)/frontend/ttfautohintGUI$(EXEEXT) $@
 
-  ttfautohint.html: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGSVG) \
+  ttfautohint.html: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGSVG) handle-images \
                     ttfautohint.css template.html $(top_srcdir)/.version
 	  $(PANDOC) --to=json \
 	            --smart \
@@ -98,7 +98,7 @@ if WITH_DOC
 	              --standalone \
 	              --output=$@
 
-  ttfautohint.pdf: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGPDF) \
+  ttfautohint.pdf: ttfautohint.txt $(DOCIMGPNG) $(DOCIMGPDF) handle-images \
                    template.tex $(top_srcdir)/.version
 	  $(PANDOC) --to=json \
 	            --smart \
