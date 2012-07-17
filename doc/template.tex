@@ -1,5 +1,6 @@
-\documentclass[$if(fontsize)$$fontsize$,$endif$
-               $if(lang)$$lang$,$endif$]{scrartcl}
+\documentclass[$if(fontsize)$$fontsize$,$endif$%
+               $if(lang)$$lang$,$endif$%
+               DIV=13]{scrreprt}
 
 \usepackage{ifxetex,ifluatex}
 \usepackage[T1]{fontenc}
@@ -79,6 +80,7 @@ $endif$
   \usepackage[unicode=true,
               colorlinks=true,
               linkcolor=blue]{hyperref}
+  \usepackage{microtype}
 \fi
 \hypersetup{breaklinks=true, pdfborder={0 0 0}}
 

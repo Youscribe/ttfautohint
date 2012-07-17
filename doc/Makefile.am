@@ -111,6 +111,7 @@ if WITH_DOC
 	              --variable="version:$(VERSION)" \
 	              --number-sections \
 	              --toc \
+	              --chapters \
 	              --standalone \
 	              --output=$@
 else
