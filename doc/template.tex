@@ -127,9 +127,7 @@ $endif$
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 
-% We want a break after the description label.  Alas, it is necessary to
-% copy the whole definition of \@item and the `description' environemnt just
-% to insert `\\'...
+% We want a break after the description label (if there is one).
 \makeatletter
 
 \let\original@item\@item
@@ -192,8 +190,14 @@ $endif$
       \box\@tempboxa
     \else
       \hbox to\labelwidth {\unhbox\@tempboxa}%
-    \fi}%
+    \fi
+    \hskip \labelsep}%
+  \def\reserved@a{#1}%
+  \def\reserved@b{\@itemlabel}%
+  \ifx\reserved@a \reserved@b
+  \else
     \leavevmode\\
+  \fi
   \ignorespaces}
 
 \renewenvironment{description}{%
