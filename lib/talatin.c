@@ -181,7 +181,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
   TA_LatinBlue blue;
   FT_Error error;
   TA_LatinAxis axis = &metrics->axis[TA_DIMENSION_VERT];
-  FT_GlyphSlot glyph = face->glyph;
+  FT_Outline outline;
 
 
   /* we compute the blues simply by loading each character from the */
@@ -208,7 +208,7 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
     {
       FT_UInt glyph_index;
       FT_Pos best_y; /* same as points.y */
-      FT_Int best_point, best_first, best_last;
+      FT_Int best_point, best_contour_first, best_contour_last;
       FT_Vector* points;
       FT_Bool round = 0;
 
@@ -219,15 +219,16 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
         continue;
 
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_SCALE);
-      if (error || glyph->outline.n_points <= 0)
+      outline = face->glyph->outline;
+      if (error || outline.n_points <= 0)
         continue;
 
       /* now compute min or max point indices and coordinates */
-      points = glyph->outline.points;
+      points = outline.points;
       best_point = -1;
       best_y = 0; /* make compiler happy */
-      best_first = 0; /* ditto */
-      best_last = 0; /* ditto */
+      best_contour_first = 0; /* ditto */
+      best_contour_last = 0; /* ditto */
 
       {
         FT_Int nn;
@@ -235,13 +236,13 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
         FT_Int last = -1;
 
 
-        for (nn = 0; nn < glyph->outline.n_contours; first = last + 1, nn++)
+        for (nn = 0; nn < outline.n_contours; first = last + 1, nn++)
         {
           FT_Int old_best_point = best_point;
           FT_Int pp;
 
 
-          last = glyph->outline.contours[nn];
+          last = outline.contours[nn];
 
           /* avoid single-point contours since they are never rasterized; */
           /* in some fonts, they correspond to mark attachment points */
@@ -272,8 +273,8 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
 
           if (best_point != old_best_point)
           {
-            best_first = first;
-            best_last = last;
+            best_contour_first = first;
+            best_contour_last = last;
           }
         }
         TA_LOG(("  %c  %ld", *p, best_y));
@@ -289,17 +290,17 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
         FT_Pos dist;
 
 
-        /* now look for the previous and next points that are not on the */
-        /* same Y coordinate and threshold the `closeness'... */
+        /* look for the previous and next points that are not on the */
+        /* same Y coordinate, then threshold the `closeness'... */
         prev = best_point;
         next = prev;
 
         do
         {
-          if (prev > best_first)
+          if (prev > best_contour_first)
             prev--;
           else
-            prev = best_last;
+            prev = best_contour_last;
 
           dist = TA_ABS(points[prev].y - best_y);
           /* accept a small distance or a small angle (both values are */
@@ -311,10 +312,10 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
 
         do
         {
-          if (next < best_last)
+          if (next < best_contour_last)
             next++;
           else
-            next = best_first;
+            next = best_contour_first;
 
           dist = TA_ABS(points[next].y - best_y);
           if (dist > 5)
@@ -324,8 +325,8 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
 
         /* now set the `round' flag depending on the segment's kind */
         round = FT_BOOL(
-          FT_CURVE_TAG(glyph->outline.tags[prev]) != FT_CURVE_TAG_ON
-          || FT_CURVE_TAG(glyph->outline.tags[next]) != FT_CURVE_TAG_ON);
+          FT_CURVE_TAG(outline.tags[prev]) != FT_CURVE_TAG_ON
+          || FT_CURVE_TAG(outline.tags[next]) != FT_CURVE_TAG_ON);
 
         TA_LOG((" (%s)\n", round ? "round" : "flat"));
       }
