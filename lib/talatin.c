@@ -287,8 +287,20 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
       {
         FT_Pos best_x = points[best_point].x;
         FT_Int prev, next;
+        FT_Int best_on_point_first, best_on_point_last;
         FT_Pos dist;
 
+
+        if (FT_CURVE_TAG(outline.tags[best_point]) == FT_CURVE_TAG_ON)
+        {
+          best_on_point_first = best_point;
+          best_on_point_last = best_point;
+        }
+        else
+        {
+          best_on_point_first = -1;
+          best_on_point_last = -1;
+        }
 
         /* look for the previous and next points that are not on the */
         /* same Y coordinate, then threshold the `closeness'... */
@@ -308,6 +320,14 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
           if (dist > 5)
             if (TA_ABS(points[prev].x - best_x) <= 20 * dist)
               break;
+
+          if (FT_CURVE_TAG(outline.tags[prev]) == FT_CURVE_TAG_ON)
+          {
+            best_on_point_first = prev;
+            if (best_on_point_last < 0)
+              best_on_point_last = prev;
+          }
+
         } while (prev != best_point);
 
         do
@@ -321,12 +341,28 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
           if (dist > 5)
             if (TA_ABS(points[next].x - best_x) <= 20 * dist)
               break;
+
+          if (FT_CURVE_TAG(outline.tags[next]) == FT_CURVE_TAG_ON)
+          {
+            best_on_point_last = next;
+            if (best_on_point_first < 0)
+              best_on_point_first = next;
+          }
+
         } while (next != best_point);
 
         /* now set the `round' flag depending on the segment's kind */
-        round = FT_BOOL(
-          FT_CURVE_TAG(outline.tags[prev]) != FT_CURVE_TAG_ON
-          || FT_CURVE_TAG(outline.tags[next]) != FT_CURVE_TAG_ON);
+        /* (value 8 is heuristic) */
+        if (best_on_point_first >= 0
+            && best_on_point_last >= 0
+            && (FT_UInt)(TA_ABS(points[best_on_point_last].x
+                                - points[best_on_point_first].x))
+                 > metrics->units_per_em / 8)
+          round = 0;
+        else
+          round = FT_BOOL(
+            FT_CURVE_TAG(outline.tags[prev]) != FT_CURVE_TAG_ON
+            || FT_CURVE_TAG(outline.tags[next]) != FT_CURVE_TAG_ON);
 
         TA_LOG((" (%s)\n", round ? "round" : "flat"));
       }
