@@ -1,3 +1,9 @@
+New in 0.92:
+
+* A serious bug in the created bytecode has been fixed, causing incorrect
+  rounding.
+
+
 New in 0.91:
 
 * A new, `strong' routine to handle stem widths and positions has been
