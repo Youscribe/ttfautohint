@@ -84,19 +84,10 @@ unsigned char FPGM(bci_round) [] =
     bci_round,
   FDEF,
 
-  DUP,
-  ABS,
   PUSHB_1,
     32,
   ADD,
   FLOOR,
-  SWAP,
-  PUSHB_1,
-    0,
-  LT,
-  IF,
-    NEG,
-  EIF,
 
   ENDF,
 
