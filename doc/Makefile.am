@@ -33,7 +33,9 @@ DOCIMGPNG = img/ttfautohintGUI.png \
             img/afii10108-12px-after-hinting.png \
             img/afii10108-12px-before-hinting.png \
             img/e-17px-x14.png \
-            img/e-17px-x17.png
+            img/e-17px-x17.png \
+            img/ff-g-26px.png \
+            img/ff-g-26px-wD.png
 
 DOC = ttfautohint.html \
       ttfautohint.pdf \
