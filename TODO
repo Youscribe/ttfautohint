@@ -5,6 +5,9 @@ important improvements
 add features to the GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
+  -> drag and drop to the input and output file name box
+  -> drag and drop to the application itself
+  -> autocompletion of file names with tab key
 
 handle OT features
   -> use HarfBuzz?
@@ -95,6 +98,12 @@ allow processing of multiple files by using globs as in the Midnight
 
 allow composite fonts already processed by ttfautohint to be processed
   again
+
+make ttfautohint remember options:
+  1. collect md5 checksums in a `~/.ttfautohint_history' file so that fonts
+     can be re-processed easily, using the same parameters
+  2. if fonts already processed by ttfautohint can be re-processed (which
+     isn't possible yet), parse the `version' string for parameters
 
 allow disabling of handling composite glyphs
 
