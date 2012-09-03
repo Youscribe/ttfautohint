@@ -42,10 +42,13 @@ if USE_QT
   bin_PROGRAMS += ttfautohintGUI
   ttfautohintGUI_SOURCES = info.cpp \
                            info.h \
+                           lineedit.cpp \
+                           lineedit.h \
                            main.cpp \
                            maingui.cpp \
                            maingui.h
-  nodist_ttfautohintGUI_SOURCES = maingui.moc.cpp
+  nodist_ttfautohintGUI_SOURCES = maingui.moc.cpp \
+                                  lineedit.moc.cpp
   ttfautohintGUI_CXXFLAGS = $(QT_CXXFLAGS)
   ttfautohintGUI_LDFLAGS = $(QT_LDFLAGS)
   ttfautohintGUI_CPPFLAGS = $(AM_CPPFLAGS) \
@@ -54,7 +57,8 @@ if USE_QT
   ttfautohintGUI_LDADD = $(LDADD) \
                          $(QT_LIBS)
 
-  BUILT_SOURCES = maingui.moc.cpp
+  BUILT_SOURCES = maingui.moc.cpp \
+                  lineedit.moc.cpp
   manpages += ttfautohintGUI.1
 endif
 

@@ -16,7 +16,8 @@
 
 #include <config.h>
 
-#include <QMainWindow>
+#include <QtGui>
+#include "lineedit.h"
 
 #include <stdio.h>
 #include <ttfautohint.h>
@@ -28,10 +29,11 @@ class QComboBox;
 class QFile;
 class QLabel;
 class QLocale;
-class QLineEdit;
 class QMenu;
 class QPushButton;
 class QSpinBox;
+
+class Line_Edit;
 
 class Main_GUI
 : public QMainWindow
@@ -91,10 +93,10 @@ private:
   QMenu* file_menu;
   QMenu* help_menu;
 
-  QLineEdit* input_line;
+  Line_Edit* input_line;
   QPushButton* input_button;
 
-  QLineEdit* output_line;
+  Line_Edit* output_line;
   QPushButton* output_button;
 
   QSpinBox* min_box;

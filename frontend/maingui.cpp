@@ -624,7 +624,7 @@ Main_GUI::create_layout()
   completer->setModel(model);
 
   QLabel* input_label = new QLabel(tr("&Input File:"));
-  input_line = new QLineEdit;
+  input_line = new Line_Edit;
   input_button = new QPushButton(tr("Browse..."));
   input_label->setBuddy(input_line);
   // enforce rich text to get nice word wrapping
@@ -634,7 +634,7 @@ Main_GUI::create_layout()
   input_line->setCompleter(completer);
 
   QLabel* output_label = new QLabel(tr("&Output File:"));
-  output_line = new QLineEdit;
+  output_line = new Line_Edit;
   output_button = new QPushButton(tr("Browse..."));
   output_label->setBuddy(output_line);
   output_label->setToolTip(
