@@ -5,7 +5,6 @@ important improvements
 add features to the GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
-  -> drag and drop to the input and output file name box
   -> drag and drop to the application itself
   -> autocompletion of file names with tab key
 
@@ -104,8 +103,6 @@ make ttfautohint remember options:
      can be re-processed easily, using the same parameters
   2. if fonts already processed by ttfautohint can be re-processed (which
      isn't possible yet), parse the `version' string for parameters
-
-allow disabling of handling composite glyphs
 
 
 later enhancements
