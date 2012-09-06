@@ -141,6 +141,7 @@ show_help(bool
 #ifndef BUILD_GUI
 "      --debug                print debugging information\n"
 #endif
+"  -c, --components           hint glyph components separately\n"
 "  -f, --latin-fallback       set fallback script to latin\n"
 "  -G, --hinting-limit=N      switch off hinting above this PPEM value\n"
 "                             (default: %d); value 0 means no limit\n"
@@ -297,6 +298,7 @@ main(int argc,
 
   bool ignore_restrictions = false;
   bool pre_hinting = false;
+  bool process_with_components = true;
   bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
   bool symbol = false;
@@ -334,6 +336,7 @@ main(int argc,
 #endif
 
       // ttfautohint options
+      {"components", no_argument, NULL, 'c'},
 #ifndef BUILD_GUI
       {"debug", no_argument, NULL, DEBUG_OPTION},
 #endif
@@ -381,13 +384,17 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "fG:hil:npr:stVvx:X:w:",
+    int c = getopt_long_only(argc, argv, "cfG:hil:npr:stVvx:X:w:",
                              long_options, &option_index);
     if (c == -1)
       break;
 
     switch (c)
     {
+    case 'c':
+      process_with_components = false;
+      break;
+
     case 'f':
       latin_fallback = 1;
       break;
@@ -575,6 +582,7 @@ main(int argc,
     info_data.dw_cleartype_strong_stem_width = dw_cleartype_strong_stem_width;
 
     info_data.pre_hinting = pre_hinting;
+    info_data.process_with_components = process_with_components;
     info_data.increase_x_height = increase_x_height;
     info_data.latin_fallback = latin_fallback;
     info_data.symbol = symbol;
@@ -590,8 +598,8 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
-                 "ignore-restrictions, pre-hinting, increase-x-height,"
-                 "fallback-script, symbol,"
+                 "ignore-restrictions, pre-hinting, process-with-components,"
+                 "increase-x-height, fallback-script, symbol,"
                  "debug",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
@@ -600,8 +608,8 @@ main(int argc,
                  &error_string,
                  progress_func, &progress_data,
                  info_func, &info_data,
-                 ignore_restrictions, pre_hinting, increase_x_height,
-                 latin_fallback, symbol,
+                 ignore_restrictions, pre_hinting, process_with_components,
+                 increase_x_height, latin_fallback, symbol,
                  debug);
 
   if (error)
@@ -669,7 +677,7 @@ main(int argc,
                gray_strong_stem_width, gdi_cleartype_strong_stem_width,
                dw_cleartype_strong_stem_width,
                increase_x_height, ignore_restrictions, pre_hinting,
-               no_info, latin_fallback, symbol);
+               process_with_components, no_info, latin_fallback, symbol);
   gui.show();
 
   return app.exec();

@@ -36,6 +36,7 @@ typedef struct Info_Data_
   int increase_x_height;
 
   bool pre_hinting;
+  bool process_with_components;
   int latin_fallback;
   bool symbol;
 } Info_Data;

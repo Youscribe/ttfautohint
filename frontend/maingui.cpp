@@ -46,6 +46,7 @@ Main_GUI::Main_GUI(int range_min,
                    int increase,
                    bool ignore,
                    bool pre,
+                   bool components,
                    bool no,
                    int fallback,
                    bool symb)
@@ -58,6 +59,7 @@ Main_GUI::Main_GUI(int range_min,
   increase_x_height(increase),
   ignore_restrictions(ignore),
   pre_hinting(pre),
+  process_with_components(components),
   no_info(no),
   latin_fallback(fallback),
   symbol(symb)
@@ -563,6 +565,7 @@ again:
                                 : increase_box->value();
 
   info_data.pre_hinting = pre_box->isChecked();
+  info_data.process_with_components = process_box->isChecked();
   info_data.latin_fallback = fallback_box->currentIndex();
   info_data.symbol = symbol_box->isChecked();
 
@@ -582,7 +585,9 @@ again:
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
                  "ignore-restrictions,"
-                 "pre-hinting, increase-x-height,"
+                 "pre-hinting,"
+                 "process-with-components,"
+                 "increase-x-height,"
                  "fallback-script, symbol",
                  input, output,
                  info_data.hinting_range_min, info_data.hinting_range_max,
@@ -594,7 +599,9 @@ again:
                  gui_progress, &gui_progress_data,
                  info_func, &info_data,
                  ignore_restrictions,
-                 info_data.pre_hinting, info_data.increase_x_height,
+                 info_data.pre_hinting,
+                 info_data.process_with_components,
+                 info_data.increase_x_height,
                  info_data.latin_fallback, info_data.symbol);
 
   fclose(input);
@@ -813,6 +820,16 @@ Main_GUI::create_layout()
   if (pre_hinting)
     pre_box->setChecked(true);
 
+  process_box = new QCheckBox(tr("Process &With Components"), this);
+  process_box->setToolTip(
+    tr("If switched on, <b>ttfautohint</b> hints composite glyphs"
+       " as a whole, including subglyphs."
+       "  Otherwise, glyph components get hinted separately.<br>"
+       "Deactivating this flag reduces the bytecode size enormously,"
+       " however, it might yield worse results."));
+  if (process_with_components)
+    process_box->setChecked(true);
+
   symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
   symbol_box->setToolTip(
     tr("If switched on, <b>ttfautohint</b> uses default values"
@@ -836,11 +853,15 @@ Main_GUI::create_layout()
 
   flags_layout->setColumnStretch(1, 1);
   flags_layout->setColumnStretch(3, 1);
-  flags_layout->setColumnStretch(5, 1);
 
   flags_layout->addWidget(pre_box, 0, 0);
-  flags_layout->addWidget(symbol_box, 0, 2);
-  flags_layout->addWidget(info_box, 0, 4);
+  flags_layout->addWidget(process_box, 0, 2);
+
+  flags_layout->setRowMinimumHeight(1, 20);
+  flags_layout->setRowStretch(1, 1);
+
+  flags_layout->addWidget(symbol_box, 2, 0);
+  flags_layout->addWidget(info_box, 2, 2);
 
   //
   // controls (hinting limit, x height increase limit, flags)

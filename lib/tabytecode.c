@@ -87,11 +87,12 @@ static FT_UInt
 TA_adjust_point_index(Recorder* recorder,
                       FT_UInt idx)
 {
+  FONT* font = recorder->font;
   GLYPH* glyph = recorder->glyph;
   FT_UShort i;
 
 
-  if (!glyph->num_components)
+  if (!glyph->num_components || !font->hint_with_components)
     return idx; /* not a composite glyph */
 
   for (i = 0; i < glyph->num_pointsums; i++)
@@ -188,7 +189,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     need_words = 1;
 
   /* the number of packed segments is indicated by the function number */
-  if (recorder->glyph->num_components)
+  if (recorder->glyph->num_components && font->hint_with_components)
     *(arg--) = bci_create_segments_composite_0 + num_packed_segments;
   else
     *(arg--) = bci_create_segments_0 + num_packed_segments;
@@ -355,6 +356,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
                            Recorder* recorder,
                            FT_Byte* bufp)
 {
+  FONT* font = recorder->font;
   FT_GlyphSlot glyph = sfnt->face->glyph;
   FT_Vector* points = glyph->outline.points;
   FT_Int num_contours = glyph->outline.n_contours;
@@ -385,7 +387,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   if (num_args > 0xFF)
     need_words = 1;
 
-  if (recorder->glyph->num_components)
+  if (recorder->glyph->num_components && font->hint_with_components)
     *(arg--) = bci_scale_composite_glyph;
   else
     *(arg--) = bci_scale_glyph;
@@ -1685,7 +1687,12 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (font->increase_x_height)
     load_flags |= (font->increase_x_height - 5) << 25;
   if (!font->pre_hinting)
-    load_flags |= FT_LOAD_NO_SCALE;
+  {
+    if (font->hint_with_components)
+      load_flags |= FT_LOAD_NO_SCALE;
+    else
+      load_flags |= FT_LOAD_NO_RECURSE;
+  }
 
   /* computing the segments is resolution independent, */
   /* thus the pixel size in this call is arbitrary */
@@ -1749,7 +1756,8 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   if (font->loader->metrics->clazz == &ta_dummy_script_class)
   {
     /* since `TA_init_recorder' hasn't been called yet, */
-    /* we manually initialize the `glyph' field */
+    /* we manually initialize the `font' and `glyph' fields */
+    recorder.font = font;
     recorder.glyph = glyph;
 
     bufp = TA_sfnt_build_glyph_scaler(sfnt, &recorder, ins_buf);

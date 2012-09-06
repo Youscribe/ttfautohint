@@ -116,7 +116,8 @@ static FT_Error
 TA_glyph_parse_composite(GLYPH* glyph,
                          FT_Byte* buf,
                          FT_ULong len,
-                         FT_UShort num_glyphs)
+                         FT_UShort num_glyphs,
+                         FT_Bool hint_with_components)
 {
   FT_ULong flags_offset; /* after the loop, this is the offset */
                          /* to the last element in the flags array */
@@ -147,7 +148,7 @@ TA_glyph_parse_composite(GLYPH* glyph,
   /* which eventually becomes the last glyph in the `glyf' table; */
   /* for convenience, however, it is not added to the `components' array */
   /* (doing so simplifies the conversion of point indices later on) */
-  if (glyph->num_composite_contours)
+  if (glyph->num_composite_contours && hint_with_components)
   {
     FT_Short x_min;
     FT_Short x_max;
@@ -521,17 +522,20 @@ TA_sfnt_compute_composite_pointsums(SFNT* sfnt,
 
       glyph->num_composite_contours = num_composite_contours;
 
-      /* update maximum values, */
-      /* including the subglyphs not in `components' array */
-      /* (each of them has a single point in a single contour) */
-      if (num_composite_points + glyph->num_pointsums
-          > sfnt->max_composite_points)
-        sfnt->max_composite_points = num_composite_points
-                                     + glyph->num_pointsums;
-      if (num_composite_contours + glyph->num_pointsums
-          > sfnt->max_composite_contours)
-        sfnt->max_composite_contours = num_composite_contours
+      if (font->hint_with_components)
+      {
+        /* update maximum values, */
+        /* including the subglyphs not in `components' array */
+        /* (each of them has a single point in a single contour) */
+        if (num_composite_points + glyph->num_pointsums
+            > sfnt->max_composite_points)
+          sfnt->max_composite_points = num_composite_points
                                        + glyph->num_pointsums;
+        if (num_composite_contours + glyph->num_pointsums
+            > sfnt->max_composite_contours)
+          sfnt->max_composite_contours = num_composite_contours
+                                         + glyph->num_pointsums;
+      }
     }
   }
 
@@ -580,7 +584,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   loop_count = data->num_glyphs - 1;
 
   /* allocate one more glyph slot if we have composite glyphs */
-  if (!sfnt->max_components)
+  if (!sfnt->max_components || !font->hint_with_components)
     data->num_glyphs -= 1;
   data->glyphs = (GLYPH*)calloc(1, data->num_glyphs * sizeof (GLYPH));
   if (!data->glyphs)
@@ -669,7 +673,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     }
   }
 
-  if (sfnt->max_components)
+  if (sfnt->max_components && font->hint_with_components)
   {
     error = TA_sfnt_compute_composite_pointsums(sfnt, font);
     if (error)
@@ -734,7 +738,9 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
       /* is more or less invalid. */
 
       if (glyph->num_contours < 0)
-        error = TA_glyph_parse_composite(glyph, buf, len, data->num_glyphs);
+        error = TA_glyph_parse_composite(glyph, buf, len,
+                                         data->num_glyphs,
+                                         font->hint_with_components);
       else
         error = TA_glyph_parse_simple(glyph, buf, len);
       if (error)
@@ -742,7 +748,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     }
   }
 
-  if (sfnt->max_components)
+  if (sfnt->max_components && font->hint_with_components)
   {
     /* construct and append our special glyph used as a composite element */
     GLYPH* glyph = &data->glyphs[data->num_glyphs - 1];

@@ -32,7 +32,7 @@ TA_sfnt_update_maxp_table(SFNT* sfnt,
   if (maxp_table->len != MAXP_LEN)
     return FT_Err_Invalid_Table;
 
-  if (sfnt->max_components)
+  if (sfnt->max_components && font->hint_with_components)
   {
     buf[MAXP_NUM_GLYPHS] = HIGH(data->num_glyphs);
     buf[MAXP_NUM_GLYPHS + 1] = LOW(data->num_glyphs);

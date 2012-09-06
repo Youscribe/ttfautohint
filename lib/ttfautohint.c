@@ -68,6 +68,7 @@ TTF_autohint(const char* options,
 
   FT_Bool ignore_restrictions = 0;
   FT_Bool pre_hinting = 0;
+  FT_Bool hint_with_components = 0;
   FT_UInt fallback_script = 0;
   FT_Bool symbol = 0;
 
@@ -172,6 +173,8 @@ TTF_autohint(const char* options,
     }
     else if (COMPARE("pre-hinting"))
       pre_hinting = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("hint-with-components"))
+      hint_with_components = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("progress-callback"))
       progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
@@ -265,6 +268,7 @@ TTF_autohint(const char* options,
 
   font->ignore_restrictions = ignore_restrictions;
   font->pre_hinting = pre_hinting;
+  font->hint_with_components = hint_with_components;
   /* restrict value to two bits */
   font->fallback_script = fallback_script & 3;
   font->symbol = symbol;
@@ -297,6 +301,8 @@ TTF_autohint(const char* options,
          font->increase_x_height);
     DUMP("pre-hinting",
          font->pre_hinting);
+    DUMP("process-composites",
+         font->hint_with_components);
     DUMP("symbol",
          font->symbol);
 
@@ -422,7 +428,9 @@ TTF_autohint(const char* options,
       goto Err;
 
     /* we add one glyph for composites */
-    if (sfnt->max_components && !font->pre_hinting)
+    if (sfnt->max_components
+        && !font->pre_hinting
+        && font->hint_with_components)
     {
       error = TA_sfnt_update_hmtx_table(sfnt, font);
       if (error)
