@@ -493,11 +493,16 @@ Hint Sets
 In ttfautohint terminology, a *hint set* is the *optimal* configuration for
 a given PPEM (pixel per EM) value.
 
-Internally, ttfautohint creates hint sets for every PPEM value in the range
-given by the `--hinting-range-min` and `--hinting-range-max` options (this
-is a per-glyph operation).  If it differs to the current one, a new set is
-emitted.  For some glyphs it is possible that one set covers, say, the range
-8px-1000px, while other glyphs need 10 or more such sets.
+In the range given by the `--hinting-range-min` and `--hinting-range-max`
+options, ttfautohint creates hint sets for every PPEM value.  For each
+glyph, ttfautohint automatically determines if a new set should be emitted
+for a PPEM value if it finds that it differs from a previous one.  For some
+glyphs it is possible that one set covers, say, the range 8px-1000px, while
+other glyphs need 10 or more such sets.
+
+In the PPEM range below `--hinting-range-min`, ttfautohint always uses just
+one set, in the PPEM range between `--hinting-range-max` and
+`--hinting-limit`, it also uses just one set.
 
 One of the hinting configuration parameters is the decision which segments
 form an edge.  For example, let us assume that two segments get aligned on a
@@ -533,6 +538,14 @@ more hint sets without any noticeable hinting effects.
 
 Similar arguments hold for `--hinting-range-min` except that there is no
 lower limit at which hinting is switched off.
+
+An example.  Let's assume that we have a hinting range 10\ <= ppem <=\ 100,
+and the hinting limit is set to 250.  For a given glyph, ttfautohint finds
+out that four hint sets must be computed to exactly cover thes hinting
+range: 10-15, 16-40, 41-80, and 81-100.  For ppem values below 10ppem, the
+hint set covering 10-15ppem is used, for ppem values larger than 100 the
+hint set covering 81-100ppem is used.  For ppem values larger than 250, no
+hinting gets applied.
 
 
 The '\.ttfautohint' Glyph
