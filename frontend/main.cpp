@@ -298,7 +298,7 @@ main(int argc,
 
   bool ignore_restrictions = false;
   bool pre_hinting = false;
-  bool process_with_components = true;
+  bool hint_with_components = true;
   bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
   bool symbol = false;
@@ -392,7 +392,7 @@ main(int argc,
     switch (c)
     {
     case 'c':
-      process_with_components = false;
+      hint_with_components = false;
       break;
 
     case 'f':
@@ -582,7 +582,7 @@ main(int argc,
     info_data.dw_cleartype_strong_stem_width = dw_cleartype_strong_stem_width;
 
     info_data.pre_hinting = pre_hinting;
-    info_data.process_with_components = process_with_components;
+    info_data.hint_with_components = hint_with_components;
     info_data.increase_x_height = increase_x_height;
     info_data.latin_fallback = latin_fallback;
     info_data.symbol = symbol;
@@ -598,7 +598,7 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
-                 "ignore-restrictions, pre-hinting, process-with-components,"
+                 "ignore-restrictions, pre-hinting, hint-with-components,"
                  "increase-x-height, fallback-script, symbol,"
                  "debug",
                  in, out,
@@ -608,7 +608,7 @@ main(int argc,
                  &error_string,
                  progress_func, &progress_data,
                  info_func, &info_data,
-                 ignore_restrictions, pre_hinting, process_with_components,
+                 ignore_restrictions, pre_hinting, hint_with_components,
                  increase_x_height, latin_fallback, symbol,
                  debug);
 
@@ -677,7 +677,7 @@ main(int argc,
                gray_strong_stem_width, gdi_cleartype_strong_stem_width,
                dw_cleartype_strong_stem_width,
                increase_x_height, ignore_restrictions, pre_hinting,
-               process_with_components, no_info, latin_fallback, symbol);
+               hint_with_components, no_info, latin_fallback, symbol);
   gui.show();
 
   return app.exec();

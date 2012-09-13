@@ -73,7 +73,7 @@ private:
   int increase_x_height;
   int ignore_restrictions;
   int pre_hinting;
-  int process_with_components;
+  int hint_with_components;
   int no_info;
   int latin_fallback;
   int symbol;
@@ -118,7 +118,7 @@ private:
   QCheckBox* no_increase_box;
 
   QCheckBox* pre_box;
-  QCheckBox* process_box;
+  QCheckBox* hint_box;
   QCheckBox* symbol_box;
   QCheckBox* info_box;
 

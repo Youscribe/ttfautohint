@@ -59,7 +59,7 @@ Main_GUI::Main_GUI(int range_min,
   increase_x_height(increase),
   ignore_restrictions(ignore),
   pre_hinting(pre),
-  process_with_components(components),
+  hint_with_components(components),
   no_info(no),
   latin_fallback(fallback),
   symbol(symb)
@@ -565,7 +565,7 @@ again:
                                 : increase_box->value();
 
   info_data.pre_hinting = pre_box->isChecked();
-  info_data.process_with_components = process_box->isChecked();
+  info_data.hint_with_components = hint_box->isChecked();
   info_data.latin_fallback = fallback_box->currentIndex();
   info_data.symbol = symbol_box->isChecked();
 
@@ -586,7 +586,7 @@ again:
                  "info-callback, info-callback-data,"
                  "ignore-restrictions,"
                  "pre-hinting,"
-                 "process-with-components,"
+                 "hint-with-components,"
                  "increase-x-height,"
                  "fallback-script, symbol",
                  input, output,
@@ -600,7 +600,7 @@ again:
                  info_func, &info_data,
                  ignore_restrictions,
                  info_data.pre_hinting,
-                 info_data.process_with_components,
+                 info_data.hint_with_components,
                  info_data.increase_x_height,
                  info_data.latin_fallback, info_data.symbol);
 
@@ -820,15 +820,15 @@ Main_GUI::create_layout()
   if (pre_hinting)
     pre_box->setChecked(true);
 
-  process_box = new QCheckBox(tr("Process &With Components"), this);
-  process_box->setToolTip(
+  hint_box = new QCheckBox(tr("Hint &With Components"), this);
+  hint_box->setToolTip(
     tr("If switched on, <b>ttfautohint</b> hints composite glyphs"
        " as a whole, including subglyphs."
        "  Otherwise, glyph components get hinted separately.<br>"
        "Deactivating this flag reduces the bytecode size enormously,"
        " however, it might yield worse results."));
-  if (process_with_components)
-    process_box->setChecked(true);
+  if (hint_with_components)
+    hint_box->setChecked(true);
 
   symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
   symbol_box->setToolTip(
@@ -855,7 +855,7 @@ Main_GUI::create_layout()
   flags_layout->setColumnStretch(3, 1);
 
   flags_layout->addWidget(pre_box, 0, 0);
-  flags_layout->addWidget(process_box, 0, 2);
+  flags_layout->addWidget(hint_box, 0, 2);
 
   flags_layout->setRowMinimumHeight(1, 20);
   flags_layout->setRowStretch(1, 1);
