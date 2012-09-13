@@ -131,6 +131,8 @@ TTF_autohint(const char* options,
       hinting_range_max = (FT_Long)va_arg(ap, FT_UInt);
     else if (COMPARE("hinting-range-min"))
       hinting_range_min = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("hint-with-components"))
+      hint_with_components = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("ignore-restrictions"))
       ignore_restrictions = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("in-buffer"))
@@ -151,15 +153,15 @@ TTF_autohint(const char* options,
     }
     else if (COMPARE("increase-x-height"))
       increase_x_height = (FT_Long)va_arg(ap, FT_UInt);
+    else if (COMPARE("info-callback"))
+      info = va_arg(ap, TA_Info_Func);
+    else if (COMPARE("info-callback-data"))
+      info_data = va_arg(ap, void*);
     else if (COMPARE("out-buffer"))
     {
       out_file = NULL;
       out_bufp = va_arg(ap, char**);
     }
-    else if (COMPARE("info-callback"))
-      info = va_arg(ap, TA_Info_Func);
-    else if (COMPARE("info-callback-data"))
-      info_data = va_arg(ap, void*);
     else if (COMPARE("out-buffer-len"))
     {
       out_file = NULL;
@@ -173,8 +175,6 @@ TTF_autohint(const char* options,
     }
     else if (COMPARE("pre-hinting"))
       pre_hinting = (FT_Bool)va_arg(ap, FT_Int);
-    else if (COMPARE("hint-with-components"))
-      hint_with_components = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("progress-callback"))
       progress = va_arg(ap, TA_Progress_Func);
     else if (COMPARE("progress-callback-data"))
@@ -295,14 +295,14 @@ TTF_autohint(const char* options,
          font->hinting_range_max);
     DUMP("hinting-range-min",
          font->hinting_range_min);
+    DUMP("hint-with-components",
+         font->hint_with_components);
     DUMP("ignore-restrictions",
          font->ignore_restrictions);
     DUMP("increase-x-height",
          font->increase_x_height);
     DUMP("pre-hinting",
          font->pre_hinting);
-    DUMP("process-composites",
-         font->hint_with_components);
     DUMP("symbol",
          font->symbol);
 

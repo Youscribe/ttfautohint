@@ -268,7 +268,7 @@ typedef int
  *     `TA_INCREASE_X_HEIGHT`.  Use this flag to improve the legibility of
  *     small font sizes if necessary.
  *
- * `process-with-components`
+ * `hint-with-components`
  * :   If this integer is set to\ 1 (which is the default), ttfautohint
  *     handles composite glyphs as a whole.  This implies adding a special
  *     glyph to the font, as documented [here](#the-.ttfautohint-glyph).
