@@ -181,6 +181,11 @@ TTF_autohint(const char* options,
       progress_data = va_arg(ap, void*);
     else if (COMPARE("symbol"))
       symbol = (FT_Bool)va_arg(ap, FT_Int);
+    else
+    {
+      error = TA_Err_Unknown_Argument;
+      goto Err1;
+    }
 
     /*
       x-height-snapping-exceptions

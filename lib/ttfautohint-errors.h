@@ -67,6 +67,8 @@ TA_ERRORDEF_(Already_Processed,        0xF5, \
              "font already processed by ttfautohint")
 TA_ERRORDEF_(Invalid_Font_Type,        0xF6, \
              "not a font with TrueType outlines in SFNT format")
+TA_ERRORDEF_(Unknown_Argument,         0xF7, \
+             "unknown argument")
 
 #ifdef TA_ERROR_END_LIST
   TA_ERROR_END_LIST
