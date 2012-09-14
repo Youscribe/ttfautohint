@@ -66,6 +66,8 @@ better handling of `incomplete' fonts (this is, fonts which lack the minimum
 minor improvements
 ------------------
 
+make ttfautohint a filter
+
 reject fonts which are `hopeless' (for example, `Lipstick')
 
 reduce memory consumption by using 16bit data types in large arrays if 32bit
