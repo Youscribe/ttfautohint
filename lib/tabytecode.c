@@ -1681,8 +1681,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 
   /* XXX: right now, we abuse this flag to control */
   /*      the global behaviour of the auto-hinter */
-  load_flags = font->fallback_script << 30;
-  load_flags |= 1 << 29; /* vertical hinting only */
+  load_flags = 1 << 29; /* vertical hinting only */
   /* values 0 and 6-20 compressed to 4 bits */
   if (font->increase_x_height)
     load_flags |= (font->increase_x_height - 5) << 25;
@@ -1708,7 +1707,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
 #endif
 
   ta_loader_register_hints_recorder(font->loader, NULL, NULL);
-  error = ta_loader_load_glyph(font->loader, face, (FT_UInt)idx, load_flags);
+  error = ta_loader_load_glyph(font, face, (FT_UInt)idx, load_flags);
 
 #ifdef TA_DEBUG
   _ta_debug = _ta_debug_save;
@@ -1820,7 +1819,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
     /* calling `ta_loader_load_glyph' uses the */
     /* `TA_hints_recorder' function as a callback, */
     /* modifying `hints_record' */
-    error = ta_loader_load_glyph(font->loader, face, idx, load_flags);
+    error = ta_loader_load_glyph(font, face, idx, load_flags);
     if (error)
       goto Err;
 

@@ -22,7 +22,7 @@
 #include <ft2build.h>
 #include FT_GLYPH_H
 
-#include "taloader.h"
+#include "ta.h"
 #include "tahints.h"
 #include "taglobal.h"
 
@@ -42,8 +42,11 @@ typedef struct FT_Slot_InternalRec_
 /* initialize glyph loader */
 
 FT_Error
-ta_loader_init(TA_Loader loader)
+ta_loader_init(FONT* font)
 {
+  TA_Loader loader = font->loader;
+
+
   memset(loader, 0, sizeof (TA_LoaderRec));
 
   ta_glyph_hints_init(&loader->hints);
@@ -57,11 +60,11 @@ ta_loader_init(TA_Loader loader)
 /* reset glyph loader and compute globals if necessary */
 
 FT_Error
-ta_loader_reset(TA_Loader loader,
-                FT_Face face,
-                FT_UInt fallback_script)
+ta_loader_reset(FONT* font,
+                FT_Face face)
 {
   FT_Error error = FT_Err_Ok;
+  TA_Loader loader = font->loader;
 
 
   loader->face = face;
@@ -71,7 +74,8 @@ ta_loader_reset(TA_Loader loader,
 
   if (loader->globals == NULL)
   {
-    error = ta_face_globals_new(face, &loader->globals, fallback_script);
+    error = ta_face_globals_new(face, &loader->globals,
+                                font->fallback_script);
     if (!error)
     {
       face->autohint.data = (FT_Pointer)loader->globals;
@@ -86,8 +90,11 @@ ta_loader_reset(TA_Loader loader,
 /* finalize glyph loader */
 
 void
-ta_loader_done(TA_Loader loader)
+ta_loader_done(FONT* font)
 {
+  TA_Loader loader = font->loader;
+
+
   ta_glyph_hints_done(&loader->hints);
 
   loader->face = NULL;
@@ -487,15 +494,15 @@ Exit:
 /* load a glyph */
 
 FT_Error
-ta_loader_load_glyph(TA_Loader loader,
+ta_loader_load_glyph(FONT* font,
                      FT_Face face,
                      FT_UInt gindex,
                      FT_Int32 load_flags)
 {
   FT_Error error;
   FT_Size size = face->size;
+  TA_Loader loader = font->loader;
   TA_ScalerRec scaler;
-  FT_UInt fallback_script;
 
 
   if (!size)
@@ -513,17 +520,15 @@ ta_loader_load_glyph(TA_Loader loader,
   scaler.flags = 0; /* XXX: fix this */
 
   /* XXX this is an ugly hack of ttfautohint: */
-  /* bits 30 and 31 of `load_flags' specify the fallback script, */
   /* bit 29 triggers vertical hinting only, */
   /* and bits 25-28 give the x height increase limit */
-  fallback_script = load_flags >> 30;
   if (load_flags & (1 << 29))
     scaler.flags |= TA_SCALER_FLAG_NO_HORIZONTAL;
   scaler.flags |= ((load_flags >> 25) & 15) << 3; /* bits 3-6 */
 
   /* note that the fallback script can't be changed anymore */
   /* after the first call of `ta_loader_load_glyph' */
-  error = ta_loader_reset(loader, face, fallback_script);
+  error = ta_loader_reset(font, face);
   if (!error)
   {
     TA_ScriptMetrics metrics;

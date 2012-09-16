@@ -69,7 +69,7 @@ TTF_autohint(const char* options,
   FT_Bool ignore_restrictions = 0;
   FT_Bool pre_hinting = 0;
   FT_Bool hint_with_components = 0;
-  FT_UInt fallback_script = 0;
+  FT_UInt fallback_script = TA_SCRIPT_FALLBACK;
   FT_Bool symbol = 0;
 
   FT_Bool debug = 0;
@@ -274,8 +274,7 @@ TTF_autohint(const char* options,
   font->ignore_restrictions = ignore_restrictions;
   font->pre_hinting = pre_hinting;
   font->hint_with_components = hint_with_components;
-  /* restrict value to two bits */
-  font->fallback_script = fallback_script & 3;
+  font->fallback_script = fallback_script;
   font->symbol = symbol;
 
   font->debug = debug;

@@ -61,7 +61,7 @@ TA_font_unload(FONT* font,
     return;
 
   if (font->loader)
-    ta_loader_done(font->loader);
+    ta_loader_done(font);
 
   if (font->tables)
   {

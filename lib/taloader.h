@@ -25,11 +25,16 @@
 #include "tagloadr.h"
 
 
+typedef struct FONT_ FONT;
+
 typedef struct TA_LoaderRec_
 {
-  FT_Face face; /* current face */
-  TA_FaceGlobals globals; /* current face globals */
-  TA_GlyphLoader gloader; /* glyph loader */
+  /* current face data */
+  FT_Face face;
+  TA_FaceGlobals globals;
+
+  /* current glyph data */
+  TA_GlyphLoader gloader;
   TA_GlyphHintsRec hints;
   TA_ScriptMetrics metrics;
   FT_Bool transformed;
@@ -42,20 +47,20 @@ typedef struct TA_LoaderRec_
 
 
 FT_Error
-ta_loader_init(TA_Loader loader);
+ta_loader_init(FONT* font);
 
 
 FT_Error
-ta_loader_reset(TA_Loader loader,
-                FT_Face face,
-                FT_UInt fallback_script);
+ta_loader_reset(FONT* font,
+                FT_Face face);
+
 
 void
-ta_loader_done(TA_Loader loader);
+ta_loader_done(FONT* font);
 
 
 FT_Error
-ta_loader_load_glyph(TA_Loader loader,
+ta_loader_load_glyph(FONT* font,
                      FT_Face face,
                      FT_UInt gindex,
                      FT_Int32 load_flags);

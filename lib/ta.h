@@ -173,7 +173,7 @@ typedef struct SFNT_
 } SFNT;
 
 /* our font object */
-typedef struct FONT_
+struct FONT_
 {
   FT_Library lib;
 
@@ -213,7 +213,7 @@ typedef struct FONT_
   FT_UInt fallback_script;
   FT_Bool symbol;
   FT_Bool debug;
-} FONT;
+};
 
 
 #include "tatables.h"

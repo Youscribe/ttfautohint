@@ -49,24 +49,6 @@ static TA_ScriptClass const ta_script_classes[] =
 };
 
 
-/* a bit mask indicating an uncovered glyph */
-#define TA_SCRIPT_LIST_NONE 0x7F
-/* if this flag is set, we have an ASCII digit */
-#define TA_DIGIT 0x80
-
-
-/* note that glyph_scripts[] is used to map each glyph into */
-/* an index into the `ta_script_classes' array. */
-typedef struct TA_FaceGlobalsRec_
-{
-  FT_Face face;
-  FT_Long glyph_count; /* same as face->num_glyphs */
-  FT_Byte* glyph_scripts;
-
-  TA_ScriptMetrics metrics[TA_SCRIPT_MAX];
-} TA_FaceGlobalsRec;
-
-
 /* Compute the script index of each glyph within a given face. */
 
 static FT_Error
@@ -81,8 +63,8 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals,
   FT_UInt i;
 
 
-  /* the value TA_SCRIPT_LIST_NONE means `uncovered glyph' */
-  memset(globals->glyph_scripts, TA_SCRIPT_LIST_NONE, globals->glyph_count);
+  /* the value TA_SCRIPT_NONE means `uncovered glyph' */
+  memset(globals->glyph_scripts, TA_SCRIPT_NONE, globals->glyph_count);
 
   error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
   if (error)
@@ -115,7 +97,7 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals,
 
       if (gindex != 0
           && gindex < (FT_ULong)globals->glyph_count
-          && gscripts[gindex] == TA_SCRIPT_LIST_NONE)
+          && gscripts[gindex] == TA_SCRIPT_NONE)
         gscripts[gindex] = (FT_Byte)ss;
 
       for (;;)
@@ -126,7 +108,7 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals,
           break;
 
         if (gindex < (FT_ULong)globals->glyph_count
-            && gscripts[gindex] == TA_SCRIPT_LIST_NONE)
+            && gscripts[gindex] == TA_SCRIPT_NONE)
           gscripts[gindex] = (FT_Byte)ss;
       }
     }
@@ -152,9 +134,9 @@ Exit:
 
     for (nn = 0; nn < globals->glyph_count; nn++)
     {
-      if ((gscripts[nn] & ~TA_DIGIT) == TA_SCRIPT_LIST_NONE)
+      if ((gscripts[nn] & ~TA_DIGIT) == TA_SCRIPT_NONE)
       {
-        gscripts[nn] &= ~TA_SCRIPT_LIST_NONE;
+        gscripts[nn] &= ~TA_SCRIPT_NONE;
         gscripts[nn] |= fallback_script;
       }
     }
@@ -260,7 +242,7 @@ ta_face_globals_get_metrics(TA_FaceGlobals globals,
   gidx = script;
   if (gidx == 0
       || gidx + 1 >= script_max)
-    gidx = globals->glyph_scripts[gindex] & TA_SCRIPT_LIST_NONE;
+    gidx = globals->glyph_scripts[gindex] & TA_SCRIPT_NONE;
 
   clazz = ta_script_classes[gidx];
   if (script == 0)

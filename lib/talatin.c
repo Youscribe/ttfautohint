@@ -2431,10 +2431,12 @@ static const TA_Script_UniRangeRec ta_latin_uniranges[] =
   TA_UNIRANGE_REC(0x2460UL, 0x24FFUL), /* Enclosed Alphanumerics */
   TA_UNIRANGE_REC(0x2C60UL, 0x2C7FUL), /* Latin Extended-C */
   TA_UNIRANGE_REC(0x2DE0UL, 0x2DFFUL), /* Cyrillic Extended-A */
+  TA_UNIRANGE_REC(0x2E00UL, 0x2E7FUL), /* Supplemental Punctuation */
   TA_UNIRANGE_REC(0xA640UL, 0xA69FUL), /* Cyrillic Extended-B */
   TA_UNIRANGE_REC(0xA720UL, 0xA7FFUL), /* Latin Extended-D */
   TA_UNIRANGE_REC(0xFB00UL, 0xFB06UL), /* Alphab. Present. Forms (Latin Ligs) */
   TA_UNIRANGE_REC(0x1D400UL, 0x1D7FFUL), /* Mathematical Alphanumeric Symbols */
+  TA_UNIRANGE_REC(0x1F100UL, 0x1F1FFUL), /* Enclosed Alphanumeric Supplement */
   TA_UNIRANGE_REC(0UL, 0UL)
 };
 
