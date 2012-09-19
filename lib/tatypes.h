@@ -188,12 +188,15 @@ typedef enum TA_Script_
 } TA_Script;
 
 typedef struct TA_ScriptClassRec_ const* TA_ScriptClass;
+typedef struct TA_FaceGlobalsRec_* TA_FaceGlobals;
 
 typedef struct TA_ScriptMetricsRec_
 {
   TA_ScriptClass clazz;
   TA_ScalerRec scaler;
   FT_Bool digits_have_same_width;
+
+  TA_FaceGlobals globals; /* to access properties */
 } TA_ScriptMetricsRec, *TA_ScriptMetrics;
 
 

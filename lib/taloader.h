@@ -21,7 +21,6 @@
 #define __TALOADER_H__
 
 #include "tahints.h"
-#include "taglobal.h"
 #include "tagloadr.h"
 
 

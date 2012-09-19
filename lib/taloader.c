@@ -74,8 +74,7 @@ ta_loader_reset(FONT* font,
 
   if (loader->globals == NULL)
   {
-    error = ta_face_globals_new(face, &loader->globals,
-                                font->fallback_script);
+    error = ta_face_globals_new(face, &loader->globals, font);
     if (!error)
     {
       face->autohint.data = (FT_Pointer)loader->globals;

@@ -20,6 +20,7 @@
 #ifndef __TAGLOBAL_H__
 #define __TAGLOBAL_H__
 
+#include "ta.h"
 #include "tatypes.h"
 
 
@@ -40,17 +41,18 @@ typedef struct TA_FaceGlobalsRec_
   FT_Byte* glyph_scripts;
 
   TA_ScriptMetrics metrics[TA_SCRIPT_MAX];
+
+  FONT* font; /* to access global properties */
 } TA_FaceGlobalsRec;
 
 
 /* this models the global hints data for a given face, */
 /* decomposed into script-specific items */
-typedef struct TA_FaceGlobalsRec_* TA_FaceGlobals;
 
 FT_Error
 ta_face_globals_new(FT_Face face,
                     TA_FaceGlobals *aglobals,
-                    FT_UInt fallback_script);
+                    FONT* font);
 
 FT_Error
 ta_face_globals_get_metrics(TA_FaceGlobals globals,

@@ -24,6 +24,7 @@
 #include FT_TRUETYPE_TAGS_H
 
 #include "taloader.h"
+#include "taglobal.h"
 #include "tadummy.h"
 #include "talatin.h"
 

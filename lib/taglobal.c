@@ -52,8 +52,7 @@ static TA_ScriptClass const ta_script_classes[] =
 /* Compute the script index of each glyph within a given face. */
 
 static FT_Error
-ta_face_globals_compute_script_coverage(TA_FaceGlobals globals,
-                                        FT_UInt fallback_script)
+ta_face_globals_compute_script_coverage(TA_FaceGlobals globals)
 {
   FT_Error error = FT_Err_Ok;
   FT_Face face = globals->face;
@@ -137,7 +136,7 @@ Exit:
       if ((gscripts[nn] & ~TA_DIGIT) == TA_SCRIPT_NONE)
       {
         gscripts[nn] &= ~TA_SCRIPT_NONE;
-        gscripts[nn] |= fallback_script;
+        gscripts[nn] |= globals->font->fallback_script;
       }
     }
   }
@@ -150,7 +149,7 @@ Exit:
 FT_Error
 ta_face_globals_new(FT_Face face,
                     TA_FaceGlobals *aglobals,
-                    FT_UInt fallback_script)
+                    FONT* font)
 {
   FT_Error error;
   TA_FaceGlobals globals;
@@ -167,8 +166,9 @@ ta_face_globals_new(FT_Face face,
   globals->face = face;
   globals->glyph_count = face->num_glyphs;
   globals->glyph_scripts = (FT_Byte*)(globals + 1);
+  globals->font = font;
 
-  error = ta_face_globals_compute_script_coverage(globals, fallback_script);
+  error = ta_face_globals_compute_script_coverage(globals);
   if (error)
   {
     ta_face_globals_free(globals);
@@ -260,6 +260,7 @@ ta_face_globals_get_metrics(TA_FaceGlobals globals,
     }
 
     metrics->clazz = clazz;
+    metrics->globals = globals;
 
     if (clazz->script_metrics_init)
     {
