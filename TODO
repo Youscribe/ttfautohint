@@ -106,6 +106,8 @@ make ttfautohint remember options:
   2. if fonts already processed by ttfautohint can be re-processed (which
      isn't possible yet), parse the `version' string for parameters
 
+implement (sort of) the opposite of -x, this is, decrease the x height
+
 
 later enhancements
 ------------------
