@@ -345,7 +345,8 @@ TTF_autohint(const char* options,
     error = FT_New_Memory_Face(font->lib, font->in_buf, font->in_len,
                                i, &sfnt->face);
 
-    /* assure that the font hasn't been already processed by ttfautohint */
+    /* assure that the font hasn't been already processed by ttfautohint; */
+    /* another, more thorough check is done in TA_glyph_parse_simple */
     idx = FT_Get_Name_Index(sfnt->face, TTFAUTOHINT_GLYPH);
     if (idx)
     {

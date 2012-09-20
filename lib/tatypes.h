@@ -53,7 +53,7 @@
   } while (0)
 
 void
-_ta_message(const char *format,
+_ta_message(const char* format,
             ...);
 
 extern int _ta_debug;

@@ -149,7 +149,7 @@ Exit:
 
 
 void
-_ta_message(const char *format,
+_ta_message(const char* format,
             ...)
 {
   va_list ap;

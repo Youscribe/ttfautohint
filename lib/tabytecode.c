@@ -74,6 +74,23 @@ typedef struct Recorder_
 } Recorder;
 
 
+/* this is the bytecode of the `.ttfautohint' glyph */
+
+FT_Byte ttfautohint_glyph_bytecode[7] =
+{
+
+  /* increment `cvtl_is_subglyph' counter */
+  PUSHB_3,
+    cvtl_is_subglyph,
+    1,
+    cvtl_is_subglyph,
+  RCVT,
+  ADD,
+  WCVTP,
+
+};
+
+
 /* We add a subglyph for each composite glyph. */
 /* Since subglyphs must contain at least one point, */
 /* we have to adjust all point indices accordingly. */

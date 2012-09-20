@@ -521,6 +521,9 @@
 #define CVT_BLUE_SHOOTS_OFFSET(font) \
           CVT_BLUE_REFS_OFFSET(font) + CVT_BLUES_SIZE(font)
 
+
+extern FT_Byte ttfautohint_glyph_bytecode[7];
+
 #endif /* __TABYTECODE_H__ */
 
 /* end of tabytecode.h */

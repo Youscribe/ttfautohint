@@ -346,6 +346,18 @@ TA_glyph_parse_simple(GLYPH* glyph,
   num_ins = *(p++) << 8;
   num_ins += *(p++);
 
+  /* assure that we don't process a font */
+  /* which already contains a `.ttfautohint' glyph */
+  /* (a font with a `post' table version 3.0 doesn't contain glyph names, */
+  /* so we have to check it this way) */
+  if (glyph->num_points == 1
+      && num_ins >= sizeof (ttfautohint_glyph_bytecode))
+  {
+    if (!strncmp((char*)p, (char*)ttfautohint_glyph_bytecode,
+                 sizeof (ttfautohint_glyph_bytecode)))
+      return TA_Err_Already_Processed;
+  }
+
   p += num_ins;
 
   if (p > endp)
@@ -754,20 +766,6 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     GLYPH* glyph = &data->glyphs[data->num_glyphs - 1];
     FT_Byte* buf;
 
-    FT_Byte bytecode[] =
-    {
-
-      /* increment `cvtl_is_subglyph' counter */
-      PUSHB_3,
-        cvtl_is_subglyph,
-        1,
-        cvtl_is_subglyph,
-      RCVT,
-      ADD,
-      WCVTP,
-
-    };
-
     glyph->len1 = 12;
     glyph->len2 = 1;
     glyph->buf = (FT_Byte*)malloc(glyph->len1 + glyph->len2);
@@ -794,11 +792,11 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
     /* add bytecode also; */
     /* this works because the loop in `TA_sfnt_build_glyf_hints' */
     /* doesn't include the newly appended glyph */
-    glyph->ins_len = sizeof (bytecode);
+    glyph->ins_len = sizeof (ttfautohint_glyph_bytecode);
     glyph->ins_buf = (FT_Byte*)malloc(glyph->ins_len);
     if (!glyph->ins_buf)
       return FT_Err_Out_Of_Memory;
-    memcpy(glyph->ins_buf, bytecode, glyph->ins_len);
+    memcpy(glyph->ins_buf, ttfautohint_glyph_bytecode, glyph->ins_len);
 
     sfnt->max_components += 1;
   }
