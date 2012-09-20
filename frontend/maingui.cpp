@@ -776,7 +776,7 @@ Main_GUI::create_layout()
        "Use this if holes in letters like <i>e</i> get filled,"
        " for example."));
   increase_box->setKeyboardTracking(false);
-  increase_box->setRange(6, 20);
+  increase_box->setRange(6, 10000);
   increase_box->setValue(increase_x_height ? increase_x_height
                                            : TA_INCREASE_X_HEIGHT);
 

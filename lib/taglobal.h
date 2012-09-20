@@ -24,12 +24,20 @@
 #include "tatypes.h"
 
 
+/* Default values and flags for both autofitter globals */
+/* (originally found in AF_ModuleRec, we use FONT instead) */
+/* and face globals (in TA_FaceGlobalsRec). */
+
 /* index of fallback script in `ta_script_classes' */
 #define TA_SCRIPT_FALLBACK 0
 /* a bit mask indicating an uncovered glyph */
 #define TA_SCRIPT_NONE 0x7F
 /* if this flag is set, we have an ASCII digit */
 #define TA_DIGIT 0x80
+
+/* `increase-x-height' property */
+#define TA_PROP_INCREASE_X_HEIGHT_MIN 6
+#define TA_PROP_INCREASE_X_HEIGHT_MAX 0
 
 
 /* note that glyph_scripts[] is used to map each glyph into */
@@ -39,6 +47,9 @@ typedef struct TA_FaceGlobalsRec_
   FT_Face face;
   FT_Long glyph_count; /* same as face->num_glyphs */
   FT_Byte* glyph_scripts;
+
+  /* per-face auto-hinter properties */
+  FT_UInt increase_x_height;
 
   TA_ScriptMetrics metrics[TA_SCRIPT_MAX];
 

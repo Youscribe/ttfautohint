@@ -519,11 +519,9 @@ ta_loader_load_glyph(FONT* font,
   scaler.flags = 0; /* XXX: fix this */
 
   /* XXX this is an ugly hack of ttfautohint: */
-  /* bit 29 triggers vertical hinting only, */
-  /* and bits 25-28 give the x height increase limit */
+  /* bit 29 triggers vertical hinting only */
   if (load_flags & (1 << 29))
     scaler.flags |= TA_SCALER_FLAG_NO_HORIZONTAL;
-  scaler.flags |= ((load_flags >> 25) & 15) << 3; /* bits 3-6 */
 
   /* note that the fallback script can't be changed anymore */
   /* after the first call of `ta_loader_load_glyph' */

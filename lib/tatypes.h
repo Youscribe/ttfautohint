@@ -125,13 +125,6 @@ typedef struct TA_GlyphHintsRec_* TA_GlyphHints;
 #define TA_SCALER_FLAG_NO_VERTICAL 0x02 /* disable vertical hinting */
 #define TA_SCALER_FLAG_NO_ADVANCE 0x04 /* disable advance hinting */
 
-/* for ttfautohint, we add more scaler flags; */
-/* note that FreeType will use a different mechanism */
-/* to pass control arguments to the auto-hinter */
-/* (this isn't implemented yet in version 2.4.9) */
-
-/* currently, bits 3-6 hold the x height increase limit */
-
 typedef struct TA_ScalerRec_
 {
   FT_Face face; /* source font face */

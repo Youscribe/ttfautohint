@@ -247,9 +247,7 @@ TTF_autohint(const char* options,
   if (hinting_limit < 0)
     hinting_limit = TA_HINTING_LIMIT;
 
-  /* we have 4 bits to store the values 0 and 6-20 */
-  if (increase_x_height > 0
-      && (increase_x_height < 6 || increase_x_height > 20))
+  if (increase_x_height > 0 && increase_x_height < 6)
   {
     error = FT_Err_Invalid_Argument;
     goto Err1;

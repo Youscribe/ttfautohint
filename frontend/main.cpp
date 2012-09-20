@@ -527,11 +527,10 @@ main(int argc,
                     hinting_range_max);
     exit(EXIT_FAILURE);
   }
-  if (increase_x_height != 0
-      && (increase_x_height < 6 || increase_x_height > 20))
+  if (increase_x_height != 0 && increase_x_height < 6)
   {
     fprintf(stderr, "A non-zero x height increase limit"
-                    " must be in the range 6-20\n");
+                    " must be larger than or equal to 6\n");
     exit(EXIT_FAILURE);
   }
 

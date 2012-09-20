@@ -22,6 +22,7 @@
 #include <ft2build.h>
 #include FT_ADVANCES_H
 
+#include "taglobal.h"
 #include "talatin.h"
 #include "tasort.h"
 
@@ -596,18 +597,19 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
       FT_Pos threshold;
       FT_Pos fitted;
       FT_UInt limit;
+      FT_UInt ppem;
 
 
       scaled = FT_MulFix(blue->shoot.org, scaler->y_scale);
-
+      ppem = metrics->root.scaler.face->size->metrics.x_ppem;
+      limit = metrics->root.globals->increase_x_height;
       threshold = 40;
-      /* scaler flag bits 3-6 hold the x height increase limit; */
-      /* if zero, the feature is switched off, */
-      /* otherwise the limit is the bits value + 5 */
-      limit = (scaler->flags >> 3) & 15;
+
+      /* if the `increase-x-height' property is active, */
+      /* we round up much more often                    */
       if (limit
-          && metrics->root.scaler.face->size->metrics.x_ppem <= limit + 5
-          && metrics->root.scaler.face->size->metrics.x_ppem >= 6)
+          && ppem <= limit
+          && ppem >= TA_PROP_INCREASE_X_HEIGHT_MIN)
         threshold = 52;
 
       fitted = (scaled + threshold) & ~63;
