@@ -16,24 +16,45 @@
 #include "ta.h"
 
 
+#define BUF_SIZE 1024
+
 FT_Error
 TA_font_file_read(FONT* font,
                   FILE* in_file)
 {
-  fseek(in_file, 0, SEEK_END);
-  font->in_len = ftell(in_file);
-  fseek(in_file, 0, SEEK_SET);
+  FT_Byte buf[BUF_SIZE];
+  size_t in_len = 0;
+  size_t read_bytes;
 
-  /* a valid TTF can never be that small */
-  if (font->in_len < 100)
-    return TA_Err_Invalid_Font_Type;
 
-  font->in_buf = (FT_Byte*)malloc(font->in_len);
+  font->in_buf = (FT_Byte*)malloc(BUF_SIZE);
   if (!font->in_buf)
     return FT_Err_Out_Of_Memory;
 
-  if (fread(font->in_buf, 1, font->in_len, in_file) != font->in_len)
+  while ((read_bytes = fread(buf, 1, BUF_SIZE, in_file)) > 0)
+  {
+    FT_Byte* in_buf_new;
+
+
+    in_buf_new = (FT_Byte*)realloc(font->in_buf, in_len + read_bytes);
+    if (!in_buf_new)
+      return FT_Err_Out_Of_Memory;
+    else
+      font->in_buf = in_buf_new;
+
+    memcpy(font->in_buf + in_len, buf, read_bytes);
+
+    in_len += read_bytes;
+  }
+
+  if (ferror(in_file))
     return FT_Err_Invalid_Stream_Read;
+
+  /* a valid TTF can never be that small */
+  if (in_len < 100)
+    return TA_Err_Invalid_Font_Type;
+
+  font->in_len = in_len;
 
   return TA_Err_Ok;
 }

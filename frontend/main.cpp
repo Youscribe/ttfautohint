@@ -115,10 +115,13 @@ show_help(bool
 "Usage: ttfautohintGUI [OPTION]...\n"
 "A GUI application to replace hints in a TrueType font.\n"
 #else
-"Usage: ttfautohint [OPTION]... IN-FILE OUT-FILE\n"
+"Usage: ttfautohint [OPTION]... [IN-FILE [OUT-FILE]]\n"
 "Replace hints in TrueType font IN-FILE and write output to OUT-FILE.\n"
+"If OUT-FILE is missing, standard output is used instead;\n"
+"if IN-FILE is missing also, standard input and output are used.\n"
 #endif
-"The new hints are based on FreeType's autohinter.\n"
+"\n"
+"The new hints are based on FreeType's auto-hinter.\n"
 "\n"
 "This program is a simple front-end to the `ttfautohint' library.\n"
 "\n");
@@ -534,29 +537,42 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
-  // on the console we need in and out file arguments
-  if (argc - optind != 2)
+  int num_args = argc - optind;
+
+  if (num_args > 2)
     show_help(false, true);
 
-  FILE* in = fopen(argv[optind], "rb");
-  if (!in)
+  FILE* out;
+  if (num_args > 1)
   {
-    fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                    "\n"
-                    "  %s\n",
-                    argv[optind], strerror(errno));
-    exit(EXIT_FAILURE);
+    out = fopen(argv[optind + 1], "wb");
+    if (!out)
+    {
+      fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                      "\n"
+                      "  %s\n",
+                      argv[optind + 1], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
   }
+  else
+    out = stdout;
 
-  FILE* out = fopen(argv[optind + 1], "wb");
-  if (!out)
+  FILE* in;
+  if (num_args > 0)
   {
-    fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                    "\n"
-                    "  %s\n",
-                    argv[optind + 1], strerror(errno));
-    exit(EXIT_FAILURE);
+    in = fopen(argv[optind], "rb");
+    if (!in)
+    {
+      fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                      "\n"
+                      "  %s\n",
+                      argv[optind], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
   }
+  else
+    in = stdin;
 
   unsigned char version_data[128];
   unsigned char version_data_wide[256];
