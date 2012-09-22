@@ -16,7 +16,7 @@
 #include "ta.h"
 
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 0x10000
 
 FT_Error
 TA_font_file_read(FONT* font,

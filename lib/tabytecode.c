@@ -18,7 +18,7 @@
 
 
 #undef MISSING
-#define MISSING (FT_UInt)~0
+#define MISSING (FT_UShort)~0
 
 /* a simple macro to emit bytecode instructions */
 #define BCI(code) *(bufp++) = (code)
@@ -58,19 +58,19 @@ typedef struct Recorder_
   /* (there can be at most one such segment per contour); */
   /* later on we append additional records */
   /* to split them into 24-26 and 0-2 */
-  FT_UInt* wrap_around_segments;
-  FT_UInt num_wrap_around_segments;
+  FT_UShort* wrap_around_segments;
+  FT_UShort num_wrap_around_segments;
 
   FT_UShort num_stack_elements; /* the necessary stack depth so far */
 
   /* data necessary for strong point interpolation */
-  FT_UInt* ip_before_points;
-  FT_UInt* ip_after_points;
-  FT_UInt* ip_on_point_array;
-  FT_UInt* ip_between_point_array;
+  FT_UShort* ip_before_points;
+  FT_UShort* ip_after_points;
+  FT_UShort* ip_on_point_array;
+  FT_UShort* ip_between_point_array;
 
-  FT_UInt num_strong_points;
-  FT_UInt num_segments;
+  FT_UShort num_strong_points;
+  FT_UShort num_segments;
 } Recorder;
 
 
@@ -143,17 +143,17 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   FT_UInt* arg;
   FT_UInt num_args;
   FT_UInt nargs;
-  FT_UInt num_segments;
+  FT_UShort num_segments;
 
   FT_Bool need_words = 0;
 
   FT_Int n;
   FT_UInt i, j;
   FT_UInt base;
-  FT_UInt num_packed_segments;
-  FT_UInt num_storage;
-  FT_UInt num_stack_elements;
-  FT_UInt num_twilight_points;
+  FT_UShort num_packed_segments;
+  FT_UShort num_storage;
+  FT_UShort num_stack_elements;
+  FT_UShort num_twilight_points;
 
 
   seg_limit = segments + axis->num_segments;
@@ -387,7 +387,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   FT_Int p, q;
   FT_UInt i, j;
   FT_Int start, end;
-  FT_UInt num_stack_elements;
+  FT_UShort num_stack_elements;
 
 
   num_args = 2 * num_contours + 2;
@@ -621,19 +621,19 @@ TA_build_point_hints(Recorder* recorder,
   TA_Edge after;
 
   FT_Byte* p = recorder->hints_record.buf;
-  FT_UInt num_edges = axis->num_edges;
-  FT_UInt num_strong_points = recorder->num_strong_points;
+  FT_UShort num_edges = axis->num_edges;
+  FT_UShort num_strong_points = recorder->num_strong_points;
 
-  FT_UInt i;
-  FT_UInt j;
-  FT_UInt k;
+  FT_UShort i;
+  FT_UShort j;
+  FT_UShort k;
 
-  FT_UInt* ip;
-  FT_UInt* iq;
-  FT_UInt* ir;
-  FT_UInt* ip_limit;
-  FT_UInt* iq_limit;
-  FT_UInt* ir_limit;
+  FT_UShort* ip;
+  FT_UShort* iq;
+  FT_UShort* ir;
+  FT_UShort* ip_limit;
+  FT_UShort* iq_limit;
+  FT_UShort* ir_limit;
 
 
   /* we store everything as 16bit numbers; */
@@ -1057,13 +1057,13 @@ static FT_Byte*
 TA_hints_recorder_handle_segments(FT_Byte* bufp,
                                   TA_AxisHints axis,
                                   TA_Edge edge,
-                                  FT_UInt* wraps)
+                                  FT_UShort* wraps)
 {
   TA_Segment segments = axis->segments;
   TA_Segment seg;
-  FT_UInt seg_idx;
-  FT_UInt num_segs = 0;
-  FT_UInt* wrap;
+  FT_UShort seg_idx;
+  FT_UShort num_segs = 0;
+  FT_UShort* wrap;
 
 
   seg_idx = edge->first - segments;
@@ -1152,11 +1152,11 @@ TA_hints_recorder(TA_Action action,
 
   Recorder* recorder = (Recorder*)hints->user;
   FONT* font = recorder->font;
-  FT_UInt* wraps = recorder->wrap_around_segments;
+  FT_UShort* wraps = recorder->wrap_around_segments;
   FT_Byte* p = recorder->hints_record.buf;
 
-  FT_UInt* ip;
-  FT_UInt* limit;
+  FT_UShort* ip;
+  FT_UShort* limit;
 
 
   if (dim == TA_DIMENSION_HORZ)
@@ -1536,8 +1536,8 @@ TA_init_recorder(Recorder* recorder,
   TA_Segment seg_limit = segments + axis->num_segments;
   TA_Segment seg;
 
-  FT_UInt num_strong_points = 0;
-  FT_UInt* wrap_around_segment;
+  FT_UShort num_strong_points = 0;
+  FT_UShort* wrap_around_segment;
 
   recorder->font = font;
   recorder->glyph = glyph;
@@ -1559,7 +1559,8 @@ TA_init_recorder(Recorder* recorder,
       recorder->num_wrap_around_segments++;
 
   recorder->wrap_around_segments =
-    (FT_UInt*)malloc(recorder->num_wrap_around_segments * sizeof (FT_UInt));
+    (FT_UShort*)malloc(recorder->num_wrap_around_segments
+                     * sizeof (FT_UShort));
   if (!recorder->wrap_around_segments)
     return FT_Err_Out_Of_Memory;
 
@@ -1583,12 +1584,12 @@ TA_init_recorder(Recorder* recorder,
   recorder->num_strong_points = num_strong_points;
 
   recorder->ip_before_points =
-    (FT_UInt*)malloc(num_strong_points * sizeof (FT_UInt));
+    (FT_UShort*)malloc(num_strong_points * sizeof (FT_UShort));
   if (!recorder->ip_before_points)
     return FT_Err_Out_Of_Memory;
 
   recorder->ip_after_points =
-    (FT_UInt*)malloc(num_strong_points * sizeof (FT_UInt));
+    (FT_UShort*)malloc(num_strong_points * sizeof (FT_UShort));
   if (!recorder->ip_after_points)
     return FT_Err_Out_Of_Memory;
 
@@ -1596,14 +1597,14 @@ TA_init_recorder(Recorder* recorder,
   /* however, this value isn't known yet */
   /* (or rather, it can vary between different pixel sizes) */
   recorder->ip_on_point_array =
-    (FT_UInt*)malloc(axis->num_segments
-                     * num_strong_points * sizeof (FT_UInt));
+    (FT_UShort*)malloc(axis->num_segments
+                       * num_strong_points * sizeof (FT_UShort));
   if (!recorder->ip_on_point_array)
     return FT_Err_Out_Of_Memory;
 
   recorder->ip_between_point_array =
-    (FT_UInt*)malloc(axis->num_segments * axis->num_segments
-                     * num_strong_points * sizeof (FT_UInt));
+    (FT_UShort*)malloc(axis->num_segments * axis->num_segments
+                       * num_strong_points * sizeof (FT_UShort));
   if (!recorder->ip_between_point_array)
     return FT_Err_Out_Of_Memory;
 
@@ -1632,16 +1633,16 @@ TA_rewind_recorder(Recorder* recorder,
   /* We later check with MISSING (which expands to 0xFF bytes) */
 
   memset(recorder->ip_before_points, 0xFF,
-         recorder->num_strong_points * sizeof (FT_UInt));
+         recorder->num_strong_points * sizeof (FT_UShort));
   memset(recorder->ip_after_points, 0xFF,
-         recorder->num_strong_points * sizeof (FT_UInt));
+         recorder->num_strong_points * sizeof (FT_UShort));
 
   memset(recorder->ip_on_point_array, 0xFF,
          recorder->num_segments
-         * recorder->num_strong_points * sizeof (FT_UInt));
+         * recorder->num_strong_points * sizeof (FT_UShort));
   memset(recorder->ip_between_point_array, 0xFF,
          recorder->num_segments * recorder->num_segments
-         * recorder->num_strong_points * sizeof (FT_UInt));
+         * recorder->num_strong_points * sizeof (FT_UShort));
 }
 
 
@@ -1683,7 +1684,7 @@ TA_sfnt_build_glyph_instructions(SFNT* sfnt,
   Hints_Record* point_hints_records = NULL;
 
   Recorder recorder;
-  FT_UInt num_stack_elements;
+  FT_UShort num_stack_elements;
   FT_Bool optimize = 0;
 
   FT_Int32 load_flags;
