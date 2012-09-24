@@ -19,6 +19,9 @@
 #include "info.h"
 
 
+#define TTFAUTOHINT_STRING "; ttfautohint"
+#define TTFAUTOHINT_STRING_WIDE "\0;\0 \0t\0t\0f\0a\0u\0t\0o\0h\0i\0n\0t"
+
 // build string which gets appended to the `Version' field(s)
 
 extern "C" {
@@ -32,7 +35,7 @@ build_version_string(Info_Data* idata)
   int count;
 
   d = (char*)idata->data;
-  d += sprintf(d, "; ttfautohint (v%s)", VERSION);
+  d += sprintf(d, TTFAUTOHINT_STRING " (v%s)", VERSION);
 
   d += sprintf(d, " -l %d", idata->hinting_range_min);
   d += sprintf(d, " -r %d", idata->hinting_range_max);
@@ -84,8 +87,18 @@ info(unsigned short platform_id,
      void* user)
 {
   Info_Data* idata = (Info_Data*)user;
+  unsigned char ttfautohint_string[] = TTFAUTOHINT_STRING;
+  unsigned char ttfautohint_string_wide[] = TTFAUTOHINT_STRING_WIDE;
+
+  // we use memmem, so don't count the trailing \0 character
+  size_t ttfautohint_string_len = sizeof (TTFAUTOHINT_STRING) - 1;
+  size_t ttfautohint_string_wide_len = sizeof (TTFAUTOHINT_STRING_WIDE) - 1;
+
   unsigned char* v;
   unsigned short v_len;
+  unsigned char* s;
+  size_t s_len;
+  size_t offset;
 
   // if it is a version string, append our data
   if (name_id != 5)
@@ -98,12 +111,51 @@ info(unsigned short platform_id,
     // one-byte or multi-byte encodings
     v = idata->data;
     v_len = idata->data_len;
+    s = ttfautohint_string;
+    s_len = ttfautohint_string_len;
+    offset = 2;
   }
   else
   {
     // (two-byte) UTF-16BE for everything else
     v = idata->data_wide;
     v_len = idata->data_wide_len;
+    s = ttfautohint_string_wide;
+    s_len = ttfautohint_string_wide_len;
+    offset = 4;
+  }
+
+  // if we already have an ttfautohint info string,
+  // remove it up to a following `;' character (or end of string)
+  unsigned char* s_start = (unsigned char*)memmem(*str, *len, s, s_len);
+  if (s_start)
+  {
+    unsigned char* s_end = s_start + offset;
+    unsigned char* limit = *str + *len;
+
+    while (s_end < limit)
+    {
+      if (*s_end == ';')
+      {
+        if (offset == 2)
+          break;
+        else
+        {
+          if (*(s_end - 1) == '\0') // UTF-16BE
+          {
+            s_end--;
+            break;
+          }
+        }
+      }
+
+      s_end++;
+    }
+
+    while (s_end < limit)
+      *s_start++ = *s_end++;
+
+    *len -= s_end - s_start;
   }
 
   // do nothing if the string would become too long
