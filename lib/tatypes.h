@@ -166,7 +166,7 @@ typedef struct TA_ScalerRec_
 
 typedef enum TA_Script_
 {
-  TA_SCRIPT_NONE = 0,
+  TA_SCRIPT_DUMMY = 0,
   TA_SCRIPT_LATIN = 1,
   TA_SCRIPT_CJK = 2,
   TA_SCRIPT_INDIC = 3, 

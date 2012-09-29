@@ -43,7 +43,7 @@ ta_dummy_hints_apply(TA_GlyphHints hints,
 
 const TA_ScriptClassRec ta_dummy_script_class =
 {
-  TA_SCRIPT_NONE,
+  TA_SCRIPT_DUMMY,
   NULL,
 
   sizeof (TA_ScriptMetricsRec),
