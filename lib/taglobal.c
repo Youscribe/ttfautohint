@@ -127,6 +127,7 @@ ta_face_globals_compute_script_coverage(TA_FaceGlobals globals)
 Exit:
   /* by default, all uncovered glyphs are set to the fallback script */
   /* XXX: Shouldn't we disable hinting or do something similar? */
+  if (globals->font->fallback_script != TA_SCRIPT_NONE)
   {
     FT_Long nn;
 

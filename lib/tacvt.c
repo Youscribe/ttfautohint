@@ -88,7 +88,7 @@ TA_table_build_cvt(FT_Byte** cvt,
   if (error)
     return error;
 
-  if (font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE)
+  if (font->loader->hints.metrics->clazz->script == TA_SCRIPT_DUMMY)
   {
     haxis = NULL;
     vaxis = NULL;

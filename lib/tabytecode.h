@@ -497,7 +497,7 @@
 #define CVT_HORZ_WIDTHS_OFFSET(font) \
           CVT_VERT_STANDARD_WIDTH_OFFSET(font) + 1
 #define CVT_HORZ_WIDTHS_SIZE(font) \
-          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_DUMMY) \
            ? 0 \
            : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[0].width_count)
 
@@ -505,13 +505,13 @@
 #define CVT_VERT_WIDTHS_OFFSET(font) \
           CVT_HORZ_WIDTHS_OFFSET(font) + CVT_HORZ_WIDTHS_SIZE(font)
 #define CVT_VERT_WIDTHS_SIZE(font) \
-          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_DUMMY) \
            ? 0 \
            : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count)
 
 /* the number of blue zones */
 #define CVT_BLUES_SIZE(font) \
-          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE) \
+          ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_DUMMY) \
            ? 0 \
            : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count)
 
