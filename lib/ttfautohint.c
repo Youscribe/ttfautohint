@@ -411,11 +411,6 @@ TTF_autohint(const char* options,
   if (error)
     goto Err;
 
-  /* hint the glyphs and build bytecode */
-  error = TA_sfnt_build_glyf_hints(&font->sfnts[0], font);
-  if (error)
-    goto Err;
-
   /* loop again over subfonts */
   for (i = 0; i < font->num_sfnts; i++)
   {

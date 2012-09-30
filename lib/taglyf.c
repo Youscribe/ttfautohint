@@ -16,7 +16,7 @@
 #include "ta.h"
 
 
-FT_Error
+static FT_Error
 TA_sfnt_build_glyf_hints(SFNT* sfnt,
                          FONT* font)
 {
@@ -813,6 +813,8 @@ FT_Error
 TA_sfnt_build_glyf_table(SFNT* sfnt,
                          FONT* font)
 {
+  FT_Error error;
+
   SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
   glyf_Data* data = (glyf_Data*)glyf_table->data;
 
@@ -826,6 +828,10 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 
   if (glyf_table->processed)
     return TA_Err_Ok;
+
+  error = TA_sfnt_build_glyf_hints(sfnt, font);
+  if (error)
+    return error;
 
   /* get table size */
   len = 0;
