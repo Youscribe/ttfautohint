@@ -202,7 +202,10 @@ FT_Error
 TA_sfnt_build_cvt_table(SFNT* sfnt,
                         FONT* font)
 {
-  FT_Error error;
+  FT_Error error = FT_Err_Ok;
+
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
 
   FT_Byte* cvt_buf;
   FT_ULong cvt_len;
@@ -210,11 +213,18 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
 
   error = TA_sfnt_add_table_info(sfnt);
   if (error)
-    return error;
+    goto Exit;
+
+  /* `glyf', `cvt', `fpgm', and `prep' are always used in parallel */
+  if (glyf_table->processed)
+  {
+    sfnt->table_infos[sfnt->num_table_infos - 1] = data->cvt_idx;
+    goto Exit;
+  }
 
   error = TA_table_build_cvt(&cvt_buf, &cvt_len, sfnt, font);
   if (error)
-    return error;
+    goto Exit;
 
   /* in case of success, `cvt_buf' gets linked */
   /* and is eventually freed in `TA_font_unload' */
@@ -222,12 +232,12 @@ TA_sfnt_build_cvt_table(SFNT* sfnt,
                             &sfnt->table_infos[sfnt->num_table_infos - 1],
                             TTAG_cvt, cvt_len, cvt_buf);
   if (error)
-  {
     free(cvt_buf);
-    return error;
-  }
+  else
+    data->cvt_idx = sfnt->table_infos[sfnt->num_table_infos - 1];
 
-  return FT_Err_Ok;
+Exit:
+  return error;
 }
 
 /* end of tacvt.c */

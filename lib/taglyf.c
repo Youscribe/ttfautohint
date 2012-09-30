@@ -602,6 +602,10 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   if (!data->glyphs)
     return FT_Err_Out_Of_Memory;
 
+  data->cvt_idx = MISSING;
+  data->fpgm_idx = MISSING;
+  data->prep_idx = MISSING;
+
   /* first loop over `loca' and `glyf' data */
 
   p = loca_table->buf;

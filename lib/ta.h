@@ -126,6 +126,13 @@ typedef struct glyf_Data_
 {
   FT_UShort num_glyphs;
   GLYPH* glyphs;
+
+  /* if a `glyf' table gets used in more than one subfont, */
+  /* so do `cvt', `fpgm', and `prep' tables: */
+  /* these four tables are always handled in parallel */
+  FT_ULong cvt_idx;
+  FT_ULong fpgm_idx;
+  FT_ULong prep_idx;
 } glyf_Data;
 
 /* an SFNT table */

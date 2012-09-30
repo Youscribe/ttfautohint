@@ -558,7 +558,10 @@ FT_Error
 TA_sfnt_build_prep_table(SFNT* sfnt,
                          FONT* font)
 {
-  FT_Error error;
+  FT_Error error = FT_Err_Ok;
+
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
 
   FT_Byte* prep_buf;
   FT_ULong prep_len;
@@ -566,11 +569,18 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
 
   error = TA_sfnt_add_table_info(sfnt);
   if (error)
-    return error;
+    goto Exit;
+
+  /* `glyf', `cvt', `fpgm', and `prep' are always used in parallel */
+  if (glyf_table->processed)
+  {
+    sfnt->table_infos[sfnt->num_table_infos - 1] = data->prep_idx;
+    goto Exit;
+  }
 
   error = TA_table_build_prep(&prep_buf, &prep_len, font);
   if (error)
-    return error;
+    goto Exit;
 
 #if 0
   /* ttfautohint's bytecode in `fpgm' is larger */
@@ -586,12 +596,12 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
                             &sfnt->table_infos[sfnt->num_table_infos - 1],
                             TTAG_prep, prep_len, prep_buf);
   if (error)
-  {
     free(prep_buf);
-    return error;
-  }
+  else
+    data->prep_idx = sfnt->table_infos[sfnt->num_table_infos - 1];
 
-  return FT_Err_Ok;
+Exit:
+  return error;
 }
 
 /* end of taprep.c */
