@@ -337,7 +337,10 @@ TTF_autohint(const char* options,
   if (error)
     goto Err;
 
-  /* loop over subfonts */
+  if (font->debug)
+    _ta_debug = 1;
+
+  /* we do some loops over all subfonts */
   for (i = 0; i < font->num_sfnts; i++)
   {
     SFNT* sfnt = &font->sfnts[i];
@@ -370,6 +373,10 @@ TTF_autohint(const char* options,
     if (error)
       goto Err;
 
+    error = TA_sfnt_handle_coverage(sfnt, font);
+    if (error)
+      goto Err;
+
     /* check permission */
     if (sfnt->OS2_idx != MISSING)
     {
@@ -386,30 +393,28 @@ TTF_autohint(const char* options,
     }
   }
 
-  /* build `gasp' table */
-  error = TA_sfnt_build_gasp_table(&font->sfnts[0], font);
-  if (error)
-    goto Err;
+  for (i = 0; i < font->num_sfnts; i++)
+  {
+    SFNT* sfnt = &font->sfnts[i];
 
-  /* XXX handle subfonts for bytecode tables */
 
-  if (font->debug)
-    _ta_debug = 1;
+    TA_sfnt_adjust_master_coverage(sfnt, font);
+  }
 
-  /* build `cvt ' table */
-  error = TA_sfnt_build_cvt_table(&font->sfnts[0], font);
-  if (error)
-    goto Err;
+#if 0
+  /* this code is here for completeness -- */
+  /* right now, `glyf' tables get hinted only once, */
+  /* and referring subfonts simply reuse it, */
+  /* but this might change in the future */
 
-  /* build `fpgm' table */
-  error = TA_sfnt_build_fpgm_table(&font->sfnts[0], font);
-  if (error)
-    goto Err;
+  for (i = 0; i < font->num_sfnts; i++)
+  {
+    SFNT* sfnt = &font->sfnts[i];
 
-  /* build `prep' table */
-  error = TA_sfnt_build_prep_table(&font->sfnts[0], font);
-  if (error)
-    goto Err;
+
+    TA_sfnt_copy_master_coverage(sfnt, font);
+  }
+#endif
 
   /* loop again over subfonts */
   for (i = 0; i < font->num_sfnts; i++)
@@ -417,12 +422,31 @@ TTF_autohint(const char* options,
     SFNT* sfnt = &font->sfnts[i];
 
 
+    error = TA_sfnt_build_gasp_table(sfnt, font);
+    if (error)
+      goto Err;
+    error = TA_sfnt_build_cvt_table(sfnt, font);
+    if (error)
+      goto Err;
+    error = TA_sfnt_build_fpgm_table(sfnt, font);
+    if (error)
+      goto Err;
+    error = TA_sfnt_build_prep_table(sfnt, font);
+    if (error)
+      goto Err;
     error = TA_sfnt_build_glyf_table(sfnt, font);
     if (error)
       goto Err;
     error = TA_sfnt_build_loca_table(sfnt, font);
     if (error)
       goto Err;
+  }
+
+  for (i = 0; i < font->num_sfnts; i++)
+  {
+    SFNT* sfnt = &font->sfnts[i];
+
+
     error = TA_sfnt_update_maxp_table(sfnt, font);
     if (error)
       goto Err;

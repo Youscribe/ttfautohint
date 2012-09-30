@@ -26,10 +26,6 @@ TA_sfnt_compute_global_hints(SFNT* sfnt,
   FT_Int32 load_flags;
 
 
-  error = ta_loader_init(font);
-  if (error)
-    return error;
-
   error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
   if (error)
   {
