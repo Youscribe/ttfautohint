@@ -192,6 +192,9 @@ struct FONT_
 
   FT_Bool have_DSIG;
 
+  /* we have a single `gasp' table for all subfonts */
+  FT_ULong gasp_idx;
+
   TA_LoaderRec loader[1]; /* the interface to the autohinter */
 
   /* configuration options */

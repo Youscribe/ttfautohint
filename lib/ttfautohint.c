@@ -275,6 +275,8 @@ TTF_autohint(const char* options,
   font->fallback_script = fallback_script;
   font->symbol = symbol;
 
+  font->gasp_idx = MISSING;
+
   font->debug = debug;
 
   /* dump parameters */

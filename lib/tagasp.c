@@ -51,18 +51,24 @@ FT_Error
 TA_sfnt_build_gasp_table(SFNT* sfnt,
                          FONT* font)
 {
-  FT_Error error;
+  FT_Error error = FT_Err_Ok;
 
   FT_Byte* gasp_buf;
 
 
   error = TA_sfnt_add_table_info(sfnt);
   if (error)
-    return error;
+    goto Exit;
+
+  if (font->gasp_idx != MISSING)
+  {
+    sfnt->table_infos[sfnt->num_table_infos - 1] = font->gasp_idx;
+    goto Exit;
+  }
 
   error = TA_table_build_gasp(&gasp_buf);
   if (error)
-    return error;
+    goto Exit;
 
   /* in case of success, `gasp_buf' gets linked */
   /* and is eventually freed in `TA_font_unload' */
@@ -70,12 +76,12 @@ TA_sfnt_build_gasp_table(SFNT* sfnt,
                             &sfnt->table_infos[sfnt->num_table_infos - 1],
                             TTAG_gasp, GASP_LEN, gasp_buf);
   if (error)
-  {
     free(gasp_buf);
-    return error;
-  }
+  else
+    font->gasp_idx = sfnt->table_infos[sfnt->num_table_infos - 1];
 
-  return FT_Err_Ok;
+Exit:
+  return error;
 }
 
 /* end of tagasp.c */
