@@ -602,6 +602,7 @@ TA_sfnt_split_glyf_table(SFNT* sfnt,
   if (!data->glyphs)
     return FT_Err_Out_Of_Memory;
 
+  data->master_globals = NULL;
   data->cvt_idx = MISSING;
   data->fpgm_idx = MISSING;
   data->prep_idx = MISSING;
@@ -1201,5 +1202,136 @@ TA_sfnt_create_glyf_data(SFNT* sfnt,
 
   return TA_Err_Ok;
 }
+
+
+FT_Error
+TA_sfnt_handle_coverage(SFNT* sfnt,
+                        FONT* font)
+{
+  FT_Error error;
+
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
+  FT_Face face = sfnt->face;
+  TA_FaceGlobals curr_globals;
+
+  FT_UInt saved_fallback_script = font->fallback_script;
+
+
+  /* using TA_SCRIPT_NONE as the fallback script ensures */
+  /* that uncovered glyphs stay as-is */
+  /* (we handle the fallback script later on) */
+  font->fallback_script = TA_SCRIPT_NONE;
+
+  /* trigger computation of coverage */
+  error = ta_loader_init(font);
+  if (error)
+    goto Exit;
+  error = ta_loader_reset(font, face);
+  if (error)
+    goto Exit;
+
+  font->fallback_script = saved_fallback_script;
+  curr_globals = (TA_FaceGlobals)face->autohint.data;
+
+  if (!data->master_globals)
+  {
+    /* initialize */
+    data->master_globals = curr_globals;
+    goto Exit;
+  }
+
+  /* we have the same `glyf' table for another subfont; */
+  /* merge the current coverage info into the `master' coverage info */
+  {
+    TA_FaceGlobals master_globals = data->master_globals;
+    FT_Long count = master_globals->glyph_count;
+
+    FT_Byte* master = master_globals->glyph_scripts;
+    FT_Byte* curr = curr_globals->glyph_scripts;
+
+    FT_Byte* limit = master + count;
+
+
+    /* we simply copy the data, */
+    /* assuming that a given glyph always has the same properties -- */
+    /* as soon as we make the script selection more fine-grained, */
+    /* it is possible that this assumption doesn't hold: */
+    /* for example, glyph `A' can be used for both Cyrillic and Latin */
+    while (master < limit)
+    {
+      if ((*curr & ~TA_DIGIT) != TA_SCRIPT_NONE)
+        *master = *curr;
+
+      master++;
+      curr++;
+    }
+  }
+
+Exit:
+  return error;
+}
+
+
+void
+TA_sfnt_adjust_master_coverage(SFNT* sfnt,
+                               FONT* font)
+{
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
+  FT_Face face = sfnt->face;
+
+  TA_FaceGlobals master_globals = data->master_globals;
+  TA_FaceGlobals curr_globals = (TA_FaceGlobals)face->autohint.data;
+
+
+  /* use fallback script for uncovered glyphs */
+  if (master_globals == curr_globals)
+  {
+    FT_Long nn;
+    FT_Byte* gscripts = master_globals->glyph_scripts;
+
+
+    for (nn = 0; nn < master_globals->glyph_count; nn++)
+    {
+      if ((gscripts[nn] & ~TA_DIGIT) == TA_SCRIPT_NONE)
+      {
+        gscripts[nn] &= ~TA_SCRIPT_NONE;
+        gscripts[nn] |= master_globals->font->fallback_script;
+      }
+    }
+  }
+}
+
+
+#if 0
+
+void
+TA_sfnt_copy_master_coverage(SFNT* sfnt,
+                             FONT* font)
+{
+  SFNT_Table* glyf_table = &font->tables[sfnt->glyf_idx];
+  glyf_Data* data = (glyf_Data*)glyf_table->data;
+
+  FT_Face face = sfnt->face;
+
+  TA_FaceGlobals master_globals = data->master_globals;
+  TA_FaceGlobals curr_globals = (TA_FaceGlobals)face->autohint.data;
+
+
+  if (master_globals != curr_globals)
+  {
+    FT_Long count = master_globals->glyph_count;
+    FT_Byte* master = master_globals->glyph_scripts;
+    FT_Byte* curr = curr_globals->glyph_scripts;
+
+
+    memcpy(curr, master, count);
+  }
+}
+
+#endif /* 0 */
 
 /* end of taglyf.c */

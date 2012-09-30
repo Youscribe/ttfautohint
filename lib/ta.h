@@ -127,6 +127,10 @@ typedef struct glyf_Data_
   FT_UShort num_glyphs;
   GLYPH* glyphs;
 
+  /* this index gives the `master' globals for a `glyf' table; */
+  /* see function `TA_sfnt_handle_coverage' */
+  TA_FaceGlobals master_globals;
+
   /* if a `glyf' table gets used in more than one subfont, */
   /* so do `cvt', `fpgm', and `prep' tables: */
   /* these four tables are always handled in parallel */
@@ -285,6 +289,17 @@ TA_sfnt_build_glyf_table(SFNT* sfnt,
 FT_Error
 TA_sfnt_create_glyf_data(SFNT* sfnt,
                          FONT* font);
+FT_Error
+TA_sfnt_handle_coverage(SFNT* sfnt,
+                        FONT* font);
+void
+TA_sfnt_adjust_master_coverage(SFNT* sfnt,
+                               FONT* font);
+#if 0
+void
+TA_sfnt_copy_master_coverage(SFNT* sfnt,
+                             FONT* font);
+#endif
 
 FT_Error
 TA_sfnt_update_GPOS_table(SFNT* sfnt,
