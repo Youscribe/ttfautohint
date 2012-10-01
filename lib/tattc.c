@@ -37,7 +37,7 @@ TA_font_build_TTC_header(FONT* font,
   FT_Byte* p;
 
 
-  len = 24 + 4 * num_sfnts;
+  len = (font->have_DSIG ? 24 : 12) + 4 * num_sfnts;
   buf = (FT_Byte*)malloc(len);
   if (!buf)
     return FT_Err_Out_Of_Memory;

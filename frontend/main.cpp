@@ -69,6 +69,7 @@ progress(long curr_idx,
   {
     fprintf(stderr, "subfont %ld of %ld\n", curr_sfnt + 1, num_sfnts);
     data->last_sfnt = curr_sfnt;
+    data->last_percent = 0;
     data->begin = true;
   }
 
