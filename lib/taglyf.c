@@ -1231,6 +1231,7 @@ TA_sfnt_handle_coverage(SFNT* sfnt,
   error = ta_loader_reset(font, face);
   if (error)
     goto Exit;
+  ta_loader_done(font);
 
   font->fallback_script = saved_fallback_script;
   curr_globals = (TA_FaceGlobals)face->autohint.data;

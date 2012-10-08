@@ -422,6 +422,10 @@ TTF_autohint(const char* options,
     SFNT* sfnt = &font->sfnts[i];
 
 
+    error = ta_loader_init(font);
+    if (error)
+      goto Err;
+
     error = TA_sfnt_build_gasp_table(sfnt, font);
     if (error)
       goto Err;
@@ -440,6 +444,9 @@ TTF_autohint(const char* options,
     error = TA_sfnt_build_loca_table(sfnt, font);
     if (error)
       goto Err;
+
+    if (font->loader)
+      ta_loader_done(font);
   }
 
   for (i = 0; i < font->num_sfnts; i++)
