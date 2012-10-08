@@ -156,17 +156,53 @@ platform's native widgets.
 Both the GUI and console version share the same features, to be discussed in
 the next subsection.
 
-**Warning: ttfautohint can't process a font a second time** (well, it can,
-if the font doesn't contain composite glyphs).  Just think of ttfautohint as
-being a compiler, a tool which also can't process its created output again.
+**Warning: ttfautohint cannot always process a font a second time.**
+If the font contains composite glyphs, and option `-c` is not used,
+reprocessing with ttfautohint will fail.  For this reason it is strongly
+recommended to *not* delete the original, unhinted font so that you can
+always rerun ttfautohint.
 
 
-Options
--------
+Calling `ttfautohint`
+---------------------
+
+```
+    ttfautohint [OPTION]... [IN-FILE [OUT-FILE]]
+```
+
+The TTY binary, `ttfautohint`, works like a Unix filter, this is, it reads
+data from standard input if no input file name is given, and it sends its
+output to standard output if no output file name is specificied.
+
+A typical call looks like the following.
+
+```
+    ttfautohint -v -f foo.ttf foo-autohinted.ttf
+```
+
+For demonstration purposes, here the same using a pipe and redirection. 
+Note that Windows's default command line interpreter, `cmd.exe`, doesn't
+support piping with binary files, unfortunately.
+
+```
+    cat foo.ttf | ttfautohint -v -f > foo-autohinted.ttf
+```
+
+
+Calling `ttfautohintGUI`
+------------------------
+
+```
+    ttfautohintGUI [OPTION]...
+```
 
 `ttfautohintGUI` doesn't send any output to a console; however, it accepts
 the same command line options as `ttfautohint`, setting default values for
 the GUI.
+
+
+Options
+-------
 
 Long options can be given with one or two dashes, and with and without an
 equal sign between option and argument.  This means that the following forms
@@ -180,7 +216,7 @@ equivalent, followed by a description.
 Background and technical details on the meaning of the various options are
 given [afterwards](#background-and-technical-details).
 
-### Hint Set Ranges
+### Hint Set Range Minimum, Hint Set Range Maximum
 
 See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
@@ -191,6 +227,13 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 `--hinting-range-max=`*n*, `-r`\ *n*
 :   The maximum PPEM value (in pixels) at which hint sets are created.  The
     default value for *n* is 50.
+
+### Fallback Script
+
+`--latin-fallback`, `-f`
+:   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
+    module instead of 'none' for all glyphs which can't be assigned to a
+    script.  See [below](#scripts) for more details.
 
 ### Hinting Limit
 
@@ -208,7 +251,74 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     overflow in the rasterizer for large pixel values (>\ 1500px approx.) it
     is strongly recommended to not use this except for testing purposes.
 
-### Stem Width and Stem Positioning
+### x Height Increase Limit
+
+`--increase-x-height=`*n*, `-x`\ *n*
+:   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
+    slight preference for rounding up.  If this flag is set, values in the
+    range 6\ PPEM to *n*\ PPEM are much more often rounded up.  The default
+    value for *n* is 14.  Use this flag to increase the legibility of small
+    sizes if necessary; you might get weird rendering results otherwise for
+    glyphs like 'a' or 'e', depending on the font design.
+
+    To switch off this feature, use `--increase-x-height=0` (or check the
+    'No x\ Height Increase' box in the GUI).
+
+    The following images again use the font 'Mertz Bold'.
+
+    ![At 17px, without option `-x` and '`-w ""`', the hole in glyph 'e'
+      looks very grey in the FontForge snapshot, and the GDI ClearType
+      rendering (which is the default on older Windows versions) fills it
+      completely with black because it uses B/W rendering along the y\ axis.
+      FreeType's 'light' autohint mode (which corresponds to ttfautohint's
+      'smooth' stem width algorithm) intentionally aligns horizontal lines
+      to non-integer (but still discrete) values to avoid large glyph shape
+      distortions.](img/e-17px-x14.png)
+
+    ![The same, this time with option `-x 17` (and
+      '`-w ""`').](img/e-17px-x17.png)
+
+### Pre-Hinting
+
+`--pre-hinting`, `-p`
+:   *Pre-hinting* means that a font's original bytecode is applied to all
+    glyphs before it is replaced with bytecode created by ttfautohint.
+    This makes only sense if your font already has some hints in it which
+    modify the shape even at EM size (normally 2048px); for example, some
+    CJK fonts need this because the bytecode is used to scale and shift
+    subglyphs.  For most fonts, however, this is not the case.
+
+### Hint With Components
+
+`--components`, `-c`
+:   Hint glyph components separately instead of hinting composite glyphs as
+    a whole.  Using this flag reduces the bytecode size enormously, however,
+    it might yield worse results.  In the GUI it is similar: If you uncheck
+    the 'Process With Components' box, glyph components are hinted
+    separately.
+
+    If a font contains composite glyphs and those glyphs are hinted as a
+    whole, ttfautohint cannot reprocess its own output.
+
+### Symbol Font
+
+`--symbol`, `-s`
+:   Use default values for standard stem width and height instead of
+    deriving them from latin character 'o'.  Use this option (usually in
+    combination with option `--latin-fallback`) to hint symbol or dingbat
+    fonts or math glyphs, for example, which lack character 'o', at the
+    expense of possibly poor hinting results at small sizes.
+
+### Add ttfautohint Info
+
+`--no-info`, `-n`
+:   Don't add ttfautohint version and command line information to the
+    version string or strings (with name ID\ 5) in the font's `name` table.
+    In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
+    information is not added to the `name` table.  Except for testing and
+    development purposes it is strongly recommended to not use this option.
+
+### Strong Stem Width and Positioning
 
 `--strong-stem-width=`*string*, `-w`\ *string*
 :   ttfautohint offers two different routines to handle stem widths and stem
@@ -247,8 +357,8 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     all three rendering targets, use the empty string as an argument,
     usually connoted with '`""`'.
 
-    In the GUI, the option is split into three sets of radio buttons to
-    select the stem width routine for a given rendering target.
+    In the GUI, simply set the corresponding check box to select the stem
+    width routine for a given rendering target.
 
     The following FontForge snapshot images use the font ['Mertz
     Bold'](http://code.newtypography.co.uk/?p=2449) (still under
@@ -260,68 +370,6 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     ![The same, but this time using the 'strong'
      algorithm.  Note how the stems are aligned to the pixel
      grid.](img/ff-g-26px-wD.png)
-
-### x Height Increase Limit
-
-`--increase-x-height=`*n*, `-x`\ *n*
-:   Normally, ttfautohint rounds the x\ height to the pixel grid, with a
-    slight preference for rounding up.  If this flag is set, values in the
-    range 6\ PPEM to *n*\ PPEM are much more often rounded up.  The default
-    value for *n* is 14.  Use this flag to increase the legibility of small
-    sizes if necessary; you might get weird rendering results otherwise for
-    glyphs like 'a' or 'e', depending on the font design.
-
-    To switch off this feature, use `--increase-x-height=0` (or check the
-    `No x\ Height Increase' box in the GUI).
-
-    The following images again use the font 'Mertz Bold'.
-
-    ![At 17px, without option `-x` and '`-w ""`', the hole in glyph 'e'
-      looks very grey in the FontForge snapshot, and the GDI ClearType
-      rendering (which is the default on older Windows versions) fills it
-      completely with black because it uses B/W rendering along the y\ axis.
-      FreeType's 'light' autohint mode (which corresponds to ttfautohint's
-      'smooth' stem width algorithm) intentionally aligns horizontal lines
-      to non-integer (but still discrete) values to avoid large glyph shape
-      distortions.](img/e-17px-x14.png)
-
-    ![The same, this time with option `-x 17` (and
-      '`-w ""`').](img/e-17px-x17.png)
-
-### Fallback Script
-
-`--latin-fallback`, `-f`
-:   Set fallback script to 'latin', this is, use the 'latin' auto-hinting
-    module instead of 'none' for all glyphs which can't be assigned to a
-    script.  See [below](#scripts) for more details.
-
-### Pre-Hinting
-
-`--pre-hinting`, `-p`
-:   *Pre-hinting* means that a font's original bytecode is applied to all
-    glyphs before it is replaced with bytecode created by ttfautohint.
-    This makes only sense if your font already has some hints in it which
-    modify the shape even at EM size (normally 2048px); for example, some
-    CJK fonts need this because the bytecode is used to scale and shift
-    subglyphs.  For most fonts, however, this is not the case.
-
-### ttfautohint Info
-
-`--no-info`, `-n`
-:   Don't add ttfautohint version and command line information to the
-    version string or strings (with name ID\ 5) in the font's `name` table.
-    In the GUI it is similar: If you uncheck the 'Add ttfautohint info' box,
-    information is not added to the `name` table.  Except for testing and
-    development purposes it is strongly recommended to not use this option.
-
-### Symbol Fonts
-
-`--symbol`, `-s`
-:   Use default values for standard stem width and height instead of
-    deriving them from latin character 'o'.  Use this option (usually in
-    combination with option `--latin-fallback`) to hint symbol or dingbat
-    fonts or math glyphs, for example, which lack character 'o', at the
-    expense of possibly poor hinting results at small sizes.
 
 ### Font License Restrictions
 
@@ -344,8 +392,9 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     This doesn't work with `ttfautohintGUI` on MS Windows.
 
 `--debug`
-:   Print a lot of debugging information on standard error while processing
-    a font.  This doesn't work with `ttfautohintGUI` on MS Windows.
+:   Print *a lot* of debugging information on standard error while
+    processing a font (you should redirect stderr to a file).  This
+    doesn't work with `ttfautohintGUI` on MS Windows.
 
 
 
