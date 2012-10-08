@@ -44,6 +44,7 @@
 
 
 #ifdef _WIN32
+#  include <unistd.h>
 #  define SET_BINARY(f) do { \
                           if (!isatty(f)) \
                             setmode(f, O_BINARY); \
