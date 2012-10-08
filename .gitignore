@@ -1,3 +1,6 @@
+/.version
+/Makefile
+/Makefile.in
 /aclocal.m4
 /autom4te.cache/
 /config.h
@@ -9,7 +12,4 @@
 /gnulib
 /gnulib/
 /libtool
-/Makefile
-/Makefile.in
 /stamp-h1
-/.version
