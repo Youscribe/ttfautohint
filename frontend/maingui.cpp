@@ -437,7 +437,7 @@ Main_GUI::handle_error(TA_Error error,
     QMessageBox::warning(
       this,
       "TTFautohint",
-      tr("This font has already been processed by ttfautohint."),
+      tr("This font has already been processed by TTFautohint."),
       QMessageBox::Ok,
       QMessageBox::Ok);
   else if (error == TA_Err_Missing_Legal_Permission)
@@ -556,9 +556,9 @@ again:
                             ? 0
                             : limit_box->value();
 
-  info_data.gray_strong_stem_width = gray_button_group->checkedId();
-  info_data.gdi_cleartype_strong_stem_width = gdi_button_group->checkedId();
-  info_data.dw_cleartype_strong_stem_width = dw_button_group->checkedId();
+  info_data.gray_strong_stem_width = gray_box->isChecked();
+  info_data.gdi_cleartype_strong_stem_width = gdi_box->isChecked();
+  info_data.dw_cleartype_strong_stem_width = dw_box->isChecked();
 
   info_data.increase_x_height = no_increase_box->isChecked()
                                 ? 0
@@ -646,64 +646,61 @@ Main_GUI::create_layout()
   output_label->setBuddy(output_line);
   output_label->setToolTip(
     tr("<b></b>The output file, which will be essentially identical"
-       " to the input font but contains new, generated hints."));
+       " to the input font but will contain new, generated hints."));
   output_line->setCompleter(completer);
 
   // layout
   QGridLayout* file_layout = new QGridLayout;
 
-  file_layout->addWidget(input_label, 0, 0);
+  file_layout->addWidget(input_label, 0, 0, Qt::AlignRight);
   file_layout->addWidget(input_line, 0, 1);
   file_layout->addWidget(input_button, 0, 2);
 
   file_layout->setRowStretch(1, 1);
 
-  file_layout->addWidget(output_label, 2, 0);
+  file_layout->addWidget(output_label, 2, 0, Qt::AlignRight);
   file_layout->addWidget(output_line, 2, 1);
   file_layout->addWidget(output_button, 2, 2);
 
   //
   // minmax controls
   //
-  QLabel* min_label = new QLabel(tr("Mi&nimum:"));
+  QLabel* min_label = new QLabel(tr("Hint Set Range Mi&nimum:"));
   min_box = new QSpinBox;
   min_label->setBuddy(min_box);
-  min_box->setKeyboardTracking(false);
-  min_box->setRange(2, 10000);
-  min_box->setValue(hinting_range_min);
-
-  QLabel* max_label = new QLabel(tr("Ma&ximum:"));
-  max_box = new QSpinBox;
-  max_label->setBuddy(max_box);
-  max_box->setKeyboardTracking(false);
-  max_box->setRange(2, 10000);
-  max_box->setValue(hinting_range_max);
-
-  // layout
-  QGridLayout* minmax_layout = new QGridLayout;
-
-  minmax_layout->addWidget(min_label, 0, 0);
-  minmax_layout->addWidget(min_box, 0, 1);
-
-  minmax_layout->setRowStretch(1, 1);
-
-  minmax_layout->addWidget(max_label, 2, 0);
-  minmax_layout->addWidget(max_box, 2, 1);
-
-  //
-  // hinting and fallback controls
-  //
-  QLabel* hinting_label = new QLabel(tr("Hint Set Range") + " ");
-  QLabel* fallback_label = new QLabel(tr("Fallback &Script:"));
-  hinting_label->setToolTip(
-    tr("The PPEM range for which <b>TTFautohint</b> computes"
-       " <i>hint sets</i>."
+  min_label->setToolTip(
+    tr("The minimum PPEM value of the range for which"
+       " <b>TTFautohint</b> computes <i>hint sets</i>."
        " A hint set for a given PPEM value hints this size optimally."
        " The larger the range, the more hint sets are considered,"
        " usually increasing the size of the bytecode.<br>"
        "Note that changing this range doesn't influence"
        " the <i>gasp</i> table:"
        " Hinting is enabled for all sizes."));
+  min_box->setKeyboardTracking(false);
+  min_box->setRange(2, 10000);
+  min_box->setValue(hinting_range_min);
+
+  QLabel* max_label = new QLabel(tr("Hint Set Range Ma&ximum:"));
+  max_box = new QSpinBox;
+  max_label->setBuddy(max_box);
+  max_label->setToolTip(
+    tr("The maximum PPEM value of the range for which"
+       " <b>TTFautohint</b> computes <i>hint sets</i>."
+       " A hint set for a given PPEM value hints this size optimally."
+       " The larger the range, the more hint sets are considered,"
+       " usually increasing the size of the bytecode.<br>"
+       "Note that changing this range doesn't influence"
+       " the <i>gasp</i> table:"
+       " Hinting is enabled for all sizes."));
+  max_box->setKeyboardTracking(false);
+  max_box->setRange(2, 10000);
+  max_box->setValue(hinting_range_max);
+
+  //
+  // hinting and fallback controls
+  //
+  QLabel* fallback_label = new QLabel(tr("Fallback &Script:"));
   fallback_box = new QComboBox;
   fallback_label->setBuddy(fallback_box);
   fallback_label->setToolTip(
@@ -712,17 +709,6 @@ Main_GUI::create_layout()
   fallback_box->insertItem(0, tr("None"));
   fallback_box->insertItem(1, tr("Latin"));
   fallback_box->setCurrentIndex(latin_fallback);
-
-  // layout
-  QGridLayout* hint_fallback_layout = new QGridLayout;
-
-  hint_fallback_layout->setColumnStretch(2, 1);
-  hint_fallback_layout->setColumnStretch(5, 2);
-
-  hint_fallback_layout->addWidget(hinting_label, 0, 0);
-  hint_fallback_layout->addLayout(minmax_layout, 0, 1);
-  hint_fallback_layout->addWidget(fallback_label, 0, 3);
-  hint_fallback_layout->addWidget(fallback_box, 0, 4);
 
   //
   // hinting limit
@@ -743,16 +729,6 @@ Main_GUI::create_layout()
     tr("If switched on, <b>TTFautohint</b> adds no hinting limit"
        " to the bytecode."));
 
-  // layout
-  QGridLayout* limit_layout = new QGridLayout;
-
-  limit_layout->setColumnStretch(2, 1);
-  limit_layout->setColumnStretch(4, 1);
-
-  limit_layout->addWidget(limit_label, 0, 0);
-  limit_layout->addWidget(limit_box, 0, 1);
-  limit_layout->addWidget(no_limit_box, 0, 3);
-
   // handle command line option `--hinting-limit=0'
   if (!hinting_limit)
   {
@@ -763,10 +739,7 @@ Main_GUI::create_layout()
   //
   // x height increase limit
   //
-
-  // the final \n makes this label align with the spin box to the right
-  increase_label = new QLabel(tr("x Height\n"
-                                 "In&crease Limit:\n"));
+  increase_label = new QLabel(tr("x Height In&crease Limit:"));
   increase_box = new QSpinBox;
   increase_label->setBuddy(increase_box);
   increase_label->setToolTip(
@@ -784,16 +757,6 @@ Main_GUI::create_layout()
   no_increase_box->setToolTip(
     tr("If switched on,"
        " <b>TTFautohint</b> does not increase the x&nbsp;height."));
-
-  // layout
-  QGridLayout* increase_layout = new QGridLayout;
-
-  increase_layout->setColumnStretch(2, 1);
-  increase_layout->setColumnStretch(4, 1);
-
-  increase_layout->addWidget(increase_label, 0, 0);
-  increase_layout->addWidget(increase_box, 0, 1);
-  increase_layout->addWidget(no_increase_box, 0, 3);
 
   // handle command line option `--increase-x-height=0'
   if (!increase_x_height)
@@ -820,9 +783,10 @@ Main_GUI::create_layout()
   if (pre_hinting)
     pre_box->setChecked(true);
 
-  hint_box = new QCheckBox(tr("Hint &With Components"), this);
+  hint_box = new QCheckBox(tr("Hint &With Components")
+                           + "                ", this); // make label wider
   hint_box->setToolTip(
-    tr("If switched on, <b>ttfautohint</b> hints composite glyphs"
+    tr("If switched on, <b>TTFautohint</b> hints composite glyphs"
        " as a whole, including subglyphs."
        "  Otherwise, glyph components get hinted separately.<br>"
        "Deactivating this flag reduces the bytecode size enormously,"
@@ -832,7 +796,7 @@ Main_GUI::create_layout()
 
   symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
   symbol_box->setToolTip(
-    tr("If switched on, <b>ttfautohint</b> uses default values"
+    tr("If switched on, <b>TTFautohint</b> uses default values"
        " for standard stem width and height"
        " instead of deriving these values from the input font.<br>"
        "Use this for fonts which don't contain glyphs"
@@ -842,205 +806,128 @@ Main_GUI::create_layout()
 
   info_box = new QCheckBox(tr("Add ttf&autohint Info"), this);
   info_box->setToolTip(
-    tr("If switched on, information about <b>ttfautohint</b>"
+    tr("If switched on, information about <b>TTFautohint</b>"
        " and its calling parameters are added to the version string(s)"
        " (name ID&nbsp;5) in the <i>name</i> table."));
   if (!no_info)
     info_box->setChecked(true);
 
-  // layout
-  QGridLayout* flags_layout = new QGridLayout;
-
-  flags_layout->setColumnStretch(1, 1);
-  flags_layout->setColumnStretch(3, 1);
-
-  flags_layout->addWidget(pre_box, 0, 0);
-  flags_layout->addWidget(hint_box, 0, 2);
-
-  flags_layout->setRowMinimumHeight(1, 20);
-  flags_layout->setRowStretch(1, 1);
-
-  flags_layout->addWidget(symbol_box, 2, 0);
-  flags_layout->addWidget(info_box, 2, 2);
-
   //
-  // controls (hinting limit, x height increase limit, flags)
+  // stem width and positioning
   //
-  QGridLayout* control_layout = new QGridLayout;
+  QLabel* stem_label = new QLabel(tr("Strong Stem &Width and Positioning:"));
+  stem_label->setToolTip(
+    tr("<b>TTFautohint</b> provides two different hinting algorithms"
+       " which can be selected for various hinting modes."
+       ""
+       "<p><i>strong:</i> Position horizontal stems and snap stem widths"
+       " to integer pixel values.  While making the output look crisper,"
+       " outlines become more distorted.</p>"
+       ""
+       "<p><i>smooth:</i> Use discrete values for horizontal stems"
+       " and stem widths.  This only slightly increases the contrast"
+       " but avoids larger outline distortion.</p>"));
 
-  control_layout->addLayout(limit_layout, 0, 0);
-
-  control_layout->setRowMinimumHeight(1, 20);
-  control_layout->setRowStretch(1, 1);
-
-  control_layout->addLayout(increase_layout, 2, 0);
-
-  control_layout->setRowMinimumHeight(3, 20);
-  control_layout->setRowStretch(3, 1);
-
-  control_layout->addLayout(flags_layout, 4, 0);
-
-  //
-  // stem width and stem positioning
-  //
-  QLabel* stem_label = new QLabel(tr("Stem &Width and\n"
-                                     "Stem Positioning"));
-  QLabel* gray_label = new QLabel(tr("Grayscale:"));
-  QLabel* gdi_label = new QLabel(tr("GDI ClearType:"));
-  QLabel* dw_label = new QLabel(tr("DW ClearType:"));
-  QLabel* strong_label = new QLabel(tr("Strong"));
-  QLabel* smooth_label = new QLabel(tr("Smooth"));
-  gray_label->setToolTip(
+  gray_box = new QCheckBox(tr("Grayscale"), this);
+  gray_box->setToolTip(
     tr("<b></b>Grayscale rendering, no ClearType activated."));
-  gdi_label->setToolTip(
+  if (gray_strong_stem_width)
+    gray_box->setChecked(true);
+
+  stem_label->setBuddy(gray_box);
+
+  gdi_box = new QCheckBox(tr("GDI ClearType"), this);
+  gdi_box->setToolTip(
     tr("GDI ClearType rendering,"
        " introduced in 2000 for Windows XP.<br>"
        "The rasterizer version (as returned by the"
        " GETINFO bytecode instruction) is in the range"
        " 36&nbsp;&le; version &lt;&nbsp;38, and ClearType is enabled.<br>"
        "Along the vertical axis, this mode behaves like B/W rendering."));
-  dw_label->setToolTip(
+  if (gdi_cleartype_strong_stem_width)
+    gdi_box->setChecked(true);
+
+  dw_box = new QCheckBox(tr("DW ClearType"), this);
+  dw_box->setToolTip(
     tr("DirectWrite ClearType rendering,"
        " introduced in 2008 for Windows Vista.<br>"
        "The rasterizer version (as returned by the"
        " GETINFO bytecode instruction) is &ge;&nbsp;38,"
        " ClearType is enabled, and subpixel positioning is enabled also.<br>"
        "Smooth rendering along the vertical axis."));
-  strong_label->setToolTip(
-    tr("<b></b>Position horizontal stems and snap stem widths"
-       " to integer pixel values.  While making the output look crisper,"
-       " outlines become more distorted."));
-  smooth_label->setToolTip(
-    tr("<b></b>Use discrete values for horizontal stems and stem widths."
-       "  This only slightly increases the contrast but avoids large"
-       " outline distortion."));
-
-  gray_button_group = new QButtonGroup;
-  QRadioButton* gray_strong_button = new QRadioButton();
-  QRadioButton* gray_smooth_button = new QRadioButton();
-  gray_button_group->addButton(gray_strong_button, 1);
-  gray_button_group->addButton(gray_smooth_button, 0);
-  if (gray_strong_stem_width)
-    gray_strong_button->setChecked(true);
-  else
-    gray_smooth_button->setChecked(true);
-
-  stem_label->setBuddy(gray_strong_button);
-
-  gdi_button_group = new QButtonGroup;
-  QRadioButton* gdi_strong_button = new QRadioButton();
-  QRadioButton* gdi_smooth_button = new QRadioButton();
-  gdi_button_group->addButton(gdi_strong_button, 1);
-  gdi_button_group->addButton(gdi_smooth_button, 0);
-  if (gdi_cleartype_strong_stem_width)
-    gdi_strong_button->setChecked(true);
-  else
-    gdi_smooth_button->setChecked(true);
-
-  dw_button_group = new QButtonGroup;
-  QRadioButton* dw_strong_button = new QRadioButton();
-  QRadioButton* dw_smooth_button = new QRadioButton();
-  dw_button_group->addButton(dw_strong_button, 1);
-  dw_button_group->addButton(dw_smooth_button, 0);
   if (dw_cleartype_strong_stem_width)
-    dw_strong_button->setChecked(true);
-  else
-    dw_smooth_button->setChecked(true);
-
-  // layout
-  QGridLayout* stem_layout = new QGridLayout;
-
-  stem_layout->setColumnMinimumWidth(0, 20);
-  stem_layout->setColumnMinimumWidth(2, 20);
-  stem_layout->setColumnStretch(2, 2);
-  stem_layout->setColumnMinimumWidth(4, 10);
-  stem_layout->setColumnStretch(4, 1);
-
-  stem_layout->addWidget(stem_label, 0, 0, 1, 2);
-  stem_layout->addWidget(strong_label, 0, 3);
-  stem_layout->addWidget(smooth_label, 0, 5);
-
-  stem_layout->setRowMinimumHeight(1, 10);
-  stem_layout->setRowStretch(1, 1);
-
-  stem_layout->addWidget(gray_label, 2, 1);
-  stem_layout->addWidget(gray_strong_button, 2, 3, Qt::AlignHCenter);
-  stem_layout->addWidget(gray_smooth_button, 2, 5, Qt::AlignHCenter);
-
-  stem_layout->setRowMinimumHeight(3, 20);
-  stem_layout->setRowStretch(3, 1);
-
-  stem_layout->addWidget(gdi_label, 4, 1);
-  stem_layout->addWidget(gdi_strong_button, 4, 3, Qt::AlignHCenter);
-  stem_layout->addWidget(gdi_smooth_button, 4, 5, Qt::AlignHCenter);
-
-  stem_layout->setRowMinimumHeight(5, 20);
-  stem_layout->setRowStretch(5, 1);
-
-  stem_layout->addWidget(dw_label, 6, 1);
-  stem_layout->addWidget(dw_strong_button, 6, 3, Qt::AlignHCenter);
-  stem_layout->addWidget(dw_smooth_button, 6, 5, Qt::AlignHCenter);
-
-  //
-  // controls & stem width positioning
-  //
-  QGridLayout* controls_stem_layout = new QGridLayout;
-
-  controls_stem_layout->setColumnStretch(0, 3);
-  controls_stem_layout->setColumnMinimumWidth(1, 20);
-  controls_stem_layout->setColumnStretch(1, 1);
-  controls_stem_layout->setColumnStretch(2, 2);
-  controls_stem_layout->setColumnStretch(3, 1);
-
-  controls_stem_layout->addLayout(control_layout, 0, 0);
-  controls_stem_layout->addLayout(stem_layout, 0, 2);
+    dw_box->setChecked(true);
 
   //
   // running
   //
-  run_button = new QPushButton(tr("&Run"));
+  run_button = new QPushButton("    "
+                               + tr("&Run")
+                               + "    "); // make label wider
   run_button->setEnabled(false);
-
-  // layout
-  QGridLayout* running_layout = new QGridLayout;
-
-  running_layout->setColumnStretch(0, 1);
-  running_layout->setColumnStretch(2, 1);
-
-  running_layout->addWidget(run_button, 0, 1);
-
 
   //
   // the whole gui
   //
   QGridLayout* gui_layout = new QGridLayout;
+  QFrame* hline = new QFrame;
+  hline->setFrameShape(QFrame::HLine);
+  int row = 0; // this counter simplifies inserting new items
 
-  gui_layout->setRowMinimumHeight(0, 10); // XXX urgh, pixels...
-  gui_layout->setRowStretch(0, 1);
+  gui_layout->setRowMinimumHeight(row, 10); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->addLayout(file_layout, 1, 0);
-  gui_layout->setRowStretch(1, 1);
+  gui_layout->addLayout(file_layout, row, 0, row, -1);
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->setRowMinimumHeight(2, 20); // XXX urgh, pixels...
-  gui_layout->setRowStretch(2, 1);
+  gui_layout->addWidget(hline, row, 0, row, -1);
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->addLayout(hint_fallback_layout, 3, 0);
-  gui_layout->setRowStretch(3, 1);
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->setRowMinimumHeight(4, 20); // XXX urgh, pixels...
-  gui_layout->setRowStretch(4, 1);
+  gui_layout->addWidget(min_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(min_box, row++, 1, Qt::AlignLeft);
+  gui_layout->addWidget(max_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(max_box, row++, 1, Qt::AlignLeft);
 
-  gui_layout->addLayout(controls_stem_layout, 5, 0);
-  gui_layout->setRowStretch(5, 2);
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->setRowMinimumHeight(6, 20); // XXX urgh, pixels...
-  gui_layout->setRowStretch(6, 1);
+  gui_layout->addWidget(fallback_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(fallback_box, row++, 1, Qt::AlignLeft);
 
-  gui_layout->addLayout(running_layout, 7, 0);
-  gui_layout->setRowStretch(7, 1);
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
 
-  gui_layout->setRowMinimumHeight(8, 10); // XXX urgh, pixels...
-  gui_layout->setRowStretch(8, 1);
+  gui_layout->addWidget(limit_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(limit_box, row++, 1, Qt::AlignLeft);
+  gui_layout->addWidget(no_limit_box, row++, 1);
+
+  gui_layout->addWidget(increase_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(increase_box, row++, 1, Qt::AlignLeft);
+  gui_layout->addWidget(no_increase_box, row++, 1);
+
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
+
+  gui_layout->addWidget(pre_box, row++, 1);
+  gui_layout->addWidget(hint_box, row++, 1);
+  gui_layout->addWidget(symbol_box, row++, 1);
+  gui_layout->addWidget(info_box, row++, 1);
+
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
+
+  gui_layout->addWidget(stem_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(gray_box, row++, 1);
+  gui_layout->addWidget(gdi_box, row++, 1);
+  gui_layout->addWidget(dw_box, row++, 1);
+
+  gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
+  gui_layout->setRowStretch(row++, 1);
+
+  gui_layout->addWidget(run_button, row++, 1, Qt::AlignRight);
 
   // create dummy widget to register layout
   QWidget* main_widget = new QWidget;

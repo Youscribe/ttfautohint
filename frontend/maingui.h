@@ -103,9 +103,9 @@ private:
   QSpinBox* min_box;
   QSpinBox* max_box;
 
-  QButtonGroup* gray_button_group;
-  QButtonGroup* gdi_button_group;
-  QButtonGroup* dw_button_group;
+  QCheckBox* gray_box;
+  QCheckBox* gdi_box;
+  QCheckBox* dw_box;
 
   QComboBox* fallback_box;
 
