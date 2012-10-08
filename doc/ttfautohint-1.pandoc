@@ -172,7 +172,7 @@ Calling `ttfautohint`
 
 The TTY binary, `ttfautohint`, works like a Unix filter, this is, it reads
 data from standard input if no input file name is given, and it sends its
-output to standard output if no output file name is specificied.
+output to standard output if no output file name is specified.
 
 A typical call looks like the following.
 
@@ -180,7 +180,7 @@ A typical call looks like the following.
     ttfautohint -v -f foo.ttf foo-autohinted.ttf
 ```
 
-For demonstration purposes, here the same using a pipe and redirection. 
+For demonstration purposes, here the same using a pipe and redirection.
 Note that Windows's default command line interpreter, `cmd.exe`, doesn't
 support piping with binary files, unfortunately.
 
@@ -600,10 +600,13 @@ hinting gets applied.
 The '\.ttfautohint' Glyph
 -------------------------
 
-ttfautohint doesn't hint subglyphs of composite glyphs separately.  Instead,
-it hints the whole glyph, this is, composites get recursively expanded so
-that they form simple glyphs, then hints are applied -- this is the normal
-working mode of FreeType's auto-hinter.
+[The behaviour described in this section does not apply if [option
+`--components`](#hint-with-components) is used.]
+
+By default, ttfautohint doesn't hint subglyphs of composite glyphs
+separately.  Instead, it hints the whole glyph, this is, composites get
+recursively expanded internally so that they form simple glyphs, then hints
+are applied -- this is the normal working mode of FreeType's auto-hinter.
 
 One problem, however, must be solved: Hinting for subglyphs (which usually
 are used as normal glyphs also) must be deactivated so that nothing but the
@@ -641,7 +644,6 @@ the font!  Under normal circumstances this never happens because
 '\.ttfautohint' doesn't have an entry in the font's `cmap` table.  (However,
 some test and demo programs like FreeType's `ftview` application or other
 glyph viewers which are able to bypass the `cmap` table might be affected.)
-
 
 Scripts
 -------
