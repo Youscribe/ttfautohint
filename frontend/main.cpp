@@ -42,6 +42,19 @@
 
 #include <ttfautohint.h>
 
+
+#ifdef _WIN32
+#  define SET_BINARY(f) do { \
+                          if (!isatty(f)) \
+                            setmode(f, O_BINARY); \
+                        } while (0)
+#endif
+
+#ifndef SET_BINARY
+#  define SET_BINARY(f) do {} while (0)
+#endif
+
+
 using namespace std;
 
 
@@ -606,6 +619,11 @@ main(int argc,
     build_version_string(&info_data);
   }
 
+  if (in == stdin)
+    SET_BINARY(stdin);
+  if (out == stdout)
+    SET_BINARY(stdout);
+
   TA_Error error =
     TTF_autohint("in-file, out-file,"
                  "hinting-range-min, hinting-range-max, hinting-limit,"
@@ -667,8 +685,10 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
-  fclose(in);
-  fclose(out);
+  if (in != stdin)
+    fclose(in);
+  if (out != stdout)
+    fclose(out);
 
   exit(EXIT_SUCCESS);
 
