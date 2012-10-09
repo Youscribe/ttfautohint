@@ -572,7 +572,11 @@ main(int argc,
     }
   }
   else
+  {
+    if (isatty(fileno(stdout)))
+      show_help(false, true);
     out = stdout;
+  }
 
   FILE* in;
   if (num_args > 0)
@@ -588,7 +592,11 @@ main(int argc,
     }
   }
   else
+  {
+    if (isatty(fileno(stdin)))
+      show_help(false, true);
     in = stdin;
+  }
 
   unsigned char version_data[128];
   unsigned char version_data_wide[256];
