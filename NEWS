@@ -1,3 +1,24 @@
+New in 0.93:
+
+* New option `--components' to treat components of composite glyphs
+  separately.  This greatly reduces the bytecode size.
+
+  I'm waiting for reports whether this option works for most fonts; in case
+  this is true I'm inverting the option, making it the default (and the old
+  behaviour optional).
+
+* Full support of TTCs, this is, all subfonts get auto-hinted now.
+
+* The upper limit of the `--increase-x-height' option has been removed.
+
+* Drag-and-drop support in the GUI.
+
+* The TTY version of ttfautohint now acts like a (Unix) filter, this is, it
+  accepts stdin and stdout as input and output, respectively.
+
+* Less memory consumption.
+
+
 New in 0.92:
 
 * A serious bug in the created bytecode has been fixed, causing incorrect

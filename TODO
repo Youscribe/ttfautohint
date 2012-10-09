@@ -5,7 +5,6 @@ important improvements
 add features to the GUI
   -> direct control over `actions'
   -> preview similar to ftgrid
-  -> drag and drop to the application itself
   -> autocompletion of file names with tab key
 
 handle OT features
@@ -68,9 +67,6 @@ minor improvements
 
 reject fonts which are `hopeless' (for example, `Lipstick')
 
-reduce memory consumption by using 16bit data types in large arrays if 32bit
-  are not necessary
-
 correctly set `lowestRecPPEM' field in `head'
 
 control dropout mode
@@ -81,7 +77,7 @@ apply hinting in x direction also?
 
 add a config and/or command file for batch handling
 
-warn against overwrite of output file?
+warn against overwrite of output file in TTY mode?
 
 reduce output size of option -p:
   1. compare outline rendered at EM value with unhinted outline
