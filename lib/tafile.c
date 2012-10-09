@@ -13,6 +13,8 @@
  */
 
 
+#include <errno.h>
+
 #include "ta.h"
 
 
@@ -25,12 +27,14 @@ TA_font_file_read(FONT* font,
   FT_Byte buf[BUF_SIZE];
   size_t in_len = 0;
   size_t read_bytes;
+  int file_error;
 
 
   font->in_buf = (FT_Byte*)malloc(BUF_SIZE);
   if (!font->in_buf)
     return FT_Err_Out_Of_Memory;
 
+Again:
   while ((read_bytes = fread(buf, 1, BUF_SIZE, in_file)) > 0)
   {
     FT_Byte* in_buf_new;
@@ -47,7 +51,17 @@ TA_font_file_read(FONT* font,
     in_len += read_bytes;
   }
 
-  if (ferror(in_file))
+  file_error = ferror(in_file);
+
+  if (file_error == EAGAIN)
+  {
+    /* on some platforms, fread returns */
+    /* if we are reading from an empty pipe; */
+    /* however, the expected behaviour of a filter is to wait for input */
+    clearerr(in_file);
+    goto Again;
+  }
+  if (file_error)
     return FT_Err_Invalid_Stream_Read;
 
   /* a valid TTF can never be that small */
