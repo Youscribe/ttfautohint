@@ -45,9 +45,10 @@
 
 #ifdef _WIN32
 #  include <unistd.h>
+#  include <fcntl.h>
 #  define SET_BINARY(f) do { \
-                          if (!isatty(f)) \
-                            setmode(f, O_BINARY); \
+                          if (!isatty(fileno(f))) \
+                            setmode(fileno(f), O_BINARY); \
                         } while (0)
 #endif
 
