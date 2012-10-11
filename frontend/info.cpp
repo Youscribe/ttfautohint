@@ -43,6 +43,7 @@ build_version_string(Info_Data* idata)
   d += sprintf(d, " -x %d", idata->increase_x_height);
 
   count = 0;
+  strong[0] = '\0';
   strong[1] = '\0';
   strong[2] = '\0';
   strong[3] = '\0';
