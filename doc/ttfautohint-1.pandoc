@@ -303,11 +303,11 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 ### Symbol Font
 
 `--symbol`, `-s`
-:   Use default values for standard stem width and height instead of
-    deriving them from latin character 'o'.  Use this option (usually in
-    combination with option `--latin-fallback`) to hint symbol or dingbat
-    fonts or math glyphs, for example, which lack character 'o', at the
-    expense of possibly poor hinting results at small sizes.
+:   Use default values for standard (horizontal) stem width and height
+    instead of deriving them from latin character 'o'.  Use this option
+    (usually in combination with option `--latin-fallback`) to hint symbol
+    or dingbat fonts or math glyphs, for example, which lack character 'o',
+    at the expense of possibly poor hinting results at small sizes.
 
 ### Add ttfautohint Info
 
@@ -321,12 +321,12 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 ### Strong Stem Width and Positioning
 
 `--strong-stem-width=`*string*, `-w`\ *string*
-:   ttfautohint offers two different routines to handle stem widths and stem
-    positions: 'smooth' and 'strong'.  The former uses discrete values which
-    slightly increase the stem contrast with almost no distortion of the
-    outlines, while the latter snaps both stem widths and stem positions to
-    integer pixel values as much as possible, yielding a crisper appearance
-    at the cost of much more distortion.
+:   ttfautohint offers two different routines to handle (horizontal) stem
+    widths and stem positions: 'smooth' and 'strong'.  The former uses
+    discrete values which slightly increase the stem contrast with almost no
+    distortion of the outlines, while the latter snaps both stem widths and
+    stem positions to integer pixel values as much as possible, yielding a
+    crisper appearance at the cost of much more distortion.
 
     These two routines are mapped onto three possible rendering targets:
 
@@ -442,7 +442,9 @@ The analysis to find segments and edges is specific to a script.
 Feature Analysis
 ----------------
 
-The auto-hinter analyzes a font in two steps.
+The auto-hinter analyzes a font in two steps.  Right now, everything
+described below happens for the horizontal axis only, providing vertical
+hinting.
 
   * Global Analysis
 
