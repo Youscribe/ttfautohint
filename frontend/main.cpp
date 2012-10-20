@@ -29,6 +29,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <limits.h>
+#include <unistd.h>
 
 #include <vector>
 #include <string>
@@ -44,7 +45,6 @@
 
 
 #ifdef _WIN32
-#  include <unistd.h>
 #  include <fcntl.h>
 #  define SET_BINARY(f) do { \
                           if (!isatty(fileno(f))) \
