@@ -45,6 +45,7 @@ const TA_ScriptClassRec ta_dummy_script_class =
 {
   TA_SCRIPT_DUMMY,
   NULL,
+  0,
 
   sizeof (TA_ScriptMetricsRec),
 

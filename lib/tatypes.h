@@ -227,6 +227,7 @@ typedef struct TA_ScriptClassRec_
 {
   TA_Script script;
   TA_Script_UniRange script_uni_ranges; /* last must be { 0, 0 } */
+  FT_UInt32 standard_char; /* for default width and height */
 
   FT_Offset script_metrics_size;
   TA_Script_InitMetricsFunc script_metrics_init;

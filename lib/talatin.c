@@ -37,8 +37,7 @@
 
 void
 ta_latin_metrics_init_widths(TA_LatinMetrics metrics,
-                             FT_Face face,
-                             FT_ULong charcode)
+                             FT_Face face)
 {
   /* scan the array of segments in each direction */
   TA_GlyphHintsRec hints[1];
@@ -57,7 +56,8 @@ ta_latin_metrics_init_widths(TA_LatinMetrics metrics,
     TA_Scaler scaler = &dummy->root.scaler;
 
 
-    glyph_index = FT_Get_Char_Index(face, charcode);
+    glyph_index = FT_Get_Char_Index(face,
+                                    metrics->root.clazz->standard_char);
     if (glyph_index == 0)
       goto Exit;
 
@@ -511,8 +511,7 @@ ta_latin_metrics_init(TA_LatinMetrics metrics,
 
   if (!FT_Select_Charmap(face, FT_ENCODING_UNICODE))
   {
-    /* for now, compute the standard width and height from the `o' */
-    ta_latin_metrics_init_widths(metrics, face, 'o');
+    ta_latin_metrics_init_widths(metrics, face);
     ta_latin_metrics_init_blues(metrics, face);
     ta_latin_metrics_check_digits(metrics, face);
   }
@@ -2427,6 +2426,7 @@ const TA_ScriptClassRec ta_latin_script_class =
 {
   TA_SCRIPT_LATIN,
   ta_latin_uniranges,
+  'o',
 
   sizeof (TA_LatinMetricsRec),
 
