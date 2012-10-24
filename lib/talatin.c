@@ -504,32 +504,12 @@ FT_Error
 ta_latin_metrics_init(TA_LatinMetrics metrics,
                       FT_Face face)
 {
-  FT_Error error = FT_Err_Ok;
   FT_CharMap oldmap = face->charmap;
-  FT_UInt ee;
-
-  static const FT_Encoding latin_encodings[] =
-  {
-    FT_ENCODING_UNICODE,
-    FT_ENCODING_APPLE_ROMAN,
-    FT_ENCODING_ADOBE_STANDARD,
-    FT_ENCODING_ADOBE_LATIN_1,
-
-    FT_ENCODING_NONE /* end of list */
-  };
 
 
   metrics->units_per_em = face->units_per_EM;
 
-  /* do we have a latin charmap in there? */
-  for (ee = 0; latin_encodings[ee] != FT_ENCODING_NONE; ee++)
-  {
-    error = FT_Select_Charmap(face, latin_encodings[ee]);
-    if (!error)
-      break;
-  }
-
-  if (!error)
+  if (!FT_Select_Charmap(face, FT_ENCODING_UNICODE))
   {
     /* for now, compute the standard width and height from the `o' */
     ta_latin_metrics_init_widths(metrics, face, 'o');
