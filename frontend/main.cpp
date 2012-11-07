@@ -527,6 +527,9 @@ main(int argc,
 
 #ifndef BUILD_GUI
 
+  if (!isatty(fileno(stderr)) && !debug)
+    setvbuf(stderr, (char*)NULL, _IONBF, BUFSIZ);
+
   if (hinting_range_min < 2)
   {
     fprintf(stderr, "The hinting range minimum must be at least 2\n");
