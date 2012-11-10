@@ -1797,6 +1797,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
   TA_Edge anchor = NULL;
   FT_Int has_serifs = 0;
 
+#ifdef TA_DEBUG
+  FT_UInt num_actions = 0;
+#endif
 
   TA_LOG(("%s edge hinting\n", dim == TA_DIMENSION_VERT ? "horizontal"
                                                         : "vertical"));
@@ -1834,6 +1837,7 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       if (!edge1)
         continue;
 
+#ifdef TA_DEBUG
       if (!anchor)
         TA_LOG(("  BLUE_ANCHOR: edge %d (opos=%.2f) snapped to %.2f,"
                   " was %.2f (anchor=edge %d)\n",
@@ -1843,6 +1847,9 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         TA_LOG(("  BLUE: edge %d (opos=%.2f) snapped to %.2f, was %.2f\n",
                 edge1 - edges, edge1->opos / 64.0, blue->fit / 64.0,
                 edge1->pos / 64.0));
+
+      num_actions++;
+#endif
 
       edge1->pos = blue->fit;
       edge1->flags |= TA_EDGE_DONE;
@@ -1861,6 +1868,10 @@ ta_latin_hint_edges(TA_GlyphHints hints,
       {
         ta_latin_align_linked_edge(hints, dim, edge1, edge2);
         edge2->flags |= TA_EDGE_DONE;
+
+#ifdef TA_DEBUG
+        num_actions++;
+#endif
       }
 
       if (!anchor)
@@ -1895,6 +1906,10 @@ ta_latin_hint_edges(TA_GlyphHints hints,
 
       ta_latin_align_linked_edge(hints, dim, edge2, edge);
       edge->flags |= TA_EDGE_DONE;
+
+#ifdef TA_DEBUG
+      num_actions++;
+#endif
       continue;
     }
 
@@ -1964,6 +1979,10 @@ ta_latin_hint_edges(TA_GlyphHints hints,
                         edge, edge2, NULL, NULL, NULL);
 
       ta_latin_align_linked_edge(hints, dim, edge, edge2);
+
+#ifdef TA_DEBUG
+      num_actions += 2;
+#endif
     }
     else
     {
@@ -2093,14 +2112,22 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         }
       }
 
+#ifdef TA_DEBUG
+      num_actions++;
+#endif
+
       edge->flags |= TA_EDGE_DONE;
       edge2->flags |= TA_EDGE_DONE;
 
       if (edge > edges
           && edge->pos < edge[-1].pos)
       {
+#ifdef TA_DEBUG
         TA_LOG(("  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
                 edge - edges, edge->pos / 64.0, edge[-1].pos / 64.0));
+
+        num_actions++;
+#endif
 
         edge->pos = edge[-1].pos;
 
@@ -2268,7 +2295,6 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         else
         {
           edge->pos = anchor->pos + ((edge->opos - anchor->opos + 16) & ~31);
-
           TA_LOG(("  SERIF_LINK2: edge %d (opos=%.2f) snapped to %.2f\n",
                   edge - edges, edge->opos / 64.0, edge->pos / 64.0));
 
@@ -2278,13 +2304,19 @@ ta_latin_hint_edges(TA_GlyphHints hints,
         }
       }
 
+#ifdef TA_DEBUG
+      num_actions++;
+#endif
       edge->flags |= TA_EDGE_DONE;
 
       if (edge > edges
           && edge->pos < edge[-1].pos)
       {
+#ifdef TA_DEBUG
         TA_LOG(("  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
                 edge - edges, edge->pos / 64.0, edge[-1].pos / 64.0));
+        num_actions++;
+#endif
 
         edge->pos = edge[-1].pos;
 
@@ -2297,8 +2329,12 @@ ta_latin_hint_edges(TA_GlyphHints hints,
           && edge[1].flags & TA_EDGE_DONE
           && edge->pos > edge[1].pos)
       {
+#ifdef TA_DEBUG
         TA_LOG(("  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
                 edge - edges, edge->pos / 64.0, edge[1].pos / 64.0));
+
+        num_actions++;
+#endif
 
         edge->pos = edge[1].pos;
 
@@ -2309,7 +2345,11 @@ ta_latin_hint_edges(TA_GlyphHints hints,
     }
   }
 
+#ifdef TA_DEBUG
+  if (!num_actions)
+    TA_LOG(("  (none)\n"));
   TA_LOG(("\n"));
+#endif
 }
 
 
