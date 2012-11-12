@@ -53,6 +53,9 @@ try to `embolden' fonts at small sizes to avoid drop-outs; cf. Infinality
 
 implement `x-height-snapping-exceptions'
 
+make switching between smooth and strong hinting dependent on user-defined
+  ranges
+
 improve `pre-hinting' by making the used PPEM value configurable
 
 allow hinting of single glyphs, using a config file which holds the global
