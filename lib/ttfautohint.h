@@ -302,6 +302,13 @@ typedef int
  *     supplied argument is NULL, no x-height snapping takes place at all.
  *     By default, there are no snapping exceptions.  Not implemented yet.
  *
+ * `windows-compatibility`
+ * :   If this integer is set to\ 1, two artificial blue zones are used,
+ *     positioned at the `usWinAscent` and `usWinDescent` values (from the
+ *     font's `OS/2` table).  The idea is to help ttfautohint so that the
+ *     hinted glyphs stay within this horizontal stripe since Windows clips
+ *     everything falling outside.  The default is\ 0.
+ *
  * `ignore-restrictions`
  * :   If the font has set bit\ 1 in the 'fsType' field of the `OS/2` table,
  *     the ttfautohint library refuses to process the font since a

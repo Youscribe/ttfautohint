@@ -278,6 +278,44 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     ![The same, this time with option `-x 17` (and
       '`-w ""`').](img/e-17px-x17.png)
 
+### Windows Compatibility
+
+`--windows-compatibility`, `-W`
+:   This option makes ttfautohint add two artificial blue zones, positioned
+    at the `usWinAscent` and `usWinDescent` values (from the font's `OS/2`
+    table).  The idea is to help ttfautohint so that the hinted glyphs stay
+    within this horizontal stripe since Windows clips everything falling
+    outside.
+
+    There is a general problem with tight values for `usWinAscent` and
+    `usWinDescent`; a good description is given in the [Vertical Metrics
+    How-To](http://typophile.com/node/13081).  Additionally, there is a
+    special problem with tight values if used in combination with
+    ttfautohint because the auto-hinter tends to slightly increase the
+    vertical glyph dimensions at smaller sizes to improve legibility.  This
+    enlargement can make the heights and depths of glyphs exceed the range
+    given by `usWinAscent` and `usWinDescent`.
+
+    If ttfautohint is part of the font creation tool chain, and the font
+    designer can adjust those two values, a better solution instead of using
+    option `-W` is to reserve some vertical space for 'padding': For the
+    auto-hinter, the difference between a top or bottom outline point before
+    and after hinting is less than 1px, thus a vertical padding of 2px is
+    sufficient.  Assuming a minimum hinting size of 6ppem, adding two pixels
+    gives an increase factor of 8÷6=1.33.  This is near to the default
+    baseline-to-baseline distance used by TeX and other sophisticated text
+    processing applications, namely 1.2×designsize, which gives satisfying
+    results in most cases.  It is also near to the factor 1.25 recommended
+    in the abovementioned How-To.  For example, if the EM size is 2048, the
+    sum of `usWinAscent` and `usWinDescent` could be 1.2×2048 = 2458.
+
+    In case ttfautohint is used as an auto-hinting tool for fonts which can
+    be no longer modified to change the metrics, option `-W` in combination
+    with '`-X ""`' to suppress any vertical enlargement should prevent almost
+    all clipping.
+
+    [Option `-X` is not implemented yet.]
+
 ### Pre-Hinting
 
 `--pre-hinting`, `-p`

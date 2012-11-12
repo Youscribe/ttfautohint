@@ -53,8 +53,10 @@ build_version_string(Info_Data* idata)
     strong[count++] = 'G';
   if (idata->dw_cleartype_strong_stem_width)
     strong[count++] = 'D';
-  d+= sprintf(d, " -w \"%s\"", strong);
+  d += sprintf(d, " -w \"%s\"", strong);
 
+  if (idata->windows_compatibility)
+    d += sprintf(d, " -W");
   if (idata->pre_hinting)
     d += sprintf(d, " -p");
   if (!idata->hint_with_components)

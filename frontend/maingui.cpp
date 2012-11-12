@@ -45,6 +45,7 @@ Main_GUI::Main_GUI(int range_min,
                    bool dw,
                    int increase,
                    bool ignore,
+                   bool wincomp,
                    bool pre,
                    bool components,
                    bool no,
@@ -58,6 +59,7 @@ Main_GUI::Main_GUI(int range_min,
   dw_cleartype_strong_stem_width(dw),
   increase_x_height(increase),
   ignore_restrictions(ignore),
+  windows_compatibility(wincomp),
   pre_hinting(pre),
   hint_with_components(components),
   no_info(no),
@@ -564,6 +566,7 @@ again:
                                 ? 0
                                 : increase_box->value();
 
+  info_data.windows_compatibility = wincomp_box->isChecked();
   info_data.pre_hinting = pre_box->isChecked();
   info_data.hint_with_components = hint_box->isChecked();
   info_data.latin_fallback = fallback_box->currentIndex();
@@ -585,6 +588,7 @@ again:
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
                  "ignore-restrictions,"
+                 "windows-compatibility,"
                  "pre-hinting,"
                  "hint-with-components,"
                  "increase-x-height,"
@@ -599,6 +603,7 @@ again:
                  gui_progress, &gui_progress_data,
                  info_func, &info_data,
                  ignore_restrictions,
+                 info_data.windows_compatibility,
                  info_data.pre_hinting,
                  info_data.hint_with_components,
                  info_data.increase_x_height,
@@ -775,6 +780,16 @@ Main_GUI::create_layout()
   //
   // flags
   //
+  wincomp_box = new QCheckBox(tr("Windows Com&patibility"), this);
+  wincomp_box->setToolTip(
+    tr("If switched on, add two artificial blue zones positioned at the"
+       " <tt>usWinAscent</tt> and <tt>usWinDescent</tt> values"
+       " (from the font's <i>OS/2</i> table)."
+       "  Use this if those values are tight,"
+       " and you are experiencing clipping during rendering."));
+  if (windows_compatibility)
+    wincomp_box->setChecked(true);
+
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
   pre_box->setToolTip(
     tr("If switched on, the original bytecode of the input font"
@@ -911,6 +926,7 @@ Main_GUI::create_layout()
   gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
   gui_layout->setRowStretch(row++, 1);
 
+  gui_layout->addWidget(wincomp_box, row++, 1);
   gui_layout->addWidget(pre_box, row++, 1);
   gui_layout->addWidget(hint_box, row++, 1);
   gui_layout->addWidget(symbol_box, row++, 1);

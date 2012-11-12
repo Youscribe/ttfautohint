@@ -43,7 +43,7 @@ class Main_GUI
 public:
   Main_GUI(int, int, int,
            bool, bool, bool,
-           int, bool, bool,
+           int, bool, bool, bool,
            bool, bool, int, bool);
 
 protected:
@@ -72,6 +72,7 @@ private:
   int dw_cleartype_strong_stem_width;
   int increase_x_height;
   int ignore_restrictions;
+  int windows_compatibility;
   int pre_hinting;
   int hint_with_components;
   int no_info;
@@ -117,6 +118,7 @@ private:
   QSpinBox* increase_box;
   QCheckBox* no_increase_box;
 
+  QCheckBox* wincomp_box;
   QCheckBox* pre_box;
   QCheckBox* hint_box;
   QCheckBox* symbol_box;

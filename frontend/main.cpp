@@ -171,7 +171,7 @@ show_help(bool
 "  -i, --ignore-restrictions  override font license restrictions\n"
 "  -l, --hinting-range-min=N  the minimum PPEM value for hint sets\n"
 "                             (default: %d)\n"
-"  -n  --no-info              don't add ttfautohint info\n"
+"  -n, --no-info              don't add ttfautohint info\n"
 "                             to the version string(s) in the `name' table\n"
 "  -p, --pre-hinting          apply original hints in advance\n",
           TA_HINTING_LIMIT, TA_HINTING_RANGE_MIN);
@@ -186,6 +186,9 @@ show_help(bool
 "                             with possible values `g' for grayscale,\n"
 "                             `G' for GDI ClearType, and `D' for\n"
 "                             DirectWrite ClearType (default: G)\n"
+"  -W, --windows-compatibility\n"
+"                             add blue zones for `usWinAscent' and\n"
+"                             `usWinDescent' to avoid clipping\n"
 "  -x, --increase-x-height=N  increase x height for sizes in the range\n"
 "                             6<=PPEM<=N; value 0 switches off this feature\n"
 "                             (default: %d)\n"
@@ -316,6 +319,7 @@ main(int argc,
   bool dw_cleartype_strong_stem_width = false;
 
   bool ignore_restrictions = false;
+  bool windows_compatibility = false;
   bool pre_hinting = false;
   bool hint_with_components = true;
   bool no_info = false;
@@ -371,6 +375,7 @@ main(int argc,
       {"symbol", no_argument, NULL, 's'},
       {"verbose", no_argument, NULL, 'v'},
       {"version", no_argument, NULL, 'V'},
+      {"windows-compatibility", no_argument, NULL, 'W'},
       {"x-height-snapping-exceptions", required_argument, NULL, 'X'},
 
       // Qt options
@@ -403,7 +408,7 @@ main(int argc,
     };
 
     int option_index;
-    int c = getopt_long_only(argc, argv, "cfG:hil:npr:stVvx:X:w:",
+    int c = getopt_long_only(argc, argv, "cfG:hil:npr:stVvw:Wx:X:",
                              long_options, &option_index);
     if (c == -1)
       break;
@@ -471,6 +476,10 @@ main(int argc,
       gray_strong_stem_width = strchr(optarg, 'g') ? true : false;
       gdi_cleartype_strong_stem_width = strchr(optarg, 'G') ? true : false;
       dw_cleartype_strong_stem_width = strchr(optarg, 'D') ? true : false;
+      break;
+
+    case 'W':
+      windows_compatibility = true;
       break;
 
     case 'x':
@@ -623,6 +632,7 @@ main(int argc,
     info_data.gdi_cleartype_strong_stem_width = gdi_cleartype_strong_stem_width;
     info_data.dw_cleartype_strong_stem_width = dw_cleartype_strong_stem_width;
 
+    info_data.windows_compatibility = windows_compatibility;
     info_data.pre_hinting = pre_hinting;
     info_data.hint_with_components = hint_with_components;
     info_data.increase_x_height = increase_x_height;
@@ -645,7 +655,8 @@ main(int argc,
                  "error-string,"
                  "progress-callback, progress-callback-data,"
                  "info-callback, info-callback-data,"
-                 "ignore-restrictions, pre-hinting, hint-with-components,"
+                 "ignore-restrictions, windows-compatibility,"
+                 "pre-hinting, hint-with-components,"
                  "increase-x-height, fallback-script, symbol,"
                  "debug",
                  in, out,
@@ -655,7 +666,8 @@ main(int argc,
                  &error_string,
                  progress_func, &progress_data,
                  info_func, &info_data,
-                 ignore_restrictions, pre_hinting, hint_with_components,
+                 ignore_restrictions, windows_compatibility,
+                 pre_hinting, hint_with_components,
                  increase_x_height, latin_fallback, symbol,
                  debug);
 
@@ -724,8 +736,8 @@ main(int argc,
 
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
                gray_strong_stem_width, gdi_cleartype_strong_stem_width,
-               dw_cleartype_strong_stem_width,
-               increase_x_height, ignore_restrictions, pre_hinting,
+               dw_cleartype_strong_stem_width, increase_x_height,
+               ignore_restrictions, windows_compatibility, pre_hinting,
                hint_with_components, no_info, latin_fallback, symbol);
   gui.show();
 

@@ -220,6 +220,7 @@ struct FONT_
   FT_Bool gray_strong_stem_width;
   FT_Bool gdi_cleartype_strong_stem_width;
   FT_Bool dw_cleartype_strong_stem_width;
+  FT_Bool windows_compatibility;
   FT_Bool pre_hinting;
   FT_Bool hint_with_components;
   FT_Bool no_x_height_snapping;

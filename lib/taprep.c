@@ -510,14 +510,15 @@ TA_table_build_prep(FT_Byte** prep,
     *(buf_p++) = (unsigned char)CVT_VERT_WIDTHS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_VERT_WIDTHS_OFFSET(font)
                                  + CVT_VERT_WIDTHS_SIZE(font) - 1);
+    /* don't loop over the artificial blue zones */
     COPY_PREP(loop_cvt_b);
     *(buf_p++) = (unsigned char)CVT_BLUE_REFS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_REFS_OFFSET(font)
-                                 + CVT_BLUES_SIZE(font) - 1);
+                                 + CVT_BLUES_SIZE(font) - 1 - 2);
     COPY_PREP(loop_cvt_c);
     *(buf_p++) = (unsigned char)CVT_BLUE_SHOOTS_OFFSET(font);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
-                                 + CVT_BLUES_SIZE(font) - 1);
+                                 + CVT_BLUES_SIZE(font) - 1 - 2);
     COPY_PREP(loop_cvt_d);
   }
 

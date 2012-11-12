@@ -35,6 +35,7 @@ typedef struct Info_Data_
 
   int increase_x_height;
 
+  bool windows_compatibility;
   bool pre_hinting;
   bool hint_with_components;
   int latin_fallback;

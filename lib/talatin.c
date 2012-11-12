@@ -21,6 +21,7 @@
 
 #include <ft2build.h>
 #include FT_ADVANCES_H
+#include FT_TRUETYPE_TABLES_H
 
 #include "taglobal.h"
 #include "talatin.h"
@@ -445,6 +446,51 @@ ta_latin_metrics_init_blues(TA_LatinMetrics metrics,
             *blue_ref, *blue_shoot));
   }
 
+  /* add two blue zones for usWinAscent and usWinDescent */
+  /* just in case the above algorithm has missed them -- */
+  /* Windows cuts off everything outside of those two values */
+  {
+    TT_OS2* os2;
+
+
+    os2 = (TT_OS2*)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+
+    if (os2)
+    {
+      blue = &axis->blues[axis->blue_count];
+      blue->flags = TA_LATIN_BLUE_TOP | TA_LATIN_BLUE_ACTIVE;
+      blue->ref.org =
+      blue->shoot.org = os2->usWinAscent;
+
+      TA_LOG(("artificial blue zone for usWinAscent:\n"
+              "    -> reference = %ld\n"
+              "       overshoot = %ld\n",
+              blue->ref.org, blue->shoot.org));
+
+      blue = &axis->blues[axis->blue_count + 1];
+      blue->flags = TA_LATIN_BLUE_ACTIVE;
+      blue->ref.org =
+      blue->shoot.org = -os2->usWinDescent;
+
+      TA_LOG(("artificial blue zone for usWinDescent:\n"
+              "    -> reference = %ld\n"
+              "       overshoot = %ld\n",
+              blue->ref.org, blue->shoot.org));
+    }
+    else
+    {
+      blue = &axis->blues[axis->blue_count];
+      blue->flags =
+      blue->ref.org =
+      blue->shoot.org = 0;
+
+      blue = &axis->blues[axis->blue_count + 1];
+      blue->flags =
+      blue->ref.org =
+      blue->shoot.org = 0;
+    }
+  }
+
   TA_LOG(("\n"));
 
   return;
@@ -700,6 +746,26 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
         blue->flags |= TA_LATIN_BLUE_ACTIVE;
       }
+    }
+
+    /* the last two artificial blue zones are to be scaled */
+    /* with uncorrected scaling values */
+    {
+      TA_LatinAxis a = &metrics->axis[TA_DIMENSION_VERT];
+      TA_LatinBlue b;
+
+
+      b = &a->blues[a->blue_count];
+      b->ref.cur =
+      b->ref.fit =
+      b->shoot.cur =
+      b->shoot.fit = FT_MulFix(b->ref.org, a->org_scale) + delta;
+
+      b = &a->blues[a->blue_count + 1];
+      b->ref.cur =
+      b->ref.fit =
+      b->shoot.cur =
+      b->shoot.fit = FT_MulFix(b->ref.org, a->org_scale) + delta;
     }
   }
 }
@@ -1367,7 +1433,7 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
   /* for each horizontal edge search the blue zone which is closest */
   for (; edge < edge_limit; edge++)
   {
-    FT_Int bb;
+    FT_UInt bb;
     TA_Width best_blue = NULL;
     FT_Pos best_dist; /* initial threshold */
 
@@ -1383,7 +1449,13 @@ ta_latin_hints_compute_blue_edges(TA_GlyphHints hints,
     if (best_dist > 64 / 2)
       best_dist = 64 / 2;
 
-    for (bb = 0; bb < TA_LATIN_BLUE_MAX; bb++)
+    /* this loop also handles the two extra blue zones */
+    /* for usWinAscent and usWinDescent */
+    /* if option `windows-compatibility' is set */
+    for (bb = 0;
+         bb < latin->blue_count
+              + (metrics->root.globals->font->windows_compatibility ? 2 : 0);
+         bb++)
     {
       TA_LatinBlue blue = latin->blues + bb;
       FT_Bool is_top_blue, is_major_dir;

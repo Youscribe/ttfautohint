@@ -509,11 +509,11 @@
            ? 0 \
            : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].width_count)
 
-/* the number of blue zones */
+/* the number of blue zones (including the artificial ones) */
 #define CVT_BLUES_SIZE(font) \
           ((font->loader->hints.metrics->clazz->script == TA_SCRIPT_DUMMY) \
            ? 0 \
-           : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count)
+           : ((TA_LatinMetrics)font->loader->hints.metrics)->axis[1].blue_count + 2)
 
 /* the blue zone values for flat and round edges */
 #define CVT_BLUE_REFS_OFFSET(font) \

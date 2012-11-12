@@ -66,6 +66,7 @@ TTF_autohint(const char* options,
   TA_Info_Func info;
   void* info_data;
 
+  FT_Bool windows_compatibility = 0;
   FT_Bool ignore_restrictions = 0;
   FT_Bool pre_hinting = 0;
   FT_Bool hint_with_components = 0;
@@ -181,6 +182,8 @@ TTF_autohint(const char* options,
       progress_data = va_arg(ap, void*);
     else if (COMPARE("symbol"))
       symbol = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("windows-compatibility"))
+      windows_compatibility = (FT_Bool)va_arg(ap, FT_Int);
     else
     {
       error = TA_Err_Unknown_Argument;
@@ -269,6 +272,7 @@ TTF_autohint(const char* options,
   font->info = info;
   font->info_data = info_data;
 
+  font->windows_compatibility = windows_compatibility;
   font->ignore_restrictions = ignore_restrictions;
   font->pre_hinting = pre_hinting;
   font->hint_with_components = hint_with_components;
@@ -309,6 +313,8 @@ TTF_autohint(const char* options,
          font->pre_hinting);
     DUMP("symbol",
          font->symbol);
+    DUMP("windows-compatibility",
+         font->windows_compatibility);
 
     fprintf(stderr, "\n");
   }

@@ -100,7 +100,7 @@ TA_table_build_cvt(FT_Byte** cvt,
 
     hwidth_count = haxis->width_count;
     vwidth_count = vaxis->width_count;
-    blue_count = vaxis->blue_count;
+    blue_count = vaxis->blue_count + 2; /* with artificial blue zones */
   }
 
   buf_len = 2 * (cvtl_max_runtime /* runtime values */
