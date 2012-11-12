@@ -302,12 +302,14 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     auto-hinter, the difference between a top or bottom outline point before
     and after hinting is less than 1px, thus a vertical padding of 2px is
     sufficient.  Assuming a minimum hinting size of 6ppem, adding two pixels
-    gives an increase factor of 8÷6=1.33.  This is near to the default
+    gives an increase factor of 8÷6 = 1.33.  This is near to the default
     baseline-to-baseline distance used by TeX and other sophisticated text
     processing applications, namely 1.2×designsize, which gives satisfying
     results in most cases.  It is also near to the factor 1.25 recommended
-    in the abovementioned How-To.  For example, if the EM size is 2048, the
-    sum of `usWinAscent` and `usWinDescent` could be 1.2×2048 = 2458.
+    in the abovementioned How-To.  For example, if the vertical extension of
+    the largest glyph is 2000 units (assuming that it approximately
+    represents the designsize), the sum of `usWinAscent` and `usWinDescent`
+    could be 1.25×2000 = 2500.
 
     In case ttfautohint is used as an auto-hinting tool for fonts which can
     be no longer modified to change the metrics, option `-W` in combination
