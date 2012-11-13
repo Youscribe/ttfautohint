@@ -385,7 +385,8 @@ unsigned char PREP(reset_component_counter) [] =
 
 
 #define COPY_PREP(snippet_name) \
-          do { \
+          do \
+          { \
             memcpy(buf_p, prep_ ## snippet_name, \
                    sizeof (prep_ ## snippet_name)); \
             buf_p += sizeof (prep_ ## snippet_name); \

@@ -47,7 +47,8 @@
 #ifdef TA_DEBUG
 
 #define TA_LOG(x) \
-  do { \
+  do \
+  { \
     if (_ta_debug) \
       _ta_message x; \
   } while (0)
@@ -99,7 +100,8 @@ typedef FT_Int TA_Angle;
 #define TA_ANGLE_PI4 (TA_ANGLE_PI / 4)
 
 #define TA_ANGLE_DIFF(result, angle1, angle2) \
-          do { \
+          do \
+          { \
             TA_Angle _delta = (angle2) - (angle1); \
 \
 \
