@@ -12,7 +12,10 @@
 
 AM_CPPFLAGS = $(FREETYPE_CPPFLAGS)
 
-noinst_LIBRARIES = libttfautohint.a
+noinst_LIBRARIES = libttfautohint.a \
+                   libnumberset.a
+
+libnumberset_a_SOURCES = numberset.c numberset.h
 libttfautohint_a_SOURCES = ta.h \
                            tabytecode.c tabytecode.h \
                            tacvt.c \
@@ -44,5 +47,6 @@ libttfautohint_a_SOURCES = ta.h \
                            tattf.c \
                            tatypes.h \
                            ttfautohint.c ttfautohint.h ttfautohint-errors.h
+libttfautohint_a_LIBADD = libnumberset.a
 
 ## end of Makefile.am
