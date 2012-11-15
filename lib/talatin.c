@@ -44,6 +44,9 @@ ta_latin_metrics_init_widths(TA_LatinMetrics metrics,
   TA_GlyphHintsRec hints[1];
 
 
+  TA_LOG(("standard widths computation\n"
+          "===========================\n\n"));
+
   ta_glyph_hints_init(hints);
 
   metrics->axis[TA_DIMENSION_HORZ].width_count = 0;
@@ -61,6 +64,9 @@ ta_latin_metrics_init_widths(TA_LatinMetrics metrics,
                                     metrics->root.clazz->standard_char);
     if (glyph_index == 0)
       goto Exit;
+
+    TA_LOG(("standard character: 0x%X (glyph index %d)\n",
+            metrics->root.clazz->standard_char, glyph_index));
 
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_SCALE);
     if (error || face->glyph->outline.n_points <= 0)
@@ -145,8 +151,27 @@ Exit:
       axis->edge_distance_threshold = stdw / 5;
       axis->standard_width = stdw;
       axis->extra_light = 0;
+
+#ifdef TA_DEBUG
+      {
+        FT_UInt i;
+
+
+        TA_LOG(("%s widths:\n",
+                dim == TA_DIMENSION_VERT ? "horizontal"
+                                         : "vertical"));
+
+        TA_LOG(("  %d (standard)", axis->standard_width));
+        for (i = 1; i < axis->width_count; i++)
+          TA_LOG((" %d", axis->widths[i].org));
+
+        TA_LOG(("\n"));
+      }
+#endif
     }
   }
+
+  TA_LOG(("\n"));
 
   ta_glyph_hints_done(hints);
 }
