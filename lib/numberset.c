@@ -206,6 +206,22 @@ number_set_parse(const char* s,
 }
 
 
+void
+number_set_free(number_range* number_set)
+{
+  number_range* nr = number_set;
+  number_range* tmp;
+
+
+  while (nr)
+  {
+    tmp = nr;
+    nr = nr->next;
+    free(tmp);
+  }
+}
+
+
 int
 number_set_is_element(number_range* number_set,
                       int number)

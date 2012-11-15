@@ -16,21 +16,14 @@
 #ifndef __NUMBERSET_H__
 #define __NUMBERSET_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * A structure defining an integer range, to be used as a linked list.  It
- * gets allocated by a successful call to `parse_number_set'.  To deallocate
- * such a linked list `nr', use code like the following.
- *
- *   number_range* tmp;
- *
- *   while (nr)
- *   {
- *     tmp = nr;
- *     nr = nr->next;
- *     free(tmp);
- *   }
- *
+ * gets allocated by a successful call to `parse_number_set'.  Use
+ * `number_set_free' to deallocate it.
  */
 
 typedef struct number_range_
@@ -103,12 +96,24 @@ number_set_parse(const char* s,
 
 
 /*
+ * Free the allocated data in `number_set'.
+ */
+
+void
+number_set_free(number_range* number_set);
+
+
+/*
  * Return value 1 if `number' is element of `number_set', zero otherwise.
  */
 
 int
 number_set_is_element(number_range* number_set,
                       int number);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __NUMBERSET_H__ */
 
