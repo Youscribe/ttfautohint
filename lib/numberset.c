@@ -205,4 +205,25 @@ number_set_parse(const char* s,
   return s;
 }
 
+
+int
+number_set_is_element(number_range* number_set,
+                      int number)
+{
+  number_range* nr = number_set;
+
+
+  while (nr)
+  {
+    if (number < nr->start)
+      return 0;
+    if (nr->start <= number
+        && number <= nr->end)
+      return 1;
+    nr = nr->next;
+  }
+
+  return 0;
+}
+
 /* end of numberset.c */

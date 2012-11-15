@@ -101,6 +101,15 @@ number_set_parse(const char* s,
                  int min,
                  int max);
 
+
+/*
+ * Return value 1 if `number' is element of `number_set', zero otherwise.
+ */
+
+int
+number_set_is_element(number_range* number_set,
+                      int number);
+
 #endif /* __NUMBERSET_H__ */
 
 /* end of numberset.h */
