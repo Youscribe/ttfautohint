@@ -72,7 +72,7 @@ typedef struct number_range_
  * case of an error, the return value is a pointer to the beginning position
  * of the offending range in string `s'.
  *
- * If the user provides a non-NULL `number_set' value, `parse_number_set'
+ * If the user provides a non-NULL `number_set' value, `number_set_parse'
  * stores a linked list of ordered number ranges in `*number_set', allocated
  * with `malloc'.  If there is no range at all (for example, an empty string
  * or whitespace and commas only) no data gets allocated, and `*number_set'
@@ -85,6 +85,8 @@ typedef struct number_range_
  *   NUMBERSET_OVERLAPPING_RANGES  overlapping ranges
  *   NUMBERSET_ALLOCATION_ERROR    allocation error
  *
+ * Note that a negative value for `min' is replaced with zero, and a
+ * negative value for `max' with the largest representable integer, INT_MAX.
  */
 
 #define NUMBERSET_INVALID_CHARACTER (number_range*)-1
@@ -94,7 +96,7 @@ typedef struct number_range_
 #define NUMBERSET_ALLOCATION_ERROR (number_range*)-5
 
 const char*
-parse_number_set(const char* s,
+number_set_parse(const char* s,
                  number_range** number_set,
                  int min,
                  int max);

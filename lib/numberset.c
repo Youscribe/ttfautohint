@@ -21,7 +21,7 @@
 
 
 const char*
-parse_number_set(const char* s,
+number_set_parse(const char* s,
                  number_range** number_set,
                  int min,
                  int max)
@@ -34,6 +34,11 @@ parse_number_set(const char* s,
   int last_end = -1;
   number_range* error_code = NULL;
 
+
+  if (min < 0)
+    min = 0;
+  if (max < 0)
+    max = INT_MAX;
 
   for (;;)
   {
