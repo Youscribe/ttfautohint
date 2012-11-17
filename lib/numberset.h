@@ -104,6 +104,22 @@ number_set_free(number_range* number_set);
 
 
 /*
+ * Return a string representation of `number_set', viewed through a
+ * `window', so to say, spanned up by the parameters `min' and `max'.  After
+ * use, the string should be deallocated with a call to `free'.  In case of
+ * an allocation error, the return value is NULL.
+ *
+ * Note that a negative value for `min' is replaced with zero, and a
+ * negative value for `max' with the largest representable integer, INT_MAX.
+ */
+
+char*
+number_set_show(number_range* number_set,
+                int min,
+                int max);
+
+
+/*
  * Return value 1 if `number' is element of `number_set', zero otherwise.
  */
 

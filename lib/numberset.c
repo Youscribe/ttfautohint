@@ -13,7 +13,9 @@
  */
 
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <limits.h>
 
@@ -223,6 +225,91 @@ number_set_free(number_range* number_set)
     nr = nr->next;
     free(tmp);
   }
+}
+
+
+char*
+number_set_show(number_range* number_set,
+                int min,
+                int max)
+{
+  char* s;
+  char* s_new;
+  size_t s_len;
+  size_t s_len_new;
+
+  number_range* nr = number_set;
+
+  char tmp[256];
+  int tmp_len;
+  int t;
+  const char *comma;
+
+
+  if (min < 0)
+    min = 0;
+  if (max < 0)
+    max = INT_MAX;
+  if (min > max)
+  {
+    t = min;
+    min = max;
+    max = t;
+  }
+
+  /* we return an empty string for an empty number set */
+  /* (this is, number_set == NULL or unsuitable `min' and `max' values) */
+  s = (char*)malloc(1);
+  if (!s)
+    return NULL;
+  *s = '\0';
+
+  s_len = 1;
+
+  while (nr)
+  {
+    if (nr->start > max)
+      return s;
+    if (nr->end < min)
+      goto Again;
+
+    comma = (s_len == 1) ? "" : ", ";
+
+    if (nr->start <= min
+        && nr->end >= max)
+      tmp_len = sprintf(tmp, "-");
+    else if (nr->start <= min)
+      tmp_len = sprintf(tmp, "-%i",
+                             nr->end);
+    else if (nr->end >= max)
+      tmp_len = sprintf(tmp, "%s%i-",
+                             comma, nr->start);
+    else
+    {
+      if (nr->start == nr->end)
+        tmp_len = sprintf(tmp, "%s%i",
+                               comma, nr->start);
+      else
+        tmp_len = sprintf(tmp, "%s%i-%i",
+                               comma, nr->start, nr->end);
+    }
+
+    s_len_new = s_len + tmp_len;
+    s_new = (char*)realloc(s, s_len_new);
+    if (!s_new)
+    {
+      free(s);
+      return NULL;
+    }
+    strcpy(s_new + s_len - 1, tmp);
+    s_len = s_len_new;
+    s = s_new;
+
+  Again:
+    nr = nr->next;
+  }
+
+  return s;
 }
 
 
