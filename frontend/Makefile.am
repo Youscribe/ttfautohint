@@ -26,7 +26,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/lib \
               -I$(top_builddir)/gnulib/src \
               -I$(top_srcdir)/gnulib/src \
               $(FREETYPE_CPPFLAGS)
-LDADD = $(top_builddir)/lib/libttfautohint.a \
+LDADD = $(top_builddir)/lib/libttfautohint.la \
         $(top_builddir)/gnulib/src/libgnu.la \
         $(LTLIBINTL) \
         $(LTLIBTHREAD) \
