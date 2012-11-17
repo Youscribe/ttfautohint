@@ -32,6 +32,7 @@ number_set_parse(const char* s,
 
   const char* last_pos = s;
   int last_end = -1;
+  int t;
   number_range* error_code = NULL;
 
 
@@ -39,6 +40,12 @@ number_set_parse(const char* s,
     min = 0;
   if (max < 0)
     max = INT_MAX;
+  if (min > max)
+  {
+    t = min;
+    min = max;
+    max = t;
+  }
 
   for (;;)
   {
@@ -122,12 +129,9 @@ number_set_parse(const char* s,
 
     if (m < n)
     {
-      int tmp;
-
-
-      tmp = n;
+      t = n;
       n = m;
-      m = tmp;
+      m = t;
     }
 
     if (n < min || m > max)
