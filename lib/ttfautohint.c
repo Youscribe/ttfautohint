@@ -26,7 +26,7 @@
 #define COMPARE(str) \
           (len == (sizeof (str) - 1) \
            && !strncmp(start, str, sizeof (str) - 1))
-#define DUMP(str, arg) \
+#define DUMPVAL(str, arg) \
           fprintf(stderr, "%33s = %ld\n", \
                           (str), \
                           (FT_Long)(arg))
@@ -289,32 +289,32 @@ TTF_autohint(const char* options,
     fprintf(stderr, "TTF_autohint parameters\n"
                     "=======================\n\n");
 
-    DUMP("dw-cleartype-strong-stem-width",
-         font->dw_cleartype_strong_stem_width);
-    DUMP("fallback-script",
-         font->fallback_script);
-    DUMP("gdi-cleartype-strong-stem-width",
-         font->gdi_cleartype_strong_stem_width);
-    DUMP("gray-strong-stem-width",
-         font->gray_strong_stem_width);
-    DUMP("hinting-limit",
-         font->hinting_limit);
-    DUMP("hinting-range-max",
-         font->hinting_range_max);
-    DUMP("hinting-range-min",
-         font->hinting_range_min);
-    DUMP("hint-with-components",
-         font->hint_with_components);
-    DUMP("ignore-restrictions",
-         font->ignore_restrictions);
-    DUMP("increase-x-height",
-         font->increase_x_height);
-    DUMP("pre-hinting",
-         font->pre_hinting);
-    DUMP("symbol",
-         font->symbol);
-    DUMP("windows-compatibility",
-         font->windows_compatibility);
+    DUMPVAL("dw-cleartype-strong-stem-width",
+            font->dw_cleartype_strong_stem_width);
+    DUMPVAL("fallback-script",
+            font->fallback_script);
+    DUMPVAL("gdi-cleartype-strong-stem-width",
+            font->gdi_cleartype_strong_stem_width);
+    DUMPVAL("gray-strong-stem-width",
+            font->gray_strong_stem_width);
+    DUMPVAL("hinting-limit",
+            font->hinting_limit);
+    DUMPVAL("hinting-range-max",
+            font->hinting_range_max);
+    DUMPVAL("hinting-range-min",
+            font->hinting_range_min);
+    DUMPVAL("hint-with-components",
+            font->hint_with_components);
+    DUMPVAL("ignore-restrictions",
+            font->ignore_restrictions);
+    DUMPVAL("increase-x-height",
+            font->increase_x_height);
+    DUMPVAL("pre-hinting",
+            font->pre_hinting);
+    DUMPVAL("symbol",
+            font->symbol);
+    DUMPVAL("windows-compatibility",
+            font->windows_compatibility);
 
     fprintf(stderr, "\n");
   }
