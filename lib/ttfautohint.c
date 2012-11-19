@@ -32,6 +32,17 @@
                           (FT_Long)(arg))
 
 
+void
+TA_sfnt_set_properties(SFNT* sfnt,
+                       FONT* font)
+{
+  TA_FaceGlobals  globals = (TA_FaceGlobals)sfnt->face->autohint.data;
+
+
+  globals->increase_x_height = font->increase_x_height;
+}
+
+
 TA_Error
 TTF_autohint(const char* options,
              ...)
@@ -379,9 +390,13 @@ TTF_autohint(const char* options,
     if (error)
       goto Err;
 
+    /* this call creates a `globals' object... */
     error = TA_sfnt_handle_coverage(sfnt, font);
     if (error)
       goto Err;
+
+    /* ... so that we now can initialize its properties */
+    TA_sfnt_set_properties(sfnt, font);
 
     /* check permission */
     if (sfnt->OS2_idx != MISSING)
