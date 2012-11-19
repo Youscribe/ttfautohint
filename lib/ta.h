@@ -243,6 +243,13 @@ void
 TA_get_current_time(FT_ULong* high,
                     FT_ULong* low);
 
+FT_Byte*
+TA_build_push(FT_Byte* bufp,
+              FT_UInt* args,
+              FT_UInt num_args,
+              FT_Bool need_words,
+              FT_Bool optimize);
+
 FT_Error
 TA_font_init(FONT* font);
 void

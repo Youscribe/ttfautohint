@@ -88,6 +88,70 @@ FT_Byte ttfautohint_glyph_bytecode[7] =
 };
 
 
+/*
+ * convert array `args' into a sequence of NPUSHB, NPUSHW, PUSHB_X, and
+ * PUSHW_X instructions to be stored in `bufp' (the latter two instructions
+ * only if `optimize' is not set); if `need_words' is set, NPUSHW and
+ * PUSHW_X gets used
+ */
+
+FT_Byte*
+TA_build_push(FT_Byte* bufp,
+              FT_UInt* args,
+              FT_UInt num_args,
+              FT_Bool need_words,
+              FT_Bool optimize)
+{
+  FT_UInt* arg = args;
+  FT_UInt i, j, nargs;
+
+
+  if (need_words)
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      if (optimize && nargs <= 8)
+        BCI(PUSHW_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHW);
+        BCI(nargs);
+      }
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(HIGH(*arg));
+        BCI(LOW(*arg));
+        arg++;
+      }
+    }
+  }
+  else
+  {
+    for (i = 0; i < num_args; i += 255)
+    {
+      nargs = (num_args - i > 255) ? 255 : num_args - i;
+
+      if (optimize && nargs <= 8)
+        BCI(PUSHB_1 - 1 + nargs);
+      else
+      {
+        BCI(NPUSHB);
+        BCI(nargs);
+      }
+      for (j = 0; j < nargs; j++)
+      {
+        BCI(*arg);
+        arg++;
+      }
+    }
+  }
+
+  return bufp;
+}
+
+
 /* We add a subglyph for each composite glyph. */
 /* Since subglyphs must contain at least one point, */
 /* we have to adjust all point indices accordingly. */
@@ -139,13 +203,11 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   FT_UInt* args;
   FT_UInt* arg;
   FT_UInt num_args;
-  FT_UInt nargs;
   FT_UShort num_segments;
 
   FT_Bool need_words = 0;
 
   FT_Int n;
-  FT_UInt i, j;
   FT_UInt base;
   FT_UShort num_packed_segments;
   FT_UShort num_storage;
@@ -297,50 +359,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
   /* thus we refrain from further optimizing this case */
-
-  arg = args;
-
-  if (need_words)
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      if (optimize && nargs <= 8)
-        BCI(PUSHW_1 - 1 + nargs);
-      else
-      {
-        BCI(NPUSHW);
-        BCI(nargs);
-      }
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(HIGH(*arg));
-        BCI(LOW(*arg));
-        arg++;
-      }
-    }
-  }
-  else
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      if (optimize && nargs <= 8)
-        BCI(PUSHB_1 - 1 + nargs);
-      else
-      {
-        BCI(NPUSHB);
-        BCI(nargs);
-      }
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(*arg);
-        arg++;
-      }
-    }
-  }
+  bufp = TA_build_push(bufp, args, num_args, need_words, optimize);
 
   BCI(CALL);
 
@@ -378,11 +397,9 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   FT_UInt* args;
   FT_UInt* arg;
   FT_UInt num_args;
-  FT_UInt nargs;
 
   FT_Bool need_words = 0;
   FT_Int p, q;
-  FT_UInt i, j;
   FT_Int start, end;
   FT_UShort num_stack_elements;
 
@@ -446,50 +463,7 @@ TA_sfnt_build_glyph_scaler(SFNT* sfnt,
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
   /* thus we refrain from further optimizing this case */
-
-  arg = args;
-
-  if (need_words)
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      if (nargs <= 8)
-        BCI(PUSHW_1 - 1 + nargs);
-      else
-      {
-        BCI(NPUSHW);
-        BCI(nargs);
-      }
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(HIGH(*arg));
-        BCI(LOW(*arg));
-        arg++;
-      }
-    }
-  }
-  else
-  {
-    for (i = 0; i < num_args; i += 255)
-    {
-      nargs = (num_args - i > 255) ? 255 : num_args - i;
-
-      if (nargs <= 8)
-        BCI(PUSHB_1 - 1 + nargs);
-      else
-      {
-        BCI(NPUSHB);
-        BCI(nargs);
-      }
-      for (j = 0; j < nargs; j++)
-      {
-        BCI(*arg);
-        arg++;
-      }
-    }
-  }
+  bufp = TA_build_push(bufp, args, num_args, need_words, 1);
 
   BCI(CALL);
 
