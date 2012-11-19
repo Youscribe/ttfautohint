@@ -292,6 +292,10 @@
 #define MIRP_rp0_keep_round_3           0xFF
 
 
+/* a simple macro to emit bytecode instructions */
+#define BCI(code) *(bufp++) = (code)
+
+
 /* symbolic names for storage area locations */
 
 #define sal_i 0

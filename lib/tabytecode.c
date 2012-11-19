@@ -20,9 +20,6 @@
 #undef MISSING
 #define MISSING (FT_UShort)~0
 
-/* a simple macro to emit bytecode instructions */
-#define BCI(code) *(bufp++) = (code)
-
 /* we increase the stack depth by this amount */
 #define ADDITIONAL_STACK_ELEMENTS 20
 
@@ -296,6 +293,7 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
       *(arg--) = TA_adjust_point_index(recorder, last);
     }
   }
+
   /* with most fonts it is very rare */
   /* that any of the pushed arguments is larger than 0xFF, */
   /* thus we refrain from further optimizing this case */
@@ -307,7 +305,6 @@ TA_sfnt_build_glyph_segments(SFNT* sfnt,
     for (i = 0; i < num_args; i += 255)
     {
       nargs = (num_args - i > 255) ? 255 : num_args - i;
-
 
       if (optimize && nargs <= 8)
         BCI(PUSHW_1 - 1 + nargs);
@@ -1560,7 +1557,7 @@ TA_init_recorder(Recorder* recorder,
 
   recorder->wrap_around_segments =
     (FT_UShort*)malloc(recorder->num_wrap_around_segments
-                     * sizeof (FT_UShort));
+                       * sizeof (FT_UShort));
   if (!recorder->wrap_around_segments)
     return FT_Err_Out_Of_Memory;
 
