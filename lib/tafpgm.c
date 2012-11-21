@@ -867,6 +867,108 @@ unsigned char FPGM(bci_nibbles) [] =
 
 
 /*
+ * bci_number_set_is_element
+ *
+ *   Pop values from stack until it is empty.  If one of them is equal to
+ *   the current PPEM value, set `cvtl_is_element' to 1 (and to 0
+ *   otherwise).
+ *
+ * in: ppem_value_1
+ *     ppem_value_2
+ *     ...
+ *
+ * CVT: cvtl_is_element
+ */
+
+unsigned char FPGM(bci_number_set_is_element) [] =
+{
+
+  PUSHB_1,
+    bci_number_set_is_element,
+  FDEF,
+
+  PUSHB_2,
+    cvtl_is_element,
+    0,
+  WCVTP,
+
+/* start_loop: */
+  MPPEM,
+  EQ,
+  IF,
+    PUSHB_2,
+      cvtl_is_element,
+      1,
+    WCVTP,
+  EIF,
+
+  PUSHB_1,
+    12,
+  NEG,
+  DEPTH,
+  JROT, /* goto start_loop if stack depth != 0 */
+
+  ENDF,
+
+};
+
+
+/*
+ * bci_number_set_is_element2
+ *
+ *   Pop value ranges from stack until it is empty.  If one of them contains
+ *   the current PPEM value, set `cvtl_is_element' to 1 (and to 0
+ *   otherwise).
+ *
+ * in: ppem_range_1_start
+ *     ppem_range_1_end
+ *     ppem_range_2_start
+ *     ppem_range_2_end
+ *     ...
+ *
+ * CVT: cvtl_is_element
+ */
+
+unsigned char FPGM(bci_number_set_is_element2) [] =
+{
+
+  PUSHB_1,
+    bci_number_set_is_element2,
+  FDEF,
+
+  PUSHB_2,
+    cvtl_is_element,
+    0,
+  WCVTP,
+
+/* start_loop: */
+  MPPEM,
+  LTEQ,
+  IF,
+    MPPEM,
+    GTEQ,
+    IF,
+      PUSHB_2,
+        cvtl_is_element,
+        1,
+      WCVTP,
+    EIF,
+  ELSE,
+    POP,
+  EIF,
+
+  PUSHB_1,
+    18,
+  NEG,
+  DEPTH,
+  JROT, /* goto start_loop if stack depth != 0 */
+
+  ENDF,
+
+};
+
+
+/*
  * bci_create_segment
  *
  *   Store start and end point of a segment in the storage area,
@@ -4857,6 +4959,10 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_decrement_component_counter))
             + sizeof (FPGM(bci_get_point_extrema))
             + sizeof (FPGM(bci_nibbles))
+            + (font->x_height_snapping_exceptions
+                ? (sizeof (FPGM(bci_number_set_is_element))
+                   + sizeof (FPGM(bci_number_set_is_element2)))
+                : 0)
 
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
@@ -4995,6 +5101,11 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_decrement_component_counter);
   COPY_FPGM(bci_get_point_extrema);
   COPY_FPGM(bci_nibbles);
+  if (font->x_height_snapping_exceptions)
+  {
+    COPY_FPGM(bci_number_set_is_element);
+    COPY_FPGM(bci_number_set_is_element2);
+  }
 
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
