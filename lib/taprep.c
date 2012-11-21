@@ -384,6 +384,142 @@ unsigned char PREP(reset_component_counter) [] =
 };
 
 
+/* this function allocates `buf', parsing `number_set' to create bytecode */
+/* which eventually sets CVT index `cvtl_is_element' */
+/* (in functions `bci_number_set_is_element' and */
+/* `bci_number_set_is_element2') */
+
+static FT_Byte*
+build_number_set(FT_Byte** buf,
+                 number_range* number_set)
+{
+  FT_Byte* bufp = NULL;
+  number_range* nr;
+
+  FT_UInt num_singles2 = 0;
+  FT_UInt* single2_args;
+  FT_UInt* single2_arg;
+  FT_UInt num_singles = 0;
+  FT_UInt* single_args;
+  FT_UInt* single_arg;
+
+  FT_UInt num_ranges2 = 0;
+  FT_UInt* range2_args;
+  FT_UInt* range2_arg;
+  FT_UInt num_ranges = 0;
+  FT_UInt* range_args;
+  FT_UInt* range_arg;
+
+  FT_UInt have_single = 0;
+  FT_UInt have_range = 0;
+
+
+  /* build up four stacks to stay as compact as possible */
+  nr = number_set;
+  while (nr)
+  {
+    if (nr->start == nr->end)
+    {
+      if (nr->start < 256)
+        num_singles++;
+      else
+        num_singles2++;
+    }
+    else
+    {
+      if (nr->start < 256 && nr->end < 256)
+        num_ranges++;
+      else
+        num_ranges2++;
+    }
+    nr = nr->next;
+  }
+
+  /* collect all arguments temporarily in arrays (in reverse order) */
+  /* so that we can easily split into chunks of 255 args */
+  /* as needed by NPUSHB and friends; */
+  /* for simplicity, always allocate an extra slot */
+  single2_args = (FT_UInt*)malloc(num_singles2 * sizeof (FT_UInt) + 1);
+  single_args = (FT_UInt*)malloc(num_singles * sizeof (FT_UInt) + 1);
+  range2_args = (FT_UInt*)malloc(2 * num_ranges2 * sizeof (FT_UInt) + 1);
+  range_args = (FT_UInt*)malloc(2 * num_ranges * sizeof (FT_UInt) + 1);
+  if (!single2_args || !single_args
+      || !range2_args || !range_args)
+    goto Fail;
+
+  /* check whether we need the extra slot for the argument to CALL */
+  if (num_singles || num_singles2)
+    have_single = 1;
+  if (num_ranges || num_ranges2)
+    have_range = 1;
+
+  /* set function indices outside of argument loop (using the extra slot) */
+  if (have_single)
+    single_args[num_singles] = bci_number_set_is_element;
+  if (have_range)
+    range_args[num_singles] = bci_number_set_is_element2;
+
+  single2_arg = single2_args + num_singles2 - 1;
+  single_arg = single_args + num_singles - 1;
+  range2_arg = range2_args + num_ranges2 - 1;
+  range_arg = range_args + num_ranges - 1;
+
+  nr = number_set;
+  while (nr)
+  {
+    if (nr->start == nr->end)
+    {
+      if (nr->start < 256)
+        *(single_arg--) = nr->start;
+      else
+        *(single2_arg--) = nr->start;
+    }
+    else
+    {
+      if (nr->start < 256 && nr->end < 256)
+      {
+        *(range_arg--) = nr->start;
+        *(range_arg--) = nr->end;
+      }
+      else
+      {
+        *(range2_arg--) = nr->start;
+        *(range2_arg--) = nr->end;
+      }
+    }
+    nr = nr->next;
+  }
+
+  /* this rough estimate of the buffer size gets adjusted later on */
+  *buf = (FT_Byte*)malloc((2 + 1) * num_singles2
+                          + (1 + 1) * num_singles
+                          + (4 + 1) * num_ranges2
+                          + (2 + 1) * num_ranges
+                          + 2);
+  if (!*buf)
+    goto Fail;
+  bufp = *buf;
+
+  bufp = TA_build_push(bufp, single2_args, num_singles2, 1, 1);
+  bufp = TA_build_push(bufp, single_args, num_singles + have_single, 0, 1);
+  if (have_single)
+    BCI(CALL);
+
+  bufp = TA_build_push(bufp, range2_args, num_ranges2, 1, 1);
+  bufp = TA_build_push(bufp, range_args, num_ranges + have_range, 0, 1);
+  if (have_range)
+    BCI(CALL);
+
+Fail:
+  free(single2_args);
+  free(single_args);
+  free(range2_args);
+  free(range_args);
+
+  return bufp;
+}
+
+
 #define COPY_PREP(snippet_name) \
           do \
           { \
