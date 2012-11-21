@@ -390,8 +390,9 @@ unsigned char PREP(reset_component_counter) [] =
 /* `bci_number_set_is_element2') */
 
 static FT_Byte*
-build_number_set(FT_Byte** buf,
-                 number_range* number_set)
+TA_sfnt_build_number_set(SFNT* sfnt,
+                         FT_Byte** buf,
+                         number_range* number_set)
 {
   FT_Byte* bufp = NULL;
   number_range* nr;
@@ -412,6 +413,8 @@ build_number_set(FT_Byte** buf,
 
   FT_UInt have_single = 0;
   FT_UInt have_range = 0;
+
+  FT_UShort num_stack_elements;
 
 
   /* build up four stacks to stay as compact as possible */
@@ -509,6 +512,13 @@ build_number_set(FT_Byte** buf,
   bufp = TA_build_push(bufp, range_args, num_ranges + have_range, 0, 1);
   if (have_range)
     BCI(CALL);
+
+  num_stack_elements = num_singles + num_singles2;
+  if (num_stack_elements > num_ranges + num_ranges2)
+    num_stack_elements = num_ranges + num_ranges2;
+  num_stack_elements += ADDITIONAL_STACK_ELEMENTS;
+  if (num_stack_elements > sfnt->max_stack_elements)
+    sfnt->max_stack_elements = num_stack_elements;
 
 Fail:
   free(single2_args);

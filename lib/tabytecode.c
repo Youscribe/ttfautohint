@@ -20,9 +20,6 @@
 #undef MISSING
 #define MISSING (FT_UShort)~0
 
-/* we increase the stack depth by this amount */
-#define ADDITIONAL_STACK_ELEMENTS 20
-
 
 #define DEBUGGING
 

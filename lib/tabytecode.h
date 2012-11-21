@@ -295,6 +295,9 @@
 /* a simple macro to emit bytecode instructions */
 #define BCI(code) *(bufp++) = (code)
 
+/* we increase the stack depth by this amount */
+#define ADDITIONAL_STACK_ELEMENTS 20
+
 
 /* symbolic names for storage area locations */
 
