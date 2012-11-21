@@ -4941,6 +4941,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   FT_Byte* buf_p;
 
 
+  /* for compatibility with dumb bytecode interpreters or analyzers, */
+  /* FDEFs are stored in ascending index order, without holes -- */
+  /* note that some FDEFs are not always needed */
+  /* (depending on options of `TTFautohint'), */
+  /* but implementing dynamic FDEF indices would be a lot of work */
+
   buf_len = sizeof (FPGM(bci_round))
             + sizeof (FPGM(bci_smooth_stem_width_a))
             + 1
@@ -4959,13 +4965,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_decrement_component_counter))
             + sizeof (FPGM(bci_get_point_extrema))
             + sizeof (FPGM(bci_nibbles))
-            + (font->x_height_snapping_exceptions
-                ? (sizeof (FPGM(bci_number_set_is_element))
-                   + sizeof (FPGM(bci_number_set_is_element2)))
-                : 0)
+            + sizeof (FPGM(bci_number_set_is_element))
+            + sizeof (FPGM(bci_number_set_is_element2))
 
             + sizeof (FPGM(bci_create_segment))
             + sizeof (FPGM(bci_create_segments))
+
             + sizeof (FPGM(bci_create_segments_0))
             + sizeof (FPGM(bci_create_segments_1))
             + sizeof (FPGM(bci_create_segments_2))
@@ -4976,7 +4981,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_create_segments_7))
             + sizeof (FPGM(bci_create_segments_8))
             + sizeof (FPGM(bci_create_segments_9))
+
             + sizeof (FPGM(bci_create_segments_composite))
+
             + sizeof (FPGM(bci_create_segments_composite_0))
             + sizeof (FPGM(bci_create_segments_composite_1))
             + sizeof (FPGM(bci_create_segments_composite_2))
@@ -4987,6 +4994,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_create_segments_composite_7))
             + sizeof (FPGM(bci_create_segments_composite_8))
             + sizeof (FPGM(bci_create_segments_composite_9))
+
             + sizeof (FPGM(bci_align_segment))
             + sizeof (FPGM(bci_align_segments))
 
@@ -5012,55 +5020,64 @@ TA_table_build_fpgm(FT_Byte** fpgm,
             + sizeof (FPGM(bci_upper_bound))
             + sizeof (FPGM(bci_upper_lower_bound))
 
+            + sizeof (FPGM(bci_adjust_bound))
+            + sizeof (FPGM(bci_stem_bound))
+            + sizeof (FPGM(bci_link))
+            + sizeof (FPGM(bci_anchor))
+            + sizeof (FPGM(bci_adjust))
+            + sizeof (FPGM(bci_stem))
+
             + sizeof (FPGM(bci_action_ip_before))
             + sizeof (FPGM(bci_action_ip_after))
             + sizeof (FPGM(bci_action_ip_on))
             + sizeof (FPGM(bci_action_ip_between))
 
-            + sizeof (FPGM(bci_adjust_bound))
-            + sizeof (FPGM(bci_action_adjust_bound))
-            + sizeof (FPGM(bci_action_adjust_bound_serif))
-            + sizeof (FPGM(bci_action_adjust_bound_round))
-            + sizeof (FPGM(bci_action_adjust_bound_round_serif))
-            + sizeof (FPGM(bci_stem_bound))
-            + sizeof (FPGM(bci_action_stem_bound))
-            + sizeof (FPGM(bci_action_stem_bound_serif))
-            + sizeof (FPGM(bci_action_stem_bound_round))
-            + sizeof (FPGM(bci_action_stem_bound_round_serif))
-            + sizeof (FPGM(bci_link))
-            + sizeof (FPGM(bci_action_link))
-            + sizeof (FPGM(bci_action_link_serif))
-            + sizeof (FPGM(bci_action_link_round))
-            + sizeof (FPGM(bci_action_link_round_serif))
-            + sizeof (FPGM(bci_anchor))
+            + sizeof (FPGM(bci_action_blue))
+            + sizeof (FPGM(bci_action_blue_anchor))
+
             + sizeof (FPGM(bci_action_anchor))
             + sizeof (FPGM(bci_action_anchor_serif))
             + sizeof (FPGM(bci_action_anchor_round))
             + sizeof (FPGM(bci_action_anchor_round_serif))
-            + sizeof (FPGM(bci_action_blue_anchor))
-            + sizeof (FPGM(bci_adjust))
+
             + sizeof (FPGM(bci_action_adjust))
             + sizeof (FPGM(bci_action_adjust_serif))
             + sizeof (FPGM(bci_action_adjust_round))
             + sizeof (FPGM(bci_action_adjust_round_serif))
-            + sizeof (FPGM(bci_stem))
+            + sizeof (FPGM(bci_action_adjust_bound))
+            + sizeof (FPGM(bci_action_adjust_bound_serif))
+            + sizeof (FPGM(bci_action_adjust_bound_round))
+            + sizeof (FPGM(bci_action_adjust_bound_round_serif))
+
+            + sizeof (FPGM(bci_action_link))
+            + sizeof (FPGM(bci_action_link_serif))
+            + sizeof (FPGM(bci_action_link_round))
+            + sizeof (FPGM(bci_action_link_round_serif))
+
             + sizeof (FPGM(bci_action_stem))
             + sizeof (FPGM(bci_action_stem_serif))
             + sizeof (FPGM(bci_action_stem_round))
             + sizeof (FPGM(bci_action_stem_round_serif))
-            + sizeof (FPGM(bci_action_blue))
+            + sizeof (FPGM(bci_action_stem_bound))
+            + sizeof (FPGM(bci_action_stem_bound_serif))
+            + sizeof (FPGM(bci_action_stem_bound_round))
+            + sizeof (FPGM(bci_action_stem_bound_round_serif))
+
             + sizeof (FPGM(bci_action_serif))
             + sizeof (FPGM(bci_action_serif_lower_bound))
             + sizeof (FPGM(bci_action_serif_upper_bound))
             + sizeof (FPGM(bci_action_serif_upper_lower_bound))
+
             + sizeof (FPGM(bci_action_serif_anchor))
             + sizeof (FPGM(bci_action_serif_anchor_lower_bound))
             + sizeof (FPGM(bci_action_serif_anchor_upper_bound))
             + sizeof (FPGM(bci_action_serif_anchor_upper_lower_bound))
+
             + sizeof (FPGM(bci_action_serif_link1))
             + sizeof (FPGM(bci_action_serif_link1_lower_bound))
             + sizeof (FPGM(bci_action_serif_link1_upper_bound))
             + sizeof (FPGM(bci_action_serif_link1_upper_lower_bound))
+
             + sizeof (FPGM(bci_action_serif_link2))
             + sizeof (FPGM(bci_action_serif_link2_lower_bound))
             + sizeof (FPGM(bci_action_serif_link2_upper_bound))
@@ -5101,14 +5118,12 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_decrement_component_counter);
   COPY_FPGM(bci_get_point_extrema);
   COPY_FPGM(bci_nibbles);
-  if (font->x_height_snapping_exceptions)
-  {
-    COPY_FPGM(bci_number_set_is_element);
-    COPY_FPGM(bci_number_set_is_element2);
-  }
+  COPY_FPGM(bci_number_set_is_element);
+  COPY_FPGM(bci_number_set_is_element2);
 
   COPY_FPGM(bci_create_segment);
   COPY_FPGM(bci_create_segments);
+
   COPY_FPGM(bci_create_segments_0);
   COPY_FPGM(bci_create_segments_1);
   COPY_FPGM(bci_create_segments_2);
@@ -5119,7 +5134,9 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_create_segments_7);
   COPY_FPGM(bci_create_segments_8);
   COPY_FPGM(bci_create_segments_9);
+
   COPY_FPGM(bci_create_segments_composite);
+
   COPY_FPGM(bci_create_segments_composite_0);
   COPY_FPGM(bci_create_segments_composite_1);
   COPY_FPGM(bci_create_segments_composite_2);
@@ -5130,6 +5147,7 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_create_segments_composite_7);
   COPY_FPGM(bci_create_segments_composite_8);
   COPY_FPGM(bci_create_segments_composite_9);
+
   COPY_FPGM(bci_align_segment);
   COPY_FPGM(bci_align_segments);
 
@@ -5155,55 +5173,64 @@ TA_table_build_fpgm(FT_Byte** fpgm,
   COPY_FPGM(bci_upper_bound);
   COPY_FPGM(bci_upper_lower_bound);
 
+  COPY_FPGM(bci_adjust_bound);
+  COPY_FPGM(bci_stem_bound);
+  COPY_FPGM(bci_link);
+  COPY_FPGM(bci_anchor);
+  COPY_FPGM(bci_adjust);
+  COPY_FPGM(bci_stem);
+
   COPY_FPGM(bci_action_ip_before);
   COPY_FPGM(bci_action_ip_after);
   COPY_FPGM(bci_action_ip_on);
   COPY_FPGM(bci_action_ip_between);
 
-  COPY_FPGM(bci_adjust_bound);
-  COPY_FPGM(bci_action_adjust_bound);
-  COPY_FPGM(bci_action_adjust_bound_serif);
-  COPY_FPGM(bci_action_adjust_bound_round);
-  COPY_FPGM(bci_action_adjust_bound_round_serif);
-  COPY_FPGM(bci_stem_bound);
-  COPY_FPGM(bci_action_stem_bound);
-  COPY_FPGM(bci_action_stem_bound_serif);
-  COPY_FPGM(bci_action_stem_bound_round);
-  COPY_FPGM(bci_action_stem_bound_round_serif);
-  COPY_FPGM(bci_link);
-  COPY_FPGM(bci_action_link);
-  COPY_FPGM(bci_action_link_serif);
-  COPY_FPGM(bci_action_link_round);
-  COPY_FPGM(bci_action_link_round_serif);
-  COPY_FPGM(bci_anchor);
+  COPY_FPGM(bci_action_blue);
+  COPY_FPGM(bci_action_blue_anchor);
+
   COPY_FPGM(bci_action_anchor);
   COPY_FPGM(bci_action_anchor_serif);
   COPY_FPGM(bci_action_anchor_round);
   COPY_FPGM(bci_action_anchor_round_serif);
-  COPY_FPGM(bci_action_blue_anchor);
-  COPY_FPGM(bci_adjust);
+
   COPY_FPGM(bci_action_adjust);
   COPY_FPGM(bci_action_adjust_serif);
   COPY_FPGM(bci_action_adjust_round);
   COPY_FPGM(bci_action_adjust_round_serif);
-  COPY_FPGM(bci_stem);
+  COPY_FPGM(bci_action_adjust_bound);
+  COPY_FPGM(bci_action_adjust_bound_serif);
+  COPY_FPGM(bci_action_adjust_bound_round);
+  COPY_FPGM(bci_action_adjust_bound_round_serif);
+
+  COPY_FPGM(bci_action_link);
+  COPY_FPGM(bci_action_link_serif);
+  COPY_FPGM(bci_action_link_round);
+  COPY_FPGM(bci_action_link_round_serif);
+
   COPY_FPGM(bci_action_stem);
   COPY_FPGM(bci_action_stem_serif);
   COPY_FPGM(bci_action_stem_round);
   COPY_FPGM(bci_action_stem_round_serif);
-  COPY_FPGM(bci_action_blue);
+  COPY_FPGM(bci_action_stem_bound);
+  COPY_FPGM(bci_action_stem_bound_serif);
+  COPY_FPGM(bci_action_stem_bound_round);
+  COPY_FPGM(bci_action_stem_bound_round_serif);
+
   COPY_FPGM(bci_action_serif);
   COPY_FPGM(bci_action_serif_lower_bound);
   COPY_FPGM(bci_action_serif_upper_bound);
   COPY_FPGM(bci_action_serif_upper_lower_bound);
+
   COPY_FPGM(bci_action_serif_anchor);
   COPY_FPGM(bci_action_serif_anchor_lower_bound);
   COPY_FPGM(bci_action_serif_anchor_upper_bound);
   COPY_FPGM(bci_action_serif_anchor_upper_lower_bound);
+
   COPY_FPGM(bci_action_serif_link1);
   COPY_FPGM(bci_action_serif_link1_lower_bound);
   COPY_FPGM(bci_action_serif_link1_upper_bound);
   COPY_FPGM(bci_action_serif_link1_upper_lower_bound);
+
   COPY_FPGM(bci_action_serif_link2);
   COPY_FPGM(bci_action_serif_link2_lower_bound);
   COPY_FPGM(bci_action_serif_link2_upper_bound);
