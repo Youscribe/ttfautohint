@@ -460,10 +460,10 @@ TA_sfnt_build_number_set(SFNT* sfnt,
   /* so that we can easily split into chunks of 255 args */
   /* as needed by NPUSHB and friends; */
   /* for simplicity, always allocate an extra slot */
-  single2_args = (FT_UInt*)malloc(num_singles2 * sizeof (FT_UInt) + 1);
-  single_args = (FT_UInt*)malloc(num_singles * sizeof (FT_UInt) + 1);
-  range2_args = (FT_UInt*)malloc(2 * num_ranges2 * sizeof (FT_UInt) + 1);
-  range_args = (FT_UInt*)malloc(2 * num_ranges * sizeof (FT_UInt) + 1);
+  single2_args = (FT_UInt*)malloc((num_singles2 + 1) * sizeof (FT_UInt));
+  single_args = (FT_UInt*)malloc((num_singles + 1) * sizeof (FT_UInt));
+  range2_args = (FT_UInt*)malloc((2 * num_ranges2 + 1) * sizeof (FT_UInt));
+  range_args = (FT_UInt*)malloc((2 * num_ranges + 1) * sizeof (FT_UInt));
   if (!single2_args || !single_args
       || !range2_args || !range_args)
     goto Fail;
@@ -478,12 +478,12 @@ TA_sfnt_build_number_set(SFNT* sfnt,
   if (have_single)
     single_args[num_singles] = bci_number_set_is_element;
   if (have_range)
-    range_args[num_singles] = bci_number_set_is_element2;
+    range_args[2 * num_ranges] = bci_number_set_is_element2;
 
   single2_arg = single2_args + num_singles2 - 1;
   single_arg = single_args + num_singles - 1;
-  range2_arg = range2_args + num_ranges2 - 1;
-  range_arg = range_args + num_ranges - 1;
+  range2_arg = range2_args + 2 * num_ranges2 - 1;
+  range_arg = range_args + 2 * num_ranges - 1;
 
   nr = number_set;
   while (nr)
@@ -526,8 +526,8 @@ TA_sfnt_build_number_set(SFNT* sfnt,
   if (have_single)
     BCI(CALL);
 
-  bufp = TA_build_push(bufp, range2_args, num_ranges2, 1, 1);
-  bufp = TA_build_push(bufp, range_args, num_ranges + have_range, 0, 1);
+  bufp = TA_build_push(bufp, range2_args, 2 * num_ranges2, 1, 1);
+  bufp = TA_build_push(bufp, range_args, 2 * num_ranges + have_range, 0, 1);
   if (have_range)
     BCI(CALL);
 
