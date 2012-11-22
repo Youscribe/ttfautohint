@@ -41,7 +41,8 @@ DOC = ttfautohint.html \
       ttfautohint.pdf \
       ttfautohint.txt \
       $(DOCIMGPNG) \
-      $(DOCIMGSVG)
+      $(DOCIMGSVG) \
+      $(DOCIMGPDF)
 
 EXTRA_DIST = c2pandoc.sed \
              handle-images.hs \
