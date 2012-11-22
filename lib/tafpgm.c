@@ -2254,11 +2254,18 @@ unsigned char FPGM(bci_ip_between_align_points) [] =
   PUSHB_1,
     2,
   CINDEX, /* s: ... before after before after */
-  MD_cur, /* b = after_pos - before_pos */
+  MD_cur, /* a = after_pos - before_pos */
   ROLL,
   ROLL,
-  MD_orig_ZP2_0, /* a = after_orig_pos - before_orig_pos */
-  DIV, /* s: a/b */
+  MD_orig_ZP2_0, /* b = after_orig_pos - before_orig_pos */
+
+  DUP,
+  IF, /* b != 0 ? */
+    DIV, /* s: a/b */
+  ELSE,
+    POP, /* avoid division by zero */
+  EIF,
+
   PUSHB_1,
     sal_j,
   SWAP,
@@ -4457,7 +4464,13 @@ unsigned char FPGM(bci_serif_link1_common) [] =
     RCVT,
     MUL, /* (b-c) in 16.16 format */
     SWAP,
-    DIV, /* s: [...] after edge before a a (b-c)/c */
+
+    DUP,
+    IF, /* c != 0 ? */
+      DIV, /* s: [...] after edge before a a (b-c)/c */
+    ELSE,
+      POP, /* avoid division by zero */
+    EIF,
 
     MUL, /* a * (b-c)/c * 2^10 */
     PUSHB_1,
