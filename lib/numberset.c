@@ -177,9 +177,9 @@ number_set_parse(const char* s,
         new_range->next = cur;
         cur = new_range;
       }
-
-      last_end = m;
     }
+
+    last_end = m;
   } /* end of loop */
 
   if (error_code)
