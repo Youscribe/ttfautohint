@@ -516,10 +516,15 @@ TA_sfnt_build_number_set(SFNT* sfnt,
                           + (1 + 1) * num_singles
                           + (4 + 1) * num_ranges2
                           + (2 + 1) * num_ranges
-                          + 2);
+                          + 10);
   if (!*buf)
     goto Fail;
   bufp = *buf;
+
+  BCI(PUSHB_2);
+    BCI(cvtl_is_element);
+    BCI(0);
+  BCI(WCVTP);
 
   bufp = TA_build_push(bufp, single2_args, num_singles2, 1, 1);
   bufp = TA_build_push(bufp, single_args, num_singles + have_single, 0, 1);

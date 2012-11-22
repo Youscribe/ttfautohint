@@ -887,11 +887,6 @@ unsigned char FPGM(bci_number_set_is_element) [] =
     bci_number_set_is_element,
   FDEF,
 
-  PUSHB_2,
-    cvtl_is_element,
-    0,
-  WCVTP,
-
 /* start_loop: */
   MPPEM,
   EQ,
@@ -902,10 +897,11 @@ unsigned char FPGM(bci_number_set_is_element) [] =
     WCVTP,
   EIF,
 
-  PUSHB_1,
-    12,
-  NEG,
   DEPTH,
+  PUSHB_1,
+    13,
+  NEG,
+  SWAP,
   JROT, /* goto start_loop if stack depth != 0 */
 
   ENDF,
@@ -936,11 +932,6 @@ unsigned char FPGM(bci_number_set_is_element2) [] =
     bci_number_set_is_element2,
   FDEF,
 
-  PUSHB_2,
-    cvtl_is_element,
-    0,
-  WCVTP,
-
 /* start_loop: */
   MPPEM,
   LTEQ,
@@ -957,10 +948,11 @@ unsigned char FPGM(bci_number_set_is_element2) [] =
     POP,
   EIF,
 
-  PUSHB_1,
-    18,
-  NEG,
   DEPTH,
+  PUSHB_1,
+    19,
+  NEG,
+  SWAP,
   JROT, /* goto start_loop if stack depth != 0 */
 
   ENDF,
