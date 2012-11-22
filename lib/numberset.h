@@ -76,6 +76,7 @@ typedef struct number_range_
  *   NUMBERSET_OVERFLOW            numerical overflow
  *   NUMBERSET_INVALID_RANGE       invalid range, exceeding `min' or `max'
  *   NUMBERSET_OVERLAPPING_RANGES  overlapping ranges
+ *   NUMBERSET_NOT_ASCENDING       not ascending ranges or values
  *   NUMBERSET_ALLOCATION_ERROR    allocation error
  *
  * Note that a negative value for `min' is replaced with zero, and a
@@ -86,7 +87,8 @@ typedef struct number_range_
 #define NUMBERSET_OVERFLOW (number_range*)-2
 #define NUMBERSET_INVALID_RANGE (number_range*)-3
 #define NUMBERSET_OVERLAPPING_RANGES (number_range*)-4
-#define NUMBERSET_ALLOCATION_ERROR (number_range*)-5
+#define NUMBERSET_NOT_ASCENDING (number_range*)-5
+#define NUMBERSET_ALLOCATION_ERROR (number_range*)-6
 
 const char*
 number_set_parse(const char* s,

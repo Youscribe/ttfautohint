@@ -150,7 +150,10 @@ number_set_parse(const char* s,
 
     if (last_end >= n)
     {
-      error_code = NUMBERSET_OVERLAPPING_RANGES;
+      if (last_end >= m)
+        error_code = NUMBERSET_NOT_ASCENDING;
+      else
+        error_code = NUMBERSET_OVERLAPPING_RANGES;
       break;
     }
 
