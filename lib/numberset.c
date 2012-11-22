@@ -19,7 +19,7 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include "numberset.h"
+#include <numberset.h>
 
 
 const char*
@@ -87,6 +87,9 @@ number_set_parse(const char* s,
         s++;
       } while (isdigit(*s));
 
+      if (error_code)
+        break;
+
       while (isspace(*s))
         s++;
     }
@@ -121,6 +124,9 @@ number_set_parse(const char* s,
           m = m * 10 + digit;
           s++;
         } while (isdigit(*s));
+
+        if (error_code)
+          break;
       }
     }
     else
