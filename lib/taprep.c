@@ -73,6 +73,17 @@ unsigned char PREP(store_0x10000) [] =
 
 };
 
+unsigned char PREP(test_exception_a) [] =
+{
+
+  PUSHB_1,
+    cvtl_is_element,
+  RCVT,
+  NOT,
+  IF,
+
+};
+
 unsigned char PREP(align_top_a) [] =
 {
 
@@ -211,6 +222,13 @@ unsigned char PREP(loop_cvt_d) [] =
       bci_cvt_rescale,
       bci_loop,
     CALL,
+  EIF,
+
+};
+
+unsigned char PREP(test_exception_b) [] =
+{
+
   EIF,
 
 };
@@ -541,16 +559,20 @@ Fail:
 static FT_Error
 TA_table_build_prep(FT_Byte** prep,
                     FT_ULong* prep_len,
+                    SFNT* sfnt,
                     FONT* font)
 {
   TA_LatinAxis vaxis;
   TA_LatinBlue blue_adjustment = NULL;
   FT_UInt i;
 
-  FT_UInt buf_len = 0;
+  FT_Byte* buf = NULL;
+  FT_Byte* buf_new;
+  FT_UInt buf_len;
+  FT_UInt buf_new_len;
+
   FT_UInt len;
-  FT_Byte* buf;
-  FT_Byte* buf_p;
+  FT_Byte* buf_p = NULL;
 
 
   if (font->loader->hints.metrics->clazz->script == TA_SCRIPT_NONE)
@@ -569,62 +591,85 @@ TA_table_build_prep(FT_Byte** prep,
     }
   }
 
-  if (font->hinting_limit)
-    buf_len += sizeof (PREP(hinting_limit_a))
-               + 2
-               + sizeof (PREP(hinting_limit_b));
+  if (blue_adjustment && font->x_height_snapping_exceptions)
+  {
+    buf_p = TA_sfnt_build_number_set(sfnt, &buf,
+                                     font->x_height_snapping_exceptions);
+    if (!buf_p)
+      return FT_Err_Out_Of_Memory;
+  }
 
-  buf_len += sizeof (PREP(store_0x10000));
+  buf_len = buf_p - buf;
+  buf_new_len = buf_len;
+
+  if (font->hinting_limit)
+    buf_new_len += sizeof (PREP(hinting_limit_a))
+                   + 2
+                   + sizeof (PREP(hinting_limit_b));
+
+  buf_new_len += sizeof (PREP(store_0x10000));
 
   if (blue_adjustment)
-    buf_len += sizeof (PREP(align_top_a))
-               + 1
-               + sizeof (PREP(align_top_b))
-               + (font->increase_x_height ? (sizeof (PREP(align_top_c1a))
-                                             + 2
-                                             + sizeof (PREP(align_top_c1b)))
-                                          : sizeof (PREP(align_top_c2)))
-               + sizeof (PREP(align_top_d))
-               + sizeof (PREP(loop_cvt_a))
-               + 2
-               + sizeof (PREP(loop_cvt_b))
-               + 2
-               + sizeof (PREP(loop_cvt_c))
-               + 2
-               + sizeof (PREP(loop_cvt_d));
+  {
+    if (font->x_height_snapping_exceptions)
+      buf_new_len += sizeof (PREP(test_exception_a));
+    buf_new_len += sizeof (PREP(align_top_a))
+                   + 1
+                   + sizeof (PREP(align_top_b))
+                   + (font->increase_x_height
+                       ? (sizeof (PREP(align_top_c1a))
+                          + 2
+                          + sizeof (PREP(align_top_c1b)))
+                       : sizeof (PREP(align_top_c2)))
+                   + sizeof (PREP(align_top_d))
+                   + sizeof (PREP(loop_cvt_a))
+                   + 2
+                   + sizeof (PREP(loop_cvt_b))
+                   + 2
+                   + sizeof (PREP(loop_cvt_c))
+                   + 2
+                   + sizeof (PREP(loop_cvt_d));
+    if (font->x_height_snapping_exceptions)
+      buf_new_len += sizeof (PREP(test_exception_b));
+  }
 
-  buf_len += sizeof (PREP(compute_extra_light_a))
-             + 1
-             + sizeof (PREP(compute_extra_light_b));
+  buf_new_len += sizeof (PREP(compute_extra_light_a))
+                 + 1
+                 + sizeof (PREP(compute_extra_light_b));
 
   if (CVT_BLUES_SIZE(font))
-    buf_len += sizeof (PREP(round_blues_a))
-               + 2
-               + sizeof (PREP(round_blues_b));
+    buf_new_len += sizeof (PREP(round_blues_a))
+                   + 2
+                   + sizeof (PREP(round_blues_b));
 
-  buf_len += sizeof (PREP(set_stem_width_handling_a))
-             + 1
-             + sizeof (PREP(set_stem_width_handling_b))
-             + 1
-             + sizeof (PREP(set_stem_width_handling_c))
-             + 1
-             + sizeof (PREP(set_stem_width_handling_d));
-  buf_len += sizeof (PREP(set_dropout_mode));
-  buf_len += sizeof (PREP(reset_component_counter));
+  buf_new_len += sizeof (PREP(set_stem_width_handling_a))
+                 + 1
+                 + sizeof (PREP(set_stem_width_handling_b))
+                 + 1
+                 + sizeof (PREP(set_stem_width_handling_c))
+                 + 1
+                 + sizeof (PREP(set_stem_width_handling_d));
+  buf_new_len += sizeof (PREP(set_dropout_mode));
+  buf_new_len += sizeof (PREP(reset_component_counter));
 
   /* buffer length must be a multiple of four */
-  len = (buf_len + 3) & ~3;
-  buf = (FT_Byte*)malloc(len);
-  if (!buf)
+  len = (buf_new_len + 3) & ~3;
+  buf_new = (FT_Byte*)realloc(buf, len);
+  if (!buf_new)
+  {
+    free(buf);
     return FT_Err_Out_Of_Memory;
+  }
+  buf = buf_new;
 
   /* pad end of buffer with zeros */
   buf[len - 1] = 0x00;
   buf[len - 2] = 0x00;
   buf[len - 3] = 0x00;
 
-  /* copy cvt program into buffer and fill in the missing variables */
-  buf_p = buf;
+  /* copy remaining cvt program into buffer */
+  /* and fill in the missing variables */
+  buf_p = buf + buf_len;
 
   if (font->hinting_limit)
   {
@@ -638,6 +683,9 @@ TA_table_build_prep(FT_Byte** prep,
 
   if (blue_adjustment)
   {
+    if (font->x_height_snapping_exceptions)
+      COPY_PREP(test_exception_a);
+
     COPY_PREP(align_top_a);
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + blue_adjustment - vaxis->blues);
@@ -667,6 +715,9 @@ TA_table_build_prep(FT_Byte** prep,
     *(buf_p++) = (unsigned char)(CVT_BLUE_SHOOTS_OFFSET(font)
                                  + CVT_BLUES_SIZE(font) - 1 - 2);
     COPY_PREP(loop_cvt_d);
+
+    if (font->x_height_snapping_exceptions)
+      COPY_PREP(test_exception_b);
   }
 
   COPY_PREP(compute_extra_light_a);
@@ -696,7 +747,7 @@ TA_table_build_prep(FT_Byte** prep,
   COPY_PREP(reset_component_counter);
 
   *prep = buf;
-  *prep_len = buf_len;
+  *prep_len = buf_new_len;
 
   return FT_Err_Ok;
 }
@@ -726,7 +777,7 @@ TA_sfnt_build_prep_table(SFNT* sfnt,
     goto Exit;
   }
 
-  error = TA_table_build_prep(&prep_buf, &prep_len, font);
+  error = TA_table_build_prep(&prep_buf, &prep_len, sfnt, font);
   if (error)
     goto Exit;
 
