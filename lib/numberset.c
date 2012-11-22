@@ -33,6 +33,7 @@ number_set_parse(const char* s,
   number_range* tmp;
 
   const char* last_pos = s;
+  int last_start = -1;
   int last_end = -1;
   int t;
   number_range* error_code = NULL;
@@ -150,7 +151,7 @@ number_set_parse(const char* s,
 
     if (last_end >= n)
     {
-      if (last_end >= m)
+      if (last_start >= m)
         error_code = NUMBERSET_NOT_ASCENDING;
       else
         error_code = NUMBERSET_OVERLAPPING_RANGES;
@@ -182,6 +183,7 @@ number_set_parse(const char* s,
       }
     }
 
+    last_start = n;
     last_end = m;
   } /* end of loop */
 
