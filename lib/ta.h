@@ -29,6 +29,7 @@
 #include "talatin.h"
 
 #include <ttfautohint.h>
+#include <numberset.h>
 
 
 #define TTFAUTOHINT_GLYPH ".ttfautohint"
@@ -217,14 +218,13 @@ struct FONT_
   FT_UInt hinting_range_max;
   FT_UInt hinting_limit;
   FT_UInt increase_x_height;
+  number_range* x_height_snapping_exceptions;
   FT_Bool gray_strong_stem_width;
   FT_Bool gdi_cleartype_strong_stem_width;
   FT_Bool dw_cleartype_strong_stem_width;
   FT_Bool windows_compatibility;
   FT_Bool pre_hinting;
   FT_Bool hint_with_components;
-  FT_Bool no_x_height_snapping;
-  FT_Byte* x_height_snapping_exceptions;
   FT_Bool ignore_restrictions;
   FT_UInt fallback_script;
   FT_Bool symbol;

@@ -30,6 +30,10 @@
           fprintf(stderr, "%33s = %ld\n", \
                           (str), \
                           (FT_Long)(arg))
+#define DUMPSTR(str, arg) \
+          fprintf(stderr, "%33s = %s\n", \
+                          (str), \
+                          (arg))
 
 
 void
@@ -67,6 +71,9 @@ TTF_autohint(const char* options,
   FT_Long hinting_range_max = -1;
   FT_Long hinting_limit = -1;
   FT_Long increase_x_height = -1;
+
+  const char* x_height_snapping_exceptions_string = NULL;
+  number_range* x_height_snapping_exceptions = NULL;
 
   FT_Bool gray_strong_stem_width = 0;
   FT_Bool gdi_cleartype_strong_stem_width = 1;
@@ -195,15 +202,13 @@ TTF_autohint(const char* options,
       symbol = (FT_Bool)va_arg(ap, FT_Int);
     else if (COMPARE("windows-compatibility"))
       windows_compatibility = (FT_Bool)va_arg(ap, FT_Int);
+    else if (COMPARE("x-height-snapping-exceptions"))
+      x_height_snapping_exceptions_string = va_arg(ap, const char*);
     else
     {
       error = TA_Err_Unknown_Argument;
       goto Err1;
     }
-
-    /*
-      x-height-snapping-exceptions
-     */
 
   End:
     if (!*op)
@@ -261,7 +266,8 @@ TTF_autohint(const char* options,
   if (hinting_limit < 0)
     hinting_limit = TA_HINTING_LIMIT;
 
-  if (increase_x_height > 0 && increase_x_height < 6)
+  if (increase_x_height > 0
+      && increase_x_height < TA_PROP_INCREASE_X_HEIGHT_MIN)
   {
     error = FT_Err_Invalid_Argument;
     goto Err1;
@@ -269,10 +275,24 @@ TTF_autohint(const char* options,
   if (increase_x_height < 0)
     increase_x_height = TA_INCREASE_X_HEIGHT;
 
+  if (x_height_snapping_exceptions_string)
+  {
+    const char* s = number_set_parse(x_height_snapping_exceptions_string,
+                                     &x_height_snapping_exceptions,
+                                     TA_PROP_INCREASE_X_HEIGHT_MIN,
+                                     0x7FFF);
+    if (*s)
+    {
+      error = FT_Err_Invalid_Argument;
+      goto Err1;
+    }
+  }
+
   font->hinting_range_min = (FT_UInt)hinting_range_min;
   font->hinting_range_max = (FT_UInt)hinting_range_max;
   font->hinting_limit = (FT_UInt)hinting_limit;
   font->increase_x_height = increase_x_height;
+  font->x_height_snapping_exceptions = x_height_snapping_exceptions;
 
   font->gray_strong_stem_width = gray_strong_stem_width;
   font->gdi_cleartype_strong_stem_width = gdi_cleartype_strong_stem_width;
@@ -297,6 +317,9 @@ TTF_autohint(const char* options,
   /* dump parameters */
   if (debug)
   {
+    char *s;
+
+
     fprintf(stderr, "TTF_autohint parameters\n"
                     "=======================\n\n");
 
@@ -326,6 +349,11 @@ TTF_autohint(const char* options,
             font->symbol);
     DUMPVAL("windows-compatibility",
             font->windows_compatibility);
+
+    s = number_set_show(font->x_height_snapping_exceptions,
+                        TA_PROP_INCREASE_X_HEIGHT_MIN, -1);
+    DUMPSTR("x-height-snapping-exceptions", s);
+    free(s);
 
     fprintf(stderr, "\n");
   }

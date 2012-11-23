@@ -297,10 +297,15 @@ typedef int
  * :   A pointer of type `const char*` to a null-terminated string which
  *     gives a list of comma separated PPEM values or value ranges at which
  *     no x-height snapping shall be applied.  A value range has the form
- *     *value1*`-`*value2*, meaning *value1* <= PPEM <= *value2*.
- *     Whitespace is not significant; a trailing comma is ignored.  If the
- *     supplied argument is NULL, no x-height snapping takes place at all.
- *     By default, there are no snapping exceptions.  Not implemented yet.
+ *     *value1*`-`*value2*, meaning *value1* <= PPEM <= *value2*.  *value1*
+ *     or *value2* (or both) can be missing; a missing value is replaced by
+ *     the beginning or end of the whole interval of valid PPEM values,
+ *     respectively.  Whitespace is not significant; superfluous commas are
+ *     ignored, and ranges must be specified in increasing order.  For
+ *     example, the string `"3, 5-7, 9-"` means the values 3, 5, 6, 7, 9,
+ *     10, 11, 12, etc.  Consequently, if the supplied argument is `"-"`, no
+ *     x-height snapping takes place at all.  The default is the empty
+ *     string (`""`), meaning no snapping exceptions.
  *
  * `windows-compatibility`
  * :   If this integer is set to\ 1, two artificial blue zones are used,

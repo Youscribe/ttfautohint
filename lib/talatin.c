@@ -32,6 +32,8 @@
 #include "tawarp.h"
 #endif
 
+#include <numberset.h>
+
 
 /* find segments and links, compute all stem widths, and initialize */
 /* standard width and height for the glyph with given charcode */
@@ -603,8 +605,11 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
   FT_Fixed scale;
   FT_Pos delta;
   TA_LatinAxis axis;
+  FT_UInt ppem;
   FT_UInt nn;
 
+
+  ppem = metrics->root.scaler.face->size->metrics.x_ppem;
 
   if (dim == TA_DIMENSION_HORZ)
   {
@@ -627,6 +632,10 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
 
   /* correct X and Y scale to optimize the alignment of the top of */
   /* small letters to the pixel grid */
+  /* (if we do x-height snapping for this ppem value) */
+  if (!number_set_is_element(
+        metrics->root.globals->font->x_height_snapping_exceptions,
+        ppem))
   {
     TA_LatinAxis Axis = &metrics->axis[TA_DIMENSION_VERT];
     TA_LatinBlue blue = NULL;
@@ -647,11 +656,9 @@ ta_latin_metrics_scale_dim(TA_LatinMetrics metrics,
       FT_Pos threshold;
       FT_Pos fitted;
       FT_UInt limit;
-      FT_UInt ppem;
 
 
       scaled = FT_MulFix(blue->shoot.org, scaler->y_scale);
-      ppem = metrics->root.scaler.face->size->metrics.x_ppem;
       limit = metrics->root.globals->increase_x_height;
       threshold = 40;
 

@@ -107,6 +107,8 @@ TA_font_unload(FONT* font,
     free(font->sfnts);
   }
 
+  number_set_free(font->x_height_snapping_exceptions);
+
   FT_Done_FreeType(font->lib);
   if (!in_buf)
     free(font->in_buf);
