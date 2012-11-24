@@ -536,9 +536,6 @@ again:
   if (!open_files(input_name, &input, output_name, &output))
     return;
 
-  unsigned char version_data[128];
-  unsigned char version_data_wide[256];
-
   QProgressDialog dialog;
   dialog.setCancelButtonText(tr("Cancel"));
   dialog.setMinimumDuration(1000);
@@ -549,8 +546,10 @@ again:
   GUI_Progress_Data gui_progress_data = {-1, true, &dialog};
   Info_Data info_data;
 
-  info_data.data = version_data;
-  info_data.data_wide = version_data_wide;
+  info_data.data = NULL; // must be deallocated after use
+  info_data.data_wide = NULL; // must be deallocated after use
+  info_data.data_len = 0;
+  info_data.data_wide_len = 0;
 
   info_data.hinting_range_min = min_box->value();
   info_data.hinting_range_max = max_box->value();
@@ -573,7 +572,25 @@ again:
   info_data.symbol = symbol_box->isChecked();
 
   if (info_box->isChecked())
-    build_version_string(&info_data);
+  {
+    int ret = build_version_string(&info_data);
+    if (ret == 1)
+      QMessageBox::information(
+        this,
+        "TTFautohint",
+        tr("Can't allocate memory for <b>TTFautohint</b> options string"
+           " in <i>name</i> table."),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+    else if (ret == 2)
+      QMessageBox::information(
+        this,
+        "TTFautohint",
+        tr("<b>TTFautohint</b> options string"
+           " in <i>name</i> table too long."),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+  }
   else
     info_func = NULL;
 
@@ -608,6 +625,12 @@ again:
                  info_data.hint_with_components,
                  info_data.increase_x_height,
                  info_data.latin_fallback, info_data.symbol);
+
+  if (info_box->isChecked())
+  {
+    free(info_data.data);
+    free(info_data.data_wide);
+  }
 
   fclose(input);
   fclose(output);

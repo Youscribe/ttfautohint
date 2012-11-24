@@ -15,6 +15,7 @@
 #define __INFO_H__
 
 #include <ttfautohint.h>
+#include <numberset.h>
 
 extern "C" {
 
@@ -34,6 +35,7 @@ typedef struct Info_Data_
   bool dw_cleartype_strong_stem_width;
 
   int increase_x_height;
+  number_range* x_height_snapping_exceptions;
 
   bool windows_compatibility;
   bool pre_hinting;
@@ -43,7 +45,7 @@ typedef struct Info_Data_
 } Info_Data;
 
 
-void
+int
 build_version_string(Info_Data* idata);
 
 TA_Error

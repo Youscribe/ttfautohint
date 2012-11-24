@@ -610,9 +610,6 @@ main(int argc,
     in = stdin;
   }
 
-  unsigned char version_data[128];
-  unsigned char version_data_wide[256];
-
   const unsigned char* error_string;
   Progress_Data progress_data = {-1, 1, 0};
   Info_Data info_data;
@@ -621,8 +618,10 @@ main(int argc,
     info_func = NULL;
   else
   {
-    info_data.data = version_data;
-    info_data.data_wide = version_data_wide;
+    info_data.data = NULL; // must be deallocated after use
+    info_data.data_wide = NULL; // must be deallocated after use
+    info_data.data_len = 0;
+    info_data.data_wide_len = 0;
 
     info_data.hinting_range_min = hinting_range_min;
     info_data.hinting_range_max = hinting_range_max;
@@ -639,7 +638,13 @@ main(int argc,
     info_data.latin_fallback = latin_fallback;
     info_data.symbol = symbol;
 
-    build_version_string(&info_data);
+    int ret = build_version_string(&info_data);
+    if (ret == 1)
+      fprintf(stderr, "Warning: Can't allocate memory"
+                      " for ttfautohint options string in `name' table\n");
+    else if (ret == 2)
+      fprintf(stderr, "Warning: ttfautohint options string"
+                      " in `name' table too long\n");
   }
 
   if (in == stdin)
@@ -670,6 +675,12 @@ main(int argc,
                  pre_hinting, hint_with_components,
                  increase_x_height, latin_fallback, symbol,
                  debug);
+
+  if (!no_info)
+  {
+    free(info_data.data);
+    free(info_data.data_wide);
+  }
 
   if (error)
   {

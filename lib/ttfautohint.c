@@ -351,7 +351,7 @@ TTF_autohint(const char* options,
             font->windows_compatibility);
 
     s = number_set_show(font->x_height_snapping_exceptions,
-                        TA_PROP_INCREASE_X_HEIGHT_MIN, -1);
+                        TA_PROP_INCREASE_X_HEIGHT_MIN, 0x7FFF);
     DUMPSTR("x-height-snapping-exceptions", s);
     free(s);
 

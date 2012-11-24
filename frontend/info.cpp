@@ -26,13 +26,29 @@
 
 extern "C" {
 
-void
+// return value 1 means allocation error, value 2 too long a string
+
+int
 build_version_string(Info_Data* idata)
 {
   char* d;
   char* dw;
+  char* s = NULL;
+  size_t s_len;
+  unsigned char* data_new;
+  unsigned short data_new_len;
   char strong[4];
   int count;
+  int ret = 0;
+
+  // 128 bytes certainly hold the following options except -X
+  data_new = (unsigned char*)realloc(idata->data, 128);
+  if (!data_new)
+  {
+    ret = 1;
+    goto Fail;
+  }
+  idata->data = data_new;
 
   d = (char*)idata->data;
   d += sprintf(d, TTFAUTOHINT_STRING " (v%s)", VERSION);
@@ -65,10 +81,61 @@ build_version_string(Info_Data* idata)
     d += sprintf(d, " -f");
   if (idata->symbol)
     d += sprintf(d, " -s");
+  if (idata->x_height_snapping_exceptions)
+    d += sprintf(d, " -X \"\""); // fill in data later
 
   idata->data_len = d - (char*)idata->data;
 
+  if (idata->x_height_snapping_exceptions)
+  {
+    s = number_set_show(idata->x_height_snapping_exceptions, 6, 0x7FFF);
+    if (!s)
+    {
+      ret = 1;
+      goto Fail;
+    }
+
+    // ensure UTF16-BE version doesn't get too long
+    s_len = strlen(s);
+    if (s_len > 0xFFFF / 2 - 128)
+    {
+      ret = 2;
+      goto Fail;
+    }
+  }
+  else
+    s_len = 0;
+
+  // we now reallocate to the real size
+  data_new_len = idata->data_len + s_len;
+  data_new = (unsigned char*)realloc(idata->data, data_new_len);
+  if (!data_new)
+  {
+    ret = 1;
+    goto Fail;
+  }
+
+  if (idata->x_height_snapping_exceptions)
+  {
+    // overwrite second doublequote and append it instead
+    d = (char*)(data_new + idata->data_len - 1);
+    sprintf(d, "%s\"", s);
+  }
+
+  idata->data = data_new;
+  idata->data_len = data_new_len;
+
   // prepare UTF16-BE version data
+  idata->data_wide_len = 2 * idata->data_len;
+  data_new = (unsigned char*)realloc(idata->data_wide,
+                                     idata->data_wide_len);
+  if (!data_new)
+  {
+    ret = 1;
+    goto Fail;
+  }
+  idata->data_wide = data_new;
+
   d = (char*)idata->data;
   dw = (char*)idata->data_wide;
   for (unsigned short i = 0; i < idata->data_len; i++)
@@ -76,7 +143,22 @@ build_version_string(Info_Data* idata)
     *(dw++) = '\0';
     *(dw++) = *(d++);
   }
-  idata->data_wide_len = idata->data_len << 1;
+
+Exit:
+  free(s);
+
+  return ret;
+
+Fail:
+  free(idata->data);
+  free(idata->data_wide);
+
+  idata->data = NULL;
+  idata->data_wide = NULL;
+  idata->data_len = 0;
+  idata->data_wide_len = 0;
+
+  goto Exit;
 }
 
 
