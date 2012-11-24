@@ -107,8 +107,9 @@ build_version_string(Info_Data* idata)
     s_len = 0;
 
   // we now reallocate to the real size
+  // (plus one byte so that `sprintf' works)
   data_new_len = idata->data_len + s_len;
-  data_new = (unsigned char*)realloc(idata->data, data_new_len);
+  data_new = (unsigned char*)realloc(idata->data, data_new_len + 1);
   if (!data_new)
   {
     ret = 1;
