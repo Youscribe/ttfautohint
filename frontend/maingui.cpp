@@ -821,7 +821,7 @@ Main_GUI::create_layout()
   if (pre_hinting)
     pre_box->setChecked(true);
 
-  hint_box = new QCheckBox(tr("Hint &With Components")
+  hint_box = new QCheckBox(tr("Hint With Co&mponents")
                            + "                ", this); // make label wider
   hint_box->setToolTip(
     tr("If switched on, <b>TTFautohint</b> hints composite glyphs"
