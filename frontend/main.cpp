@@ -42,6 +42,7 @@
 #endif
 
 #include <ttfautohint.h>
+#include <numberset.h>
 
 
 #ifdef _WIN32
@@ -194,7 +195,8 @@ show_help(bool
 "                             (default: %d)\n"
 "  -X, --x-height-snapping-exceptions=STRING\n"
 "                             specify a comma-separated list of\n"
-"                             x-height snapping exceptions\n"
+"                             x-height snapping exceptions, for example\n"
+"                             \"-9, 13-17, 19\" (default: \"\")\n"
 "\n",
           TA_HINTING_RANGE_MAX, TA_INCREASE_X_HEIGHT);
 
@@ -325,6 +327,10 @@ main(int argc,
   bool no_info = false;
   int latin_fallback = 0; // leave it as int; this probably gets extended
   bool symbol = false;
+
+  const char* x_height_snapping_exceptions_string = NULL;
+  bool have_x_height_snapping_exceptions_string = false;
+  number_range* x_height_snapping_exceptions = NULL;
 
 #ifndef BUILD_GUI
   bool debug = false;
@@ -488,9 +494,8 @@ main(int argc,
       break;
 
     case 'X':
-#ifdef CONSOLE_OUTPUT
-      fprintf(stderr, "Option `-x' not implemented yet\n");
-#endif
+      x_height_snapping_exceptions_string = optarg;
+      have_x_height_snapping_exceptions_string = true;
       break;
 
 #ifndef BUILD_GUI
@@ -533,6 +538,8 @@ main(int argc,
     hinting_limit = TA_HINTING_LIMIT;
   if (!have_increase_x_height)
     increase_x_height = TA_INCREASE_X_HEIGHT;
+  if (!have_x_height_snapping_exceptions_string)
+    x_height_snapping_exceptions_string = "";
 
 #ifndef BUILD_GUI
 
@@ -563,6 +570,41 @@ main(int argc,
     fprintf(stderr, "A non-zero x height increase limit"
                     " must be larger than or equal to 6\n");
     exit(EXIT_FAILURE);
+  }
+
+  if (have_x_height_snapping_exceptions_string)
+  {
+    const char* s;
+
+
+    s = number_set_parse(x_height_snapping_exceptions_string,
+                         &x_height_snapping_exceptions,
+                         6, 0x7FFF);
+    if (*s)
+    {
+      if (x_height_snapping_exceptions == NUMBERSET_ALLOCATION_ERROR)
+        fprintf(stderr, "Allocation error while scanning"
+                        " x height snapping exceptions\n");
+      else {
+        if (x_height_snapping_exceptions == NUMBERSET_INVALID_CHARACTER)
+          fprintf(stderr, "Invalid character");
+        else if (x_height_snapping_exceptions == NUMBERSET_OVERFLOW)
+          fprintf(stderr, "Overflow");
+        else if (x_height_snapping_exceptions == NUMBERSET_INVALID_RANGE)
+          fprintf(stderr, "Invalid range");
+        else if (x_height_snapping_exceptions == NUMBERSET_OVERLAPPING_RANGES)
+          fprintf(stderr, "Overlapping ranges");
+        else if (x_height_snapping_exceptions == NUMBERSET_NOT_ASCENDING)
+          fprintf(stderr, "Values und ranges must be ascending");
+        fprintf(stderr, " in x height snapping exceptions:\n"
+                        "  \"%s\"\n"
+                        "   %*s\n",
+                        x_height_snapping_exceptions_string,
+                        s - x_height_snapping_exceptions_string + 1, "^");
+      }
+      exit(EXIT_FAILURE);
+    }
+
   }
 
   int num_args = argc - optind;
@@ -635,6 +677,7 @@ main(int argc,
     info_data.pre_hinting = pre_hinting;
     info_data.hint_with_components = hint_with_components;
     info_data.increase_x_height = increase_x_height;
+    info_data.x_height_snapping_exceptions = x_height_snapping_exceptions;
     info_data.latin_fallback = latin_fallback;
     info_data.symbol = symbol;
 
@@ -662,7 +705,8 @@ main(int argc,
                  "info-callback, info-callback-data,"
                  "ignore-restrictions, windows-compatibility,"
                  "pre-hinting, hint-with-components,"
-                 "increase-x-height, fallback-script, symbol,"
+                 "increase-x-height, x-height-snapping-exceptions,"
+                 "fallback-script, symbol,"
                  "debug",
                  in, out,
                  hinting_range_min, hinting_range_max, hinting_limit,
@@ -673,7 +717,8 @@ main(int argc,
                  info_func, &info_data,
                  ignore_restrictions, windows_compatibility,
                  pre_hinting, hint_with_components,
-                 increase_x_height, latin_fallback, symbol,
+                 increase_x_height, x_height_snapping_exceptions_string,
+                 latin_fallback, symbol,
                  debug);
 
   if (!no_info)
@@ -681,6 +726,8 @@ main(int argc,
     free(info_data.data);
     free(info_data.data_wide);
   }
+
+  number_set_free(x_height_snapping_exceptions);
 
   if (error)
   {
