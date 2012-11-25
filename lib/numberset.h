@@ -65,6 +65,9 @@ typedef struct number_range_
  * case of an error, the return value is a pointer to the beginning position
  * of the offending range in string `s'.
  *
+ * If s is NULL, the function exits immediately with NULL as the return
+ * value.
+ *
  * If the user provides a non-NULL `number_set' value, `number_set_parse'
  * stores a linked list of ordered number ranges in `*number_set', allocated
  * with `malloc'.  If there is no range at all (for example, an empty string

@@ -39,6 +39,9 @@ number_set_parse(const char* s,
   number_range* error_code = NULL;
 
 
+  if (!s)
+    return NULL;
+
   if (min < 0)
     min = 0;
   if (max < 0)
