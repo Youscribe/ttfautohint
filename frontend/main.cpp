@@ -795,6 +795,7 @@ main(int argc,
   Main_GUI gui(hinting_range_min, hinting_range_max, hinting_limit,
                gray_strong_stem_width, gdi_cleartype_strong_stem_width,
                dw_cleartype_strong_stem_width, increase_x_height,
+               x_height_snapping_exceptions_string,
                ignore_restrictions, windows_compatibility, pre_hinting,
                hint_with_components, no_info, latin_fallback, symbol);
   gui.show();

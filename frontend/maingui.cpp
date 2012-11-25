@@ -44,6 +44,7 @@ Main_GUI::Main_GUI(int range_min,
                    bool gdi,
                    bool dw,
                    int increase,
+                   const char* exceptions,
                    bool ignore,
                    bool wincomp,
                    bool pre,
@@ -58,6 +59,7 @@ Main_GUI::Main_GUI(int range_min,
   gdi_cleartype_strong_stem_width(gdi),
   dw_cleartype_strong_stem_width(dw),
   increase_x_height(increase),
+  x_height_snapping_exceptions_string(exceptions),
   ignore_restrictions(ignore),
   windows_compatibility(wincomp),
   pre_hinting(pre),
@@ -66,6 +68,8 @@ Main_GUI::Main_GUI(int range_min,
   latin_fallback(fallback),
   symbol(symb)
 {
+  x_height_snapping_exceptions = NULL;
+
   create_layout();
   create_connections();
   create_actions();
@@ -82,6 +86,12 @@ Main_GUI::Main_GUI(int range_min,
     locale = new QLocale;
   else
     locale = new QLocale(QLocale::C);
+}
+
+
+Main_GUI::~Main_GUI()
+{
+  number_set_free(x_height_snapping_exceptions);
 }
 
 
@@ -250,6 +260,106 @@ Main_GUI::absolute_output()
     QDir cur_path(QDir::currentPath() + "/" + output_name);
     output_line->setText(QDir::toNativeSeparators(cur_path.absolutePath()));
   }
+}
+
+
+void
+Main_GUI::check_number_set()
+{
+  QString text = snapping_line->text();
+  QString qs;
+
+  // construct ASCII string from arbitrary Unicode data;
+  // the idea is to accept, say, CJK fullwidth digits also
+  for (int i = 0; i < text.size(); i++)
+  {
+    QChar c = text.at(i);
+
+    int digit = c.digitValue();
+    if (digit >= 0)
+      qs += QString::number(digit);
+    else if (c.isSpace())
+      qs += ' ';
+    // U+30FC KATAGANA-HIRAGANA PROLONGED SOUND MARK is assigned
+    // to the `-' key in some Japanese input methods
+    else if (c.category() == QChar::Punctuation_Dash
+             || c == QChar(0x30FC))
+      qs += '-';
+    // various Unicode COMMA characters,
+    // including representation forms
+    else if (c == QChar(',')
+             || c == QChar(0x055D)
+             || c == QChar(0x060C)
+             || c == QChar(0x07F8)
+             || c == QChar(0x1363)
+             || c == QChar(0x1802)
+             || c == QChar(0x1808)
+             || c == QChar(0x3001)
+             || c == QChar(0xA4FE)
+             || c == QChar(0xA60D)
+             || c == QChar(0xA6F5)
+             || c == QChar(0xFE10)
+             || c == QChar(0xFE11)
+             || c == QChar(0xFE50)
+             || c == QChar(0xFE51)
+             || c == QChar(0xFF0C)
+             || c == QChar(0xFF64))
+      qs += ',';
+    else
+      qs += c; // we do error handling below
+  }
+
+  if (x_height_snapping_exceptions)
+    number_set_free(x_height_snapping_exceptions);
+
+  QByteArray str = qs.toLocal8Bit();
+  const char* s = number_set_parse(str.constData(),
+                                   &x_height_snapping_exceptions,
+                                   6, 0x7FFF);
+  if (s && *s)
+  {
+    statusBar()->setStyleSheet("color: red;");
+    if (x_height_snapping_exceptions == NUMBERSET_ALLOCATION_ERROR)
+      statusBar()->showMessage(
+        tr("allocation error"));
+    else if (x_height_snapping_exceptions == NUMBERSET_INVALID_CHARACTER)
+      statusBar()->showMessage(
+        tr("invalid character (use digits, dashes, commas, and spaces)"));
+    else if (x_height_snapping_exceptions == NUMBERSET_OVERFLOW)
+      statusBar()->showMessage(
+        tr("overflow"));
+    else if (x_height_snapping_exceptions == NUMBERSET_INVALID_RANGE)
+      statusBar()->showMessage(
+        tr("invalid range (minimum is 6, maximum is 32767)"));
+    else if (x_height_snapping_exceptions == NUMBERSET_OVERLAPPING_RANGES)
+      statusBar()->showMessage(
+        tr("overlapping ranges"));
+    else if (x_height_snapping_exceptions == NUMBERSET_NOT_ASCENDING)
+      statusBar()->showMessage(
+        tr("values und ranges must be specified in ascending order"));
+
+    snapping_line->setText(qs);
+    snapping_line->setFocus(Qt::OtherFocusReason);
+    snapping_line->setCursorPosition(s - str.constData());
+
+    x_height_snapping_exceptions = NULL;
+  }
+  else
+  {
+    // normalize if there is no error
+    char* new_str = number_set_show(x_height_snapping_exceptions,
+                                    6, 0x7FFF);
+    snapping_line->setText(new_str);
+    free(new_str);
+  }
+}
+
+
+void
+Main_GUI::clear_status_bar()
+{
+  statusBar()->clearMessage();
+  statusBar()->setStyleSheet("");
 }
 
 
@@ -565,6 +675,7 @@ again:
   info_data.increase_x_height = no_increase_box->isChecked()
                                 ? 0
                                 : increase_box->value();
+  info_data.x_height_snapping_exceptions = x_height_snapping_exceptions;
 
   info_data.windows_compatibility = wincomp_box->isChecked();
   info_data.pre_hinting = pre_box->isChecked();
@@ -595,6 +706,8 @@ again:
   else
     info_func = NULL;
 
+  QByteArray snapping_string = snapping_line->text().toLocal8Bit();
+
   TA_Error error =
     TTF_autohint("in-file, out-file,"
                  "hinting-range-min, hinting-range-max,"
@@ -610,6 +723,7 @@ again:
                  "pre-hinting,"
                  "hint-with-components,"
                  "increase-x-height,"
+                 "x-height-snapping-exceptions,"
                  "fallback-script, symbol",
                  input, output,
                  info_data.hinting_range_min, info_data.hinting_range_max,
@@ -625,6 +739,7 @@ again:
                  info_data.pre_hinting,
                  info_data.hint_with_components,
                  info_data.increase_x_height,
+                 snapping_string.constData(),
                  info_data.latin_fallback, info_data.symbol);
 
   if (info_box->isChecked())
@@ -775,6 +890,22 @@ Main_GUI::create_layout()
        " <b>TTFautohint</b> does not increase the x&nbsp;height."));
 
   //
+  // x height snapping exceptions
+  //
+  QLabel* snapping_label = new QLabel(tr("x Height Snapping Excep&tions:"));
+  snapping_line = new QLineEdit;
+  snapping_label->setBuddy(snapping_line);
+  snapping_label->setToolTip(
+    tr("<p>A list of comma separated PPEM values or value ranges"
+       " at which no x-height snapping shall be applied.</p>"
+       ""
+       "Examples:<br>"
+       "&nbsp;&nbsp;<tt>2, 3-5, 12-17</tt><br>"
+       "&nbsp;&nbsp;<tt>-20, 40-</tt>"
+       " (meaning PPEM &le; 20 or PPEM &ge; 40)<br>"
+       "&nbsp;&nbsp;<tt>-</tt> (meaning all possible PPEM values)"));
+
+  //
   // flags
   //
   wincomp_box = new QCheckBox(tr("Windows Com&patibility"), this);
@@ -902,6 +1033,9 @@ Main_GUI::create_layout()
   gui_layout->addWidget(increase_box, row++, 1, Qt::AlignLeft);
   gui_layout->addWidget(no_increase_box, row++, 1);
 
+  gui_layout->addWidget(snapping_label, row, 0, Qt::AlignRight);
+  gui_layout->addWidget(snapping_line, row++, 1, Qt::AlignLeft);
+
   gui_layout->setRowMinimumHeight(row, 20); // XXX urgh, pixels...
   gui_layout->setRowStretch(row++, 1);
 
@@ -962,6 +1096,11 @@ Main_GUI::create_connections()
 
   connect(no_increase_box, SIGNAL(clicked()), this,
           SLOT(check_no_increase()));
+
+  connect(snapping_line, SIGNAL(editingFinished()), this,
+          SLOT(check_number_set()));
+  connect(snapping_line, SIGNAL(textEdited(QString)), this,
+          SLOT(clear_status_bar()));
 
   connect(run_button, SIGNAL(clicked()), this,
           SLOT(run()));
@@ -1027,6 +1166,8 @@ Main_GUI::set_defaults()
     no_increase_box->setChecked(true);
   }
 
+  snapping_line->setText(x_height_snapping_exceptions_string);
+
   if (windows_compatibility)
     wincomp_box->setChecked(true);
   if (pre_hinting)
@@ -1053,6 +1194,7 @@ Main_GUI::set_defaults()
 
   check_no_limit();
   check_no_increase();
+  check_number_set();
 }
 
 

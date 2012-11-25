@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <ttfautohint.h>
+#include <numberset.h>
 
 class QAction;
 class QButtonGroup;
@@ -28,6 +29,7 @@ class QCheckBox;
 class QComboBox;
 class QFile;
 class QLabel;
+class QLineEdit;
 class QLocale;
 class QMenu;
 class QPushButton;
@@ -43,8 +45,10 @@ class Main_GUI
 public:
   Main_GUI(int, int, int,
            bool, bool, bool,
-           int, bool, bool, bool,
+           int, const char*,
+           bool, bool, bool,
            bool, bool, int, bool);
+  ~Main_GUI();
 
 protected:
   void closeEvent(QCloseEvent*);
@@ -60,6 +64,8 @@ private slots:
   void check_no_increase();
   void absolute_input();
   void absolute_output();
+  void check_number_set();
+  void clear_status_bar();
   void check_run();
   void run();
 
@@ -71,6 +77,8 @@ private:
   int gdi_cleartype_strong_stem_width;
   int dw_cleartype_strong_stem_width;
   int increase_x_height;
+  QString x_height_snapping_exceptions_string;
+  number_range* x_height_snapping_exceptions;
   int ignore_restrictions;
   int windows_compatibility;
   int pre_hinting;
@@ -118,6 +126,8 @@ private:
   QLabel* increase_label;
   QSpinBox* increase_box;
   QCheckBox* no_increase_box;
+
+  QLineEdit* snapping_line;
 
   QCheckBox* wincomp_box;
   QCheckBox* pre_box;
