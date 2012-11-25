@@ -330,7 +330,6 @@ main(int argc,
 
   const char* x_height_snapping_exceptions_string = NULL;
   bool have_x_height_snapping_exceptions_string = false;
-  number_range* x_height_snapping_exceptions = NULL;
 
 #ifndef BUILD_GUI
   bool debug = false;
@@ -572,6 +571,8 @@ main(int argc,
     exit(EXIT_FAILURE);
   }
 
+  number_range* x_height_snapping_exceptions = NULL;
+
   if (have_x_height_snapping_exceptions_string)
   {
     const char* s;
@@ -604,7 +605,6 @@ main(int argc,
       }
       exit(EXIT_FAILURE);
     }
-
   }
 
   int num_args = argc - optind;
