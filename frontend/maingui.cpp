@@ -72,6 +72,7 @@ Main_GUI::Main_GUI(int range_min,
   create_menus();
   create_status_bar();
 
+  set_defaults();
   read_settings();
 
   setUnifiedTitleAndToolBarOnMac(true);
@@ -707,7 +708,6 @@ Main_GUI::create_layout()
        " Hinting is enabled for all sizes."));
   min_box->setKeyboardTracking(false);
   min_box->setRange(2, 10000);
-  min_box->setValue(hinting_range_min);
 
   QLabel* max_label = new QLabel(tr("Hint Set Range Ma&ximum:"));
   max_box = new QSpinBox;
@@ -723,7 +723,6 @@ Main_GUI::create_layout()
        " Hinting is enabled for all sizes."));
   max_box->setKeyboardTracking(false);
   max_box->setRange(2, 10000);
-  max_box->setValue(hinting_range_max);
 
   //
   // hinting and fallback controls
@@ -736,7 +735,6 @@ Main_GUI::create_layout()
        " which <b>TTFautohint</b> can't map to a script automatically."));
   fallback_box->insertItem(0, tr("None"));
   fallback_box->insertItem(1, tr("Latin"));
-  fallback_box->setCurrentIndex(latin_fallback);
 
   //
   // hinting limit
@@ -750,19 +748,11 @@ Main_GUI::create_layout()
        " (regardless of the values in the <i>gasp</i> table)."));
   limit_box->setKeyboardTracking(false);
   limit_box->setRange(2, 10000);
-  limit_box->setValue(hinting_limit ? hinting_limit : hinting_range_max);
 
   no_limit_box = new QCheckBox(tr("No Hinting Limit"), this);
   no_limit_box->setToolTip(
     tr("If switched on, <b>TTFautohint</b> adds no hinting limit"
        " to the bytecode."));
-
-  // handle command line option `--hinting-limit=0'
-  if (!hinting_limit)
-  {
-    hinting_limit = max_box->value();
-    no_limit_box->setChecked(true);
-  }
 
   //
   // x height increase limit
@@ -778,27 +768,11 @@ Main_GUI::create_layout()
        " for example."));
   increase_box->setKeyboardTracking(false);
   increase_box->setRange(6, 10000);
-  increase_box->setValue(increase_x_height ? increase_x_height
-                                           : TA_INCREASE_X_HEIGHT);
 
   no_increase_box = new QCheckBox(tr("No x Height Increase"), this);
   no_increase_box->setToolTip(
     tr("If switched on,"
        " <b>TTFautohint</b> does not increase the x&nbsp;height."));
-
-  // handle command line option `--increase-x-height=0'
-  if (!increase_x_height)
-  {
-    increase_x_height = TA_INCREASE_X_HEIGHT;
-    no_increase_box->setChecked(true);
-  }
-
-  check_min();
-  check_max();
-  check_limit();
-
-  check_no_limit();
-  check_no_increase();
 
   //
   // flags
@@ -810,16 +784,12 @@ Main_GUI::create_layout()
        " (from the font's <i>OS/2</i> table)."
        "  Use this if those values are tight,"
        " and you are experiencing clipping during rendering."));
-  if (windows_compatibility)
-    wincomp_box->setChecked(true);
 
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
   pre_box->setToolTip(
     tr("If switched on, the original bytecode of the input font"
        " gets applied before <b>TTFautohint</b> starts processing"
        " the outlines of the glyphs."));
-  if (pre_hinting)
-    pre_box->setChecked(true);
 
   hint_box = new QCheckBox(tr("Hint With Co&mponents")
                            + "                ", this); // make label wider
@@ -829,8 +799,6 @@ Main_GUI::create_layout()
        "  Otherwise, glyph components get hinted separately.<br>"
        "Deactivating this flag reduces the bytecode size enormously,"
        " however, it might yield worse results."));
-  if (hint_with_components)
-    hint_box->setChecked(true);
 
   symbol_box = new QCheckBox(tr("S&ymbol Font"), this);
   symbol_box->setToolTip(
@@ -839,16 +807,12 @@ Main_GUI::create_layout()
        " instead of deriving these values from the input font.<br>"
        "Use this for fonts which don't contain glyphs"
        " of a (supported) script."));
-  if (symbol)
-    symbol_box->setChecked(true);
 
   info_box = new QCheckBox(tr("Add ttf&autohint Info"), this);
   info_box->setToolTip(
     tr("If switched on, information about <b>TTFautohint</b>"
        " and its calling parameters are added to the version string(s)"
        " (name ID&nbsp;5) in the <i>name</i> table."));
-  if (!no_info)
-    info_box->setChecked(true);
 
   //
   // stem width and positioning
@@ -869,9 +833,6 @@ Main_GUI::create_layout()
   gray_box = new QCheckBox(tr("Grayscale"), this);
   gray_box->setToolTip(
     tr("<b></b>Grayscale rendering, no ClearType activated."));
-  if (gray_strong_stem_width)
-    gray_box->setChecked(true);
-
   stem_label->setBuddy(gray_box);
 
   gdi_box = new QCheckBox(tr("GDI ClearType"), this);
@@ -882,8 +843,6 @@ Main_GUI::create_layout()
        " GETINFO bytecode instruction) is in the range"
        " 36&nbsp;&le; version &lt;&nbsp;38, and ClearType is enabled.<br>"
        "Along the vertical axis, this mode behaves like B/W rendering."));
-  if (gdi_cleartype_strong_stem_width)
-    gdi_box->setChecked(true);
 
   dw_box = new QCheckBox(tr("DW ClearType"), this);
   dw_box->setToolTip(
@@ -893,8 +852,6 @@ Main_GUI::create_layout()
        " GETINFO bytecode instruction) is &ge;&nbsp;38,"
        " ClearType is enabled, and subpixel positioning is enabled also.<br>"
        "Smooth rendering along the vertical axis."));
-  if (dw_cleartype_strong_stem_width)
-    dw_box->setChecked(true);
 
   //
   // running
@@ -902,7 +859,6 @@ Main_GUI::create_layout()
   run_button = new QPushButton("    "
                                + tr("&Run")
                                + "    "); // make label wider
-  run_button->setEnabled(false);
 
   //
   // the whole gui
@@ -1043,6 +999,60 @@ void
 Main_GUI::create_status_bar()
 {
   statusBar()->showMessage("");
+}
+
+
+void
+Main_GUI::set_defaults()
+{
+  min_box->setValue(hinting_range_min);
+  max_box->setValue(hinting_range_max);
+
+  fallback_box->setCurrentIndex(latin_fallback);
+
+  limit_box->setValue(hinting_limit ? hinting_limit : hinting_range_max);
+  // handle command line option `--hinting-limit=0'
+  if (!hinting_limit)
+  {
+    hinting_limit = max_box->value();
+    no_limit_box->setChecked(true);
+  }
+
+  increase_box->setValue(increase_x_height ? increase_x_height
+                                           : TA_INCREASE_X_HEIGHT);
+  // handle command line option `--increase-x-height=0'
+  if (!increase_x_height)
+  {
+    increase_x_height = TA_INCREASE_X_HEIGHT;
+    no_increase_box->setChecked(true);
+  }
+
+  if (windows_compatibility)
+    wincomp_box->setChecked(true);
+  if (pre_hinting)
+    pre_box->setChecked(true);
+  if (hint_with_components)
+    hint_box->setChecked(true);
+  if (symbol)
+    symbol_box->setChecked(true);
+  if (!no_info)
+    info_box->setChecked(true);
+
+  if (gray_strong_stem_width)
+    gray_box->setChecked(true);
+  if (gdi_cleartype_strong_stem_width)
+    gdi_box->setChecked(true);
+  if (dw_cleartype_strong_stem_width)
+    dw_box->setChecked(true);
+
+  run_button->setEnabled(false);
+
+  check_min();
+  check_max();
+  check_limit();
+
+  check_no_limit();
+  check_no_increase();
 }
 
 

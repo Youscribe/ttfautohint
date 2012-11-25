@@ -85,6 +85,7 @@ private:
   void create_actions();
   void create_menus();
   void create_status_bar();
+  void set_defaults();
   void read_settings();
   void write_settings();
 
