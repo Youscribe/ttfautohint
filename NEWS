@@ -1,3 +1,17 @@
+New in 0.94:
+
+* New option `--windows-compatibility' which adds two artificial blue zones
+  at vertical positions given by `usWinAscent' and `usWinDescent'.  This
+  helps ttfautohint's hinting algorithm reduce the possibility of clipping
+  if those two values are very tight.
+
+* Implement option `--x-height-snapping-exceptions', making ttfautohint
+  avoid x-height snapping for selected PPEM values.  Useful in combination
+  with `--windows-compatibility'.
+
+* Minor fixes to the created bytecode for compatibility and robustness.
+
+
 New in 0.93:
 
 * New option `--components' to treat components of composite glyphs

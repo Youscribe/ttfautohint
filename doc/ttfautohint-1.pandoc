@@ -278,6 +278,29 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     ![The same, this time with option `-x 17` (and
       '`-w ""`').](img/e-17px-x17.png)
 
+### x Height Snapping Exceptions
+
+`--x-height-snapping-exceptions=`*string*, `-X`\ *string*
+:   A list of comma separated PPEM values or value ranges at which no
+    x-height snapping shall be applied.  A value range has the form
+    *value1*`-`*value2*, meaning *value1*\ <= PPEM <=\ *value2*.  *value1*
+    or *value2* (or both) can be missing; a missing value is replaced by the
+    beginning or end of the whole interval of valid PPEM values,
+    respectively (6\ to 32767).  Whitespace is not significant; superfluous
+    commas are ignored, and ranges must be specified in increasing order. 
+    For example, the string `"7-9, 11, 13-"` means the values 7, 8, 9, 11,
+    13, 14, 15, etc.  Consequently, if the supplied argument is `"-"`, no
+    x-height snapping takes place at all.  The default is the empty string
+    (`""`), meaning no snapping exceptions.
+
+    Normally, x-height snapping means a slight increase in the overall
+    vertical glyph size so that the height of lowercase glyphs gets aligned
+    to the pixel grid.  However, having larger vertical glyph sizes is not
+    always desired, especially if it is not possible to adjust the
+    `usWinAscent` and `usWinDescent` values from the font's `OS/2` table so
+    that they are not too tight.  See ['Windows
+    Compatibility'](#windows-compatibility) for more details.
+
 ### Windows Compatibility
 
 `--windows-compatibility`, `-W`
@@ -313,10 +336,8 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
     In case ttfautohint is used as an auto-hinting tool for fonts which can
     be no longer modified to change the metrics, option `-W` in combination
-    with '`-X ""`' to suppress any vertical enlargement should prevent almost
-    all clipping.
-
-    [Option `-X` is not implemented yet.]
+    with '`-X "-"`' to suppress any vertical enlargement should prevent
+    almost all clipping.
 
 ### Pre-Hinting
 
