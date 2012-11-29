@@ -8,7 +8,7 @@ add features to the GUI
   -> autocompletion of file names with tab key
 
 handle OT features
-  -> use HarfBuzz?
+  -> use HarfBuzz as soon it provides the necessary APIs
 
 control `gasp' table; Adam Twardoch suggest the following:
 
@@ -51,8 +51,6 @@ control the minimum stem width
 try to `embolden' fonts at small sizes to avoid drop-outs; cf. Infinality
   patches
 
-implement `x-height-snapping-exceptions'
-
 make switching between smooth and strong hinting dependent on user-defined
   ranges
 
@@ -92,10 +90,10 @@ make it possible to hint fonts which aren't alphabetic at all, for example,
 better control -i output
 
 allow processing of multiple files by using globs as in the Midnight
-  Commander
+  Commander?
 
 allow composite fonts already processed by ttfautohint to be processed
-  again
+  again (due to option `hint-with-components' this isn't urgent)
 
 make ttfautohint remember options:
   1. collect md5 checksums in a `~/.ttfautohint_history' file so that fonts
