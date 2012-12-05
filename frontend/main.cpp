@@ -612,26 +612,6 @@ main(int argc,
   if (num_args > 2)
     show_help(false, true);
 
-  FILE* out;
-  if (num_args > 1)
-  {
-    out = fopen(argv[optind + 1], "wb");
-    if (!out)
-    {
-      fprintf(stderr, "The following error occurred while opening font `%s':\n"
-                      "\n"
-                      "  %s\n",
-                      argv[optind + 1], strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-  }
-  else
-  {
-    if (isatty(fileno(stdout)))
-      show_help(false, true);
-    out = stdout;
-  }
-
   FILE* in;
   if (num_args > 0)
   {
@@ -650,6 +630,32 @@ main(int argc,
     if (isatty(fileno(stdin)))
       show_help(false, true);
     in = stdin;
+  }
+
+  FILE* out;
+  if (num_args > 1)
+  {
+    if (!strcmp(argv[optind], argv[optind + 1]))
+    {
+      fprintf(stderr, "Input and output file names must not be identical\n");
+      exit(EXIT_FAILURE);
+    }
+
+    out = fopen(argv[optind + 1], "wb");
+    if (!out)
+    {
+      fprintf(stderr, "The following error occurred while opening font `%s':\n"
+                      "\n"
+                      "  %s\n",
+                      argv[optind + 1], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    if (isatty(fileno(stdout)))
+      show_help(false, true);
+    out = stdout;
   }
 
   const unsigned char* error_string;
