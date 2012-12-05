@@ -262,7 +262,9 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
     glyphs like 'a' or 'e', depending on the font design.
 
     To switch off this feature, use `--increase-x-height=0` (or check the
-    'No x\ Height Increase' box in the GUI).
+    'No x\ Height Increase' box in the GUI).  To switch off rounding the
+    x\ height to the pixel grid in general, either partially or completely,
+    see ['x Height Snapping Exceptions'](#x-height-snapping-exceptions).
 
     The following images again use the font 'Mertz Bold'.
 
@@ -295,11 +297,12 @@ See ['Hint Sets'](#hint-sets) for a definition and explanation.
 
     Normally, x-height snapping means a slight increase in the overall
     vertical glyph size so that the height of lowercase glyphs gets aligned
-    to the pixel grid.  However, having larger vertical glyph sizes is not
-    always desired, especially if it is not possible to adjust the
-    `usWinAscent` and `usWinDescent` values from the font's `OS/2` table so
-    that they are not too tight.  See ['Windows
-    Compatibility'](#windows-compatibility) for more details.
+    to the pixel grid (this is a global feature, affecting *all* glyphs of a
+    font).  However, having larger vertical glyph sizes is not always
+    desired, especially if it is not possible to adjust the `usWinAscent`
+    and `usWinDescent` values from the font's `OS/2` table so that they are
+    not too tight.  See ['Windows Compatibility'](#windows-compatibility)
+    for more details.
 
 ### Windows Compatibility
 
