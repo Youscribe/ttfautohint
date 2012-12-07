@@ -17,7 +17,7 @@
 #include <config.h>
 
 #include <QtGui>
-#include "lineedit.h"
+#include "ddlineedit.h"
 
 #include <stdio.h>
 #include <ttfautohint.h>
@@ -35,7 +35,7 @@ class QMenu;
 class QPushButton;
 class QSpinBox;
 
-class Line_Edit;
+class Drag_Drop_Line_Edit;
 
 class Main_GUI
 : public QMainWindow
@@ -104,10 +104,10 @@ private:
   QMenu* file_menu;
   QMenu* help_menu;
 
-  Line_Edit* input_line;
+  Drag_Drop_Line_Edit* input_line;
   QPushButton* input_button;
 
-  Line_Edit* output_line;
+  Drag_Drop_Line_Edit* output_line;
   QPushButton* output_button;
 
   QSpinBox* min_box;

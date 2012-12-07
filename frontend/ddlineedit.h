@@ -1,4 +1,4 @@
-// lineedit.h
+// ddlineedit.h
 
 // Copyright (C) 2012 by Werner Lemberg.
 //
@@ -11,26 +11,26 @@
 // with the ttfautohint library.
 
 
-#ifndef __LINEEDIT_H__
-#define __LINEEDIT_H__
+#ifndef __DDLINEEDIT_H__
+#define __DDLINEEDIT_H__
 
 #include <config.h>
 
 #include <QtGui>
 
-class Line_Edit
+class Drag_Drop_Line_Edit
 : public QLineEdit
 {
   Q_OBJECT
 
 public:
-  Line_Edit(QWidget* = 0);
+  Drag_Drop_Line_Edit(QWidget* = 0);
 
   void dragEnterEvent(QDragEnterEvent*);
   void dropEvent(QDropEvent*);
 };
 
 
-#endif // __LINEEDIT_H__
+#endif // __DDLINEEDIT_H__
 
-// end of lineedit.h
+// end of ddlineedit.h

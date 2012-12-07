@@ -1,4 +1,4 @@
-// lineedit.cpp
+// ddlineedit.cpp
 
 // Copyright (C) 2012 by Werner Lemberg.
 //
@@ -11,13 +11,14 @@
 // with the ttfautohint library.
 
 
-// Derived class `Line_Edit' is QLineEdit which accepts drag and drop.
+// Derived class `Drag_Drop_Line_Edit' is QLineEdit
+// which accepts drag and drop.
 
 #include <config.h>
 
-#include "lineedit.h"
+#include "ddlineedit.h"
 
-Line_Edit::Line_Edit(QWidget* parent)
+Drag_Drop_Line_Edit::Drag_Drop_Line_Edit(QWidget* parent)
 : QLineEdit(parent)
 {
   // empty
@@ -28,7 +29,7 @@ Line_Edit::Line_Edit(QWidget* parent)
 //      which work everywhere.  So we rely on the extension.
 
 void
-Line_Edit::dragEnterEvent(QDragEnterEvent* event)
+Drag_Drop_Line_Edit::dragEnterEvent(QDragEnterEvent* event)
 {
   QList<QUrl> url_list;
   QString file_name;
@@ -53,7 +54,7 @@ Line_Edit::dragEnterEvent(QDragEnterEvent* event)
 
 
 void
-Line_Edit::dropEvent(QDropEvent* event)
+Drag_Drop_Line_Edit::dropEvent(QDropEvent* event)
 {
   QList<QUrl> url_list;
   QString file_name;
@@ -78,4 +79,4 @@ Line_Edit::dropEvent(QDropEvent* event)
   event->acceptProposedAction();
 }
 
-// end of lineedit.cpp
+// end of ddlineedit.cpp
