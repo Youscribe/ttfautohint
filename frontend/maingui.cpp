@@ -897,7 +897,9 @@ Main_GUI::create_layout()
   snapping_label->setBuddy(snapping_line);
   snapping_label->setToolTip(
     tr("<p>A list of comma separated PPEM values or value ranges"
-       " at which no x-height snapping shall be applied.</p>"
+       " at which no x&nbsp;height snapping shall be applied"
+       " (x&nbsp;height snapping usually slightly increases"
+       " the size of all glyphs).</p>"
        ""
        "Examples:<br>"
        "&nbsp;&nbsp;<tt>2, 3-5, 12-17</tt><br>"
@@ -913,7 +915,10 @@ Main_GUI::create_layout()
     tr("If switched on, add two artificial blue zones positioned at the"
        " <tt>usWinAscent</tt> and <tt>usWinDescent</tt> values"
        " (from the font's <i>OS/2</i> table)."
-       "  Use this if those values are tight,"
+       "  This option, usually in combination"
+       " with value <tt>-</tt> (a single dash)"
+       " for the <i>x&nbsp;Height Snapping Exceptions</i> option,"
+       " should be used if those two <i>OS/2</i> values are tight,"
        " and you are experiencing clipping during rendering."));
 
   pre_box = new QCheckBox(tr("Pr&e-hinting"), this);
