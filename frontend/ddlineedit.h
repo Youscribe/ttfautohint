@@ -15,11 +15,12 @@
 #define __DDLINEEDIT_H__
 
 #include <config.h>
+#include "ttlineedit.h"
 
 #include <QtGui>
 
 class Drag_Drop_Line_Edit
-: public QLineEdit
+: public Tooltip_Line_Edit
 {
   Q_OBJECT
 

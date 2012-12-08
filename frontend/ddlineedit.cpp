@@ -11,7 +11,7 @@
 // with the ttfautohint library.
 
 
-// Derived class `Drag_Drop_Line_Edit' is QLineEdit
+// Derived class `Drag_Drop_Line_Edit' is Tooltip_Line_Edit
 // which accepts drag and drop.
 
 #include <config.h>
@@ -19,7 +19,7 @@
 #include "ddlineedit.h"
 
 Drag_Drop_Line_Edit::Drag_Drop_Line_Edit(QWidget* parent)
-: QLineEdit(parent)
+: Tooltip_Line_Edit(parent)
 {
   // empty
 }
