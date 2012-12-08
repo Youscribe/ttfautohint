@@ -46,9 +46,12 @@ if USE_QT
                            info.h \
                            main.cpp \
                            maingui.cpp \
-                           maingui.h
+                           maingui.h \
+                           ttlineedit.cpp \
+                           ttlineedit.h
   nodist_ttfautohintGUI_SOURCES = ddlineedit.moc.cpp \
-                                  maingui.moc.cpp
+                                  maingui.moc.cpp \
+                                  ttlineedit.moc.cpp
 
   ttfautohintGUI_CXXFLAGS = $(QT_CXXFLAGS)
   ttfautohintGUI_LDFLAGS = $(QT_LDFLAGS)
@@ -59,7 +62,8 @@ if USE_QT
                          $(QT_LIBS)
 
   BUILT_SOURCES = ddlineedit.moc.cpp \
-                  maingui.moc.cpp
+                  maingui.moc.cpp \
+                  ttlineedit.moc.cpp
 
   manpages += ttfautohintGUI.1
 endif

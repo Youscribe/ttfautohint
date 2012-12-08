@@ -24,7 +24,7 @@ Drag_Drop_Line_Edit::Drag_Drop_Line_Edit(QWidget* parent)
   // empty
 }
 
- 
+
 // XXX: There are no standardized MIME types for TTFs and TTCs
 //      which work everywhere.  So we rely on the extension.
 

@@ -18,6 +18,7 @@
 
 #include <QtGui>
 #include "ddlineedit.h"
+#include "ttlineedit.h"
 
 #include <stdio.h>
 #include <ttfautohint.h>
@@ -29,13 +30,13 @@ class QCheckBox;
 class QComboBox;
 class QFile;
 class QLabel;
-class QLineEdit;
 class QLocale;
 class QMenu;
 class QPushButton;
 class QSpinBox;
 
 class Drag_Drop_Line_Edit;
+class Tooltip_Line_Edit;
 
 class Main_GUI
 : public QMainWindow
@@ -127,7 +128,7 @@ private:
   QSpinBox* increase_box;
   QCheckBox* no_increase_box;
 
-  QLineEdit* snapping_line;
+  Tooltip_Line_Edit* snapping_line;
 
   QCheckBox* wincomp_box;
   QCheckBox* pre_box;

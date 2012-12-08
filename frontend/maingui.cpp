@@ -893,7 +893,7 @@ Main_GUI::create_layout()
   // x height snapping exceptions
   //
   QLabel* snapping_label = new QLabel(tr("x Height Snapping Excep&tions:"));
-  snapping_line = new QLineEdit;
+  snapping_line = new Tooltip_Line_Edit;
   snapping_label->setBuddy(snapping_line);
   snapping_label->setToolTip(
     tr("<p>A list of comma separated PPEM values or value ranges"
